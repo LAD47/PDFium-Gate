@@ -37,6 +37,8 @@ An exact duplicate should produce a warning and offer the user a choice instead 
 
 When available, the email `Message-ID` should also be retained as technical metadata. It may later support detection of the same logical message when two exported files are not byte-identical.
 
+Attachments whose decoded payload bytes are available also receive their own SHA-256. This allows tests and later extraction/import code to verify that an attachment recovered from an email is byte-identical to the embedded payload.
+
 ## Implementation direction
 
 The Email Import feature is designed as a main module with small submodules rather than one large implementation file.
@@ -78,5 +80,7 @@ The project follows these principles:
 
 - `ARCHITECTURE.md` — module boundaries, data flow, and internal model direction.
 - `DECISIONS.md` — accepted decisions and deliberately open questions.
+- `EMAIL-DOCUMENT-MODEL.md` — Canonical Email Document v1 contract.
+- `ATTACHMENT-INTEGRITY.md` — attachment-level SHA-256 and fixture integrity policy.
 
-Additional documents may be added as the design becomes concrete, including dedicated specifications for the canonical email model, PDF representation, source retention, duplicate detection, and testing.
+Synthetic permanent parser fixtures live under `test/fixtures/email/`.
