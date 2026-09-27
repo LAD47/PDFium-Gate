@@ -1,0 +1,102 @@
+From: Kari Test <kari.test@example.invalid>
+To: Ola Test <ola.test@example.invalid>
+Cc: Arkiv Test <arkiv@example.invalid>
+Subject: Inline image and PDF
+Date: Sun, 27 Sep 2026 18:00:00 +0000
+Message-ID: <inline-pdf-20260927@example.invalid>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="===============8832601933610327388=="
+
+--===============8832601933610327388==
+Content-Type: multipart/alternative;
+ boundary="===============6715056420526595772=="
+
+--===============6715056420526595772==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Plain fallback: this fixture has an inline image and a PDF attachment.
+
+--===============6715056420526595772==
+MIME-Version: 1.0
+Content-Type: multipart/related;
+ boundary="===============2173264619805896857=="
+
+--===============2173264619805896857==
+Content-Type: text/html; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+<!doctype html><html><body><p>Inline image below:</p><img src=3D"cid:pdfium-l=
+ogo@example.invalid" alt=3D"PDFium Gate logo"><p>And a normal PDF attachment.=
+</p></body></html>
+
+--===============2173264619805896857==
+Content-Type: image/png
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="inline-logo.png"
+Content-ID: <pdfium-logo@example.invalid>
+MIME-Version: 1.0
+
+iVBORw0KGgoAAAANSUhEUgAAAHgAAAAoCAIAAAC6iKlyAAADOElEQVR4nO2ZvUvrUBTAb5poRJAI
+gp+TLg6CXUKHpoVqsX4MunVpFxGK+AfYravFIYMg0ergIoiLIIIoDurUaiex6OBg0cFFA8WPNm1z
+3xAIeX01r35wyvOd33Q49/Tknl8ul0IIQUBgCCGU0npv44fDMIyj3nv4X0DRQKBoIFA0ECgaCBQN
+BIoGAkUDgaKBQNFAoGggUDQQdqKbm5t9Pt/Q0JDH4zk/P7dmJEna2NiwlhnIspzJZBRF+cqeEomE
+y+Vyu90TExP39/dVa+Lx+FceUR/oOwiCYAQXFxeiKFozz8/Pw8PD29vb1uS3cHh4ODY2pmkapTQe
+jwcCAfu9/RPUKppS2tbWVpFJp9OSJNFqM5sZ65I1OT093dfXpyhKKBTq7e2VZdksCwQCZ2dnRpzL
+5aampkql0uXlpSRJAwMDRmUsFmNZdmRk5OnpKRQK+f1+r9ebSqU+Nj0gtYo+Ojry+/30d3GapnV0
+dNCPi+Z5PplMZrNZhmFSqdTt7W1XV5dZ1tPTk8/nKxrOzs6enp4+Pj6alUa3mZmZZDJJKc1ms06n
+868D1wtCCGdzpWia5vP5KKWCIKyvr1eslkqlhoYGs8xIrq6u9vf3V+2m67oROBwOURRZlm1sbBRF
+0eFwvL6+WtsagSzLu7u7Dw8P19fXi4uLW1tbe3t7uVzO2vPg4OD]5saIX15eyuUyy7I2E9WZ996D
+zVGllB4fH4+Pj9uXtbS0GIGqqjzPV6xWPfgej8e8OlRVbWpqopSOjo4mEom7uzuzofGTzs7Ot7c3
+Smm5XD45ObE5U/WFfPrvnaqq0Wh0fn7evkwQhEwmQwjZ3NxkGKaWzpFIJBaLFYtFQsjy8rJxQtPp
+dDAYzOfzhULBKNN1Xdd1SZJ2dnYIIfv7+wsLC5+bBQa7q+NPjFuCYZhisRiNRs0b4z2WlpaCwWB7
+e7vL5eJ5vpZHhMPhq6urwcHB7u7ucDjMcRwhZG5uzu12O53O1tbWQqHA87zX652cnFQUJRKJrKys
+cBy3trb2oVmAwY+zEODHWThQNBAoGggUDQSKBgJFA4GigUDRQKBoIFA0ECgaCBQNBIoGAkUDgaKB
+QNHIz+IXP+RqYiap3OwAAAAASUVORK5CYII=
+
+--===============2173264619805896857==--
+
+--===============6715056420526595772==--
+
+--===============8832601933610327388==
+Content-Type: application/pdf
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="test-attachment-2.pdf"
+MIME-Version: 1.0
+
+JVBERi0xLjMKJZOMi54gUmVwb3J0TGFiIEdlbmVyYXRlZCBQREYgZG9jdW1lbnQgKG9wZW5zb3Vy
+Y2UpCjEgMCBvYmoKPDwKL0YxIDIgMCBSIC9GMiAzIDAgUgo+PgplbmRvYmoKMiAwIG9iago8PAov
+QmFzZUZvbnQgL0hlbHZldGljYSAvRW5jb2RpbmcgL1dpbkFuc2lFbmNvZGluZyAvTmFtZSAvRjEg
+L1N1YnR5cGUgL1R5cGUxIC9UeXBlIC9Gb250Cj4+CmVuZG9iagozIDAgb2JqCjw8Ci9CYXNlRm9u
+dCAvSGVsdmV0aWNhLUJvbGQgL0VuY29kaW5nIC9XaW5BbnNpRW5jb2RpbmcgL05hbWUgL0YyIC9T
+dWJ0eXBlIC9UeXBlMSAvVHlwZSAvRm9udAo+PgplbmRvYmoKNCAwIG9iago8PAovQ29udGVudHMg
+OCAwIFIgL01lZGlhQm94IFsgMCAwIDU5NS4yNzU2IDg0MS44ODk4IF0gL1BhcmVudCA3IDAgUiAv
+UmVzb3VyY2VzIDw8Ci9Gb250IDEgMCBSIC9Qcm9jU2V0IFsgL1BERiAvVGV4dCAvSW1hZ2VCIC9J
+bWFnZUMgL0ltYWdlSSBdCj4+IC9Sb3RhdGUgMCAvVHJhbnMgPDwKCj4+IAogIC9UeXBlIC9QYWdl
+Cj4+CmVuZG9iago1IDAgb2JqCjw8Ci9QYWdlTW9kZSAvVXNlTm9uZSAvUGFnZXMgNyAwIFIgL1R5
+cGUgL0NhdGFsb2cKPj4KZW5kb2JqCjYgMCBvYmoKPDwKL0F1dGhvciAoYW5vbnltb3VzKSAvQ3Jl
+YXRpb25EYXRlIChEOjIwMjYwOTI3MTkzOTA4KzAwJzAwJykgL0NyZWF0b3IgKGFub255bW91cykg
+L0tleXdvcmRzICgpIC9Nb2REYXRlIChEOjIwMjYwOTI3MTkzOTA4KzAwJzAwJykgL1Byb2R1Y2Vy
+IChSZXBvcnRMYWIgUERGIExpYnJhcnkgLSBcKG9wZW5zb3VyY2VcKSkgCiAgL1N1YmplY3QgKHVu
+c3BlY2lmaWVkKSAvVGl0bGUgKFN5bnRoZXRpYyBFbWFpbCBBdHRhY2htZW50IDIpIC9UcmFwcGVk
+IC9GYWxzZQo+PgplbmRvYmoKNyAwIG9iago8PAovQ291bnQgMSAvS2lkcyBbIDQgMCBSIF0gL1R5
+cGUgL1BhZ2VzCj4+CmVuZG9iago4IDAgb2JqCjw8Ci9MZW5ndGggNTE3Cj4+CnN0cmVhbQoxIDAg
+MCAxIDAgMCBjbSAgQlQgL0YxIDEyIFRmIDE0LjQgVEwgRVQKQlQgL0YyIDE2IFRmIDE5LjIgVEwg
+RVQKQlQgMSAwIDAgMSA3MiA3OTAgVG0gKFBERml1bSBHYXRlIEVtYWlsIEltcG9ydCBUZXN0KSBU
+aiBUKiBFVApCVCAvRjEgMTIgVGYgMTQuNCBUTCBFVApCVCAxIDAgMCAxIDcyIDc1NSBUbSAoQXR0
+YWNobWVudDogMikgVGogVCogRVQKQlQgMSAwIDAgMSA3MiA3MzMgVG0gIFQqIEVUCkJUIDEgMCAw
+IDEgNzIgNzExIFRtIChTZWNvbmQgc3ludGhldGljIFBERiBhdHRhY2htZW50IHdpdGggZGlmZmVy
+ZW50IGJ5dGVzLikgVGogVCogRVQKQlQgMSAwIDAgMSA3MiA2ODkgVG0gKFRoaXMgUERGIGNvbnRh
+aW5zIHNlbGVjdGFibGUgdGV4dC4pIFRqIFQqIEVUCkJUIDEgMCAwIDEgNzIgNjY3IFRtIChOb3J3
+ZWdpYW4gY2hhcmFjdGVyczogXDMwNiBcMzMwIFwzMDUgXDM0NiBcMzcwIFwzNDUpIFRqIFQqIEVU
+CkJUIDEgMCAwIDEgNzIgNjQ1IFRtIChUZXN0IGRhdGU6IDIwMjYtMDktMjcpIFRqIFQqIEVUCiAK
+ZW5kc3RyZWFtCmVuZG9iagp4cmVmCjAgOQowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwNjEg
+MDAwMDAgbiAKMDAwMDAwMDEwMiAwMDAwMCBuIAowMDAwMDAwMjA5IDAwMDAwIG4gCjAwMDAwMDAz
+MjEgMDAwMDAgbiAKMDAwMDAwMDUyNCAwMDAwMCBuIAowMDAwMDAwNTkyIDAwMDAwIG4gCjAwMDAw
+MDA4NzMgMDAwMDAgbiAKMDAwMDAwMDkzMiAwMDAwMCBuIAp0cmFpbGVyCjw8Ci9JRCAKWzxlNzFi
+NzI4NTZmNjQ5MWNkZTgyZGJlZmNlOGM4YzQ1OD48ZTcxYjcyODU2ZjY0OTFjZGU4MmRiZWZjZThj
+OGM0NTg+XQolIFJlcG9ydExhYiBnZW5lcmF0ZWQgUERGIGRvY3VtZW50IC0tIGRpZ2VzdCAob3Bl
+bnNvdXJjZSkKCi9JbmZvIDYgMCBSCi9Sb290IDUgMCBSCi9TaXplIDkKPj4Kc3RhcnR4cmVmCjE0
+OTkKJSVFT0YK
+
+--===============8832601933610327388==--

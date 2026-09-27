@@ -1,0 +1,117 @@
+{
+  "schemaVersion": 1,
+  "attachments": {
+    "test-attachment-1.pdf": {
+      "contentType": "application/pdf",
+      "sha256": "0605780a416688f7f06e7ec97016b7df03145238ceb358f62d514ce6d002c749",
+      "size": 1896,
+      "selectableTextContains": [
+        "PDFium Gate Email Import Test",
+        "Æ Ø Å æ ø å"
+      ]
+    },
+    "test-attachment-2.pdf": {
+      "contentType": "application/pdf",
+      "sha256": "aa18431ebbd82b67b4abcefe3f913f18c05720423fcf8cfd98a4b86bc95aa8c8",
+      "size": 1890,
+      "selectableTextContains": [
+        "PDFium Gate Email Import Test",
+        "Æ Ø Å æ ø å"
+      ]
+    },
+    "inline-logo.png": {
+      "contentType": "image/png",
+      "sha256": "d7825870cf6d776b18821af88b79779b554e37787e0d52c9a70c9231f119dcbc",
+      "size": 881
+    },
+    "notes.txt": {
+      "contentType": "text/plain",
+      "sha256": "2b813401f179682b85b9d389db5bff025254b0896d977bd47e88f02a724e4971",
+      "size": 49
+    }
+  },
+  "messages": {
+    "plain-text.eml": {
+      "messageId": "<plain-text-20260927@example.invalid>",
+      "subject": "Plain text test",
+      "attachmentCount": 0,
+      "hasText": true,
+      "hasHtml": false
+    },
+    "norwegian-utf8.eml": {
+      "messageId": "<norwegian-utf8-20260927@example.invalid>",
+      "subject": "Søknad om innsyn – æøå",
+      "attachmentCount": 0,
+      "bodyContains": "æ ø å Æ Ø Å"
+    },
+    "html.eml": {
+      "messageId": "<html-20260927@example.invalid>",
+      "subject": "HTML message test",
+      "attachmentCount": 0,
+      "hasText": true,
+      "hasHtml": true
+    },
+    "one-pdf-attachment.eml": {
+      "messageId": "<one-pdf-20260927@example.invalid>",
+      "subject": "One PDF attachment",
+      "attachmentCount": 1,
+      "attachments": [
+        {
+          "filename": "test-attachment-1.pdf",
+          "contentType": "application/pdf",
+          "sha256": "0605780a416688f7f06e7ec97016b7df03145238ceb358f62d514ce6d002c749"
+        }
+      ]
+    },
+    "multiple-attachments.eml": {
+      "messageId": "<multi-20260927@example.invalid>",
+      "subject": "Multiple attachments",
+      "attachmentCount": 3,
+      "attachments": [
+        {
+          "filename": "test-attachment-1.pdf",
+          "contentType": "application/pdf",
+          "sha256": "0605780a416688f7f06e7ec97016b7df03145238ceb358f62d514ce6d002c749"
+        },
+        {
+          "filename": "test-attachment-2.pdf",
+          "contentType": "application/pdf",
+          "sha256": "aa18431ebbd82b67b4abcefe3f913f18c05720423fcf8cfd98a4b86bc95aa8c8"
+        },
+        {
+          "filename": "notes.txt",
+          "contentType": "text/plain",
+          "sha256": "2b813401f179682b85b9d389db5bff025254b0896d977bd47e88f02a724e4971"
+        }
+      ]
+    },
+    "inline-image-and-pdf.eml": {
+      "messageId": "<inline-pdf-20260927@example.invalid>",
+      "subject": "Inline image and PDF",
+      "attachmentCount": 2,
+      "inlineContentId": "<pdfium-logo@example.invalid>",
+      "attachments": [
+        {
+          "filename": "inline-logo.png",
+          "contentType": "image/png",
+          "sha256": "d7825870cf6d776b18821af88b79779b554e37787e0d52c9a70c9231f119dcbc",
+          "disposition": "inline"
+        },
+        {
+          "filename": "test-attachment-2.pdf",
+          "contentType": "application/pdf",
+          "sha256": "aa18431ebbd82b67b4abcefe3f913f18c05720423fcf8cfd98a4b86bc95aa8c8",
+          "disposition": "attachment"
+        }
+      ]
+    }
+  },
+  "sourceHashes": {
+    "html.eml": "e573fbc7abcca830982860301fb19a79d503a2e0bc06314bda1bff332dfee560",
+    "inline-image-and-pdf.eml": "405b9b244ca71c9bca2bbc2236ffc73b511ccc4fdc8601d7f960a938a7e0a9dc",
+    "multiple-attachments.eml": "04d81e614e1a151566ee16622968a3c5eb4af489947bc08e8663fd2ac7236aa6",
+    "norwegian-utf8.eml": "399d8a9139febb7c80712895a02da387be6fd6ff90d500e9c6d663d31a67f8f3",
+    "one-pdf-attachment.eml": "f78a086a56c2416965ceac6e8f70480515b4547cafc241748d702bde114c7b63",
+    "plain-text.eml": "ba28f38fb7ca2b2eef50903559e3b700cf1cbf5c916f72d1bf1f143e859346bf"
+  }
+}

@@ -1,0 +1,16 @@
+From: Kari =?utf-8?b?w5hkZWfDpXJk?= <kari.test@example.invalid>
+To: Ola Test <ola.test@example.invalid>
+Cc: Arkiv Test <arkiv@example.invalid>
+Subject: =?utf-8?b?U8O4a25hZCBvbSBpbm5zeW4g4oCTIMOmw7jDpQ==?=
+Date: Sun, 27 Sep 2026 18:00:00 +0000
+Message-ID: <norwegian-utf8-20260927@example.invalid>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+MIME-Version: 1.0
+
+Hei Ola,
+
+Dette er en syntetisk e-post med norske tegn: æ ø å Æ Ø Å.
+
+Vennlig hilsen
+Kari Ødegård

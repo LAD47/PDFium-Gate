@@ -1,0 +1,26 @@
+From: Kari Test <kari.test@example.invalid>
+To: Ola Test <ola.test@example.invalid>
+Cc: Arkiv Test <arkiv@example.invalid>
+Subject: HTML message test
+Date: Sun, 27 Sep 2026 18:00:00 +0000
+Message-ID: <html-20260927@example.invalid>
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+ boundary="===============4404306071840488615=="
+
+--===============4404306071840488615==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Fallback plain text body for the HTML fixture.
+
+--===============4404306071840488615==
+Content-Type: text/html; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+
+<!doctype html><html><body><h1>HTML fixture</h1><p>This is <strong>synthetic<=
+/strong> HTML email content.</p><p>Norwegian: =C3=A6=C3=B8=C3=A5 =C3=86=C3=98=
+=C3=85</p></body></html>
+
+--===============4404306071840488615==--
