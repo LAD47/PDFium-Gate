@@ -20,6 +20,7 @@ The model is an internal runtime contract. It is **not** a promise that every fi
 8. Binary attachment content may exist at runtime but is not part of ordinary persisted document metadata.
 9. Source-format quirks belong in parser diagnostics rather than changing the common model.
 10. The model must be sufficient to render the required PDF without reopening the source file.
+11. When attachment payload bytes are available, their integrity may be recorded independently from the source-email hash.
 
 ## 2. Canonical shape
 
@@ -282,6 +283,7 @@ Conceptual shape:
   disposition: "attachment" | "inline" | null,
   contentId: string | null,
   related: boolean,
+  sha256: string | null,
 
   // Runtime only; optional depending on parser/import stage:
   content: Buffer | Uint8Array | null
@@ -321,6 +323,19 @@ CID/content identifier when available. This is needed for resolving inline image
 ### `related`
 
 `true` when the attachment is considered part of the rendered message body/related content rather than an ordinary user-facing file attachment.
+
+### `sha256`
+
+Lowercase hexadecimal SHA-256 calculated over the **decoded attachment payload bytes** when those bytes are available. Otherwise `null`.
+
+This hash is independent of `source.sha256`:
+
+- `source.sha256` identifies the complete imported EML/MSG source bytes;
+- `attachment.sha256` identifies one decoded attachment payload.
+
+The first attachment fixtures use this field to prove that PDF and other attachments recovered from the email are byte-identical to their known reference payloads.
+
+Attachment-level duplicate detection inside the vault may be added later; that is not required for the first parser milestone.
 
 ### `content`
 
@@ -363,9 +378,10 @@ A successful Canonical Email Document v1 must satisfy all of these:
 7. Recipient/reply arrays always exist.
 8. `identity.references` always exists as an array.
 9. `attachments` always exists as an array.
-10. `diagnostics.warnings` always exists as an array.
-11. At least one of `body.text` or `body.html` should normally exist; if neither can be recovered, the document may still be valid when headers/metadata were successfully parsed, but a diagnostic warning must explain the missing body.
-12. No source HTML is considered trusted merely because parsing succeeded.
+10. Every non-null attachment `sha256` is exactly 64 lowercase hexadecimal characters.
+11. `diagnostics.warnings` always exists as an array.
+12. At least one of `body.text` or `body.html` should normally exist; if neither can be recovered, the document may still be valid when headers/metadata were successfully parsed, but a diagnostic warning must explain the missing body.
+13. No source HTML is considered trusted merely because parsing succeeded.
 
 ## 12. Persisted subset
 
@@ -382,9 +398,9 @@ source.retained
 source.retainedPath (when retained)
 ```
 
-Additional fields may later be mapped into PDFium Gate document metadata, but that is a separate integration decision.
+Attachment SHA-256 values may be persisted with attachment relationship metadata when that feature is introduced. Binary attachment `content` must never be stored as ordinary text metadata/frontmatter.
 
-Binary attachment `content` must never be stored as ordinary text metadata.
+Additional fields may later be mapped into PDFium Gate document metadata, but that is a separate integration decision.
 
 ## 13. PDF renderer input
 
@@ -430,6 +446,7 @@ The initial proof must demonstrate that a synthetic EML message can produce a va
 - date/time;
 - Message-ID when present;
 - text and/or HTML body;
-- attachment descriptors.
+- attachment descriptors;
+- attachment SHA-256 when payload bytes are available.
 
 MSG is deliberately postponed until the EML path, canonical model, and tests are stable.
