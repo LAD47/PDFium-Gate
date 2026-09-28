@@ -4,19 +4,36 @@ const assert = require('assert/strict');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const { EventEmitter } = require('events');
 const { parseEml } = require('../src/email-import/parsers/eml-parser');
 const {
   SOURCE_STORAGE_ROOT,
   retainedSourceRelativePath,
   retainOriginalSource,
-  removeRetainedSourceIfExact,
-  buildObsidianRetainedSourceUri
+  removeRetainedSourceIfExact
 } = require('../src/email-import/storage/source-retention');
+const {
+  RENDERER_BRIDGE_EVENTS,
+  normalizeEmailImportRetainedSourceTarget,
+  buildEmailImportRetainedSourcePdfLink,
+  parseEmailImportRetainedSourcePdfLink
+} = require('../src/bridge/renderer-events');
+const { createEmailImportMainProcessAdapter } = require('../src/platform/email-import-main-process');
 const { renderEmailDocumentToHtml, sanitizeMessageHtml } = require('../src/email-import/render/email-html-renderer');
 const { appendRetainedSourceReference } = require('../src/email-import/render/email-source-reference');
 
 const root = path.resolve(__dirname, '..');
 const fixturePath = path.join(root, 'test', 'fixtures', 'email', 'plain-text.eml');
+
+function adapterOptions(extra = {}) {
+  return {
+    app: Object.assign(new EventEmitter(), { whenReady: async () => {} }),
+    parseRetainedSourceLink: parseEmailImportRetainedSourcePdfLink,
+    normalizeRetainedSourceTarget: normalizeEmailImportRetainedSourceTarget,
+    retainedSourceEventName: RENDERER_BRIDGE_EVENTS.EMAIL_RETAINED_SOURCE_OPEN,
+    ...extra
+  };
+}
 
 async function main() {
   const sourceBytes = fs.readFileSync(fixturePath);
@@ -66,26 +83,72 @@ async function main() {
   assert.equal(second.created, false, 'reused source is not owned by the second operation');
   assert.equal(second.retainedPath, first.retainedPath, 'same exact source has stable retained path');
 
-  const openUri = buildObsidianRetainedSourceUri({
-    vault: 'Test Vault æøå',
+  const pdfLink = buildEmailImportRetainedSourcePdfLink({
+    sha256: parsed.source.sha256,
     retainedPath: first.retainedPath
   });
-  assert.match(openUri, /^obsidian:\/\/open\?vault=/, 'retained source link uses Obsidian open URI');
-  assert.match(openUri, /Test%20Vault%20%C3%A6%C3%B8%C3%A5/, 'vault reference is URI encoded');
-  assert.match(openUri, /file=\.pdf-metadata%2Femail-sources%2F/, 'vault-relative retained path is URI encoded');
+  assert.match(pdfLink, /^https:\/\/pdfium-gate\.invalid\/retained-source\?/, 'retained source PDF link uses reserved non-resolving HTTPS origin');
+  const parsedLink = parseEmailImportRetainedSourcePdfLink(pdfLink);
+  assert.equal(parsedLink.ok, true, 'reserved retained-source link parses');
+  assert.equal(parsedLink.sha256, parsed.source.sha256, 'link carries exact source SHA-256');
+  assert.equal(parsedLink.retainedPath, first.retainedPath, 'link carries canonical vault-relative retained path');
 
   const baseHtml = renderEmailDocumentToHtml(first.document);
-  const linkedHtml = appendRetainedSourceReference(baseHtml, first.document, { sourceOpenUri: openUri });
+  const linkedHtml = appendRetainedSourceReference(baseHtml, first.document, { sourceOpenUri: pdfLink });
   assert.match(linkedHtml, /Original source/, 'retained source section appears');
   assert.match(linkedHtml, /Original message æøå\.eml/, 'original source filename appears in PDF HTML');
   assert.match(linkedHtml, new RegExp(parsed.source.sha256), 'source SHA-256 appears in PDF HTML');
-  assert.match(linkedHtml, /href="obsidian:\/\/open\?vault=/, 'retained source section contains clickable Obsidian URI');
+  assert.match(linkedHtml, /href="https:\/\/pdfium-gate\.invalid\/retained-source\?/, 'retained source section contains PDF-safe reserved link');
 
-  const unretainedHtml = appendRetainedSourceReference(renderEmailDocumentToHtml(parsed), parsed, { sourceOpenUri: openUri });
+  const unretainedHtml = appendRetainedSourceReference(renderEmailDocumentToHtml(parsed), parsed, { sourceOpenUri: pdfLink });
   assert.doesNotMatch(unretainedHtml, /email-source-reference/, 'unretained source does not get a source-reference section');
 
-  const hostileBody = sanitizeMessageHtml('<a href="obsidian://open?vault=Wrong&file=secret">source supplied link</a>', []);
-  assert.doesNotMatch(hostileBody, /href="obsidian:/i, 'source email HTML cannot inject an Obsidian URI');
+  const hostileBody = sanitizeMessageHtml(`<a href="${pdfLink}">source supplied reserved link</a>`, []);
+  assert.doesNotMatch(hostileBody, /href="https:\/\/pdfium-gate\.invalid/i, 'source email HTML cannot inject the reserved retained-source link');
+
+  let openedPath = null;
+  const opener = createEmailImportMainProcessAdapter(adapterOptions({
+    shell:{ openPath:async target=>{ openedPath=target; return ''; } }
+  }));
+  const openResult = await opener.openRetainedSource({
+    vaultRootPath:vaultRoot,
+    retainedPath:first.retainedPath,
+    sha256:parsed.source.sha256
+  });
+  assert.equal(openResult.ok, true, 'main-process opener accepts verified retained source');
+  assert.equal(path.resolve(openedPath), path.resolve(storedAbsolute), 'main-process opener receives exact retained file path');
+
+  const routeOwner = new EventEmitter();
+  routeOwner.id = 73;
+  const routedEvents = [];
+  const routeApp = Object.assign(new EventEmitter(), { whenReady:async()=>{} });
+  const router = createEmailImportMainProcessAdapter(adapterOptions({
+    app:routeApp,
+    webContents:{ getAllWebContents:()=>[routeOwner] },
+    rendererEventDispatchAdapter:{ dispatchExact:async (_owner,eventName,detail)=>{ routedEvents.push({eventName,detail}); return {ok:true}; } },
+    resolvePdfContext:()=>({token:'probe-token',filePath:'Email Imports/probe.pdf'})
+  }));
+  const routeInstall = router.installRetainedSourceRouting();
+  assert.equal(routeInstall.ok, true, 'retained-source route installs');
+  let prevented = false;
+  routeOwner.emit('will-frame-navigate',{preventDefault:()=>{prevented=true;}},{url:pdfLink});
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(prevented, true, 'reserved retained-source navigation is prevented');
+  assert.equal(routedEvents.length, 1, 'reserved navigation dispatches one renderer event');
+  assert.equal(routedEvents[0].eventName, RENDERER_BRIDGE_EVENTS.EMAIL_RETAINED_SOURCE_OPEN, 'reserved navigation uses dedicated event');
+  assert.equal(routedEvents[0].detail.filePath, 'Email Imports/probe.pdf', 'renderer event carries exact PDF path');
+  assert.equal(routedEvents[0].detail.sha256, parsed.source.sha256, 'renderer event carries source SHA');
+  router.uninstallRetainedSourceRouting();
+
+  const integrityRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'pdfium-email-open-integrity-'));
+  const integrityWrite = await retainOriginalSource({ document:parsed, sourceBytes, vaultRootPath:integrityRoot, enabled:true });
+  const integrityAbsolute = path.join(integrityRoot, ...integrityWrite.retainedPath.split('/'));
+  fs.writeFileSync(integrityAbsolute, Buffer.from('tampered retained source'));
+  await assert.rejects(
+    () => opener.openRetainedSource({vaultRootPath:integrityRoot,retainedPath:integrityWrite.retainedPath,sha256:parsed.source.sha256}),
+    /SHA-256 no longer matches/i,
+    'main-process opener refuses retained bytes whose SHA changed'
+  );
 
   const rollbackRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'pdfium-email-rollback-'));
   const rollbackWrite = await retainOriginalSource({
@@ -134,12 +197,13 @@ async function main() {
 
   fs.rmSync(disabledRoot, { recursive: true, force: true });
   fs.rmSync(vaultRoot, { recursive: true, force: true });
+  fs.rmSync(integrityRoot, { recursive: true, force: true });
   fs.rmSync(rollbackRoot, { recursive: true, force: true });
   fs.rmSync(reuseRollbackRoot, { recursive: true, force: true });
   fs.rmSync(corruptRoot, { recursive: true, force: true });
   fs.rmSync(mismatchRoot, { recursive: true, force: true });
 
-  console.log('Email Import retained source storage OK: optional no-write mode, byte-identical hidden storage, stable SHA path, exact-source reuse, owned-write rollback, fail-closed collision handling and controlled Obsidian source link verified.');
+  console.log('Email Import retained source storage OK: exact hidden storage, portable PDF-safe source link, scoped navigation routing, SHA-verified OS opening, rollback ownership and fail-closed collision handling verified.');
 }
 
 main().catch(error => {
