@@ -98,7 +98,8 @@ async function retainOriginalSource({ document, sourceBytes, vaultRootPath, enab
     return {
       document: withRetentionState(document, false, null),
       retainedPath: null,
-      reused: false
+      reused: false,
+      created: false
     };
   }
 
@@ -113,7 +114,8 @@ async function retainOriginalSource({ document, sourceBytes, vaultRootPath, enab
     return {
       document: withRetentionState(document, true, retainedPath),
       retainedPath,
-      reused: true
+      reused: true,
+      created: false
     };
   }
 
@@ -145,8 +147,36 @@ async function retainOriginalSource({ document, sourceBytes, vaultRootPath, enab
   return {
     document: withRetentionState(document, true, retainedPath),
     retainedPath,
-    reused: !installed
+    reused: !installed,
+    created: installed
   };
+}
+
+async function removeRetainedSourceIfExact({ document, sourceBytes, vaultRootPath }) {
+  const source = document?.source || {};
+  if (source.retained !== true || !source.retainedPath) return { removed:false, reason:'not-retained' };
+
+  const bytes = verifySourceBytes(document, sourceBytes);
+  const canonicalPath = retainedSourceRelativePath(document);
+  if (String(source.retainedPath) !== canonicalPath) {
+    throw new Error('Retained source rollback refused a non-canonical retainedPath.');
+  }
+
+  const targetPath = absolutePathForVaultRelative(vaultRootPath, canonicalPath);
+  let existing;
+  try {
+    existing = await fs.promises.readFile(targetPath);
+  } catch (error) {
+    if (error && error.code === 'ENOENT') return { removed:false, reason:'missing' };
+    throw error;
+  }
+
+  if (!existing.equals(bytes) || sha256Hex(existing) !== document.source.sha256) {
+    throw new Error('Retained source rollback refused to delete bytes that no longer match the imported source.');
+  }
+
+  await fs.promises.unlink(targetPath);
+  return { removed:true, reason:'exact-source-removed', retainedPath:canonicalPath };
 }
 
 function buildObsidianRetainedSourceUri({ vault, retainedPath }) {
@@ -166,6 +196,7 @@ module.exports = {
   retainedSourceRelativePath,
   verifySourceBytes,
   retainOriginalSource,
+  removeRetainedSourceIfExact,
   buildObsidianRetainedSourceUri,
   withRetentionState
 };
