@@ -8,6 +8,7 @@ const LOCALES=['en','nb','de','es','sv','da','fr'];
 
 function fail(message){ throw new Error(message); }
 function localePath(locale){ return path.join(ROOT,'src','i18n',`${locale}.json`); }
+function emailLocalePath(locale){ return path.join(ROOT,'src','email-import','i18n',`${locale}.json`); }
 function rawLocale(locale){ return fs.readFileSync(localePath(locale),'utf8'); }
 function duplicateKeys(raw, locale){
   const seen=new Set();
@@ -24,17 +25,25 @@ function duplicateKeys(raw, locale){
 function placeholders(value){
   return [...String(value).matchAll(/\{\{([a-zA-Z0-9_]+)\}\}/g)].map(match=>match[1]).sort();
 }
-function loadLocale(locale){
-  const raw=rawLocale(locale);
-  duplicateKeys(raw,locale);
+function parseDictionary(raw,label){
+  duplicateKeys(raw,label);
   let parsed;
-  try { parsed=JSON.parse(raw); } catch(error) { fail(`${locale}: invalid JSON: ${error.message}`); }
-  if(!parsed || typeof parsed!=='object' || Array.isArray(parsed)) fail(`${locale}: locale root must be an object`);
+  try { parsed=JSON.parse(raw); } catch(error) { fail(`${label}: invalid JSON: ${error.message}`); }
+  if(!parsed || typeof parsed!=='object' || Array.isArray(parsed)) fail(`${label}: locale root must be an object`);
   for(const [key,value] of Object.entries(parsed)) {
-    if(typeof value!=='string') fail(`${locale}: ${key} must be a string`);
-    if(!key || key.trim()!==key) fail(`${locale}: invalid translation key ${JSON.stringify(key)}`);
+    if(typeof value!=='string') fail(`${label}: ${key} must be a string`);
+    if(!key || key.trim()!==key) fail(`${label}: invalid translation key ${JSON.stringify(key)}`);
   }
   return parsed;
+}
+function loadLocale(locale){
+  const core=parseDictionary(rawLocale(locale),locale);
+  const overlayPath=emailLocalePath(locale);
+  if(!fs.existsSync(overlayPath)) return core;
+  const overlay=parseDictionary(fs.readFileSync(overlayPath,'utf8'),`${locale}:email-import`);
+  const collisions=Object.keys(overlay).filter(key=>Object.prototype.hasOwnProperty.call(core,key));
+  if(collisions.length) fail(`${locale}: Email Import translation keys collide with core: ${collisions.join(', ')}`);
+  return {...core,...overlay};
 }
 
 const dictionaries=Object.fromEntries(LOCALES.map(locale=>[locale,loadLocale(locale)]));
