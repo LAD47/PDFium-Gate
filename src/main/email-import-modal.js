@@ -72,7 +72,6 @@ class EmailImportReviewModal extends Modal {
       .setDesc(t('emailImport.modal.targetPathDesc'))
       .addText(text=>text
         .setValue(this.targetPath)
-        .setPlaceholder('Email Imports/example.pdf')
         .onChange(value=>{ this.targetPath=String(value || ''); }));
 
     new Setting(contentEl)
