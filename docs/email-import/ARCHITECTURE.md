@@ -47,6 +47,10 @@ Canonical Email Document v1
       |      - ordinary attachments
       |      - PDF candidates
       |
+      +--> Metadata Projection
+      |      - email_import_* provenance
+      |      - schema-aware date/time/sender suggestions
+      |
       v
 Safe Email Renderer
       |
@@ -57,6 +61,8 @@ Controlled HTML representation
 Chromium / Electron PDF generation
       |
       +--> optional retained source link
+      |
+      +--> normal pdf/document metadata record
       |
       v
 PDFium Gate PDF workflow
@@ -87,16 +93,18 @@ src/email-import/
 │   └── email-source-reference.js
 ├── storage/
 │   └── source-retention.js
-└── attachments/
-    ├── attachment-policy.js
-    └── attachment-extraction.js
+├── attachments/
+│   ├── attachment-policy.js
+│   └── attachment-extraction.js
+└── metadata/
+    └── email-metadata-projection.js
 ```
 
-A later import controller will orchestrate these bounded modules. Parser, renderer, hashing, storage, and attachment extraction responsibilities remain separate.
+A later runtime Import Controller will orchestrate these bounded modules. Parser, renderer, hashing, storage, attachment extraction, and metadata projection responsibilities remain separate.
 
 ## 4. Import Controller
 
-The Import Controller coordinates the workflow but should not contain parser, renderer, hashing, attachment-extraction, or storage implementation details.
+The Import Controller coordinates the workflow but should not contain parser, renderer, hashing, attachment-extraction, metadata-projection, or storage implementation details.
 
 Expected responsibilities:
 
@@ -108,11 +116,12 @@ Expected responsibilities:
 6. invoke the correct parser;
 7. receive a Canonical Email Document;
 8. apply optional source-retention policy;
-9. invoke the renderer;
-10. generate the PDF;
-11. persist relationships and technical metadata;
-12. offer explicit actions for eligible attachments when appropriate;
-13. open or otherwise hand the generated PDF to the normal PDFium Gate workflow.
+9. invoke the metadata projection;
+10. invoke the renderer;
+11. generate and persist the PDF;
+12. create the normal `pdf/document` metadata record with technical provenance and compatible initial user values;
+13. offer explicit actions for eligible attachments when appropriate;
+14. open or otherwise hand the generated PDF to the normal PDFium Gate workflow.
 
 ## 5. Parsers
 
@@ -268,7 +277,33 @@ The attachment extraction service is a safe primitive for later UI/orchestration
 
 The final user-facing destination and relationship model for extracted/imported attachments remains an integration decision, not a parser or extraction-service responsibility.
 
-## 12. Integration boundary
+## 12. Metadata and Document Register integration
+
+A generated email PDF remains an ordinary PDFium Gate document:
+
+```text
+filemeta_type = pdf
+filemeta_profile = document
+```
+
+Email origin is provenance, not a new document type or profile.
+
+The metadata projection produces two layers:
+
+1. technical `email_import_*` provenance in the existing Markdown record;
+2. optional initial suggestions for compatible user schema fields.
+
+Technical provenance includes exact source identity, source-retention state, message identity when available, and attachment counts. It is not added to the default DocumentInfo or standard Document Register columns because those surfaces remain driven by the user's metadata schema.
+
+Initial user-field mapping is deliberately conservative. Document date, document time, and sender may be suggested when compatible active fields exist. Stable factory field UUIDs are preferred so property renaming does not break the mapping. No user fields are created by Email Import and `document_type` is not guessed.
+
+The projection preserves a parseable raw source Date wall clock for user-facing date/time values; canonical ISO/UTC is a fallback only when that source wall clock cannot be recovered.
+
+The metadata registration plan requires a fresh/unregistered generated PDF. If the target PDF already has a document record, provenance attachment fails closed. Naming/collision policy is therefore resolved before record creation.
+
+Detailed behavior is documented in `METADATA-INTEGRATION.md`.
+
+## 13. Integration boundary
 
 After PDF generation, the resulting document should enter the existing PDFium Gate path as a normal PDF wherever possible.
 
@@ -284,7 +319,9 @@ Email Import should reuse existing PDF features rather than duplicate them:
 
 The same principle applies to a PDF attachment that the user later chooses to import separately: it should become a normal PDFium Gate PDF rather than a special email-attachment document type.
 
-## 13. Development order
+The remaining runtime work is a bounded Import Controller plus Obsidian command/UI wiring that connects the already-tested parser, integrity, retention, attachment, renderer, PDF-generation, and metadata-projection modules through existing PDFium Gate ports.
+
+## 14. Development order
 
 Recommended milestones:
 
@@ -299,6 +336,7 @@ Recommended milestones:
 9. attachment handling refinement;
 10. MSG parser;
 11. metadata/document-register integration refinements;
-12. broader regression and practical Obsidian testing.
+12. Import Controller and Obsidian runtime/UI wiring;
+13. broader regression and practical Obsidian testing.
 
-Milestones 1–10 are now implemented on the feature branch. Every milestone must continue to preserve existing PDF functionality.
+Milestones 1–11 are implemented on the feature branch. Every later milestone must continue to preserve existing PDF functionality.
