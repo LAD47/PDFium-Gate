@@ -2,6 +2,7 @@
 
 const sanitizeHtml = require('sanitize-html');
 const { toBuffer } = require('../integrity/sha256');
+const { normalizeContentId, decodeCidReference, analyzeEmailAttachments } = require('../attachments/attachment-policy');
 
 const ALLOWED_MESSAGE_TAGS = [
   'p', 'div', 'span', 'br', 'strong', 'b', 'em', 'i', 'u', 's',
@@ -32,25 +33,8 @@ function escapeHtml(value) {
     .replace(/'/g, '&#39;');
 }
 
-function normalizeContentId(value) {
-  const text = String(value == null ? '' : value).trim();
-  if (!text) return '';
-  return text.startsWith('<') && text.endsWith('>') ? text.slice(1, -1) : text;
-}
-
-function cidFromSource(src) {
-  const text = String(src == null ? '' : src).trim();
-  if (!/^cid:/i.test(text)) return null;
-  const encoded = text.slice(4);
-  try {
-    return normalizeContentId(decodeURIComponent(encoded));
-  } catch (_error) {
-    return normalizeContentId(encoded);
-  }
-}
-
 function attachmentDataUrlForCid(attachments, src) {
-  const cid = cidFromSource(src);
+  const cid = decodeCidReference(src);
   if (!cid) return null;
   const list = Array.isArray(attachments) ? attachments : [];
   const attachment = list.find(item => normalizeContentId(item?.contentId) === cid);
@@ -133,19 +117,26 @@ function renderBody(document) {
   return renderPlainTextBody(document?.body?.text);
 }
 
-function renderAttachmentList(attachments) {
-  const list = Array.isArray(attachments) ? attachments : [];
-  if (!list.length) return '<p class="email-no-attachments">None</p>';
+function renderAttachmentList(document) {
+  const analysis = analyzeEmailAttachments(document);
+  const list = analysis.attachments;
 
-  const items = list.map(attachment => {
-    const filename = attachment?.filename || '(unnamed attachment)';
-    const contentType = attachment?.contentType || 'unknown type';
-    const size = Number.isInteger(attachment?.size) ? `${attachment.size} bytes` : 'unknown size';
-    const disposition = attachment?.disposition ? `, ${attachment.disposition}` : '';
-    return `<li><strong>${escapeHtml(filename)}</strong> <span class="attachment-meta">(${escapeHtml(contentType)}, ${escapeHtml(size)}${escapeHtml(disposition)})</span></li>`;
-  });
+  const attachmentMarkup = list.length
+    ? `<ul class="email-attachments">${list.map(item => {
+      const attachment = item.attachment;
+      const filename = attachment?.filename || '(unnamed attachment)';
+      const contentType = attachment?.contentType || 'unknown type';
+      const size = Number.isInteger(attachment?.size) ? `${attachment.size} bytes` : 'unknown size';
+      const kind = item.pdfCandidate ? ', PDF' : '';
+      return `<li><strong>${escapeHtml(filename)}</strong> <span class="attachment-meta">(${escapeHtml(contentType)}, ${escapeHtml(size)}${escapeHtml(kind)})</span></li>`;
+    }).join('')}</ul>`
+    : '<p class="email-no-attachments">None</p>';
 
-  return `<ul class="email-attachments">${items.join('')}</ul>`;
+  const inlineMarkup = analysis.inlineResources.length
+    ? `<p class="inline-resource-meta">Embedded inline resources: ${analysis.inlineResources.length}</p>`
+    : '';
+
+  return `${attachmentMarkup}${inlineMarkup}`;
 }
 
 function renderHeaderRow(label, value) {
@@ -187,7 +178,7 @@ function renderEmailDocumentToHtml(document) {
   .email-html-body table { border-collapse: collapse; max-width: 100%; }
   .email-html-body th, .email-html-body td { border: 1px solid #bbb; padding: 4px 6px; }
   .attachments { margin-top: 28px; border-top: 1px solid #ccc; padding-top: 16px; }
-  .attachment-meta { color: #555; }
+  .attachment-meta, .inline-resource-meta { color: #555; }
 </style>
 </head>
 <body>
@@ -195,7 +186,7 @@ function renderEmailDocumentToHtml(document) {
 <h1>${escapeHtml(subject)}</h1>
 <table class="email-header"><tbody>${rows}</tbody></table>
 <section class="email-body">${renderBody(document)}</section>
-<section class="attachments"><h2>Attachments</h2>${renderAttachmentList(document.attachments)}</section>
+<section class="attachments"><h2>Attachments</h2>${renderAttachmentList(document)}</section>
 </main>
 </body>
 </html>
@@ -207,6 +198,7 @@ module.exports = {
   escapeHtml,
   sanitizeMessageHtml,
   renderEmailDocumentToHtml,
+  renderAttachmentList,
   attachmentDataUrlForCid,
   formatAddress,
   formatAddressList
