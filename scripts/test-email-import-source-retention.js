@@ -9,6 +9,7 @@ const {
   SOURCE_STORAGE_ROOT,
   retainedSourceRelativePath,
   retainOriginalSource,
+  removeRetainedSourceIfExact,
   buildObsidianRetainedSourceUri
 } = require('../src/email-import/storage/source-retention');
 const { renderEmailDocumentToHtml, sanitizeMessageHtml } = require('../src/email-import/render/email-html-renderer');
@@ -30,6 +31,7 @@ async function main() {
   });
   assert.equal(disabled.document.source.retained, false, 'disabled retention remains false');
   assert.equal(disabled.document.source.retainedPath, null, 'disabled retention has no path');
+  assert.equal(disabled.created, false, 'disabled retention owns no file');
   assert.equal(fs.existsSync(path.join(disabledRoot, '.pdf-metadata')), false, 'disabled retention writes nothing');
 
   const vaultRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'pdfium-email-retained-'));
@@ -45,6 +47,7 @@ async function main() {
   assert.equal(first.document.source.retainedPath, expectedPath, 'canonical retained path stored in document');
   assert.equal(first.retainedPath, expectedPath, 'result exposes retained path');
   assert.equal(first.reused, false, 'first write is new');
+  assert.equal(first.created, true, 'first write is owned by this retention operation');
   assert.ok(expectedPath.startsWith(`${SOURCE_STORAGE_ROOT}/${parsed.source.sha256.slice(0, 2)}/`), 'path is sharded under hidden source root');
   assert.ok(expectedPath.endsWith(`/${parsed.source.sha256}.eml`), 'internal filename uses source SHA and source format');
   assert.equal(first.document.source.originalFilename, 'Original message æøå.eml', 'original filename remains documentary metadata');
@@ -60,6 +63,7 @@ async function main() {
     enabled: true
   });
   assert.equal(second.reused, true, 'same exact source reuses existing retained file');
+  assert.equal(second.created, false, 'reused source is not owned by the second operation');
   assert.equal(second.retainedPath, first.retainedPath, 'same exact source has stable retained path');
 
   const openUri = buildObsidianRetainedSourceUri({
@@ -83,6 +87,32 @@ async function main() {
   const hostileBody = sanitizeMessageHtml('<a href="obsidian://open?vault=Wrong&file=secret">source supplied link</a>', []);
   assert.doesNotMatch(hostileBody, /href="obsidian:/i, 'source email HTML cannot inject an Obsidian URI');
 
+  const rollbackRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'pdfium-email-rollback-'));
+  const rollbackWrite = await retainOriginalSource({
+    document: parsed,
+    sourceBytes,
+    vaultRootPath: rollbackRoot,
+    enabled: true
+  });
+  assert.equal(rollbackWrite.created, true, 'rollback fixture creates a fresh retained source');
+  const rollbackAbsolute = path.join(rollbackRoot, ...rollbackWrite.retainedPath.split('/'));
+  assert.equal(fs.existsSync(rollbackAbsolute), true, 'rollback fixture exists before cleanup');
+  const rollbackResult = await removeRetainedSourceIfExact({
+    document: rollbackWrite.document,
+    sourceBytes,
+    vaultRootPath: rollbackRoot
+  });
+  assert.equal(rollbackResult.removed, true, 'exact owned retained source can be removed during rollback');
+  assert.equal(fs.existsSync(rollbackAbsolute), false, 'rollback removes the exact retained source');
+
+  const reuseRollbackRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'pdfium-email-reuse-rollback-'));
+  const seeded = await retainOriginalSource({ document: parsed, sourceBytes, vaultRootPath: reuseRollbackRoot, enabled: true });
+  const reused = await retainOriginalSource({ document: parsed, sourceBytes, vaultRootPath: reuseRollbackRoot, enabled: true });
+  assert.equal(seeded.created, true, 'reuse rollback seed owns first write');
+  assert.equal(reused.created, false, 'reuse rollback second operation does not own source file');
+  const reusedAbsolute = path.join(reuseRollbackRoot, ...reused.retainedPath.split('/'));
+  assert.equal(fs.existsSync(reusedAbsolute), true, 'reused retained source remains present when later operation owns nothing');
+
   const corruptRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'pdfium-email-corrupt-'));
   const corruptTarget = path.join(corruptRoot, ...expectedPath.split('/'));
   fs.mkdirSync(path.dirname(corruptTarget), { recursive: true });
@@ -104,10 +134,12 @@ async function main() {
 
   fs.rmSync(disabledRoot, { recursive: true, force: true });
   fs.rmSync(vaultRoot, { recursive: true, force: true });
+  fs.rmSync(rollbackRoot, { recursive: true, force: true });
+  fs.rmSync(reuseRollbackRoot, { recursive: true, force: true });
   fs.rmSync(corruptRoot, { recursive: true, force: true });
   fs.rmSync(mismatchRoot, { recursive: true, force: true });
 
-  console.log('Email Import retained source storage OK: optional no-write mode, byte-identical hidden storage, stable SHA path, exact-source reuse, fail-closed collision handling and controlled Obsidian source link verified.');
+  console.log('Email Import retained source storage OK: optional no-write mode, byte-identical hidden storage, stable SHA path, exact-source reuse, owned-write rollback, fail-closed collision handling and controlled Obsidian source link verified.');
 }
 
 main().catch(error => {
