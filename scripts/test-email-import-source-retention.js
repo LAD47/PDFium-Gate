@@ -9,8 +9,7 @@ const {
   SOURCE_STORAGE_ROOT,
   retainedSourceRelativePath,
   retainOriginalSource,
-  removeRetainedSourceIfExact,
-  buildObsidianRetainedSourceUri
+  removeRetainedSourceIfExact
 } = require('../src/email-import/storage/source-retention');
 const { renderEmailDocumentToHtml, sanitizeMessageHtml } = require('../src/email-import/render/email-html-renderer');
 const { appendRetainedSourceReference } = require('../src/email-import/render/email-source-reference');
@@ -66,22 +65,15 @@ async function main() {
   assert.equal(second.created, false, 'reused source is not owned by the second operation');
   assert.equal(second.retainedPath, first.retainedPath, 'same exact source has stable retained path');
 
-  const openUri = buildObsidianRetainedSourceUri({
-    vault: 'Test Vault æøå',
-    retainedPath: first.retainedPath
-  });
-  assert.match(openUri, /^obsidian:\/\/open\?vault=/, 'retained source link uses Obsidian open URI');
-  assert.match(openUri, /Test%20Vault%20%C3%A6%C3%B8%C3%A5/, 'vault reference is URI encoded');
-  assert.match(openUri, /file=\.pdf-metadata%2Femail-sources%2F/, 'vault-relative retained path is URI encoded');
-
   const baseHtml = renderEmailDocumentToHtml(first.document);
-  const linkedHtml = appendRetainedSourceReference(baseHtml, first.document, { sourceOpenUri: openUri });
-  assert.match(linkedHtml, /Original source/, 'retained source section appears');
-  assert.match(linkedHtml, /Original message æøå\.eml/, 'original source filename appears in PDF HTML');
-  assert.match(linkedHtml, new RegExp(parsed.source.sha256), 'source SHA-256 appears in PDF HTML');
-  assert.match(linkedHtml, /href="obsidian:\/\/open\?vault=/, 'retained source section contains clickable Obsidian URI');
+  const sourceHtml = appendRetainedSourceReference(baseHtml, first.document);
+  assert.match(sourceHtml, /Original source/, 'retained source section appears');
+  assert.match(sourceHtml, /Original message æøå\.eml/, 'original source filename appears in PDF HTML');
+  assert.match(sourceHtml, new RegExp(parsed.source.sha256), 'source SHA-256 appears in PDF HTML');
+  assert.match(sourceHtml, new RegExp(expectedPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')), 'retained vault-relative path appears in PDF HTML');
+  assert.doesNotMatch(sourceHtml, /retained-source-link|Open retained original|href="obsidian:/i, 'retained source section is documentary text only and contains no source-open link');
 
-  const unretainedHtml = appendRetainedSourceReference(renderEmailDocumentToHtml(parsed), parsed, { sourceOpenUri: openUri });
+  const unretainedHtml = appendRetainedSourceReference(renderEmailDocumentToHtml(parsed), parsed);
   assert.doesNotMatch(unretainedHtml, /email-source-reference/, 'unretained source does not get a source-reference section');
 
   const hostileBody = sanitizeMessageHtml('<a href="obsidian://open?vault=Wrong&file=secret">source supplied link</a>', []);
@@ -139,7 +131,7 @@ async function main() {
   fs.rmSync(corruptRoot, { recursive: true, force: true });
   fs.rmSync(mismatchRoot, { recursive: true, force: true });
 
-  console.log('Email Import retained source storage OK: optional no-write mode, byte-identical hidden storage, stable SHA path, exact-source reuse, owned-write rollback, fail-closed collision handling and controlled Obsidian source link verified.');
+  console.log('Email Import retained source storage OK: optional no-write mode, byte-identical hidden storage, stable SHA path, documentary PDF provenance without a source-open link, exact-source reuse, owned-write rollback and fail-closed collision handling verified.');
 }
 
 main().catch(error => {
