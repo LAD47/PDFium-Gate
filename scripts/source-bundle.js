@@ -103,7 +103,8 @@ const MAIN_BRIDGE_PLATFORM_ORDER = Object.freeze([
   'browser-window.js',
   'screen-point.js',
   'renderer-event-dispatch.js',
-  'obsidian-command-dispatch.js'
+  'obsidian-command-dispatch.js',
+  'email-import-main-process.js'
 ]);
 
 const MAIN_BRIDGE_FEATURE_ORDER = Object.freeze([
