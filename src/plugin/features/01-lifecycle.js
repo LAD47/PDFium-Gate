@@ -69,6 +69,7 @@ async onload() {
     this.electronRemoteRequireAdapter = createElectronRemoteRequireAdapter({ electronModule:rendererElectronModule });
     this.electronFocusDiagnosticsAdapter = createElectronFocusDiagnosticsAdapter({ mainModuleLoader:this.electronRemoteRequireAdapter });
     this.mainProcessTransport = createMainProcessTransport({ remoteRequireAdapter:this.electronRemoteRequireAdapter });
+    this.ports.registerEmailImportCommand();
 
     this.obsidianPluginRegistrationAdapter.registerView(VIEW_TYPE, leaf => new PdfiumGateView(leaf, this));
     this.obsidianPluginRegistrationAdapter.registerEvent(this.obsidianWorkspaceLifecycleAdapter.onActiveLeafChange(leaf => {
@@ -290,7 +291,7 @@ async onload() {
         new Notice(this.i18n.t('lifecycle.restartRestore'));
       }
     } catch (error) {
-      console.error('[PDFium Gate] Could not restore original PDF mapping:', error);
+      console.error('[PDFium Gate] Could not restore workspace.openLinkText:', error);
       if (this.state.lifecycle.originalPdfViewType) new Notice(this.i18n.t('lifecycle.restartRestore'));
     }
   }
