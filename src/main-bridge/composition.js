@@ -8,7 +8,8 @@ const MAIN_BRIDGE_FEATURE_CLASSES = Object.freeze({
   selectionOperations: MainBridgeSelectionOperationsFeature,
   inputRouter: MainBridgeInputRouterFeature,
   wrapperLifecycle: MainBridgeWrapperLifecycleFeature,
-  lifecycle: MainBridgeLifecycleFeature
+  lifecycle: MainBridgeLifecycleFeature,
+  emailImport: MainBridgeEmailImportFeature
 });
 
 function createBoundMainBridgePorts(host) {
@@ -95,5 +96,7 @@ module.exports = {
   setActivePdfIdentity: mainBridgeRuntime.ports.setActivePdfIdentity,
   focusPdfRuntime: mainBridgeRuntime.ports.focusPdfRuntime,
   ensurePdfRuntime: mainBridgeRuntime.ports.ensurePdfRuntime,
-  setIncludeHeaderFooterText: mainBridgeRuntime.ports.setIncludeHeaderFooterText
+  setIncludeHeaderFooterText: mainBridgeRuntime.ports.setIncludeHeaderFooterText,
+  chooseEmailImportSource: mainBridgeRuntime.ports.chooseEmailImportSource,
+  printControlledEmailHtmlToPdf: mainBridgeRuntime.ports.printControlledEmailHtmlToPdf
 };
