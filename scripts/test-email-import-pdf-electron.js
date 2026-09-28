@@ -7,6 +7,7 @@ const electron = require('electron');
 const { parseEml } = require('../src/email-import/parsers/eml-parser');
 const { generateEmailPdf, validateGeneratedPdf } = require('../src/email-import/render/email-pdf-generator');
 const { printHtmlToPdfWithElectron } = require('../src/email-import/render/electron-pdf-printer');
+const { buildEmailImportRetainedSourcePdfLink } = require('../src/bridge/renderer-events');
 
 const root = path.resolve(__dirname, '..');
 const fixtureRoot = path.join(root, 'test', 'fixtures', 'email');
@@ -54,9 +55,10 @@ async function readPdfLinks(pdf) {
   return links;
 }
 
-async function generate(document, capture) {
+async function generate(document, capture, renderOptions = {}) {
   return generateEmailPdf({
     document,
+    renderOptions,
     printHtmlToPdf: async ({ html }) => {
       if (capture) capture.html = html;
       return printHtmlToPdfWithElectron({ html, electronModule: electron });
@@ -104,25 +106,21 @@ async function run() {
   assert.doesNotMatch(hostileCapture.html, /https:\/\/tracker\.invalid/i, 'remote tracking resource never reaches Chromium printer');
   assert.match(hostileCapture.html, /Content-Security-Policy/, 'controlled document CSP reaches Chromium printer');
 
-  const probeHtml = `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline';"></head><body>
-    <p><a href="obsidian://open?vault=ProbeVault&file=.pdf-metadata%2Femail-sources%2Faa%2Fprobe.eml">Obsidian probe</a></p>
-    <p><a href="https://pdfium-gate.invalid/open-retained-source?file=.pdf-metadata%2Femail-sources%2Faa%2Fprobe.eml">HTTPS probe</a></p>
-    <p><a href="file:///tmp/pdfium-gate-probe.eml">File probe</a></p>
-  </body></html>`;
-  const probePdf = await printHtmlToPdfWithElectron({ html: probeHtml, electronModule: electron });
-  assertChromiumPdf(probePdf, 'link annotation probe');
-  const probeLinks = await readPdfLinks(probePdf);
-  process.stderr.write(`Email Import Chromium link annotation probe: ${JSON.stringify(probeLinks)}\n`);
-  assert.ok(
-    probeLinks.some(link => String(link.url || link.unsafeUrl || '').startsWith('https://pdfium-gate.invalid/open-retained-source?')),
-    `Chromium PDF must preserve ordinary HTTPS link annotations; got ${JSON.stringify(probeLinks)}`
-  );
-  assert.ok(
-    probeLinks.some(link => String(link.url || link.unsafeUrl || '').startsWith('file:///tmp/pdfium-gate-probe.eml')),
-    `Chromium PDF must preserve explicit file link annotations; got ${JSON.stringify(probeLinks)}`
-  );
+  const retainedPath = `.pdf-metadata/email-sources/${htmlDocument.source.sha256.slice(0,2)}/${htmlDocument.source.sha256}.eml`;
+  const retainedDocument = {
+    ...htmlDocument,
+    source:{...htmlDocument.source,retained:true,retainedPath}
+  };
+  const retainedLink = buildEmailImportRetainedSourcePdfLink({sha256:htmlDocument.source.sha256,retainedPath});
+  const retainedCapture = {};
+  const retainedPdf = await generate(retainedDocument,retainedCapture,{sourceOpenUri:retainedLink});
+  assertChromiumPdf(retainedPdf,'retained-source fixture');
+  assert.match(retainedCapture.html,/https:\/\/pdfium-gate\.invalid\/retained-source\?/, 'controlled HTML contains portable retained-source link');
+  const retainedLinks = await readPdfLinks(retainedPdf);
+  const retainedUrls = retainedLinks.map(link=>String(link.url || link.unsafeUrl || ''));
+  assert.ok(retainedUrls.includes(retainedLink), `finished Chromium PDF must preserve exact retained-source link; got ${JSON.stringify(retainedUrls)}`);
 
-  process.stderr.write(`Email Import Electron PDF generation OK: Electron ${process.versions.electron}, Chromium ${process.versions.chrome}; real printToPDF output validated for HTML, CID image, hostile-source fixtures and link annotations.\n`);
+  process.stderr.write(`Email Import Electron PDF generation OK: Electron ${process.versions.electron}, Chromium ${process.versions.chrome}; real printToPDF output validated for HTML, CID image, hostile-source fixtures and exact retained-source PDF annotation.\n`);
 }
 
 run().then(() => {
