@@ -17,6 +17,7 @@ const PLUGIN_FEATURE_CONTRACTS = Object.freeze({
       "initializeMetadataSchema",
       "registerPdfDocumentRegisterBasesView",
       "registerMetadataBenchmarkCommands",
+      "registerEmailImportCommand",
       "markDocumentRecordLayoutReady",
       "markDocumentRecordMetadataResolved",
       "cancelDocumentRecordIndexWarmup",
@@ -402,6 +403,18 @@ const PLUGIN_FEATURE_CONTRACTS = Object.freeze({
       "setDocumentRecordBenchmarkEventSuppression",
       "ensureDocumentRecordIndexReady",
       "runDocumentRecordIndexBenchmark"
+    ],
+    "mutableStateFields": []
+  },
+  "emailImport": {
+    "file": "20-email-import.js",
+    "className": "EmailImportFeature",
+    "stateDomains": [],
+    "ports": [
+      "ensureDocumentRecordIndexReady",
+      "getDocumentMetadataRecordState",
+      "getMetadataSchemaSnapshot",
+      "saveDocumentMetadataRecordValues"
     ],
     "mutableStateFields": []
   }
