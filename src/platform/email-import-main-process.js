@@ -1,8 +1,12 @@
 'use strict';
 
-const EMAIL_IMPORT_MAIN_PROCESS_CONTRACT_VERSION = '0.1';
+const emailImportFs = require('fs');
+const emailImportPath = require('path');
+const emailImportCrypto = require('crypto');
 
-function createEmailImportMainProcessAdapter({ app, BrowserWindow, dialog }) {
+const EMAIL_IMPORT_MAIN_PROCESS_CONTRACT_VERSION = '0.2';
+
+function createEmailImportMainProcessAdapter({ app, BrowserWindow, dialog, shell }) {
   function requireAppReady() {
     if (!app || typeof app.whenReady !== 'function') throw new Error('Email Import requires Electron app.whenReady().');
     return app.whenReady();
@@ -76,10 +80,36 @@ function createEmailImportMainProcessAdapter({ app, BrowserWindow, dialog }) {
     }
   }
 
+  async function openRetainedSource({ vaultRootPath, retainedPath, sha256 } = {}) {
+    await requireAppReady();
+    if (!shell || typeof shell.openPath !== 'function') throw new Error('Email Import retained-source opening requires Electron shell.openPath().');
+    const normalized = normalizeEmailImportRetainedSourceTarget({ sha256, retainedPath });
+    if (!normalized.ok) throw new Error(normalized.error);
+
+    const root = emailImportPath.resolve(String(vaultRootPath || '').trim());
+    if (!root) throw new Error('Vault root path is required.');
+    const target = emailImportPath.resolve(root, ...normalized.retainedPath.split('/'));
+    const relative = emailImportPath.relative(root, target);
+    if (!relative || relative === '.' || relative.startsWith('..') || emailImportPath.isAbsolute(relative)) {
+      throw new Error('Retained source path escapes or does not identify a file inside the vault.');
+    }
+
+    const stat = await emailImportFs.promises.stat(target);
+    if (!stat.isFile()) throw new Error('Retained source target is not a regular file.');
+    const bytes = await emailImportFs.promises.readFile(target);
+    const actualSha = emailImportCrypto.createHash('sha256').update(bytes).digest('hex');
+    if (actualSha !== normalized.sha256) throw new Error('Retained source SHA-256 no longer matches metadata.');
+
+    const errorText = await shell.openPath(target);
+    if (String(errorText || '').trim()) throw new Error(`Operating system could not open retained source: ${String(errorText).trim()}`);
+    return { ok:true, retainedPath:normalized.retainedPath, sha256:normalized.sha256 };
+  }
+
   return Object.freeze({
     contractVersion:EMAIL_IMPORT_MAIN_PROCESS_CONTRACT_VERSION,
     chooseSource,
-    printControlledHtmlToPdf
+    printControlledHtmlToPdf,
+    openRetainedSource
   });
 }
 
