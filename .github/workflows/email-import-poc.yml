@@ -22,10 +22,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - name: Install Email Import dependency
-        run: npm install --no-package-lock --ignore-scripts
-      - name: Run Email Import tests
+      - name: Install Email Import dependencies
+        run: npm install --no-package-lock
+      - name: Run Email Import Node tests
         run: npm run test:email-import
+      - name: Run real Electron Chromium PDF generation test
+        run: xvfb-run -a npm run test:email-import:pdf-electron
       - name: Run existing PDFium Gate checks
         run: npm run check
       - name: Ensure Email Import does not change bundled runtime

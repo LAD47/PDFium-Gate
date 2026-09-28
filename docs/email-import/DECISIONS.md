@@ -148,6 +148,20 @@ The generated document also carries a restrictive Content Security Policy as def
 
 Ordinary `http`, `https`, and `mailto` hyperlinks may remain as links because they do not need to be fetched during rendering. This does not permit remote images or other automatic subresource loading.
 
+### D-021 — Chromium PDF generation crosses an explicit Electron main-process boundary
+
+The safe HTML renderer and canonical email model must not depend directly on Electron window APIs.
+
+Email Import uses a small printer adapter around Electron's main-process `BrowserWindow` / `webContents.printToPDF()` APIs. The core PDF generator accepts only the controlled HTML produced by the safe renderer and delegates printing through that adapter.
+
+The hidden print window is created with JavaScript disabled, Node integration disabled, context isolation enabled, sandbox enabled, web security enabled, insecure content disabled, and new-window creation denied.
+
+This boundary allows the later Obsidian integration to connect PDF generation through PDFium Gate's existing main-process bridge without moving parser, duplicate-detection, or renderer responsibilities into the bridge.
+
+Generated printer output is validated as PDF bytes before it is returned to the import workflow.
+
+The exact PDF page format and visual layout remain configurable implementation details rather than being frozen by this decision.
+
 ## Open questions
 
 The following are intentionally not yet frozen:
