@@ -22,7 +22,7 @@ The PDF must include at least:
 
 The original `.eml` / `.msg` file is not required to remain visible in the vault.
 
-The import flow may optionally retain the original source file in a non-visible source area. If the original source is retained, the generated PDF must identify the source filename and provide a link back to that retained source. The source SHA-256 should also be recorded.
+The import flow may optionally retain the original source file in a non-visible source area. Retained source bytes are stored unchanged under `.pdf-metadata/email-sources/` using a SHA-256-addressed sharded path. If the original source is retained, the generated PDF identifies the source filename, records the source SHA-256, and can include a generated Obsidian URI back to the retained vault-relative source path.
 
 ## Integrity and duplicate detection
 
@@ -43,11 +43,11 @@ Attachments whose decoded payload bytes are available also receive their own SHA
 
 The Email Import feature is designed as a main module with small submodules rather than one large implementation file.
 
-Planned responsibilities include:
+Implemented or bounded responsibilities include:
 
-- import orchestration;
+- import orchestration boundary;
 - EML parsing;
-- MSG parsing;
+- MSG parsing boundary;
 - canonical email document model;
 - SHA-256 and duplicate detection;
 - safe HTML normalization/rendering;
@@ -59,7 +59,7 @@ EML support should be implemented and tested before MSG support. Both formats mu
 
 ## Rendering and PDF generation
 
-The intended direction is to render the normalized email using the Chromium/Electron environment already available to Obsidian Desktop and generate the PDF from that controlled representation.
+The normalized email is rendered using a controlled HTML shell and the Chromium/Electron environment available to Obsidian Desktop. Electron PDF generation crosses an explicit printer-adapter boundary so parser and renderer code remain independent from main-process APIs.
 
 The legacy `html-pdf` conversion path from the reference Eml-Parser project is not part of the intended PDFium Gate architecture.
 
