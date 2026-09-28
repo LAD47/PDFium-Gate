@@ -1,6 +1,7 @@
 'use strict';
 
 const { renderEmailDocumentToHtml } = require('./email-html-renderer');
+const { appendRetainedSourceReference } = require('./email-source-reference');
 const { toBuffer } = require('../integrity/sha256');
 
 function validateGeneratedPdf(pdfBytes) {
@@ -17,14 +18,16 @@ function validateGeneratedPdf(pdfBytes) {
   return pdf;
 }
 
-async function generateEmailPdf({ document, printHtmlToPdf }) {
+async function generateEmailPdf({ document, printHtmlToPdf, renderOptions = {} }) {
   if (typeof printHtmlToPdf !== 'function') {
     throw new TypeError('printHtmlToPdf must be a function.');
   }
 
   // The printer never receives source email HTML directly. It receives only the
-  // controlled document emitted by the safe renderer.
-  const html = renderEmailDocumentToHtml(document);
+  // controlled document emitted by the safe renderer plus plugin-generated source
+  // reference information when an unchanged original has been retained.
+  const baseHtml = renderEmailDocumentToHtml(document);
+  const html = appendRetainedSourceReference(baseHtml, document, renderOptions);
   const pdfBytes = await printHtmlToPdf({ html });
   return validateGeneratedPdf(pdfBytes);
 }
