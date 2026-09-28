@@ -63,7 +63,7 @@ Controlled HTML representation
       v
 Main-process Chromium / Electron PDF generation
       |
-      +--> optional retained source link
+      +--> optional retained-source provenance (filename / SHA-256 / path)
       |
       v
 Vault PDF + ordinary File Metadata pdf/document record
@@ -270,7 +270,8 @@ When enabled:
 - the retained file is verified byte-for-byte after writing;
 - an existing canonical source file is reused only when bytes are identical;
 - collisions fail closed rather than overwrite;
-- the generated PDF identifies the original filename, SHA-256, retained path, and controlled Obsidian source link.
+- the generated PDF identifies the original filename, SHA-256, and retained vault-relative path as documentary text;
+- no source-open hyperlink is generated in the PDF. A future open-original action, if needed, is a separate feature decision.
 
 Rollback removes a retained source only when the current import created it and exact path/byte verification still succeeds. Reused retained sources are never deleted by rollback from a later import.
 
@@ -364,7 +365,7 @@ Implemented milestones:
 5. SHA-256 and exact duplicate detection;
 6. controlled email renderer;
 7. Chromium/Electron PDF generation;
-8. optional source retention and source link;
+8. optional source retention and documentary provenance;
 9. attachment handling refinement;
 10. MSG parser;
 11. metadata/document-register integration refinements;
