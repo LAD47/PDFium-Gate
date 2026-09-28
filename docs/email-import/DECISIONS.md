@@ -70,7 +70,7 @@ A Message-ID match is not initially treated as proof that two source files are i
 
 The first parser implementation should target EML.
 
-MSG support is added later against the same canonical Email Document model so Outlook-specific complexity remains isolated.
+MSG support is added later against the same canonical model so Outlook-specific complexity remains isolated.
 
 ### D-010 — Both source formats produce one canonical internal model
 
@@ -134,6 +134,20 @@ Repository test messages should use synthetic/non-private data.
 
 Private real-world email may be used locally for exploratory testing when appropriate but should not become permanent repository fixtures.
 
+### D-020 — Email HTML is sanitized into a controlled document shell
+
+The renderer must never use source email HTML as the outer document.
+
+PDFium Gate generates its own HTML shell and sanitizes the message-body fragment with a mature allowlist-based sanitizer. The initial implementation uses `sanitize-html` rather than implementing an HTML sanitizer from scratch.
+
+Source scripts, styles, event-handler attributes, forms, frames, and other active/unsafe constructs are not retained as executable content.
+
+Remote image URLs are not loaded. CID images may be embedded only when they resolve to already-decoded canonical attachment bytes, in which case the renderer creates an internal `data:` URL itself.
+
+The generated document also carries a restrictive Content Security Policy as defense in depth so rendering/PDF generation does not contact external resources merely because an archived message contains remote content.
+
+Ordinary `http`, `https`, and `mailto` hyperlinks may remain as links because they do not need to be fetched during rendering. This does not permit remote images or other automatic subresource loading.
+
 ## Open questions
 
 The following are intentionally not yet frozen:
@@ -150,8 +164,7 @@ The following are intentionally not yet frozen:
 10. Collision behavior when a generated PDF filename already exists.
 11. Batch-import UX and duplicate summary behavior.
 12. Whether source retention should preserve the user-provided filename separately from an internal UUID-based storage filename.
-13. Exact sanitizer/rendering library or implementation.
-14. How malformed or partially parseable EML/MSG files should be represented to the user.
+13. How malformed or partially parseable EML/MSG files should be represented to the user.
 
 ## Change rule
 
