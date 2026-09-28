@@ -58,7 +58,26 @@ class MainBridgeRuntime {
 
     this.chromiumPdfRuntimeDriver = createChromiumPdfRuntimeDriver();
     this.rendererEventDispatchAdapter = createRendererEventDispatchAdapter({validateDetail:validateRendererBridgeEventDetail});
-    this.emailImportMainProcessAdapter = createEmailImportMainProcessAdapter({app,BrowserWindow,dialog,shell});
+    this.emailImportMainProcessAdapter = createEmailImportMainProcessAdapter({
+      app,
+      BrowserWindow,
+      dialog,
+      shell,
+      webContents,
+      rendererEventDispatchAdapter:this.rendererEventDispatchAdapter,
+      resolvePdfToken:({ownerWc,details})=>{
+        for(const frame of [details?.initiator,details?.frame]) {
+          const token=pdfTokenFromWrapperFrameUrl(String(frame?.url || ''));
+          if(token) return token;
+        }
+        const tokens=new Set();
+        for(const frame of this.ports.listFrameSubtree(ownerWc) || []) {
+          const token=pdfTokenFromWrapperFrameUrl(this.ports.safeFrameUrl(frame));
+          if(token) tokens.add(token);
+        }
+        return tokens.size===1 ? tokens.values().next().value : null;
+      }
+    });
 
     this.embeddedPdfTargetAdapter = createEmbeddedPdfTargetAdapter({
       webContents,
@@ -84,9 +103,23 @@ class MainBridgeRuntime {
 
 const mainBridgeRuntime = new MainBridgeRuntime();
 
+function installMainBridgeWithEmailImportRouting(...args) {
+  const result = mainBridgeRuntime.ports.install(...args);
+  if (result?.installed === true) mainBridgeRuntime.emailImportMainProcessAdapter.installRetainedSourceRouting();
+  return result;
+}
+
+function uninstallMainBridgeWithEmailImportRouting(...args) {
+  try {
+    return mainBridgeRuntime.ports.uninstall(...args);
+  } finally {
+    mainBridgeRuntime.emailImportMainProcessAdapter.uninstallRetainedSourceRouting();
+  }
+}
+
 module.exports = {
-  install: mainBridgeRuntime.ports.install,
-  uninstall: mainBridgeRuntime.ports.uninstall,
+  install: installMainBridgeWithEmailImportRouting,
+  uninstall: uninstallMainBridgeWithEmailImportRouting,
   getState: mainBridgeRuntime.ports.getState,
   getPlatformCapabilities: mainBridgeRuntime.ports.getPlatformCapabilities,
   setRendererMenuOpen: mainBridgeRuntime.ports.setRendererMenuOpen,
