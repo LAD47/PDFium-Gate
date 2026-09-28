@@ -17,7 +17,7 @@ Optional retained source:
 
 - original `.eml` or `.msg`, stored outside the normal visible document area of the vault.
 
-The feature must not create a parallel permanent email viewer that duplicates PDFium Gate's existing document workflow unless later evidence shows that such a viewer is necessary.
+The feature does not create a parallel permanent email viewer. The generated PDF enters the existing PDFium Gate document workflow.
 
 ## 2. High-level flow
 
@@ -47,9 +47,12 @@ Canonical Email Document v1
       |      - ordinary attachments
       |      - PDF candidates
       |
-      +--> Metadata Projection
-      |      - email_import_* provenance
-      |      - schema-aware date/time/sender suggestions
+      v
+Review / Decision UI
+      |
+      +--> target PDF path
+      +--> explicit retain/discard source choice
+      +--> duplicate action
       |
       v
 Safe Email Renderer
@@ -58,14 +61,15 @@ Safe Email Renderer
 Controlled HTML representation
       |
       v
-Chromium / Electron PDF generation
+Main-process Chromium / Electron PDF generation
       |
       +--> optional retained source link
       |
-      +--> normal pdf/document metadata record
+      v
+Vault PDF + ordinary File Metadata pdf/document record
       |
       v
-PDFium Gate PDF workflow
+Normal PDFium Gate PDF workflow
 
 Optional explicit attachment extraction/import
       |
@@ -76,7 +80,7 @@ Optional explicit attachment extraction/import
 
 ## 3. Module boundaries
 
-Current Email Import implementation is organized under:
+Current Email Import core implementation is organized under:
 
 ```text
 src/email-import/
@@ -96,32 +100,55 @@ src/email-import/
 ├── attachments/
 │   ├── attachment-policy.js
 │   └── attachment-extraction.js
-└── metadata/
-    └── email-metadata-projection.js
+├── metadata/
+│   └── email-metadata-projection.js
+├── i18n/
+│   └── <locale>.json
+└── runtime-entry.js
 ```
 
-A later runtime Import Controller will orchestrate these bounded modules. Parser, renderer, hashing, storage, attachment extraction, and metadata projection responsibilities remain separate.
+Runtime integration is deliberately separated from the core modules:
+
+```text
+src/plugin/features/20-email-import.js
+    - import orchestration in the Obsidian renderer/plugin runtime
+
+src/main/email-import-modal.js
+    - user review / explicit decision UI
+
+src/platform/email-import-main-process.js
+    - Electron main-process source picker and secure PDF printer adapter
+
+src/main-bridge/features/09-email-import.js
+    - narrow Main Bridge operation surface
+```
+
+Parser, renderer, hashing, storage, attachment extraction, metadata projection, UI, and Electron main-process responsibilities remain separate.
 
 ## 4. Import Controller
 
-The Import Controller coordinates the workflow but should not contain parser, renderer, hashing, attachment-extraction, metadata-projection, or storage implementation details.
+The Import Controller is implemented in the plugin runtime and coordinates bounded services rather than absorbing their logic.
 
-Expected responsibilities:
+Current responsibilities:
 
-1. accept a source file;
-2. validate the supported source type;
-3. calculate source SHA-256 before transformation;
-4. run duplicate detection;
-5. obtain user decision when an exact duplicate exists;
-6. invoke the correct parser;
-7. receive a Canonical Email Document;
-8. apply optional source-retention policy;
-9. invoke the metadata projection;
-10. invoke the renderer;
-11. generate and persist the PDF;
-12. create the normal `pdf/document` metadata record with technical provenance and compatible initial user values;
-13. offer explicit actions for eligible attachments when appropriate;
-14. open or otherwise hand the generated PDF to the normal PDFium Gate workflow.
+1. invoke the main-process source picker for `.eml` / `.msg`;
+2. read exact source bytes;
+3. calculate/check source SHA-256 before transformation;
+4. run exact duplicate lookup against existing File Metadata records;
+5. invoke the correct parser;
+6. receive a Canonical Email Document;
+7. show the review/decision modal;
+8. let the user cancel, open one existing exact duplicate, or continue;
+9. require an explicit retain/discard decision for the original source;
+10. validate the editable target PDF path;
+11. apply optional source retention;
+12. generate controlled HTML and delegate PDF printing across MainProcessTransport;
+13. create the PDF in the vault;
+14. project and save technical/user metadata through the existing document-record operation;
+15. open the resulting PDF through the normal PDFium Gate view path;
+16. apply ownership-aware best-effort cleanup to newly created PDF/source files if a later import step fails.
+
+Drag-and-drop, batch import, and user-facing attachment extraction/import are intentionally outside this first runtime integration.
 
 ## 5. Parsers
 
@@ -163,7 +190,7 @@ Attachment role such as "inline resource" or "PDF candidate" is deliberately der
 
 ## 7. Integrity and duplicate detection
 
-SHA-256 must be calculated from the original source bytes before parsing, normalization, source renaming, or conversion.
+SHA-256 is calculated from the original source bytes before parsing, normalization, source renaming, or conversion.
 
 The stored hash represents the imported source, not the generated PDF.
 
@@ -172,9 +199,9 @@ The stored hash represents the imported source, not the generated PDF.
 Same SHA-256:
 
 - very strong evidence that imported source bytes are identical;
-- warn the user that the source has already been imported;
-- identify the existing PDF when possible;
-- offer to open the existing document, cancel, or deliberately import again.
+- the review UI warns before durable writes;
+- one unambiguous existing match can be opened directly;
+- the user can cancel or deliberately continue with another import.
 
 ### Logical message duplicate
 
@@ -215,22 +242,26 @@ Implemented rendering policy includes:
 
 Because EML and MSG both reach the same canonical model, the renderer contains no source-format-specific branch for normal email presentation.
 
-## 9. PDF generation
+## 9. PDF generation and build-time bundling
 
-PDF generation uses the Chromium/Electron environment available to Obsidian Desktop through an explicit printer-adapter boundary around main-process `BrowserWindow` / `webContents.printToPDF()` APIs.
+PDF generation uses the Chromium/Electron environment available to Obsidian Desktop through an explicit main-process adapter around `BrowserWindow` / `webContents.printToPDF()`.
 
-The hidden print window runs with JavaScript disabled, Node integration disabled, context isolation and sandbox enabled, web security enabled, and new-window creation denied.
+The hidden print window runs with JavaScript disabled, Node integration disabled, context isolation and sandbox enabled, web security enabled, insecure content disabled, navigation restricted, and new-window creation denied.
 
 The generated PDF is the visible working document. It is not the byte-identical original email source.
 
+Email Import's parser/sanitizer dependencies are bundled into generated `main.js` at build time so the installed plugin remains self-contained and does not require a separate `node_modules` tree.
+
+The main-process picker/printer is not included in that core bundle; it is exposed through the existing generated `main-bridge.js` boundary.
+
 ## 10. Optional source retention
 
-Source retention is optional.
+Source retention is optional and requires an explicit user choice in the first runtime integration.
 
 When disabled:
 
 - Email Import creates no retained-source file;
-- technical source identity may still be persisted for duplicate detection.
+- technical source identity is still persisted for duplicate detection.
 
 When enabled:
 
@@ -240,6 +271,8 @@ When enabled:
 - an existing canonical source file is reused only when bytes are identical;
 - collisions fail closed rather than overwrite;
 - the generated PDF identifies the original filename, SHA-256, retained path, and controlled Obsidian source link.
+
+Rollback removes a retained source only when the current import created it and exact path/byte verification still succeeds. Reused retained sources are never deleted by rollback from a later import.
 
 ## 11. Attachments
 
@@ -261,7 +294,7 @@ An ordinary attachment is a PDF candidate when evidence comes from one or more o
 - decoded payload beginning with `%PDF-`;
 - `.pdf` filename.
 
-PDF-candidate status is advisory. A later Import Controller may offer the user a separate PDFium Gate import action, but classification itself has no side effect.
+PDF-candidate status is advisory. A later UI may offer a separate PDFium Gate import action, but classification itself has no side effect.
 
 ### Explicit extraction
 
@@ -275,39 +308,22 @@ The attachment extraction service is a safe primitive for later UI/orchestration
 - reuses an existing target only when bytes are identical;
 - fails closed on a different-file collision.
 
-The final user-facing destination and relationship model for extracted/imported attachments remains an integration decision, not a parser or extraction-service responsibility.
+The final user-facing destination and relationship model for extracted/imported attachments remains a later decision.
 
-## 12. Metadata and Document Register integration
+## 12. Metadata and document-register boundary
 
-A generated email PDF remains an ordinary PDFium Gate document:
+After PDF generation, the resulting document enters the existing PDFium Gate path as a normal PDF.
+
+The generated document record remains:
 
 ```text
-filemeta_type = pdf
-filemeta_profile = document
+filemeta_type: pdf
+filemeta_profile: document
 ```
 
-Email origin is provenance, not a new document type or profile.
+Technical email provenance lives in additional `email_import_*` properties in the same Markdown record, while ordinary DocumentInfo and the standard Document Register remain driven by the user's metadata schema.
 
-The metadata projection produces two layers:
-
-1. technical `email_import_*` provenance in the existing Markdown record;
-2. optional initial suggestions for compatible user schema fields.
-
-Technical provenance includes exact source identity, source-retention state, message identity when available, and attachment counts. It is not added to the default DocumentInfo or standard Document Register columns because those surfaces remain driven by the user's metadata schema.
-
-Initial user-field mapping is deliberately conservative. Document date, document time, and sender may be suggested when compatible active fields exist. Stable factory field UUIDs are preferred so property renaming does not break the mapping. No user fields are created by Email Import and `document_type` is not guessed.
-
-The projection preserves a parseable raw source Date wall clock for user-facing date/time values; canonical ISO/UTC is a fallback only when that source wall clock cannot be recovered.
-
-The metadata registration plan requires a fresh/unregistered generated PDF. If the target PDF already has a document record, provenance attachment fails closed. Naming/collision policy is therefore resolved before record creation.
-
-Detailed behavior is documented in `METADATA-INTEGRATION.md`.
-
-## 13. Integration boundary
-
-After PDF generation, the resulting document should enter the existing PDFium Gate path as a normal PDF wherever possible.
-
-Email Import should reuse existing PDF features rather than duplicate them:
+Email Import reuses existing PDF features rather than duplicating them:
 
 - text selection and copy;
 - highlighting / categories;
@@ -319,11 +335,27 @@ Email Import should reuse existing PDF features rather than duplicate them:
 
 The same principle applies to a PDF attachment that the user later chooses to import separately: it should become a normal PDFium Gate PDF rather than a special email-attachment document type.
 
-The remaining runtime work is a bounded Import Controller plus Obsidian command/UI wiring that connects the already-tested parser, integrity, retention, attachment, renderer, PDF-generation, and metadata-projection modules through existing PDFium Gate ports.
+## 13. Runtime verification boundary
+
+Before runtime integration, CI intentionally required generated `main.js` and `main-bridge.js` to remain unchanged.
+
+That rule is superseded for the integrated milestone because the new user-facing feature must change both generated runtimes.
+
+The replacement boundary requires:
+
+- all existing PDFium Gate architecture/build/regression checks to remain green;
+- all Email Import Node tests to remain green;
+- real Electron/Chromium PDF generation to remain green;
+- bundled Email Import dependencies to be present in generated `main.js` without runtime package requires;
+- the secure main-process picker/printer integration to be present in generated `main-bridge.js`;
+- deterministic build output with only `main.js` and `main-bridge.js` changed by the build;
+- a generated runtime artifact for practical Obsidian testing.
+
+Architecture gates remain active. During integration they caught transport-contract, plugin-feature-port, and Main Bridge lexical-host boundary mismatches; those boundaries were updated or respected rather than disabled.
 
 ## 14. Development order
 
-Recommended milestones:
+Implemented milestones:
 
 1. documentation and frozen initial boundaries;
 2. Canonical Email Document specification;
@@ -336,7 +368,10 @@ Recommended milestones:
 9. attachment handling refinement;
 10. MSG parser;
 11. metadata/document-register integration refinements;
-12. Import Controller and Obsidian runtime/UI wiring;
-13. broader regression and practical Obsidian testing.
+12. Import Controller + Obsidian command/UI/runtime integration.
 
-Milestones 1–11 are implemented on the feature branch. Every later milestone must continue to preserve existing PDF functionality.
+Remaining milestone before this feature branch is considered ready for merge review:
+
+13. practical Obsidian Email Import and existing-PDF regression testing.
+
+Every milestone must continue to preserve existing PDF functionality.
