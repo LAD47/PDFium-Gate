@@ -11,6 +11,9 @@ const ALLOWED_MESSAGE_TAGS = [
   'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr', 'a', 'img'
 ];
 
+const RESERVED_RETAINED_SOURCE_ORIGIN = 'https://pdfium-gate.invalid';
+const RESERVED_RETAINED_SOURCE_PATH = '/retained-source';
+
 const CONTENT_SECURITY_POLICY = [
   "default-src 'none'",
   "img-src data:",
@@ -48,6 +51,16 @@ function attachmentDataUrlForCid(attachments, src) {
   return `data:${contentType};base64,${content.toString('base64')}`;
 }
 
+function sourceHrefAllowed(href) {
+  const text = String(href || '').trim();
+  if (!/^(?:https?:|mailto:)/i.test(text)) return false;
+  try {
+    const url = new URL(text);
+    if (url.origin === RESERVED_RETAINED_SOURCE_ORIGIN && url.pathname === RESERVED_RETAINED_SOURCE_PATH) return false;
+  } catch (_) {}
+  return true;
+}
+
 function sanitizeMessageHtml(sourceHtml, attachments) {
   const html = String(sourceHtml == null ? '' : sourceHtml);
 
@@ -69,7 +82,7 @@ function sanitizeMessageHtml(sourceHtml, attachments) {
     transformTags: {
       a: (tagName, attribs) => {
         const href = String(attribs.href || '').trim();
-        const safeHref = /^(?:https?:|mailto:)/i.test(href) ? href : null;
+        const safeHref = sourceHrefAllowed(href) ? href : null;
         const next = {};
         if (safeHref) next.href = safeHref;
         if (attribs.title) next.title = attribs.title;
@@ -195,11 +208,14 @@ function renderEmailDocumentToHtml(document) {
 
 module.exports = {
   CONTENT_SECURITY_POLICY,
+  RESERVED_RETAINED_SOURCE_ORIGIN,
+  RESERVED_RETAINED_SOURCE_PATH,
   escapeHtml,
   sanitizeMessageHtml,
   renderEmailDocumentToHtml,
   renderAttachmentList,
   attachmentDataUrlForCid,
   formatAddress,
-  formatAddressList
+  formatAddressList,
+  sourceHrefAllowed
 };
