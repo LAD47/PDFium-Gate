@@ -32,7 +32,7 @@ class EmailImportFeature {
     this.obsidianPluginRegistrationAdapter.addCommand({
       id:'import-email-source',
       name:this.i18n.t('commands.importEmail'),
-      callback:()=>{ void this.ports.startEmailImport(); }
+      callback:()=>{ void this.startEmailImport(); }
     });
   }
 
@@ -128,14 +128,14 @@ class EmailImportFeature {
       const sourceBytes=Buffer.from(nodeFsModule.readFileSync(sourcePath));
       const duplicateFacts=await EMAIL_IMPORT_RUNTIME.detectExactSourceDuplicate({
         sourceBytes,
-        findBySourceSha256:sha=>this.ports.findEmailImportDuplicatesBySha256(sha)
+        findBySourceSha256:sha=>this.findEmailImportDuplicatesBySha256(sha)
       });
       const originalFilename=path.basename(sourcePath);
       const document=format==='eml'
         ? await EMAIL_IMPORT_RUNTIME.parseEml({sourceBytes,originalFilename})
         : await EMAIL_IMPORT_RUNTIME.parseMsg({sourceBytes,originalFilename});
 
-      const suggestedPdfPath=this.ports.emailImportSuggestedPdfPath(document);
+      const suggestedPdfPath=this.emailImportSuggestedPdfPath(document);
       const decision=await new EmailImportReviewModal(this.app,this,{
         suggestedPdfPath,
         duplicates:duplicateFacts.matches,
@@ -150,7 +150,7 @@ class EmailImportFeature {
       if(!decision || decision.action==='cancel') return {ok:true,canceled:true};
       if(decision.action==='open-existing') {
         try {
-          await this.ports.openEmailImportPdfPath(decision.match?.pdfPath);
+          await this.openEmailImportPdfPath(decision.match?.pdfPath);
           new Notice(t('emailImport.notice.existingOpened'),5000);
           return {ok:true,openedExisting:true,pdfPath:decision.match?.pdfPath};
         } catch(error) {
@@ -159,7 +159,7 @@ class EmailImportFeature {
         }
       }
 
-      const target=this.ports.emailImportValidateTargetPath(decision.pdfPath);
+      const target=this.emailImportValidateTargetPath(decision.pdfPath);
       if(!target.ok) {
         new Notice(t('emailImport.notice.invalidTarget',{error:target.error}),9000);
         return {ok:false,reason:'invalid-target'};
@@ -203,7 +203,7 @@ class EmailImportFeature {
           renderOptions:{sourceOpenUri}
         });
 
-        await this.ports.ensureEmailImportTargetFolders(target.path);
+        await this.ensureEmailImportTargetFolders(target.path);
         pdfFile=await this.obsidianVaultWriteAdapter.createBinary(target.path,emailImportArrayBuffer(pdfBytes));
         const saved=await this.ports.saveDocumentMetadataRecordValues(target.path,registration.values);
         if(!saved?.ok) throw new Error(saved?.error || 'Document metadata registration failed.');
@@ -222,7 +222,7 @@ class EmailImportFeature {
         throw error;
       }
 
-      try { await this.ports.openEmailImportPdfPath(target.path); }
+      try { await this.openEmailImportPdfPath(target.path); }
       catch(error) {
         console.warn('[PDFium Gate] Email Import succeeded but opening the generated PDF failed',error);
         new Notice(t('emailImport.notice.openFailed',{path:target.path}),8000);
