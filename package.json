@@ -13,14 +13,16 @@
     "check:filemeta": "node scripts/check-filemeta-foundation.js",
     "check:identity": "node scripts/check-product-identity.js",
     "test:email-import:parser": "node scripts/test-email-import-parser.js",
+    "test:email-import:msg-parser": "node scripts/test-email-import-msg-parser.js",
     "test:email-import:duplicates": "node scripts/test-email-import-duplicates.js",
     "test:email-import:renderer": "node scripts/test-email-import-renderer.js",
     "test:email-import:retention": "node scripts/test-email-import-source-retention.js",
     "test:email-import:attachments": "node scripts/test-email-import-attachments.js",
     "test:email-import:pdf-electron": "electron scripts/test-email-import-pdf-electron.js",
-    "test:email-import": "npm run test:email-import:parser && npm run test:email-import:duplicates && npm run test:email-import:renderer && npm run test:email-import:retention && npm run test:email-import:attachments"
+    "test:email-import": "npm run test:email-import:parser && npm run test:email-import:msg-parser && npm run test:email-import:duplicates && npm run test:email-import:renderer && npm run test:email-import:retention && npm run test:email-import:attachments"
   },
   "dependencies": {
+    "@kenjiuno/msgreader": "1.28.0",
     "mailparser": "3.9.28",
     "sanitize-html": "2.17.7"
   },
