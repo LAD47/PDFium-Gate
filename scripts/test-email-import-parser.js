@@ -4,6 +4,7 @@ const assert = require('assert/strict');
 const fs = require('fs');
 const path = require('path');
 const { parseEml } = require('../src/email-import/parsers/eml-parser');
+const { sha256Hex } = require('../src/email-import/integrity/sha256');
 
 const root = path.resolve(__dirname, '..');
 const fixtureRoot = path.join(root, 'test', 'fixtures', 'email');
@@ -87,13 +88,17 @@ async function checkMessage(filename, messageExpected) {
     const attachmentExpected = attachmentExpectations[index];
     const attachment = document.attachments[index];
     const fixtureExpected = expected.attachments[attachmentExpected.filename];
+    const referenceBytes = fs.readFileSync(path.join(fixtureRoot, 'attachments', attachmentExpected.filename));
 
     assert.ok(fixtureExpected, `${filename}: expected fixture metadata for ${attachmentExpected.filename}`);
+    assert.equal(sha256Hex(referenceBytes), fixtureExpected.sha256, `${filename}: reference ${attachmentExpected.filename} SHA-256`);
+    assert.equal(referenceBytes.length, fixtureExpected.size, `${filename}: reference ${attachmentExpected.filename} size`);
     assert.equal(attachment.filename, attachmentExpected.filename, `${filename}: attachment ${index + 1} filename`);
     assert.equal(attachment.contentType, attachmentExpected.contentType, `${filename}: attachment ${index + 1} content type`);
     assert.equal(attachment.sha256, attachmentExpected.sha256, `${filename}: attachment ${index + 1} SHA-256`);
     assert.equal(attachment.sha256, fixtureExpected.sha256, `${filename}: attachment ${index + 1} reference SHA-256`);
     assert.equal(attachment.size, fixtureExpected.size, `${filename}: attachment ${index + 1} reference size`);
+    assert.equal(attachment.content.equals(referenceBytes), true, `${filename}: attachment ${index + 1} byte-identical to reference file`);
     assert.equal(attachment.disposition, attachmentExpected.disposition, `${filename}: attachment ${index + 1} disposition`);
     assert.equal(attachment.related, attachmentExpected.related, `${filename}: attachment ${index + 1} related`);
   }
@@ -112,7 +117,7 @@ async function checkMessage(filename, messageExpected) {
   for (const filename of filenames) {
     await checkMessage(filename, expected.messages[filename]);
   }
-  console.log(`Email Import EML parser OK: ${filenames.length} synthetic messages, canonical v1 fields, source hashes and decoded attachment hashes verified.`);
+  console.log(`Email Import EML parser OK: ${filenames.length} synthetic messages, canonical v1 fields, source hashes and byte-identical decoded attachments verified.`);
 })().catch(error => {
   console.error('Email Import EML parser check failed.');
   console.error(error && error.stack ? error.stack : error);
