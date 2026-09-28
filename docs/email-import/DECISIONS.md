@@ -214,19 +214,37 @@ Unsupported or malformed MSG bytes fail closed instead of producing a guessed ca
 
 Permanent MSG verification does not rely on private or third-party real-world mail. Test code deterministically builds genuine synthetic CFBF/MSG byte streams with Unicode, recipients, transport headers, dates, a PDF attachment, and a CID image, then sends those bytes through the real third-party parser. The synthetic fixture builder may use the pinned library's CFBF burner as test-only infrastructure; production parsing does not depend on the burner.
 
+### D-025 — Email provenance lives in the existing pdf/document metadata record
+
+A generated email PDF is registered as an ordinary PDFium Gate document with `filemeta_type: pdf` and `filemeta_profile: document`. Email origin does not create a separate document type, profile, metadata database, or Document Register.
+
+Technical email provenance is stored as additional properties in the same Markdown record under the plugin-owned `email_import_*` namespace. The initial technical projection includes exact source format and SHA-256, original filename and byte size, source-retention state/path, message identity when available, and attachment counts.
+
+Technical provenance is deliberately separate from user-editable schema fields. Standard DocumentInfo and the standard Document Register remain schema-driven, so `email_import_*` properties do not become default visible/editable columns. A future advanced/custom Base may query them explicitly without changing the normal register.
+
+Email Import may suggest initial values only for compatible user fields that already exist. Initial semantic mappings are document date, document time, and sender. Stable factory field UUIDs are preferred so a user can rename the property without breaking the mapping; canonical factory property names are fallback identifiers. Email Import never creates missing user fields, never guesses unrelated custom-field mappings, and does not automatically set `document_type`.
+
+Suggested values must satisfy the active field's current type and constraints. For date/time, a parseable raw source `Date` header preserves the source wall-clock value rather than silently converting the displayed time to UTC. Canonical ISO/UTC is used only as fallback when no reliable raw wall clock is available.
+
+The `email_import_*` namespace is reserved by Email Import policy. If the user schema already uses that namespace, metadata projection fails closed rather than overwriting a user-owned field.
+
+Email provenance is attached only when the generated PDF has no existing document record. If the target path is already registered, Email Import fails closed instead of silently repurposing an existing record. Generated-PDF naming and path-collision handling must therefore be resolved before metadata registration.
+
+The intended write boundary is the existing `saveDocumentMetadataRecordValues` operation. On a fresh generated PDF, its current lazy-create behavior can persist both technical provenance and compatible initial user values in the ordinary Markdown record. Later normal DocumentInfo edits preserve the extra provenance because schema-field updates do not rewrite unrelated frontmatter properties.
+
 ## Open questions
 
 The following are intentionally not yet frozen:
 
-1. Exact canonical Email Document schema and field names.
-2. Default user setting for retaining or discarding the original source.
-3. Exact visual design of the email PDF.
-4. Whether `Message-ID` should be visible in the PDF, only in technical metadata, or optionally exposed.
-5. User-facing destination rules and relationship metadata for explicitly extracted/imported attachments.
-6. Naming rules for generated PDF files.
-7. Collision behavior when a generated PDF filename already exists.
-8. Batch-import UX and duplicate summary behavior.
-9. How malformed or partially parseable EML/MSG files should be represented to the user.
+1. Default user setting for retaining or discarding the original source.
+2. Exact visual design of the email PDF.
+3. Whether `Message-ID` should also be visible in the PDF or remain technical metadata only by default.
+4. User-facing destination rules and relationship metadata for explicitly extracted/imported attachments.
+5. Naming rules for generated PDF files.
+6. Collision behavior when a generated PDF filename already exists.
+7. Batch-import UX and duplicate summary behavior.
+8. How malformed or partially parseable EML/MSG files should be represented to the user.
+9. Whether users should be able to configure semantic mappings from email fields to arbitrary custom metadata fields beyond the initial factory-UUID/property fallback mapping.
 
 ## Change rule
 
