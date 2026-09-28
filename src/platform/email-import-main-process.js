@@ -3,12 +3,15 @@
 const EMAIL_IMPORT_MAIN_PROCESS_CONTRACT_VERSION = '0.1';
 
 function createEmailImportMainProcessAdapter({ app, BrowserWindow, dialog }) {
-  if (!app || typeof app.whenReady !== 'function') throw new Error('Email Import main-process adapter requires Electron app.');
-  if (!BrowserWindow || typeof BrowserWindow !== 'function') throw new Error('Email Import main-process adapter requires BrowserWindow.');
-  if (!dialog || typeof dialog.showOpenDialog !== 'function') throw new Error('Email Import main-process adapter requires dialog.');
+  function requireAppReady() {
+    if (!app || typeof app.whenReady !== 'function') throw new Error('Email Import requires Electron app.whenReady().');
+    return app.whenReady();
+  }
 
   async function chooseSource({ title = '', emailFilterName = '' } = {}) {
-    await app.whenReady();
+    await requireAppReady();
+    if (!dialog || typeof dialog.showOpenDialog !== 'function') throw new Error('Email Import source picker requires Electron dialog.showOpenDialog().');
+    if (!BrowserWindow || typeof BrowserWindow.getFocusedWindow !== 'function') throw new Error('Email Import source picker requires BrowserWindow.getFocusedWindow().');
     const options = {
       title:String(title || 'Email Import'),
       properties:['openFile'],
@@ -28,7 +31,8 @@ function createEmailImportMainProcessAdapter({ app, BrowserWindow, dialog }) {
   }
 
   async function printControlledHtmlToPdf({ html, printOptions = {} } = {}) {
-    await app.whenReady();
+    await requireAppReady();
+    if (typeof BrowserWindow !== 'function') throw new Error('Email Import PDF printing requires the Electron BrowserWindow constructor.');
     const source = String(html || '');
     if (!/^<!doctype html>/i.test(source.trimStart())) throw new Error('Email PDF printer requires the controlled HTML document shell.');
     if (!/Content-Security-Policy/i.test(source)) throw new Error('Email PDF printer requires a Content Security Policy.');
