@@ -15,8 +15,9 @@
     "test:email-import:parser": "node scripts/test-email-import-parser.js",
     "test:email-import:duplicates": "node scripts/test-email-import-duplicates.js",
     "test:email-import:renderer": "node scripts/test-email-import-renderer.js",
+    "test:email-import:retention": "node scripts/test-email-import-source-retention.js",
     "test:email-import:pdf-electron": "electron scripts/test-email-import-pdf-electron.js",
-    "test:email-import": "npm run test:email-import:parser && npm run test:email-import:duplicates && npm run test:email-import:renderer"
+    "test:email-import": "npm run test:email-import:parser && npm run test:email-import:duplicates && npm run test:email-import:renderer && npm run test:email-import:retention"
   },
   "dependencies": {
     "mailparser": "3.9.28",
