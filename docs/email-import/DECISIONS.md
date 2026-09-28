@@ -64,7 +64,7 @@ When an email contains a `Message-ID`, PDFium Gate should retain it as technical
 
 This may later support softer duplicate detection for the same logical email when two source exports are not byte-identical.
 
-A Message-ID match is not initially treated as proof that two source files are identical.
+A Message-ID match is not initially treated as proof that source bytes are identical.
 
 ### D-009 — EML comes before MSG
 
@@ -184,6 +184,22 @@ The initial link mechanism uses Obsidian's `obsidian://open` URI with an explici
 
 The source SHA-256 is shown visibly in the PDF only when an original source is retained; exact-source identity may still be persisted as technical metadata when retention is disabled.
 
+### D-023 — Attachment policy separates inline resources, user attachments, and PDF candidates
+
+Attachment classification is derived from the Canonical Email Document and does not add parser-specific fields to the canonical schema.
+
+Inline/CID resources remain in `document.attachments` with their decoded bytes, SHA-256, MIME metadata, disposition, and Content-ID, but they are treated as supporting message resources rather than ordinary user attachments when they are marked inline/related or referenced through a `cid:` URL in the HTML body.
+
+The generated email PDF lists ordinary user attachments separately. Inline resources used to render the message are not repeated as normal attachments; the PDF records the number of embedded inline resources so their presence is not silently hidden.
+
+PDF attachments are identified as candidates for later independent PDFium Gate import when PDF evidence exists in the MIME type, decoded payload signature, or filename. This classification does **not** automatically import, flatten, or create separate vault documents.
+
+Attachment extraction is explicit rather than automatic. Before an attachment is written, its available decoded payload bytes are checked against canonical size and SHA-256. The destination filename is sanitized for cross-platform filesystem safety and cannot escape the caller-provided destination root.
+
+Extraction never silently overwrites a different existing file. If the target already contains exactly the same bytes, it may be reused. If the target contains different bytes, extraction fails closed so the future UI/import controller can ask the user what to do.
+
+This preserves attachment integrity while postponing user-facing choices such as where extracted files should live, whether a PDF attachment should become a separately registered PDFium Gate document, and how relationships between the email PDF and extracted/imported attachments should be represented.
+
 ## Open questions
 
 The following are intentionally not yet frozen:
@@ -192,7 +208,7 @@ The following are intentionally not yet frozen:
 2. Default user setting for retaining or discarding the original source.
 3. Exact visual design of the email PDF.
 4. Whether `Message-ID` should be visible in the PDF, only in technical metadata, or optionally exposed.
-5. Long-term attachment extraction/import behavior.
+5. User-facing destination rules and relationship metadata for explicitly extracted/imported attachments.
 6. Naming rules for generated PDF files.
 7. Collision behavior when a generated PDF filename already exists.
 8. Batch-import UX and duplicate summary behavior.
