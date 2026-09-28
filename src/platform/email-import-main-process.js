@@ -4,9 +4,20 @@ const emailImportFs = require('fs');
 const emailImportPath = require('path');
 const emailImportCrypto = require('crypto');
 
-const EMAIL_IMPORT_MAIN_PROCESS_CONTRACT_VERSION = '0.4';
+const EMAIL_IMPORT_MAIN_PROCESS_CONTRACT_VERSION = '0.5';
 
-function createEmailImportMainProcessAdapter({ app, BrowserWindow, dialog, shell, webContents, rendererEventDispatchAdapter, resolvePdfContext }) {
+function createEmailImportMainProcessAdapter({
+  app,
+  BrowserWindow,
+  dialog,
+  shell,
+  webContents,
+  rendererEventDispatchAdapter,
+  resolvePdfContext,
+  parseRetainedSourceLink,
+  normalizeRetainedSourceTarget,
+  retainedSourceEventName
+}) {
   const routedWebContents = new Map();
   let webContentsCreatedHandler = null;
 
@@ -15,13 +26,23 @@ function createEmailImportMainProcessAdapter({ app, BrowserWindow, dialog, shell
     return app.whenReady();
   }
 
+  function parseRoutingTarget(value) {
+    if (typeof parseRetainedSourceLink !== 'function') return {ok:false,error:'retained-source link parser is unavailable'};
+    return parseRetainedSourceLink(value);
+  }
+
+  function normalizeOpeningTarget(value) {
+    if (typeof normalizeRetainedSourceTarget !== 'function') return {ok:false,error:'retained-source target validator is unavailable'};
+    return normalizeRetainedSourceTarget(value);
+  }
+
   function attachRetainedSourceRouting(ownerWc) {
     const id = Number(ownerWc?.id);
     if (!Number.isFinite(id) || typeof ownerWc?.on !== 'function' || routedWebContents.has(id)) return false;
 
     const willFrameNavigateHandler = (event, details = {}) => {
       const targetUrl = String(details?.url || event?.url || '').trim();
-      const parsed = parseEmailImportRetainedSourcePdfLink(targetUrl);
+      const parsed = parseRoutingTarget(targetUrl);
       if (!parsed.ok) return;
       try { event?.preventDefault?.(); } catch (_) {}
 
@@ -29,7 +50,7 @@ function createEmailImportMainProcessAdapter({ app, BrowserWindow, dialog, shell
       try { context = resolvePdfContext?.({ ownerWc, details }) || null; } catch (_) {}
       const token = String(context?.token || '').trim();
       const filePath = String(context?.filePath || '').trim();
-      if (!token || !filePath) return;
+      if (!token || !filePath || !retainedSourceEventName) return;
 
       const detail = {
         token,
@@ -40,7 +61,7 @@ function createEmailImportMainProcessAdapter({ app, BrowserWindow, dialog, shell
       };
       void rendererEventDispatchAdapter?.dispatchExact?.(
         ownerWc,
-        RENDERER_BRIDGE_EVENTS.EMAIL_RETAINED_SOURCE_OPEN,
+        retainedSourceEventName,
         detail
       );
     };
@@ -153,7 +174,7 @@ function createEmailImportMainProcessAdapter({ app, BrowserWindow, dialog, shell
   async function openRetainedSource({ vaultRootPath, retainedPath, sha256 } = {}) {
     await requireAppReady();
     if (!shell || typeof shell.openPath !== 'function') throw new Error('Email Import retained-source opening requires Electron shell.openPath().');
-    const normalized = normalizeEmailImportRetainedSourceTarget({ sha256, retainedPath });
+    const normalized = normalizeOpeningTarget({ sha256, retainedPath });
     if (!normalized.ok) throw new Error(normalized.error);
 
     const rootText = String(vaultRootPath || '').trim();
