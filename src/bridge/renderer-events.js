@@ -74,6 +74,7 @@ function validateRendererBridgeEventDetail(eventName, detail) {
   if(name===RENDERER_BRIDGE_EVENTS.EMAIL_RETAINED_SOURCE_OPEN) {
     const parsed=parseEmailImportRetainedSourcePdfLink(detail.url);
     if(!parsed.ok) return {ok:false,error:`email-retained-source-open: ${parsed.error}`};
+    if(!token || !String(detail.filePath||'').trim()) return {ok:false,error:'email-retained-source-open: token/filePath mangler'};
     if(String(detail.sha256||'').toLowerCase()!==parsed.sha256 || String(detail.retainedPath||'')!==parsed.retainedPath) {
       return {ok:false,error:'email-retained-source-open: event target differs from URL target'};
     }
