@@ -44,6 +44,8 @@ If the original source is retained, the generated PDF must include source inform
 
 The source SHA-256 should be included in the source-information relationship.
 
+**Superseded in part by D-027:** the retained source must still be identified in the PDF, but a clickable source-open link is no longer required or generated.
+
 ### D-006 — SHA-256 is calculated before conversion
 
 SHA-256 is calculated over the original imported bytes before parsing, normalization, renaming, rendering, or PDF generation.
@@ -182,6 +184,8 @@ A retained-source PDF section shows the original filename, source SHA-256, and r
 
 The initial link mechanism uses Obsidian's `obsidian://open` URI with an explicit vault name/ID plus the vault-relative retained path. This avoids embedding machine-specific absolute filesystem paths in the generated PDF. Source-supplied HTML is not allowed to inject `obsidian:` links.
 
+**Superseded in part by D-027:** the SHA-addressed storage, visible source information, and technical provenance remain authoritative, but the PDF no longer contains a retained-source open link.
+
 The source SHA-256 is shown visibly in the PDF only when an original source is retained; exact-source identity may still be persisted as technical metadata when retention is disabled.
 
 ### D-023 — Attachment policy separates inline resources, user attachments, and PDF candidates
@@ -251,6 +255,18 @@ Failure cleanup is ownership-aware and best-effort. A PDF newly created by the c
 The existing document-record subsystem remains the authoritative metadata writer; Email Import does not introduce a parallel metadata transaction layer. Practical Obsidian testing must therefore include retry/failure behavior around the integrated workflow before stronger all-or-nothing transaction guarantees are claimed.
 
 Automated CI no longer requires `main.js` and `main-bridge.js` to remain unchanged, because runtime integration intentionally changes both. Instead, CI requires the complete existing PDFium Gate verification suite, the Email Import tests, real Electron/Chromium PDF generation, bundled-runtime verification, deterministic/scoped generated-runtime changes, and an uploaded runtime artifact for practical testing.
+
+### D-027 — Retained original provenance is documentary text; opening the original is deferred
+
+Practical Obsidian testing showed that the retained-source link embedded in the generated PDF did not reliably open the retained `.eml`/`.msg` source. The initial `obsidian://open` link was rendered by Chromium/PDFium as a self-reference to the generated PDF. A follow-up experiment confirmed that Chromium `printToPDF()` preserves ordinary `https://` and `file://` link annotations, but a plugin-owned interception layer would add runtime complexity solely to make the source-open shortcut work.
+
+The current Email Import design therefore removes the clickable retained-source link entirely. When an original source is retained, the PDF continues to show the original filename, exact source SHA-256, and canonical vault-relative retained path. The same provenance remains in `email_import_*` metadata. Source retention, duplicate detection, integrity verification, rollback ownership, and SHA-addressed storage are unchanged.
+
+No absolute `file://` path is embedded as a replacement because that would make the archive machine-specific and weaken vault portability.
+
+This decision supersedes the clickable-link requirement in D-005 and the link-mechanism portion of D-022. A future user-facing **Open original email** function, if a real need emerges, should be treated as a separate project and may be implemented as an Obsidian command or DocumentInfo action rather than as a PDF hyperlink.
+
+The failed link experiment remains useful architectural evidence: custom application URI schemes should not be assumed to survive Chromium `printToPDF()` as usable external PDF link annotations merely because they exist correctly in the pre-print HTML.
 
 ## Open questions
 
