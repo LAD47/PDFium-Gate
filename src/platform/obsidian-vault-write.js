@@ -1,5 +1,5 @@
 'use strict';
-const OBSIDIAN_VAULT_WRITE_CONTRACT_VERSION = '0.3';
+const OBSIDIAN_VAULT_WRITE_CONTRACT_VERSION = '0.4';
 function createObsidianVaultWriteAdapter({ vault }) {
   async function createBinary(vaultPath, data) {
     if (!vault || typeof vault.createBinary !== 'function') throw new Error('vault.createBinary er ikke tilgjengelig');
@@ -17,6 +17,11 @@ function createObsidianVaultWriteAdapter({ vault }) {
     if (!vault || typeof vault.modify !== 'function') throw new Error('vault.modify er ikke tilgjengelig');
     return await vault.modify(file, String(data));
   }
+  async function deleteFile(file, force = false) {
+    if (!file) throw new Error('vault delete mangler fil');
+    if (!vault || typeof vault.delete !== 'function') throw new Error('vault.delete er ikke tilgjengelig');
+    return await vault.delete(file, force === true);
+  }
   async function ensureFolder(vaultPath) {
     const target=String(vaultPath||'').replace(/\\/g,'/').replace(/^\/+|\/+$/g,'');
     if(!target) return null;
@@ -28,6 +33,6 @@ function createObsidianVaultWriteAdapter({ vault }) {
     if(!vault || typeof vault.createFolder!=='function') throw new Error('vault.createFolder er ikke tilgjengelig');
     return await vault.createFolder(target);
   }
-  return Object.freeze({contractVersion:OBSIDIAN_VAULT_WRITE_CONTRACT_VERSION,createBinary,modifyBinary,createText,modifyText,ensureFolder});
+  return Object.freeze({contractVersion:OBSIDIAN_VAULT_WRITE_CONTRACT_VERSION,createBinary,modifyBinary,createText,modifyText,deleteFile,ensureFolder});
 }
 module.exports={OBSIDIAN_VAULT_WRITE_CONTRACT_VERSION,createObsidianVaultWriteAdapter};
