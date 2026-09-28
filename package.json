@@ -11,6 +11,10 @@
     "check:architecture-docs": "node scripts/check-architecture-docs.js",
     "check:examples": "node scripts/check-examples.js",
     "check:filemeta": "node scripts/check-filemeta-foundation.js",
-    "check:identity": "node scripts/check-product-identity.js"
+    "check:identity": "node scripts/check-product-identity.js",
+    "test:email-import": "node scripts/test-email-import-parser.js"
+  },
+  "dependencies": {
+    "mailparser": "3.9.28"
   }
 }

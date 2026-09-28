@@ -1,0 +1,32 @@
+name: Email Import parser PoC
+
+on:
+  push:
+    branches: [feature/email-import]
+    paths:
+      - 'src/email-import/**'
+      - 'test/fixtures/email/**'
+      - 'scripts/test-email-import-parser.js'
+      - 'package.json'
+      - '.github/workflows/email-import-poc.yml'
+      - 'docs/email-import/**'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install parser dependency
+        run: npm install --no-package-lock --ignore-scripts
+      - name: Run Email Import parser fixture tests
+        run: npm run test:email-import
+      - name: Run existing PDFium Gate checks
+        run: npm run check
+      - name: Ensure parser PoC does not change bundled runtime
+        run: git diff --exit-code -- main.js main-bridge.js

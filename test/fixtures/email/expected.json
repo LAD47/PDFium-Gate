@@ -1,5 +1,34 @@
 {
   "schemaVersion": 1,
+  "defaultMessageFields": {
+    "from": [
+      {
+        "name": "Kari Test",
+        "address": "kari.test@example.invalid"
+      }
+    ],
+    "to": [
+      {
+        "name": "Ola Test",
+        "address": "ola.test@example.invalid"
+      }
+    ],
+    "cc": [
+      {
+        "name": "Arkiv Test",
+        "address": "arkiv@example.invalid"
+      }
+    ],
+    "bcc": [],
+    "replyTo": [],
+    "dateTime": {
+      "iso": "2026-09-27T18:00:00.000Z",
+      "raw": "Sun, 27 Sep 2026 18:00:00 +0000",
+      "valid": true
+    },
+    "inReplyTo": null,
+    "references": []
+  },
   "attachments": {
     "test-attachment-1.pdf": {
       "contentType": "application/pdf",
@@ -41,6 +70,12 @@
     "norwegian-utf8.eml": {
       "messageId": "<norwegian-utf8-20260927@example.invalid>",
       "subject": "Søknad om innsyn – æøå",
+      "from": [
+        {
+          "name": "Kari Ødegård",
+          "address": "kari.test@example.invalid"
+        }
+      ],
       "attachmentCount": 0,
       "bodyContains": "æ ø å Æ Ø Å"
     },
@@ -59,7 +94,9 @@
         {
           "filename": "test-attachment-1.pdf",
           "contentType": "application/pdf",
-          "sha256": "0605780a416688f7f06e7ec97016b7df03145238ceb358f62d514ce6d002c749"
+          "sha256": "0605780a416688f7f06e7ec97016b7df03145238ceb358f62d514ce6d002c749",
+          "disposition": "attachment",
+          "related": false
         }
       ]
     },
@@ -71,17 +108,23 @@
         {
           "filename": "test-attachment-1.pdf",
           "contentType": "application/pdf",
-          "sha256": "0605780a416688f7f06e7ec97016b7df03145238ceb358f62d514ce6d002c749"
+          "sha256": "0605780a416688f7f06e7ec97016b7df03145238ceb358f62d514ce6d002c749",
+          "disposition": "attachment",
+          "related": false
         },
         {
           "filename": "test-attachment-2.pdf",
           "contentType": "application/pdf",
-          "sha256": "aa18431ebbd82b67b4abcefe3f913f18c05720423fcf8cfd98a4b86bc95aa8c8"
+          "sha256": "aa18431ebbd82b67b4abcefe3f913f18c05720423fcf8cfd98a4b86bc95aa8c8",
+          "disposition": "attachment",
+          "related": false
         },
         {
           "filename": "notes.txt",
           "contentType": "text/plain",
-          "sha256": "2b813401f179682b85b9d389db5bff025254b0896d977bd47e88f02a724e4971"
+          "sha256": "2b813401f179682b85b9d389db5bff025254b0896d977bd47e88f02a724e4971",
+          "disposition": "attachment",
+          "related": false
         }
       ]
     },
@@ -90,18 +133,21 @@
       "subject": "Inline image and PDF",
       "attachmentCount": 2,
       "inlineContentId": "<pdfium-logo@example.invalid>",
+      "htmlContains": "cid:pdfium-logo@example.invalid",
       "attachments": [
         {
           "filename": "inline-logo.png",
           "contentType": "image/png",
           "sha256": "d7825870cf6d776b18821af88b79779b554e37787e0d52c9a70c9231f119dcbc",
-          "disposition": "inline"
+          "disposition": "inline",
+          "related": true
         },
         {
           "filename": "test-attachment-2.pdf",
           "contentType": "application/pdf",
           "sha256": "aa18431ebbd82b67b4abcefe3f913f18c05720423fcf8cfd98a4b86bc95aa8c8",
-          "disposition": "attachment"
+          "disposition": "attachment",
+          "related": false
         }
       ]
     }
