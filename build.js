@@ -2,7 +2,7 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
-const { moduleBody, buildAnnotatorSource, buildI18nSource, buildSharedBridgeSource, buildRendererPlatformSource, buildRendererFoundationSource, buildRendererPostNormalizationCoreSource, buildNormalizationSource, buildMetadataSource, buildMainBridgeSource, buildPluginSource } = require('./scripts/source-bundle');
+const { moduleBody, buildAnnotatorSource, buildI18nSource, buildSharedBridgeSource, buildRendererPlatformSource, buildRendererFoundationSource, buildRendererPostNormalizationCoreSource, buildNormalizationSource, buildMetadataSource, buildEmailImportSource, buildMainBridgeSource, buildPluginSource } = require('./scripts/source-bundle');
 
 const ROOT = __dirname;
 function read(p){ return fs.readFileSync(path.join(ROOT,p),'utf8').replace(/\r\n?/g,'\n'); }
@@ -13,6 +13,7 @@ const platformSource = buildRendererPlatformSource(ROOT);
 const rendererFoundation = buildRendererFoundationSource(ROOT);
 const rendererCore = buildRendererPostNormalizationCoreSource(ROOT);
 const metadataSource = buildMetadataSource(ROOT);
+const emailImportSource = buildEmailImportSource(ROOT);
 const normalization = buildNormalizationSource(ROOT);
 const bridge = buildMainBridgeSource(ROOT);
 const annotator = buildAnnotatorSource(ROOT);
@@ -26,6 +27,7 @@ const fragments = [
   normalization,
   rendererCore,
   metadataSource,
+  emailImportSource,
   '__PDFIUM_GATE_EMBEDDED_MAIN_BRIDGE__',
   read('src/main/category-modals.js'),
   read('src/main/diagnostic-modals.js'),
@@ -34,6 +36,7 @@ const fragments = [
   read('src/main/metadata-schema-modal.js'),
   read('src/main/pdf-document-register-bases-view.js'),
   read('src/main/example-files-installer.js'),
+  read('src/main/email-import-modal.js'),
   read('src/main/settings.js'),
   buildPluginSource(ROOT)
 ];
