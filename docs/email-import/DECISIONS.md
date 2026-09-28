@@ -200,6 +200,20 @@ Extraction never silently overwrites a different existing file. If the target al
 
 This preserves attachment integrity while postponing user-facing choices such as where extracted files should live, whether a PDF attachment should become a separately registered PDFium Gate document, and how relationships between the email PDF and extracted/imported attachments should be represented.
 
+### D-024 — MSG parsing uses a dedicated Outlook parser but preserves the same canonical boundary
+
+MSG parsing uses the pinned `@kenjiuno/msgreader` 1.28.0 package for Outlook Compound File Binary Format / MAPI decoding rather than implementing the MSG container and property system directly in PDFium Gate.
+
+The MSG parser calculates `source.sha256` over the exact original MSG bytes before normalization and emits the same Canonical Email Document v1 used by EML. Downstream duplicate detection, attachment policy, rendering, source retention, and PDF generation therefore remain source-format independent.
+
+Native MSG properties are preferred for sender and recipient information when available. Outlook transport headers may be parsed through the existing mature RFC-mail parser to recover or supplement fields such as `Reply-To`, `In-Reply-To`, `References`, raw Date, Message-ID, or addressing fallback. Outlook-specific MAPI/property details do not leave the MSG parser boundary.
+
+MSG attachment payloads are recovered through the MSG reader API and receive the same decoded-payload size and SHA-256 treatment as EML attachments. CID/inline resources and PDF candidates are classified later by the common attachment-policy module rather than by MSG-specific downstream logic.
+
+Unsupported or malformed MSG bytes fail closed instead of producing a guessed canonical document.
+
+Permanent MSG verification does not rely on private or third-party real-world mail. Test code deterministically builds genuine synthetic CFBF/MSG byte streams with Unicode, recipients, transport headers, dates, a PDF attachment, and a CID image, then sends those bytes through the real third-party parser. The synthetic fixture builder may use the pinned library's CFBF burner as test-only infrastructure; production parsing does not depend on the burner.
+
 ## Open questions
 
 The following are intentionally not yet frozen:
