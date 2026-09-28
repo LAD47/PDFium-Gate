@@ -18,8 +18,9 @@
     "test:email-import:renderer": "node scripts/test-email-import-renderer.js",
     "test:email-import:retention": "node scripts/test-email-import-source-retention.js",
     "test:email-import:attachments": "node scripts/test-email-import-attachments.js",
+    "test:email-import:metadata": "node scripts/test-email-import-metadata.js",
     "test:email-import:pdf-electron": "electron scripts/test-email-import-pdf-electron.js",
-    "test:email-import": "npm run test:email-import:parser && npm run test:email-import:msg-parser && npm run test:email-import:duplicates && npm run test:email-import:renderer && npm run test:email-import:retention && npm run test:email-import:attachments"
+    "test:email-import": "npm run test:email-import:parser && npm run test:email-import:msg-parser && npm run test:email-import:duplicates && npm run test:email-import:renderer && npm run test:email-import:retention && npm run test:email-import:attachments && npm run test:email-import:metadata"
   },
   "dependencies": {
     "@kenjiuno/msgreader": "1.28.0",
