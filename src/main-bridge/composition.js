@@ -58,7 +58,7 @@ class MainBridgeRuntime {
 
     this.chromiumPdfRuntimeDriver = createChromiumPdfRuntimeDriver();
     this.rendererEventDispatchAdapter = createRendererEventDispatchAdapter({validateDetail:validateRendererBridgeEventDetail});
-    this.emailImportMainProcessAdapter = createEmailImportMainProcessAdapter({app,BrowserWindow,dialog});
+    this.emailImportMainProcessAdapter = createEmailImportMainProcessAdapter({app,BrowserWindow,dialog,shell});
 
     this.embeddedPdfTargetAdapter = createEmbeddedPdfTargetAdapter({
       webContents,
@@ -99,5 +99,6 @@ module.exports = {
   ensurePdfRuntime: mainBridgeRuntime.ports.ensurePdfRuntime,
   setIncludeHeaderFooterText: mainBridgeRuntime.ports.setIncludeHeaderFooterText,
   chooseEmailImportSource: mainBridgeRuntime.ports.chooseEmailImportSource,
-  printControlledEmailHtmlToPdf: mainBridgeRuntime.ports.printControlledEmailHtmlToPdf
+  printControlledEmailHtmlToPdf: mainBridgeRuntime.ports.printControlledEmailHtmlToPdf,
+  openRetainedEmailSource: mainBridgeRuntime.ports.openRetainedEmailSource
 };
