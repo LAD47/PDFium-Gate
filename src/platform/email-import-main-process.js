@@ -4,12 +4,81 @@ const emailImportFs = require('fs');
 const emailImportPath = require('path');
 const emailImportCrypto = require('crypto');
 
-const EMAIL_IMPORT_MAIN_PROCESS_CONTRACT_VERSION = '0.2';
+const EMAIL_IMPORT_MAIN_PROCESS_CONTRACT_VERSION = '0.3';
 
-function createEmailImportMainProcessAdapter({ app, BrowserWindow, dialog, shell }) {
+function createEmailImportMainProcessAdapter({ app, BrowserWindow, dialog, shell, webContents, rendererEventDispatchAdapter, resolvePdfToken }) {
+  const routedWebContents = new Map();
+  let webContentsCreatedHandler = null;
+
   function requireAppReady() {
     if (!app || typeof app.whenReady !== 'function') throw new Error('Email Import requires Electron app.whenReady().');
     return app.whenReady();
+  }
+
+  function attachRetainedSourceRouting(ownerWc) {
+    const id = Number(ownerWc?.id);
+    if (!Number.isFinite(id) || typeof ownerWc?.on !== 'function' || routedWebContents.has(id)) return false;
+
+    const willFrameNavigateHandler = (event, details = {}) => {
+      const targetUrl = String(details?.url || event?.url || '').trim();
+      const parsed = parseEmailImportRetainedSourcePdfLink(targetUrl);
+      if (!parsed.ok) return;
+      try { event?.preventDefault?.(); } catch (_) {}
+
+      let token = null;
+      try {
+        token = String(resolvePdfToken?.({ ownerWc, details }) || '').trim() || null;
+      } catch (_) {}
+      if (!token) return;
+
+      const detail = {
+        token,
+        url:parsed.url,
+        sha256:parsed.sha256,
+        retainedPath:parsed.retainedPath
+      };
+      void rendererEventDispatchAdapter?.dispatchExact?.(
+        ownerWc,
+        RENDERER_BRIDGE_EVENTS.EMAIL_RETAINED_SOURCE_OPEN,
+        detail
+      );
+    };
+
+    const destroyedHandler = () => detachRetainedSourceRouting(ownerWc);
+    ownerWc.on('will-frame-navigate', willFrameNavigateHandler);
+    ownerWc.on('destroyed', destroyedHandler);
+    routedWebContents.set(id, { ownerWc, willFrameNavigateHandler, destroyedHandler });
+    return true;
+  }
+
+  function detachRetainedSourceRouting(ownerWc) {
+    const id = Number(ownerWc?.id);
+    const rec = routedWebContents.get(id);
+    if (!rec) return false;
+    try { rec.ownerWc.removeListener?.('will-frame-navigate', rec.willFrameNavigateHandler); } catch (_) {}
+    try { rec.ownerWc.removeListener?.('destroyed', rec.destroyedHandler); } catch (_) {}
+    routedWebContents.delete(id);
+    return true;
+  }
+
+  function installRetainedSourceRouting() {
+    if (webContentsCreatedHandler) return { ok:true, already:true, webContentsCount:routedWebContents.size };
+    if (!app || typeof app.on !== 'function') return { ok:false, error:'Electron app event routing is unavailable.' };
+    if (!webContents || typeof webContents.getAllWebContents !== 'function') return { ok:false, error:'Electron webContents routing is unavailable.' };
+
+    webContentsCreatedHandler = (_event, contents) => { attachRetainedSourceRouting(contents); };
+    app.on('web-contents-created', webContentsCreatedHandler);
+    for (const contents of webContents.getAllWebContents() || []) attachRetainedSourceRouting(contents);
+    return { ok:true, already:false, webContentsCount:routedWebContents.size };
+  }
+
+  function uninstallRetainedSourceRouting() {
+    if (webContentsCreatedHandler) {
+      try { app?.removeListener?.('web-contents-created', webContentsCreatedHandler); } catch (_) {}
+      webContentsCreatedHandler = null;
+    }
+    for (const rec of [...routedWebContents.values()]) detachRetainedSourceRouting(rec.ownerWc);
+    return { ok:true, webContentsCount:0 };
   }
 
   async function chooseSource({ title = '', emailFilterName = '' } = {}) {
@@ -86,8 +155,9 @@ function createEmailImportMainProcessAdapter({ app, BrowserWindow, dialog, shell
     const normalized = normalizeEmailImportRetainedSourceTarget({ sha256, retainedPath });
     if (!normalized.ok) throw new Error(normalized.error);
 
-    const root = emailImportPath.resolve(String(vaultRootPath || '').trim());
-    if (!root) throw new Error('Vault root path is required.');
+    const rootText = String(vaultRootPath || '').trim();
+    if (!rootText) throw new Error('Vault root path is required.');
+    const root = emailImportPath.resolve(rootText);
     const target = emailImportPath.resolve(root, ...normalized.retainedPath.split('/'));
     const relative = emailImportPath.relative(root, target);
     if (!relative || relative === '.' || relative.startsWith('..') || emailImportPath.isAbsolute(relative)) {
@@ -107,6 +177,8 @@ function createEmailImportMainProcessAdapter({ app, BrowserWindow, dialog, shell
 
   return Object.freeze({
     contractVersion:EMAIL_IMPORT_MAIN_PROCESS_CONTRACT_VERSION,
+    installRetainedSourceRouting,
+    uninstallRetainedSourceRouting,
     chooseSource,
     printControlledHtmlToPdf,
     openRetainedSource
