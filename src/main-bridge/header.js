@@ -1,6 +1,6 @@
 'use strict';
 
-const { app, globalShortcut, webContents, webFrameMain, clipboard, BrowserWindow, screen } = require('electron');
+const { app, globalShortcut, webContents, webFrameMain, clipboard, BrowserWindow, dialog, screen } = require('electron');
 
 const VERSION = '0.1.194';
 const categories = [
