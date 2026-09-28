@@ -29,6 +29,9 @@ async function parseFixture(filename) {
   assert.match(inlineOutput, /data:image\/png;base64,/, 'CID image embedded from decoded attachment bytes');
   assert.doesNotMatch(inlineOutput, /src="cid:/i, 'CID URL is not left unresolved');
   assert.match(inlineOutput, /test-attachment-2\.pdf/, 'PDF attachment listed');
+  assert.match(inlineOutput, /Embedded inline resources: 1/, 'embedded CID resource counted separately');
+  assert.doesNotMatch(inlineOutput, /<strong>inline-logo\.png<\/strong>/, 'inline resource not presented as ordinary attachment');
+  assert.match(inlineOutput, /application\/pdf, \d+ bytes, PDF/, 'PDF candidate visibly identified in attachment list');
 
   const maliciousDocument = {
     schemaVersion: 1,
@@ -65,7 +68,7 @@ async function parseFixture(filename) {
   const plainOutput = renderEmailDocumentToHtml(plainDocument);
   assert.match(plainOutput, /&lt;script&gt;alert\(1\)&lt;\/script&gt;/, 'plain text is HTML-escaped');
 
-  console.log('Email Import safe HTML renderer OK: controlled shell, sanitized message HTML, blocked remote images, CID data embedding, escaped plain text and deterministic output verified.');
+  console.log('Email Import safe HTML renderer OK: controlled shell, sanitized message HTML, blocked remote images, CID embedding, refined attachment presentation, escaped plain text and deterministic output verified.');
 })().catch(error => {
   console.error('Email Import safe HTML renderer check failed.');
   console.error(error && error.stack ? error.stack : error);
