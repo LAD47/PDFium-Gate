@@ -25,5 +25,7 @@
   "emailImport.notice.invalidTarget": "El destino del PDF no es válido: {{error}}",
   "emailImport.notice.openFailed": "El correo se importó, pero PDFium Gate no pudo abrir {{path}} automáticamente.",
   "emailImport.notice.imported": "Correo importado a {{path}}.",
-  "emailImport.notice.importFailed": "La importación del correo falló: {{error}}"
+  "emailImport.notice.importFailed": "La importación del correo falló: {{error}}",
+  "emailImport.notice.retainedSourceRejected": "El enlace a la fuente original no coincide con los metadatos de procedencia de este documento.",
+  "emailImport.notice.retainedSourceOpenFailed": "No se pudo abrir la fuente original conservada: {{error}}"
 }
