@@ -1,14 +1,13 @@
 'use strict';
 
 class MainBridgeEmailImportFeature {
-  async chooseEmailImportSource({ title = '', emailFilterName = '', allFilesFilterName = '' } = {}) {
+  async chooseEmailImportSource({ title = '', emailFilterName = '' } = {}) {
     await app.whenReady();
     const options = {
       title:String(title || 'Email Import'),
       properties:['openFile'],
       filters:[
-        { name:String(emailFilterName || 'Email'), extensions:['eml','msg'] },
-        { name:String(allFilesFilterName || 'Files'), extensions:['*'] }
+        { name:String(emailFilterName || 'Email'), extensions:['eml','msg'] }
       ]
     };
     const owner = BrowserWindow.getFocusedWindow();
