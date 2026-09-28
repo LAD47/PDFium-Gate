@@ -190,17 +190,9 @@ class EmailImportFeature {
         });
         if(!registration.ok) throw new Error(registration.error || registration.reason || 'Email metadata projection failed.');
 
-        const sourceOpenUri=retainedDocument.source.retained===true
-          ? EMAIL_IMPORT_RUNTIME.buildObsidianRetainedSourceUri({
-              vault:this.app.vault?.getName?.() || path.basename(vaultRootPath),
-              retainedPath:retainedDocument.source.retainedPath
-            })
-          : null;
-
         const pdfBytes=await EMAIL_IMPORT_RUNTIME.generateEmailPdf({
           document:retainedDocument,
-          printHtmlToPdf:args=>transport.printControlledEmailHtmlToPdf(args),
-          renderOptions:{sourceOpenUri}
+          printHtmlToPdf:args=>transport.printControlledEmailHtmlToPdf(args)
         });
 
         await this.ensureEmailImportTargetFolders(target.path);
