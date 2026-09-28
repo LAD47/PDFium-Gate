@@ -1,14 +1,14 @@
 'use strict';
 
 class MainBridgeEmailImportFeature {
-  async chooseEmailImportSource() {
+  async chooseEmailImportSource({ title = '', emailFilterName = '', allFilesFilterName = '' } = {}) {
     await app.whenReady();
     const options = {
-      title:'PDFium Gate — Email Import',
+      title:String(title || 'Email Import'),
       properties:['openFile'],
       filters:[
-        { name:'Email messages', extensions:['eml','msg'] },
-        { name:'All files', extensions:['*'] }
+        { name:String(emailFilterName || 'Email'), extensions:['eml','msg'] },
+        { name:String(allFilesFilterName || 'Files'), extensions:['*'] }
       ]
     };
     const owner = BrowserWindow.getFocusedWindow();
