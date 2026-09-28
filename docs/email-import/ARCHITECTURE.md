@@ -36,11 +36,16 @@ Import Controller
       |      - MSG parser
       |
       v
-Canonical Email Document
+Canonical Email Document v1
       |
       +--> metadata / technical identity
       +--> body
-      +--> attachment descriptors
+      +--> attachment descriptors + decoded payloads
+      |
+      +--> Attachment Policy
+      |      - inline/CID resources
+      |      - ordinary attachments
+      |      - PDF candidates
       |
       v
 Safe Email Renderer
@@ -55,42 +60,42 @@ Chromium / Electron PDF generation
       |
       v
 PDFium Gate PDF workflow
+
+Optional explicit attachment extraction/import
+      |
+      +--> byte/hash verification
+      +--> safe filename and destination boundary
+      +--> later PDFium Gate import for chosen PDF attachments
 ```
 
 ## 3. Module boundaries
 
-A likely source structure is:
+Current Email Import implementation is organized under:
 
 ```text
-src/
-└── email-import/
-    ├── import-controller.js
-    ├── email-document.js
-    │
-    ├── parsers/
-    │   ├── eml-parser.js
-    │   └── msg-parser.js
-    │
-    ├── integrity/
-    │   ├── source-hash.js
-    │   └── duplicate-detector.js
-    │
-    ├── render/
-    │   ├── email-html-renderer.js
-    │   └── email-pdf-generator.js
-    │
-    ├── source/
-    │   └── source-archive.js
-    │
-    └── attachments/
-        └── attachment-service.js
+src/email-import/
+├── integrity/
+│   ├── sha256.js
+│   └── duplicate-detector.js
+├── parsers/
+│   └── eml-parser.js
+├── render/
+│   ├── email-html-renderer.js
+│   ├── email-pdf-generator.js
+│   ├── electron-pdf-printer.js
+│   └── email-source-reference.js
+├── storage/
+│   └── source-retention.js
+└── attachments/
+    ├── attachment-policy.js
+    └── attachment-extraction.js
 ```
 
-This is a responsibility map, not a frozen filename contract. Filenames may change if the existing PDFium Gate architecture suggests a cleaner integration.
+A later import controller and MSG parser will orchestrate these bounded modules. Parser, renderer, hashing, storage, and attachment extraction responsibilities should remain separate.
 
 ## 4. Import Controller
 
-The Import Controller coordinates the workflow but should not contain parser, renderer, hashing, or storage implementation details.
+The Import Controller coordinates the workflow but should not contain parser, renderer, hashing, attachment-extraction, or storage implementation details.
 
 Expected responsibilities:
 
@@ -101,65 +106,44 @@ Expected responsibilities:
 5. obtain user decision when an exact duplicate exists;
 6. invoke the correct parser;
 7. receive a Canonical Email Document;
-8. invoke the renderer;
-9. generate the PDF;
-10. optionally retain the original source;
-11. persist the relationship between generated PDF and source metadata;
-12. open or otherwise hand the PDF to the normal PDFium Gate workflow.
+8. apply optional source-retention policy;
+9. invoke the renderer;
+10. generate the PDF;
+11. persist relationships and technical metadata;
+12. offer explicit actions for eligible attachments when appropriate;
+13. open or otherwise hand the generated PDF to the normal PDFium Gate workflow.
 
 ## 5. Parsers
 
 ### 5.1 EML
 
-The EML parser should use a mature MIME/email parser rather than reimplement MIME parsing in PDFium Gate.
+The EML parser uses the mature `mailparser` MIME/email parser rather than reimplementing MIME parsing in PDFium Gate.
 
-The current reference implementation demonstrates `mailparser` / `simpleParser()` as the likely foundation.
-
-Parser-specific output must be normalized before leaving the parser boundary.
+Parser-specific output is normalized before leaving the parser boundary.
 
 ### 5.2 MSG
 
 MSG support is a later milestone.
 
-MSG parsing may require several implementation details not needed for EML, including Outlook compound-message parsing, RTF handling, character decoding, and attachment extraction.
+MSG parsing may require implementation details not needed for EML, including Outlook compound-message parsing, RTF handling, character decoding, and attachment extraction.
 
 These details must remain inside the MSG parser boundary. The rest of Email Import must not need to know whether the source was EML or MSG.
 
 ## 6. Canonical Email Document
 
-Both parsers must produce the same internal representation.
+Both parsers must produce the same Canonical Email Document v1 contract documented in `EMAIL-DOCUMENT-MODEL.md`.
 
-Initial conceptual shape:
+Important properties for downstream modules include:
 
-```text
-EmailDocument
+- exact source identity and SHA-256;
+- message identity and addressing;
+- text/HTML body;
+- attachment metadata;
+- decoded attachment payload bytes when available;
+- attachment SHA-256 independent of source SHA-256;
+- parser diagnostics.
 
-source
-    type
-    originalFilename
-    sha256
-    messageId?
-
-message
-    subject
-    from[]
-    to[]
-    cc[]
-    dateTime
-
-body
-    text?
-    html?
-
-attachments[]
-    filename
-    contentType?
-    size?
-    disposition?
-    contentId?
-```
-
-The exact schema is not yet frozen. It should be documented separately before implementation becomes dependent on it.
+Attachment role such as "inline resource" or "PDF candidate" is deliberately derived after parsing and is not parser-specific canonical state.
 
 ## 7. Integrity and duplicate detection
 
@@ -167,32 +151,30 @@ SHA-256 must be calculated from the original source bytes before parsing, normal
 
 The stored hash represents the imported source, not the generated PDF.
 
-Duplicate detection has at least two possible levels:
-
 ### Exact source duplicate
 
 Same SHA-256:
 
-- very strong evidence that the imported source bytes are identical;
+- very strong evidence that imported source bytes are identical;
 - warn the user that the source has already been imported;
 - identify the existing PDF when possible;
-- offer to open the existing document, cancel, or import again.
+- offer to open the existing document, cancel, or deliberately import again.
 
 ### Logical message duplicate
 
 Same `Message-ID` but different source SHA-256:
 
 - potentially the same logical email exported in a different byte representation;
-- should not initially be treated as proof of byte identity;
+- not proof of byte identity;
 - may later produce a softer warning.
 
-The first implementation should prioritize exact SHA-256 duplicate detection.
+Exact SHA-256 duplicate detection is the implemented first-level policy.
 
 ## 8. Rendering
 
 The renderer transforms the Canonical Email Document into a controlled HTML representation suitable for both human reading and deterministic PDF generation.
 
-The visible PDF must include at least:
+The visible PDF includes at least:
 
 - Subject
 - From
@@ -200,27 +182,26 @@ The visible PDF must include at least:
 - Cc
 - Date and time
 - Message body
-- Attachment list
+- ordinary attachment list
 
-Rendering must not blindly trust source HTML.
+Rendering does not blindly trust source HTML.
 
-The renderer should ultimately define policy for:
+Implemented rendering policy includes:
 
-- sanitizing message HTML;
-- handling inline/CID images;
-- blocking or neutralizing external remote resources by default;
-- representing missing or malformed fields;
-- text-only messages;
-- long recipient lists;
-- page breaks;
-- attachment listing;
-- source-reference section when an original is retained.
+- allowlist sanitization of message HTML;
+- blocking automatic remote resources;
+- CID image resolution only from already-decoded canonical attachment bytes;
+- controlled CSP;
+- plain-text escaping;
+- ordinary attachments separated from inline resources;
+- inline-resource count retained in the document presentation;
+- source-reference section when an original source is retained.
 
 ## 9. PDF generation
 
-PDF generation should use the Chromium/Electron environment available to Obsidian Desktop rather than introducing a legacy independent HTML-to-PDF engine.
+PDF generation uses the Chromium/Electron environment available to Obsidian Desktop through an explicit printer-adapter boundary around main-process `BrowserWindow` / `webContents.printToPDF()` APIs.
 
-The PDF should be a stable document representation suitable for normal PDFium Gate use.
+The hidden print window runs with JavaScript disabled, Node integration disabled, context isolation and sandbox enabled, web security enabled, and new-window creation denied.
 
 The generated PDF is the visible working document. It is not the byte-identical original email source.
 
@@ -230,31 +211,53 @@ Source retention is optional.
 
 When disabled:
 
-- the source file does not remain stored by Email Import;
-- technical metadata such as SHA-256 and Message-ID may still be retained so duplicate detection remains possible.
+- Email Import creates no retained-source file;
+- technical source identity may still be persisted for duplicate detection.
 
 When enabled:
 
-- the original EML/MSG bytes are retained unchanged;
-- the source is stored outside the normal visible document area;
-- the generated PDF identifies the original filename;
-- the generated PDF provides a link back to the retained source;
-- the SHA-256 value binds the retained source to the recorded import identity.
-
-The exact source-storage path is deliberately not frozen yet.
+- original EML/MSG bytes are retained unchanged;
+- storage is under `.pdf-metadata/email-sources/<sha-prefix>/<sha256>.<eml|msg>`;
+- the retained file is verified byte-for-byte after writing;
+- an existing canonical source file is reused only when bytes are identical;
+- collisions fail closed rather than overwrite;
+- the generated PDF identifies the original filename, SHA-256, retained path, and controlled Obsidian source link.
 
 ## 11. Attachments
 
-The first PDF representation must include an attachment list.
+Attachment handling has three derived roles:
 
-The long-term attachment policy is still open. Possible later behaviors include:
+### Inline resources
 
-- preserve only names in the email PDF;
-- allow extraction/import as separate vault files;
-- retain attachment relationships to the email document;
-- support optional links from the email PDF or metadata to extracted attachments.
+CID/related/inline resources support the rendered message. They remain in the canonical attachment array with integrity metadata, but when treated as message resources they are not repeated as ordinary attachments in the email PDF.
 
-Attachments should not automatically be flattened into the email PDF without an explicit design decision.
+### Ordinary attachments
+
+User-facing attachments are listed in the email PDF. They are not automatically extracted, flattened into the email PDF, or created as visible vault files.
+
+### PDF candidates
+
+An ordinary attachment is a PDF candidate when evidence comes from one or more of:
+
+- MIME type `application/pdf`;
+- decoded payload beginning with `%PDF-`;
+- `.pdf` filename.
+
+PDF-candidate status is advisory. A later Import Controller may offer the user a separate PDFium Gate import action, but classification itself has no side effect.
+
+### Explicit extraction
+
+The attachment extraction service is a safe primitive for later UI/orchestration. It:
+
+- requires decoded payload bytes;
+- verifies size and SHA-256 when available;
+- sanitizes filenames for cross-platform safety;
+- prevents path escape from the caller-supplied destination root;
+- writes and verifies exact bytes;
+- reuses an existing target only when bytes are identical;
+- fails closed on a different-file collision.
+
+The final user-facing destination and relationship model for extracted/imported attachments remains an integration decision, not a parser or extraction-service responsibility.
 
 ## 12. Integration boundary
 
@@ -270,14 +273,16 @@ Email Import should reuse existing PDF features rather than duplicate them:
 - links;
 - search and future PDF functions.
 
+The same principle applies to a PDF attachment that the user later chooses to import separately: it should become a normal PDFium Gate PDF rather than a special email-attachment document type.
+
 ## 13. Development order
 
 Recommended milestones:
 
 1. documentation and frozen initial boundaries;
-2. canonical Email Document specification;
+2. Canonical Email Document specification;
 3. synthetic EML fixtures;
-4. EML parse proof-of-concept;
+4. EML parser proof-of-concept;
 5. SHA-256 and exact duplicate detection;
 6. controlled email renderer;
 7. Chromium/Electron PDF generation;
@@ -285,6 +290,6 @@ Recommended milestones:
 9. attachment handling refinement;
 10. MSG parser;
 11. metadata/document-register integration refinements;
-12. broader regression and scale testing.
+12. broader regression and practical Obsidian testing.
 
 Every milestone must preserve existing PDF functionality.
