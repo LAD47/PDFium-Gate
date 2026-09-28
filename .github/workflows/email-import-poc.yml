@@ -24,8 +24,9 @@ jobs:
           node-version: '24'
       - name: Install Email Import dependencies
         run: npm install --no-package-lock
-      - name: Configure Electron SUID sandbox
+      - name: Install Electron binary and configure SUID sandbox
         run: |
+          node node_modules/electron/install.js
           sudo chown root:root node_modules/electron/dist/chrome-sandbox
           sudo chmod 4755 node_modules/electron/dist/chrome-sandbox
       - name: Run Email Import Node tests
