@@ -22,7 +22,7 @@ The PDF must include at least:
 
 The original `.eml` / `.msg` file is not required to remain visible in the vault.
 
-The import flow may optionally retain the original source file in a non-visible source area. Retained source bytes are stored unchanged under `.pdf-metadata/email-sources/` using a SHA-256-addressed sharded path. If the original source is retained, the generated PDF identifies the source filename, records the source SHA-256, and can include a generated Obsidian URI back to the retained vault-relative source path.
+The import flow may optionally retain the original source file in a non-visible source area. Retained source bytes are stored unchanged under `.pdf-metadata/email-sources/` using a SHA-256-addressed sharded path. If the original source is retained, the generated PDF identifies the source filename, records the source SHA-256, and shows the retained vault-relative source path as documentary text. Opening the retained original is intentionally not part of the current PDF-link workflow.
 
 ## Integrity and duplicate detection
 
