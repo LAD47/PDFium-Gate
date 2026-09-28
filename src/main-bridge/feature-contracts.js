@@ -266,6 +266,12 @@ const MAIN_BRIDGE_FEATURE_CONTRACTS = Object.freeze({
       "focusedPdfTokenForWebContents",
       "describeFrame"
     ]
+  },
+  "emailImport": {
+    "file": "09-email-import.js",
+    "className": "MainBridgeEmailImportFeature",
+    "stateFields": [],
+    "ports": []
   }
 });
 
