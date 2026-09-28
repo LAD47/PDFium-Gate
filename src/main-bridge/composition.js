@@ -65,17 +65,24 @@ class MainBridgeRuntime {
       shell,
       webContents,
       rendererEventDispatchAdapter:this.rendererEventDispatchAdapter,
-      resolvePdfToken:({ownerWc,details})=>{
+      resolvePdfContext:({ownerWc,details})=>{
+        let token=null;
         for(const frame of [details?.initiator,details?.frame]) {
-          const token=pdfTokenFromWrapperFrameUrl(String(frame?.url || ''));
-          if(token) return token;
+          token=pdfTokenFromWrapperFrameUrl(String(frame?.url || ''));
+          if(token) break;
         }
-        const tokens=new Set();
-        for(const frame of this.ports.listFrameSubtree(ownerWc) || []) {
-          const token=pdfTokenFromWrapperFrameUrl(this.ports.safeFrameUrl(frame));
-          if(token) tokens.add(token);
+        if(!token) {
+          const tokens=new Set();
+          for(const frame of this.ports.listFrameSubtree(ownerWc) || []) {
+            const candidate=pdfTokenFromWrapperFrameUrl(this.ports.safeFrameUrl(frame));
+            if(candidate) tokens.add(candidate);
+          }
+          if(tokens.size===1) token=tokens.values().next().value;
         }
-        return tokens.size===1 ? tokens.values().next().value : null;
+        if(!token) return null;
+        const publication=this.runtime.targets.activePdfTargetAdapter?.getPublication?.() || null;
+        const filePath=publication?.known && publication?.token===token ? String(publication.filePath || '').trim() : '';
+        return filePath ? {token,filePath} : null;
       }
     });
 
