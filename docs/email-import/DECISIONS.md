@@ -232,6 +232,26 @@ Email provenance is attached only when the generated PDF has no existing documen
 
 The intended write boundary is the existing `saveDocumentMetadataRecordValues` operation. On a fresh generated PDF, its current lazy-create behavior can persist both technical provenance and compatible initial user values in the ordinary Markdown record. Later normal DocumentInfo edits preserve the extra provenance because schema-field updates do not rewrite unrelated frontmatter properties.
 
+### D-026 — The first runtime integration is explicit, self-contained, and preserves existing boundaries
+
+The first user-facing runtime integration is an explicit Obsidian command rather than drag-and-drop or batch import. The command opens a main-process file picker restricted to `.eml` and `.msg`, performs exact SHA-256 duplicate lookup before parsing, parses to Canonical Email Document v1, and presents a review/decision modal before durable writes.
+
+The review step shows the source/message summary, duplicate information, and an editable proposed PDF path. Source retention has no implicit default in this first integration: the user must explicitly choose either to retain or not retain the original source on each import. A later configurable default remains a separate product decision.
+
+The initial suggested PDF location is `Email Imports/` with a filesystem-safe date/subject filename and collision suffix when necessary. Because the path is editable before import, this is an implementation default rather than a frozen long-term naming rule.
+
+Email Import's mature parser/sanitizer dependencies are bundled into the generated `main.js` at build time. The installed plugin remains self-contained and does not require users to install or retain a separate `node_modules` tree. Runtime verification explicitly rejects external `mailparser`, `sanitize-html`, or `@kenjiuno/msgreader` package requires in the generated plugin.
+
+Electron-only operations remain behind the existing renderer-to-main transport. Source selection and controlled HTML-to-PDF printing are implemented through a dedicated main-process Email Import adapter; the feature itself does not bypass the Main Bridge architecture to access Electron globals directly.
+
+A successful import writes a normal PDF into the vault, creates the normal `pdf/document` File Metadata record using the existing metadata operation, and opens the generated PDF through the ordinary PDFium Gate viewer path.
+
+Failure cleanup is ownership-aware and best-effort. A PDF newly created by the current import is removed when a later step fails. A retained source newly created by the current import may be removed only after canonical-path and exact-byte verification. A retained source that already existed and was reused is never removed by rollback from the later import.
+
+The existing document-record subsystem remains the authoritative metadata writer; Email Import does not introduce a parallel metadata transaction layer. Practical Obsidian testing must therefore include retry/failure behavior around the integrated workflow before stronger all-or-nothing transaction guarantees are claimed.
+
+Automated CI no longer requires `main.js` and `main-bridge.js` to remain unchanged, because runtime integration intentionally changes both. Instead, CI requires the complete existing PDFium Gate verification suite, the Email Import tests, real Electron/Chromium PDF generation, bundled-runtime verification, deterministic/scoped generated-runtime changes, and an uploaded runtime artifact for practical testing.
+
 ## Open questions
 
 The following are intentionally not yet frozen:
@@ -240,11 +260,12 @@ The following are intentionally not yet frozen:
 2. Exact visual design of the email PDF.
 3. Whether `Message-ID` should also be visible in the PDF or remain technical metadata only by default.
 4. User-facing destination rules and relationship metadata for explicitly extracted/imported attachments.
-5. Naming rules for generated PDF files.
-6. Collision behavior when a generated PDF filename already exists.
-7. Batch-import UX and duplicate summary behavior.
+5. Naming rules for generated PDF files beyond the current editable suggestion.
+6. Batch-import UX and duplicate summary behavior.
+7. Drag-and-drop UX and where it should be accepted in Obsidian.
 8. How malformed or partially parseable EML/MSG files should be represented to the user.
 9. Whether users should be able to configure semantic mappings from email fields to arbitrary custom metadata fields beyond the initial factory-UUID/property fallback mapping.
+10. Whether Email Import should later add stronger transactional rollback for a metadata record that was created before a downstream metadata verification failure.
 
 ## Change rule
 
