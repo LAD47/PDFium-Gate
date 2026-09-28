@@ -130,9 +130,10 @@ if(!main.includes('supportedElectronMajor: 43')) fail('supported Electron runtim
 if(!main.includes("evaluateRuntimeCompatibilityGate('main-bridge-install', true)")) fail('runtime compatibility startup gate missing');
 if(!main.includes('copy-runtime-compatibility-status')) fail('runtime compatibility diagnostic command missing');
 if(!main.includes('runtimeCompatibility: this.state.diagnostics.runtimeCompatibility || null')) fail('runtime compatibility diagnostic export missing');
-if(!main.includes("const MAIN_PROCESS_TRANSPORT_CONTRACT_VERSION = '0.3'")) fail('MainProcessTransport 0.3 contract missing from generated main.js');
+if(!main.includes("const MAIN_PROCESS_TRANSPORT_CONTRACT_VERSION = '0.4'")) fail('MainProcessTransport 0.4 contract missing from generated main.js');
 if(!main.includes("'chooseEmailImportSource'")) fail('MainProcessTransport Email Import source-picker method missing');
 if(!main.includes("'printControlledEmailHtmlToPdf'")) fail('MainProcessTransport Email Import PDF-printer method missing');
+if(!main.includes("'openRetainedEmailSource'")) fail('MainProcessTransport retained Email Import source-opener method missing');
 if(!main.includes('this.mainProcessTransport = createMainProcessTransport')) fail('MainProcessTransport composition binding missing');
 if(main.includes('this.focusMainBridge =')) fail('raw Main Bridge module reference leaked back into renderer plugin');
 if(main.includes('this.electronRemoteRequireAdapter.requireInMain(')) fail('renderer production code bypasses MainProcessTransport load boundary');
