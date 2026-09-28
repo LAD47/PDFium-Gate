@@ -45,7 +45,9 @@ function buildSyntheticMsg(options = {}) {
   };
 
   const addDocument = (parentIndex, name, bytes) => {
-    const content = Buffer.from(bytes);
+    // The msgreader Burner expects each stream to have a standalone backing
+    // ArrayBuffer. Node Buffers may share a larger slab, so make an explicit copy.
+    const content = Uint8Array.from(Buffer.from(bytes));
     const index = entries.length;
     entries.push({
       name,
