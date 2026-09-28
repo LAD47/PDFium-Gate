@@ -5,8 +5,7 @@ const { parseMsg } = require('./parsers/msg-parser');
 const { detectExactSourceDuplicate } = require('./integrity/duplicate-detector');
 const {
   retainOriginalSource,
-  removeRetainedSourceIfExact,
-  buildObsidianRetainedSourceUri
+  removeRetainedSourceIfExact
 } = require('./storage/source-retention');
 const { generateEmailPdf, validateGeneratedPdf } = require('./render/email-pdf-generator');
 const { analyzeEmailAttachments } = require('./attachments/attachment-policy');
@@ -21,7 +20,6 @@ module.exports = {
   detectExactSourceDuplicate,
   retainOriginalSource,
   removeRetainedSourceIfExact,
-  buildObsidianRetainedSourceUri,
   generateEmailPdf,
   validateGeneratedPdf,
   analyzeEmailAttachments,
