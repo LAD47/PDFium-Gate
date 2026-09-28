@@ -1,6 +1,7 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
+const esbuild = require('esbuild');
 
 const ANNOTATOR_HANDLER_ORDER = Object.freeze([
   'handlers/01-prewarm-keyboard-model.js',
@@ -113,7 +114,8 @@ const MAIN_BRIDGE_FEATURE_ORDER = Object.freeze([
   '05-selection-operations.js',
   '06-input-router.js',
   '07-wrapper-lifecycle.js',
-  '08-lifecycle.js'
+  '08-lifecycle.js',
+  '09-email-import.js'
 ]);
 
 const PLUGIN_FEATURE_ORDER = Object.freeze([
@@ -135,7 +137,8 @@ const PLUGIN_FEATURE_ORDER = Object.freeze([
   '16-document-records.js',
   '17-document-record-visibility.js',
   '18-document-register-bases.js',
-  '19-metadata-benchmark.js'
+  '19-metadata-benchmark.js',
+  '20-email-import.js'
 ]);
 
 function read(root, rel) {
@@ -162,10 +165,21 @@ function buildAnnotatorSource(root) {
   ].join('');
 }
 
+function readLocaleDictionary(root, locale) {
+  const core = JSON.parse(read(root, `src/i18n/${locale}.json`));
+  const emailPath = path.join(root, 'src', 'email-import', 'i18n', `${locale}.json`);
+  if (!fs.existsSync(emailPath)) return core;
+  const email = JSON.parse(fs.readFileSync(emailPath, 'utf8'));
+  for (const key of Object.keys(email)) {
+    if (Object.prototype.hasOwnProperty.call(core, key)) throw new Error(`Email Import i18n key collides with core locale ${locale}: ${key}`);
+  }
+  return { ...core, ...email };
+}
+
 function buildI18nSource(root) {
   const dictionaries=Object.fromEntries(I18N_LOCALE_ORDER.map(locale=>[
     locale,
-    JSON.parse(read(root, `src/i18n/${locale}.json`))
+    readLocaleDictionary(root, locale)
   ]));
   const serialized=I18N_LOCALE_ORDER
     .map(locale=>`${JSON.stringify(locale)}:Object.freeze(${JSON.stringify(dictionaries[locale])})`)
@@ -211,6 +225,33 @@ function buildNormalizationSource(root) {
 
 function buildMetadataSource(root) {
   return METADATA_SOURCE_ORDER.map(file => moduleBody(root, `src/metadata/${file}`)).join('\n');
+}
+
+function buildEmailImportSource(root) {
+  const result = esbuild.buildSync({
+    entryPoints:[path.join(root, 'src/email-import/runtime-entry.js')],
+    bundle:true,
+    platform:'node',
+    format:'cjs',
+    target:['node20'],
+    write:false,
+    sourcemap:false,
+    minify:false,
+    logLevel:'silent'
+  });
+  const output = result.outputFiles?.[0]?.text;
+  if (!output) throw new Error('Email Import runtime bundle produced no output');
+  return [
+    '// BEGIN GENERATED EMAIL IMPORT RUNTIME',
+    'const EMAIL_IMPORT_RUNTIME = (() => {',
+    '  const module = { exports:{} };',
+    '  const exports = module.exports;',
+    output,
+    '  return module.exports;',
+    '})();',
+    '// END GENERATED EMAIL IMPORT RUNTIME',
+    ''
+  ].join('\n');
 }
 
 function buildMainBridgeSource(root) {
@@ -263,6 +304,7 @@ module.exports = {
   buildRendererPlatformSource,
   buildRendererFoundationSource,
   buildMetadataSource,
+  buildEmailImportSource,
   buildRendererPostNormalizationCoreSource,
   buildNormalizationSource,
   buildMainBridgeSource,
