@@ -65,6 +65,9 @@ class MainBridgeRuntime {
       shell,
       webContents,
       rendererEventDispatchAdapter:this.rendererEventDispatchAdapter,
+      parseRetainedSourceLink:parseEmailImportRetainedSourcePdfLink,
+      normalizeRetainedSourceTarget:normalizeEmailImportRetainedSourceTarget,
+      retainedSourceEventName:RENDERER_BRIDGE_EVENTS.EMAIL_RETAINED_SOURCE_OPEN,
       resolvePdfContext:({ownerWc,details})=>{
         let token=null;
         for(const frame of [details?.initiator,details?.frame]) {
