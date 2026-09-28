@@ -112,7 +112,10 @@ class EmailImportFeature {
         return {ok:false,reason:'main-bridge-unavailable'};
       }
 
-      const picked=await transport.chooseEmailImportSource();
+      const picked=await transport.chooseEmailImportSource({
+        title:t('emailImport.modal.title'),
+        emailFilterName:t('commands.importEmail')
+      });
       if(picked?.canceled || !picked?.filePath) return {ok:true,canceled:true};
       const sourcePath=String(picked.filePath);
       const extension=path.extname(sourcePath).toLowerCase();
