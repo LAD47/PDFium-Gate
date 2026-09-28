@@ -2,20 +2,9 @@
 
 const { escapeHtml } = require('./email-html-renderer');
 
-const RETAINED_SOURCE_PDF_LINK_ORIGIN = 'https://pdfium-gate.invalid';
-const RETAINED_SOURCE_PDF_LINK_PATH = '/retained-source';
-
 function safeSourceOpenUri(value) {
   const text = String(value == null ? '' : value).trim();
-  if (!text) return null;
-  try {
-    const url = new URL(text);
-    return url.origin === RETAINED_SOURCE_PDF_LINK_ORIGIN && url.pathname === RETAINED_SOURCE_PDF_LINK_PATH
-      ? text
-      : null;
-  } catch (_) {
-    return null;
-  }
+  return /^obsidian:\/\/open\?/i.test(text) ? text : null;
 }
 
 function renderRetainedSourceReference(document, { sourceOpenUri = null } = {}) {
@@ -57,8 +46,6 @@ function appendRetainedSourceReference(html, document, options = {}) {
 }
 
 module.exports = {
-  RETAINED_SOURCE_PDF_LINK_ORIGIN,
-  RETAINED_SOURCE_PDF_LINK_PATH,
   safeSourceOpenUri,
   renderRetainedSourceReference,
   appendRetainedSourceReference

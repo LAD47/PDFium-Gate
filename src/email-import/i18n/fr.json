@@ -25,7 +25,5 @@
   "emailImport.notice.invalidTarget": "La destination du PDF n’est pas valide : {{error}}",
   "emailImport.notice.openFailed": "L’e-mail a été importé, mais PDFium Gate n’a pas pu ouvrir {{path}} automatiquement.",
   "emailImport.notice.imported": "E-mail importé vers {{path}}.",
-  "emailImport.notice.importFailed": "Échec de l’importation de l’e-mail : {{error}}",
-  "emailImport.notice.retainedSourceRejected": "Le lien vers la source originale ne correspond pas aux métadonnées de provenance de ce document.",
-  "emailImport.notice.retainedSourceOpenFailed": "Impossible d’ouvrir la source originale conservée : {{error}}"
+  "emailImport.notice.importFailed": "Échec de l’importation de l’e-mail : {{error}}"
 }

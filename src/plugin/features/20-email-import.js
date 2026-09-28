@@ -34,67 +34,6 @@ class EmailImportFeature {
       name:this.i18n.t('commands.importEmail'),
       callback:()=>{ void this.startEmailImport(); }
     });
-    this.obsidianPluginRegistrationAdapter.registerDomEvent(
-      window,
-      RENDERER_BRIDGE_EVENTS.EMAIL_RETAINED_SOURCE_OPEN,
-      event=>{
-        const parsed=readRendererBridgeEventDetail(RENDERER_BRIDGE_EVENTS.EMAIL_RETAINED_SOURCE_OPEN,event);
-        if(!parsed?.ok) {
-          console.warn('[PDFium Gate] Rejected retained-source bridge event',parsed?.error || 'invalid event');
-          return;
-        }
-        void this.handleEmailRetainedSourceBridgeEvent(parsed.detail);
-      }
-    );
-  }
-
-  async handleEmailRetainedSourceBridgeEvent(detail) {
-    const t=(key,params)=>this.i18n.t(key,params);
-    try {
-      const pdfPath=emailImportNormalizeVaultPath(detail?.filePath);
-      const sha=String(detail?.sha256 || '').trim().toLowerCase();
-      const retainedPath=String(detail?.retainedPath || '').trim();
-      const target=parseEmailImportRetainedSourcePdfLink(detail?.url);
-      if(!target.ok || target.sha256!==sha || target.retainedPath!==retainedPath) {
-        new Notice(t('emailImport.notice.retainedSourceRejected'),9000);
-        return {ok:false,reason:'link-contract-mismatch'};
-      }
-
-      const pdfFile=this.obsidianVaultReadAdapter.getAbstractFileByPath(pdfPath);
-      if(!pdfFile || String(pdfFile.extension || '').toLowerCase()!=='pdf') {
-        new Notice(t('emailImport.notice.retainedSourceRejected'),9000);
-        return {ok:false,reason:'pdf-not-found'};
-      }
-
-      await this.ports.ensureDocumentRecordIndexReady();
-      const state=this.ports.getDocumentMetadataRecordState(pdfPath);
-      const values=state?.values || {};
-      const metadataMatches=state?.ok===true
-        && state?.registered===true
-        && values.email_import_source_retained===true
-        && String(values.email_import_source_sha256 || '').toLowerCase()===sha
-        && String(values.email_import_retained_path || '')===retainedPath;
-      if(!metadataMatches) {
-        console.warn('[PDFium Gate] Retained-source link did not match PDF provenance metadata',{pdfPath,sha,retainedPath});
-        new Notice(t('emailImport.notice.retainedSourceRejected'),9000);
-        return {ok:false,reason:'metadata-mismatch'};
-      }
-
-      const transport=this.mainProcessTransport;
-      if(!transport?.getCapabilities?.().loaded) throw new Error(t('emailImport.notice.bridgeUnavailable'));
-      const result=await transport.openRetainedEmailSource({
-        vaultRootPath:this.obsidianVaultReadAdapter.getBasePath(),
-        retainedPath,
-        sha256:sha
-      });
-      if(!result?.ok) throw new Error('Retained source was not opened.');
-      return {ok:true,pdfPath,retainedPath};
-    } catch(error) {
-      const message=error instanceof Error?error.message:String(error);
-      console.warn('[PDFium Gate] Could not open retained Email Import source',error);
-      new Notice(t('emailImport.notice.retainedSourceOpenFailed',{error:message}),10000);
-      return {ok:false,reason:'open-failed',error:message};
-    }
   }
 
   async findEmailImportDuplicatesBySha256(sourceSha256) {
@@ -252,8 +191,8 @@ class EmailImportFeature {
         if(!registration.ok) throw new Error(registration.error || registration.reason || 'Email metadata projection failed.');
 
         const sourceOpenUri=retainedDocument.source.retained===true
-          ? buildEmailImportRetainedSourcePdfLink({
-              sha256:retainedDocument.source.sha256,
+          ? EMAIL_IMPORT_RUNTIME.buildObsidianRetainedSourceUri({
+              vault:this.app.vault?.getName?.() || path.basename(vaultRootPath),
               retainedPath:retainedDocument.source.retainedPath
             })
           : null;

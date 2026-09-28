@@ -25,7 +25,5 @@
   "emailImport.notice.invalidTarget": "PDF-målet är ogiltigt: {{error}}",
   "emailImport.notice.openFailed": "E-postmeddelandet importerades, men PDFium Gate kunde inte öppna {{path}} automatiskt.",
   "emailImport.notice.imported": "E-post importerad till {{path}}.",
-  "emailImport.notice.importFailed": "E-postimporten misslyckades: {{error}}",
-  "emailImport.notice.retainedSourceRejected": "Länken till originalkällan stämmer inte med dokumentets ursprungsmetadata.",
-  "emailImport.notice.retainedSourceOpenFailed": "Det gick inte att öppna den sparade originalkällan: {{error}}"
+  "emailImport.notice.importFailed": "E-postimporten misslyckades: {{error}}"
 }

@@ -29,7 +29,6 @@
   },
   "devDependencies": {
     "electron": "43.3.0",
-    "esbuild": "0.28.2",
-    "pdfjs-dist": "6.3.289"
+    "esbuild": "0.28.2"
   }
 }

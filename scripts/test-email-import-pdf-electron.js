@@ -7,7 +7,6 @@ const electron = require('electron');
 const { parseEml } = require('../src/email-import/parsers/eml-parser');
 const { generateEmailPdf, validateGeneratedPdf } = require('../src/email-import/render/email-pdf-generator');
 const { printHtmlToPdfWithElectron } = require('../src/email-import/render/electron-pdf-printer');
-const { buildEmailImportRetainedSourcePdfLink } = require('../src/bridge/renderer-events');
 
 const root = path.resolve(__dirname, '..');
 const fixtureRoot = path.join(root, 'test', 'fixtures', 'email');
@@ -26,39 +25,9 @@ function assertChromiumPdf(pdf, label) {
   assert.equal(checked.subarray(0, 5).toString('ascii'), '%PDF-', `${label}: PDF header`);
 }
 
-async function readPdfLinks(pdf) {
-  const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
-  const loadingTask = pdfjs.getDocument({
-    data: new Uint8Array(pdf),
-    useWorkerFetch: false,
-    isEvalSupported: false
-  });
-  const doc = await loadingTask.promise;
-  const links = [];
-  try {
-    for (let pageNumber = 1; pageNumber <= doc.numPages; pageNumber += 1) {
-      const page = await doc.getPage(pageNumber);
-      const annotations = await page.getAnnotations({ intent: 'display' });
-      for (const annotation of annotations || []) {
-        if (annotation?.subtype !== 'Link') continue;
-        links.push({
-          pageNumber,
-          url: annotation.url || null,
-          unsafeUrl: annotation.unsafeUrl || null,
-          dest: annotation.dest || null
-        });
-      }
-    }
-  } finally {
-    await doc.destroy();
-  }
-  return links;
-}
-
-async function generate(document, capture, renderOptions = {}) {
+async function generate(document, capture) {
   return generateEmailPdf({
     document,
-    renderOptions,
     printHtmlToPdf: async ({ html }) => {
       if (capture) capture.html = html;
       return printHtmlToPdfWithElectron({ html, electronModule: electron });
@@ -106,21 +75,7 @@ async function run() {
   assert.doesNotMatch(hostileCapture.html, /https:\/\/tracker\.invalid/i, 'remote tracking resource never reaches Chromium printer');
   assert.match(hostileCapture.html, /Content-Security-Policy/, 'controlled document CSP reaches Chromium printer');
 
-  const retainedPath = `.pdf-metadata/email-sources/${htmlDocument.source.sha256.slice(0,2)}/${htmlDocument.source.sha256}.eml`;
-  const retainedDocument = {
-    ...htmlDocument,
-    source:{...htmlDocument.source,retained:true,retainedPath}
-  };
-  const retainedLink = buildEmailImportRetainedSourcePdfLink({sha256:htmlDocument.source.sha256,retainedPath});
-  const retainedCapture = {};
-  const retainedPdf = await generate(retainedDocument,retainedCapture,{sourceOpenUri:retainedLink});
-  assertChromiumPdf(retainedPdf,'retained-source fixture');
-  assert.match(retainedCapture.html,/https:\/\/pdfium-gate\.invalid\/retained-source\?/, 'controlled HTML contains portable retained-source link');
-  const retainedLinks = await readPdfLinks(retainedPdf);
-  const retainedUrls = retainedLinks.map(link=>String(link.url || link.unsafeUrl || ''));
-  assert.ok(retainedUrls.includes(retainedLink), `finished Chromium PDF must preserve exact retained-source link; got ${JSON.stringify(retainedUrls)}`);
-
-  process.stderr.write(`Email Import Electron PDF generation OK: Electron ${process.versions.electron}, Chromium ${process.versions.chrome}; real printToPDF output validated for HTML, CID image, hostile-source fixtures and exact retained-source PDF annotation.\n`);
+  console.log(`Email Import Electron PDF generation OK: Electron ${process.versions.electron}, Chromium ${process.versions.chrome}; real printToPDF output validated for HTML, CID image and hostile-source fixtures.`);
 }
 
 run().then(() => {

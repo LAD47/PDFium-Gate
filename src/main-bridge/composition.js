@@ -58,36 +58,7 @@ class MainBridgeRuntime {
 
     this.chromiumPdfRuntimeDriver = createChromiumPdfRuntimeDriver();
     this.rendererEventDispatchAdapter = createRendererEventDispatchAdapter({validateDetail:validateRendererBridgeEventDetail});
-    this.emailImportMainProcessAdapter = createEmailImportMainProcessAdapter({
-      app,
-      BrowserWindow,
-      dialog,
-      shell,
-      webContents,
-      rendererEventDispatchAdapter:this.rendererEventDispatchAdapter,
-      parseRetainedSourceLink:parseEmailImportRetainedSourcePdfLink,
-      normalizeRetainedSourceTarget:normalizeEmailImportRetainedSourceTarget,
-      retainedSourceEventName:RENDERER_BRIDGE_EVENTS.EMAIL_RETAINED_SOURCE_OPEN,
-      resolvePdfContext:({ownerWc,details})=>{
-        let token=null;
-        for(const frame of [details?.initiator,details?.frame]) {
-          token=pdfTokenFromWrapperFrameUrl(String(frame?.url || ''));
-          if(token) break;
-        }
-        if(!token) {
-          const tokens=new Set();
-          for(const frame of this.ports.listFrameSubtree(ownerWc) || []) {
-            const candidate=pdfTokenFromWrapperFrameUrl(this.ports.safeFrameUrl(frame));
-            if(candidate) tokens.add(candidate);
-          }
-          if(tokens.size===1) token=tokens.values().next().value;
-        }
-        if(!token) return null;
-        const publication=this.runtime.targets.activePdfTargetAdapter?.getPublication?.() || null;
-        const filePath=publication?.known && publication?.token===token ? String(publication.filePath || '').trim() : '';
-        return filePath ? {token,filePath} : null;
-      }
-    });
+    this.emailImportMainProcessAdapter = createEmailImportMainProcessAdapter({app,BrowserWindow,dialog});
 
     this.embeddedPdfTargetAdapter = createEmbeddedPdfTargetAdapter({
       webContents,
@@ -113,23 +84,9 @@ class MainBridgeRuntime {
 
 const mainBridgeRuntime = new MainBridgeRuntime();
 
-function installMainBridgeWithEmailImportRouting(...args) {
-  const result = mainBridgeRuntime.ports.install(...args);
-  if (result?.installed === true) mainBridgeRuntime.emailImportMainProcessAdapter.installRetainedSourceRouting();
-  return result;
-}
-
-function uninstallMainBridgeWithEmailImportRouting(...args) {
-  try {
-    return mainBridgeRuntime.ports.uninstall(...args);
-  } finally {
-    mainBridgeRuntime.emailImportMainProcessAdapter.uninstallRetainedSourceRouting();
-  }
-}
-
 module.exports = {
-  install: installMainBridgeWithEmailImportRouting,
-  uninstall: uninstallMainBridgeWithEmailImportRouting,
+  install: mainBridgeRuntime.ports.install,
+  uninstall: mainBridgeRuntime.ports.uninstall,
   getState: mainBridgeRuntime.ports.getState,
   getPlatformCapabilities: mainBridgeRuntime.ports.getPlatformCapabilities,
   setRendererMenuOpen: mainBridgeRuntime.ports.setRendererMenuOpen,
@@ -142,6 +99,5 @@ module.exports = {
   ensurePdfRuntime: mainBridgeRuntime.ports.ensurePdfRuntime,
   setIncludeHeaderFooterText: mainBridgeRuntime.ports.setIncludeHeaderFooterText,
   chooseEmailImportSource: mainBridgeRuntime.ports.chooseEmailImportSource,
-  printControlledEmailHtmlToPdf: mainBridgeRuntime.ports.printControlledEmailHtmlToPdf,
-  openRetainedEmailSource: mainBridgeRuntime.ports.openRetainedEmailSource
+  printControlledEmailHtmlToPdf: mainBridgeRuntime.ports.printControlledEmailHtmlToPdf
 };

@@ -2,7 +2,7 @@
 
 // PDFium Gate Platform Contract — renderer-side Obsidian Plugin registration.
 // Source-of-truth for the adapter bundled into release main.js.
-const OBSIDIAN_PLUGIN_REGISTRATION_CONTRACT_VERSION = '0.4';
+const OBSIDIAN_PLUGIN_REGISTRATION_CONTRACT_VERSION = '0.3';
 
 function createObsidianPluginRegistrationAdapter({ plugin }) {
   function addSettingTab(settingTab) {
@@ -19,13 +19,6 @@ function createObsidianPluginRegistrationAdapter({ plugin }) {
   function registerEvent(eventRef) {
     if (!plugin || typeof plugin.registerEvent !== 'function') throw new Error('plugin.registerEvent er ikke tilgjengelig');
     return plugin.registerEvent(eventRef);
-  }
-
-  function registerDomEvent(target, eventName, callback, options) {
-    if (!plugin || typeof plugin.registerDomEvent !== 'function') throw new Error('plugin.registerDomEvent er ikke tilgjengelig');
-    if (!target || typeof target.addEventListener !== 'function') throw new Error('registerDomEvent target mangler');
-    if (!eventName || typeof callback !== 'function') throw new Error('registerDomEvent event/callback mangler');
-    return plugin.registerDomEvent(target, eventName, callback, options);
   }
 
   function addCommand(command) {
@@ -51,7 +44,6 @@ function createObsidianPluginRegistrationAdapter({ plugin }) {
     addSettingTab,
     registerView,
     registerEvent,
-    registerDomEvent,
     addCommand,
     registerExtensions,
     registerBasesView

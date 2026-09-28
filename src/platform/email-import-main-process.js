@@ -1,106 +1,11 @@
 'use strict';
 
-const emailImportFs = require('fs');
-const emailImportPath = require('path');
-const emailImportCrypto = require('crypto');
+const EMAIL_IMPORT_MAIN_PROCESS_CONTRACT_VERSION = '0.1';
 
-const EMAIL_IMPORT_MAIN_PROCESS_CONTRACT_VERSION = '0.5';
-
-function createEmailImportMainProcessAdapter({
-  app,
-  BrowserWindow,
-  dialog,
-  shell,
-  webContents,
-  rendererEventDispatchAdapter,
-  resolvePdfContext,
-  parseRetainedSourceLink,
-  normalizeRetainedSourceTarget,
-  retainedSourceEventName
-}) {
-  const routedWebContents = new Map();
-  let webContentsCreatedHandler = null;
-
+function createEmailImportMainProcessAdapter({ app, BrowserWindow, dialog }) {
   function requireAppReady() {
     if (!app || typeof app.whenReady !== 'function') throw new Error('Email Import requires Electron app.whenReady().');
     return app.whenReady();
-  }
-
-  function parseRoutingTarget(value) {
-    if (typeof parseRetainedSourceLink !== 'function') return {ok:false,error:'retained-source link parser is unavailable'};
-    return parseRetainedSourceLink(value);
-  }
-
-  function normalizeOpeningTarget(value) {
-    if (typeof normalizeRetainedSourceTarget !== 'function') return {ok:false,error:'retained-source target validator is unavailable'};
-    return normalizeRetainedSourceTarget(value);
-  }
-
-  function attachRetainedSourceRouting(ownerWc) {
-    const id = Number(ownerWc?.id);
-    if (!Number.isFinite(id) || typeof ownerWc?.on !== 'function' || routedWebContents.has(id)) return false;
-
-    const willFrameNavigateHandler = (event, details = {}) => {
-      const targetUrl = String(details?.url || event?.url || '').trim();
-      const parsed = parseRoutingTarget(targetUrl);
-      if (!parsed.ok) return;
-      try { event?.preventDefault?.(); } catch (_) {}
-
-      let context = null;
-      try { context = resolvePdfContext?.({ ownerWc, details }) || null; } catch (_) {}
-      const token = String(context?.token || '').trim();
-      const filePath = String(context?.filePath || '').trim();
-      if (!token || !filePath || !retainedSourceEventName) return;
-
-      const detail = {
-        token,
-        filePath,
-        url:parsed.url,
-        sha256:parsed.sha256,
-        retainedPath:parsed.retainedPath
-      };
-      void rendererEventDispatchAdapter?.dispatchExact?.(
-        ownerWc,
-        retainedSourceEventName,
-        detail
-      );
-    };
-
-    const destroyedHandler = () => detachRetainedSourceRouting(ownerWc);
-    ownerWc.on('will-frame-navigate', willFrameNavigateHandler);
-    ownerWc.on('destroyed', destroyedHandler);
-    routedWebContents.set(id, { ownerWc, willFrameNavigateHandler, destroyedHandler });
-    return true;
-  }
-
-  function detachRetainedSourceRouting(ownerWc) {
-    const id = Number(ownerWc?.id);
-    const rec = routedWebContents.get(id);
-    if (!rec) return false;
-    try { rec.ownerWc.removeListener?.('will-frame-navigate', rec.willFrameNavigateHandler); } catch (_) {}
-    try { rec.ownerWc.removeListener?.('destroyed', rec.destroyedHandler); } catch (_) {}
-    routedWebContents.delete(id);
-    return true;
-  }
-
-  function installRetainedSourceRouting() {
-    if (webContentsCreatedHandler) return { ok:true, already:true, webContentsCount:routedWebContents.size };
-    if (!app || typeof app.on !== 'function') return { ok:false, error:'Electron app event routing is unavailable.' };
-    if (!webContents || typeof webContents.getAllWebContents !== 'function') return { ok:false, error:'Electron webContents routing is unavailable.' };
-
-    webContentsCreatedHandler = (_event, contents) => { attachRetainedSourceRouting(contents); };
-    app.on('web-contents-created', webContentsCreatedHandler);
-    for (const contents of webContents.getAllWebContents() || []) attachRetainedSourceRouting(contents);
-    return { ok:true, already:false, webContentsCount:routedWebContents.size };
-  }
-
-  function uninstallRetainedSourceRouting() {
-    if (webContentsCreatedHandler) {
-      try { app?.removeListener?.('web-contents-created', webContentsCreatedHandler); } catch (_) {}
-      webContentsCreatedHandler = null;
-    }
-    for (const rec of [...routedWebContents.values()]) detachRetainedSourceRouting(rec.ownerWc);
-    return { ok:true, webContentsCount:0 };
   }
 
   async function chooseSource({ title = '', emailFilterName = '' } = {}) {
@@ -171,39 +76,10 @@ function createEmailImportMainProcessAdapter({
     }
   }
 
-  async function openRetainedSource({ vaultRootPath, retainedPath, sha256 } = {}) {
-    await requireAppReady();
-    if (!shell || typeof shell.openPath !== 'function') throw new Error('Email Import retained-source opening requires Electron shell.openPath().');
-    const normalized = normalizeOpeningTarget({ sha256, retainedPath });
-    if (!normalized.ok) throw new Error(normalized.error);
-
-    const rootText = String(vaultRootPath || '').trim();
-    if (!rootText) throw new Error('Vault root path is required.');
-    const root = emailImportPath.resolve(rootText);
-    const target = emailImportPath.resolve(root, ...normalized.retainedPath.split('/'));
-    const relative = emailImportPath.relative(root, target);
-    if (!relative || relative === '.' || relative.startsWith('..') || emailImportPath.isAbsolute(relative)) {
-      throw new Error('Retained source path escapes or does not identify a file inside the vault.');
-    }
-
-    const stat = await emailImportFs.promises.stat(target);
-    if (!stat.isFile()) throw new Error('Retained source target is not a regular file.');
-    const bytes = await emailImportFs.promises.readFile(target);
-    const actualSha = emailImportCrypto.createHash('sha256').update(bytes).digest('hex');
-    if (actualSha !== normalized.sha256) throw new Error('Retained source SHA-256 no longer matches metadata.');
-
-    const errorText = await shell.openPath(target);
-    if (String(errorText || '').trim()) throw new Error(`Operating system could not open retained source: ${String(errorText).trim()}`);
-    return { ok:true, retainedPath:normalized.retainedPath, sha256:normalized.sha256 };
-  }
-
   return Object.freeze({
     contractVersion:EMAIL_IMPORT_MAIN_PROCESS_CONTRACT_VERSION,
-    installRetainedSourceRouting,
-    uninstallRetainedSourceRouting,
     chooseSource,
-    printControlledHtmlToPdf,
-    openRetainedSource
+    printControlledHtmlToPdf
   });
 }
 

@@ -25,7 +25,5 @@
   "emailImport.notice.invalidTarget": "PDF-destinationen er ugyldig: {{error}}",
   "emailImport.notice.openFailed": "E-mailen blev importeret, men PDFium Gate kunne ikke åbne {{path}} automatisk.",
   "emailImport.notice.imported": "E-mail importeret til {{path}}.",
-  "emailImport.notice.importFailed": "E-mailimport mislykkedes: {{error}}",
-  "emailImport.notice.retainedSourceRejected": "Linket til originalkilden stemmer ikke overens med dokumentets oprindelsesmetadata.",
-  "emailImport.notice.retainedSourceOpenFailed": "Den gemte originalkilde kunne ikke åbnes: {{error}}"
+  "emailImport.notice.importFailed": "E-mailimport mislykkedes: {{error}}"
 }

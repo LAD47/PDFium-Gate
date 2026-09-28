@@ -1,6 +1,6 @@
 'use strict';
 
-const MAIN_PROCESS_TRANSPORT_CONTRACT_VERSION = '0.4';
+const MAIN_PROCESS_TRANSPORT_CONTRACT_VERSION = '0.3';
 const MAIN_PROCESS_TRANSPORT_KIND = 'electron-remote-require';
 const REQUIRED_MAIN_BRIDGE_METHODS = Object.freeze([
   'install',
@@ -17,8 +17,7 @@ const REQUIRED_MAIN_BRIDGE_METHODS = Object.freeze([
   'ensurePdfRuntime',
   'setIncludeHeaderFooterText',
   'chooseEmailImportSource',
-  'printControlledEmailHtmlToPdf',
-  'openRetainedEmailSource'
+  'printControlledEmailHtmlToPdf'
 ]);
 
 function createMainProcessTransport({ remoteRequireAdapter }) {
@@ -135,8 +134,7 @@ function createMainProcessTransport({ remoteRequireAdapter }) {
     ensurePdfRuntime: (...args) => invoke('ensurePdfRuntime', ...args),
     setIncludeHeaderFooterText: (...args) => invoke('setIncludeHeaderFooterText', ...args),
     chooseEmailImportSource: (...args) => invoke('chooseEmailImportSource', ...args),
-    printControlledEmailHtmlToPdf: (...args) => invoke('printControlledEmailHtmlToPdf', ...args),
-    openRetainedEmailSource: (...args) => invoke('openRetainedEmailSource', ...args)
+    printControlledEmailHtmlToPdf: (...args) => invoke('printControlledEmailHtmlToPdf', ...args)
   });
 }
 
