@@ -107,17 +107,22 @@ async function run() {
   const probeHtml = `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline';"></head><body>
     <p><a href="obsidian://open?vault=ProbeVault&file=.pdf-metadata%2Femail-sources%2Faa%2Fprobe.eml">Obsidian probe</a></p>
     <p><a href="https://pdfium-gate.invalid/open-retained-source?file=.pdf-metadata%2Femail-sources%2Faa%2Fprobe.eml">HTTPS probe</a></p>
+    <p><a href="file:///tmp/pdfium-gate-probe.eml">File probe</a></p>
   </body></html>`;
   const probePdf = await printHtmlToPdfWithElectron({ html: probeHtml, electronModule: electron });
   assertChromiumPdf(probePdf, 'link annotation probe');
   const probeLinks = await readPdfLinks(probePdf);
-  console.log(`Email Import Chromium link annotation probe: ${JSON.stringify(probeLinks)}`);
+  process.stderr.write(`Email Import Chromium link annotation probe: ${JSON.stringify(probeLinks)}\n`);
   assert.ok(
     probeLinks.some(link => String(link.url || link.unsafeUrl || '').startsWith('https://pdfium-gate.invalid/open-retained-source?')),
-    'Chromium PDF must preserve ordinary HTTPS link annotations'
+    `Chromium PDF must preserve ordinary HTTPS link annotations; got ${JSON.stringify(probeLinks)}`
+  );
+  assert.ok(
+    probeLinks.some(link => String(link.url || link.unsafeUrl || '').startsWith('file:///tmp/pdfium-gate-probe.eml')),
+    `Chromium PDF must preserve explicit file link annotations; got ${JSON.stringify(probeLinks)}`
   );
 
-  console.log(`Email Import Electron PDF generation OK: Electron ${process.versions.electron}, Chromium ${process.versions.chrome}; real printToPDF output validated for HTML, CID image, hostile-source fixtures and link annotations.`);
+  process.stderr.write(`Email Import Electron PDF generation OK: Electron ${process.versions.electron}, Chromium ${process.versions.chrome}; real printToPDF output validated for HTML, CID image, hostile-source fixtures and link annotations.\n`);
 }
 
 run().then(() => {
