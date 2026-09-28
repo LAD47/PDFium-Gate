@@ -5,8 +5,16 @@ on:
     branches: [feature/email-import]
     paths:
       - 'src/email-import/**'
+      - 'src/main/email-import-modal.js'
+      - 'src/plugin/**'
+      - 'src/main-bridge/**'
+      - 'src/platform/**'
       - 'test/fixtures/email/**'
       - 'scripts/test-email-import-*.js'
+      - 'scripts/check-email-import-runtime-integration.js'
+      - 'scripts/check-i18n*.js'
+      - 'scripts/source-bundle.js'
+      - 'build.js'
       - 'package.json'
       - '.github/workflows/email-import-poc.yml'
       - 'docs/email-import/**'
@@ -35,5 +43,26 @@ jobs:
         run: xvfb-run -a npm run test:email-import:pdf-electron
       - name: Run existing PDFium Gate checks
         run: npm run check
-      - name: Ensure Email Import does not change bundled runtime
-        run: git diff --exit-code -- main.js main-bridge.js
+      - name: Verify bundled Email Import runtime integration
+        run: node scripts/check-email-import-runtime-integration.js
+      - name: Verify generated runtime changes are intentional and scoped
+        run: |
+          if git diff --quiet -- main.js; then
+            echo 'Expected main.js to change after Email Import runtime integration.'
+            exit 1
+          fi
+          if git diff --quiet -- main-bridge.js; then
+            echo 'Expected main-bridge.js to change after Email Import main-process integration.'
+            exit 1
+          fi
+          git diff --exit-code -- . ':(exclude)main.js' ':(exclude)main-bridge.js'
+      - name: Upload generated runtime for practical testing
+        uses: actions/upload-artifact@v4
+        with:
+          name: email-import-runtime-${{ github.sha }}
+          path: |
+            main.js
+            main-bridge.js
+            manifest.json
+            styles.css
+          if-no-files-found: error
