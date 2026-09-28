@@ -17,6 +17,7 @@ const PROTECTED_FILES=[
   'src/main/metadata-schema-modal.js',
   'src/main/pdf-document-register-bases-view.js',
   'src/main/benchmark-modals.js',
+  'src/main/email-import-modal.js',
   'src/plugin/features/03-diagnostics.js',
   'src/plugin/features/04-category-config.js',
   'src/plugin/features/05-context-menu.js',
@@ -28,7 +29,8 @@ const PROTECTED_FILES=[
   'src/plugin/features/14-metadata-schema.js',
   'src/plugin/features/17-document-record-visibility.js',
   'src/plugin/features/18-document-register-bases.js',
-  'src/plugin/features/19-metadata-benchmark.js'
+  'src/plugin/features/19-metadata-benchmark.js',
+  'src/plugin/features/20-email-import.js'
 ];
 const PROTECTED_REGIONS=[
   {
