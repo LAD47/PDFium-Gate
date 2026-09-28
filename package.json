@@ -12,7 +12,9 @@
     "check:examples": "node scripts/check-examples.js",
     "check:filemeta": "node scripts/check-filemeta-foundation.js",
     "check:identity": "node scripts/check-product-identity.js",
-    "test:email-import": "node scripts/test-email-import-parser.js"
+    "test:email-import:parser": "node scripts/test-email-import-parser.js",
+    "test:email-import:duplicates": "node scripts/test-email-import-duplicates.js",
+    "test:email-import": "npm run test:email-import:parser && npm run test:email-import:duplicates"
   },
   "dependencies": {
     "mailparser": "3.9.28"
