@@ -65,7 +65,7 @@ Generated email PDFs remain ordinary PDFium Gate `pdf/document` records. Technic
 
 The initial user-facing runtime entry point is the command **Import email (.eml/.msg)**. The review modal requires an explicit retain/discard decision for the original source on every import and allows the suggested PDF path to be edited before durable writes occur. Drag-and-drop and batch import remain later UX work.
 
-The next milestone is practical Obsidian testing of the integrated flow and regression testing of the existing PDF feature set.
+The Import Controller + Obsidian runtime/UI milestone is implemented on the feature branch. The remaining milestone before merge review is practical Obsidian testing of the integrated import flow and regression testing of the existing PDF feature set.
 
 ## Rendering and PDF generation
 
