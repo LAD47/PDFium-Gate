@@ -179,24 +179,11 @@ async function removeRetainedSourceIfExact({ document, sourceBytes, vaultRootPat
   return { removed:true, reason:'exact-source-removed', retainedPath:canonicalPath };
 }
 
-function buildObsidianRetainedSourceUri({ vault, retainedPath }) {
-  const vaultValue = String(vault || '').trim();
-  const fileValue = String(retainedPath || '').trim();
-
-  if (!vaultValue) throw new TypeError('vault is required to build an Obsidian retained-source URI.');
-  if (!fileValue || fileValue.startsWith('/') || fileValue.includes('\\')) {
-    throw new TypeError('retainedPath must be a vault-relative forward-slash path.');
-  }
-
-  return `obsidian://open?vault=${encodeURIComponent(vaultValue)}&file=${encodeURIComponent(fileValue)}`;
-}
-
 module.exports = {
   SOURCE_STORAGE_ROOT,
   retainedSourceRelativePath,
   verifySourceBytes,
   retainOriginalSource,
   removeRetainedSourceIfExact,
-  buildObsidianRetainedSourceUri,
   withRetentionState
 };
