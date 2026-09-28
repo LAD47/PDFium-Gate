@@ -58,6 +58,7 @@ class MainBridgeRuntime {
 
     this.chromiumPdfRuntimeDriver = createChromiumPdfRuntimeDriver();
     this.rendererEventDispatchAdapter = createRendererEventDispatchAdapter({validateDetail:validateRendererBridgeEventDetail});
+    this.emailImportMainProcessAdapter = createEmailImportMainProcessAdapter({app,BrowserWindow,dialog});
 
     this.embeddedPdfTargetAdapter = createEmbeddedPdfTargetAdapter({
       webContents,
