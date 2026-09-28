@@ -4,9 +4,9 @@ const emailImportFs = require('fs');
 const emailImportPath = require('path');
 const emailImportCrypto = require('crypto');
 
-const EMAIL_IMPORT_MAIN_PROCESS_CONTRACT_VERSION = '0.3';
+const EMAIL_IMPORT_MAIN_PROCESS_CONTRACT_VERSION = '0.4';
 
-function createEmailImportMainProcessAdapter({ app, BrowserWindow, dialog, shell, webContents, rendererEventDispatchAdapter, resolvePdfToken }) {
+function createEmailImportMainProcessAdapter({ app, BrowserWindow, dialog, shell, webContents, rendererEventDispatchAdapter, resolvePdfContext }) {
   const routedWebContents = new Map();
   let webContentsCreatedHandler = null;
 
@@ -25,14 +25,15 @@ function createEmailImportMainProcessAdapter({ app, BrowserWindow, dialog, shell
       if (!parsed.ok) return;
       try { event?.preventDefault?.(); } catch (_) {}
 
-      let token = null;
-      try {
-        token = String(resolvePdfToken?.({ ownerWc, details }) || '').trim() || null;
-      } catch (_) {}
-      if (!token) return;
+      let context = null;
+      try { context = resolvePdfContext?.({ ownerWc, details }) || null; } catch (_) {}
+      const token = String(context?.token || '').trim();
+      const filePath = String(context?.filePath || '').trim();
+      if (!token || !filePath) return;
 
       const detail = {
         token,
+        filePath,
         url:parsed.url,
         sha256:parsed.sha256,
         retainedPath:parsed.retainedPath
