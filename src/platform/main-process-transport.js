@@ -114,31 +114,31 @@ function createMainProcessTransport({ remoteRequireAdapter }) {
   }
 
   return Object.freeze({
-    contractVersion:MAIN_PROCESS_TRANSPORT_CONTRACT_VERSION,
-    kind:MAIN_PROCESS_TRANSPORT_KIND,
-    requiredMethods:REQUIRED_MAIN_BRIDGE_METHODS,
+    contractVersion: MAIN_PROCESS_TRANSPORT_CONTRACT_VERSION,
+    kind: MAIN_PROCESS_TRANSPORT_KIND,
+    requiredMethods: REQUIRED_MAIN_BRIDGE_METHODS,
     getCapabilities,
     loadExact,
     reset,
-    install:(...args)=>invoke('install',...args),
-    uninstall:(...args)=>invoke('uninstall',...args),
-    getState:(...args)=>invoke('getState',...args),
-    getPlatformCapabilities:(...args)=>invoke('getPlatformCapabilities',...args),
-    setRendererMenuOpen:(...args)=>invoke('setRendererMenuOpen',...args),
-    setKeyboardSelection:(...args)=>invoke('setKeyboardSelection',...args),
-    clearKeyboardSelection:(...args)=>invoke('clearKeyboardSelection',...args),
-    reportKeyboardSelectionResult:(...args)=>invoke('reportKeyboardSelectionResult',...args),
-    showLinkLocator:(...args)=>invoke('showLinkLocator',...args),
-    setActivePdfIdentity:(...args)=>invoke('setActivePdfIdentity',...args),
-    focusPdfRuntime:(...args)=>invoke('focusPdfRuntime',...args),
-    ensurePdfRuntime:(...args)=>invoke('ensurePdfRuntime',...args),
-    setIncludeHeaderFooterText:(...args)=>invoke('setIncludeHeaderFooterText',...args),
-    chooseEmailImportSource:(...args)=>invoke('chooseEmailImportSource',...args),
-    printControlledEmailHtmlToPdf:(...args)=>invoke('printControlledEmailHtmlToPdf',...args)
+    install: (...args) => invoke('install', ...args),
+    uninstall: (...args) => invoke('uninstall', ...args),
+    getState: (...args) => invoke('getState', ...args),
+    getPlatformCapabilities: (...args) => invoke('getPlatformCapabilities', ...args),
+    setRendererMenuOpen: (...args) => invoke('setRendererMenuOpen', ...args),
+    setKeyboardSelection: (...args) => invoke('setKeyboardSelection', ...args),
+    clearKeyboardSelection: (...args) => invoke('clearKeyboardSelection', ...args),
+    reportKeyboardSelectionResult: (...args) => invoke('reportKeyboardSelectionResult', ...args),
+    showLinkLocator: (...args) => invoke('showLinkLocator', ...args),
+    setActivePdfIdentity: (...args) => invoke('setActivePdfIdentity', ...args),
+    focusPdfRuntime: (...args) => invoke('focusPdfRuntime', ...args),
+    ensurePdfRuntime: (...args) => invoke('ensurePdfRuntime', ...args),
+    setIncludeHeaderFooterText: (...args) => invoke('setIncludeHeaderFooterText', ...args),
+    chooseEmailImportSource: (...args) => invoke('chooseEmailImportSource', ...args),
+    printControlledEmailHtmlToPdf: (...args) => invoke('printControlledEmailHtmlToPdf', ...args)
   });
 }
 
-module.exports={
+module.exports = {
   MAIN_PROCESS_TRANSPORT_CONTRACT_VERSION,
   MAIN_PROCESS_TRANSPORT_KIND,
   REQUIRED_MAIN_BRIDGE_METHODS,
