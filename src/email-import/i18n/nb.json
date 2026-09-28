@@ -25,5 +25,7 @@
   "emailImport.notice.invalidTarget": "PDF-målet er ikke gyldig: {{error}}",
   "emailImport.notice.openFailed": "E-posten ble importert, men PDFium Gate kunne ikke åpne {{path}} automatisk.",
   "emailImport.notice.imported": "E-post importert til {{path}}.",
-  "emailImport.notice.importFailed": "Import av e-post mislyktes: {{error}}"
+  "emailImport.notice.importFailed": "Import av e-post mislyktes: {{error}}",
+  "emailImport.notice.retainedSourceRejected": "Lenken til originalkilden samsvarer ikke med metadataene for dette dokumentet.",
+  "emailImport.notice.retainedSourceOpenFailed": "Kunne ikke åpne den beholdte originalkilden: {{error}}"
 }
