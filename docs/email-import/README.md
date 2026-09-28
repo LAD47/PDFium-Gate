@@ -62,6 +62,8 @@ Permanent MSG verification uses deterministic synthetic CFBF/MSG sources generat
 
 Generated email PDFs remain ordinary PDFium Gate `pdf/document` records. Technical email provenance is stored as `email_import_*` properties in the same Markdown record without becoming default DocumentInfo/Bases columns. Compatible user fields such as date, time, and sender may receive initial suggestions without creating or redefining the user's schema.
 
+The next implementation milestone is the runtime Import Controller and Obsidian command/UI wiring that connects these tested modules into one user-facing import flow. Practical Obsidian testing follows that wiring step rather than being used to discover missing orchestration code.
+
 ## Rendering and PDF generation
 
 The normalized email is rendered using a controlled HTML shell and the Chromium/Electron environment available to Obsidian Desktop. Electron PDF generation crosses an explicit printer-adapter boundary so parser and renderer code remain independent from main-process APIs.
