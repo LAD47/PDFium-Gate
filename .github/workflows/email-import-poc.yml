@@ -13,6 +13,7 @@ on:
       - 'scripts/test-email-import-*.js'
       - 'scripts/check-email-import-runtime-integration.js'
       - 'scripts/check-i18n*.js'
+      - 'scripts/verify/**'
       - 'scripts/source-bundle.js'
       - 'build.js'
       - 'package.json'
