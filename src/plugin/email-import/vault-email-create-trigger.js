@@ -16,13 +16,15 @@ function isEmailStagingFile(file) {
 function createVaultEmailCreateTrigger({ onEmailFile, onError } = {}) {
   if (typeof onEmailFile !== 'function') throw new TypeError('onEmailFile must be a function.');
   const pending = new Set();
+  const suppressed = new Set();
+  let queueTail = Promise.resolve();
 
-  async function handleCreate(file) {
-    if (!isEmailStagingFile(file)) return { handled:false, reason:'not-email-source' };
-    const vaultPath = normalizeTriggerPath(file.path);
-    if (pending.has(vaultPath)) return { handled:false, reason:'already-pending', vaultPath };
+  function suppressPathOnce(value) {
+    const vaultPath = normalizeTriggerPath(value);
+    if (vaultPath) suppressed.add(vaultPath);
+  }
 
-    pending.add(vaultPath);
+  async function runQueued(file, vaultPath) {
     try {
       const result = await onEmailFile(file);
       return { handled:true, vaultPath, result };
@@ -34,7 +36,24 @@ function createVaultEmailCreateTrigger({ onEmailFile, onError } = {}) {
     }
   }
 
-  return Object.freeze({ handleCreate, isEmailStagingFile });
+  function handleCreate(file) {
+    if (!isEmailStagingFile(file)) return Promise.resolve({ handled:false, reason:'not-email-source' });
+    const vaultPath = normalizeTriggerPath(file.path);
+    if (suppressed.delete(vaultPath)) {
+      return Promise.resolve({ handled:false, reason:'suppressed', vaultPath });
+    }
+    if (pending.has(vaultPath)) return Promise.resolve({ handled:false, reason:'already-pending', vaultPath });
+
+    pending.add(vaultPath);
+    const task = queueTail.then(
+      () => runQueued(file, vaultPath),
+      () => runQueued(file, vaultPath)
+    );
+    queueTail = task.then(() => undefined, () => undefined);
+    return task;
+  }
+
+  return Object.freeze({ handleCreate, isEmailStagingFile, suppressPathOnce });
 }
 
 module.exports = { normalizeTriggerPath, isEmailStagingFile, createVaultEmailCreateTrigger };
