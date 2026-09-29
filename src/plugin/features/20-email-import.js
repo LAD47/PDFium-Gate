@@ -191,6 +191,34 @@ class EmailImportFeature {
     }
   }
 
+  async updateEmailAttachmentLinks({parentRecordPath,attachmentPaths}) {
+    const recordPath=EMAIL_IMPORT_RUNTIME.normalizeVaultPath(parentRecordPath);
+    if(!recordPath || !/^File Metadata\//.test(recordPath) || !/\.md$/i.test(recordPath)) {
+      throw new Error('Parent metadata record path is unavailable or unsafe for attachment links.');
+    }
+    const file=this.obsidianVaultReadAdapter.getAbstractFileByPath(recordPath);
+    if(!file || String(file.extension || '').toLowerCase()!=='md') {
+      throw new Error(`Parent metadata record is missing: ${recordPath}`);
+    }
+    const before=String(await this.obsidianVaultReadAdapter.readText(file));
+    const after=EMAIL_IMPORT_RUNTIME.upsertEmailAttachmentLinkBlock(before,attachmentPaths);
+    if(after!==before) await this.obsidianVaultWriteAdapter.modifyText(file,after);
+
+    const current=this.obsidianVaultReadAdapter.getAbstractFileByPath(recordPath) || file;
+    const verifiedText=String(await this.obsidianVaultReadAdapter.readText(current));
+    const actual=EMAIL_IMPORT_RUNTIME.extractEmailAttachmentLinkPaths(verifiedText);
+    const expected=[];
+    const seen=new Set();
+    for(const value of Array.isArray(attachmentPaths)?attachmentPaths:[]) {
+      const path=EMAIL_IMPORT_RUNTIME.normalizeVaultPath(value);
+      if(path && !seen.has(path)) { seen.add(path); expected.push(path); }
+    }
+    if(JSON.stringify(actual)!==JSON.stringify(expected)) {
+      throw new Error('Attachment wikilink block failed read-back verification.');
+    }
+    return {ok:true,recordPath,linkedCount:actual.length,attachmentPaths:actual};
+  }
+
   async exportAutomaticEmailAttachments(parentPdfPath) {
     const adapter=this.emailImportAdapter();
     return await EMAIL_IMPORT_RUNTIME.runAutomaticEmailAttachmentExport({
@@ -204,6 +232,7 @@ class EmailImportFeature {
       createBinary:adapter.createBinary,
       deleteFile:adapter.deleteFile,
       saveDocumentMetadataRecordValues:adapter.saveDocumentMetadataRecordValues,
+      updateParentAttachmentLinks:model=>this.updateEmailAttachmentLinks(model),
       beforeCreateAttachment:targetPath=>this.emailImportVaultTrigger?.suppressPathOnce?.(targetPath),
       onRollbackError:(error,targetPath)=>console.warn('[PDFium Gate] Automatic email attachment rollback failed',targetPath,error)
     });
@@ -244,12 +273,16 @@ class EmailImportFeature {
     if(result?.ok && !result.openedExisting && result.pdfPath && this.settings?.emailDragDropExtractAttachments!==false) {
       try {
         attachmentResult=await this.exportAutomaticEmailAttachments(result.pdfPath);
+        if(attachmentResult?.relationError) {
+          console.warn('[PDFium Gate] Email attachments exported but native attachment links could not be written',result.pdfPath,attachmentResult.relationError);
+        }
       } catch(error) {
         console.error('[PDFium Gate] Automatic email attachment export failed',result.pdfPath,error);
         attachmentResult={
           ok:false,
           failureCount:1,
           exportedCount:0,
+          relationError:null,
           failures:[{filename:'',error:error instanceof Error?error.message:String(error)}]
         };
       }
@@ -284,7 +317,7 @@ class EmailImportFeature {
       new Notice(t('emailImport.notice.dragDropExisting',{path:result.pdfPath}),6000);
     } else if(result?.ok && result.pdfPath) {
       const exported=Number(attachmentResult?.exportedCount || 0);
-      const failed=Number(attachmentResult?.failureCount || 0);
+      const failed=Number(attachmentResult?.failureCount || 0) + (attachmentResult?.relationError ? 1 : 0);
       if(failed>0) {
         new Notice(t('emailImport.notice.dragDropImportedWithAttachmentErrors',{path:result.pdfPath,count:exported,failed}),9000);
       } else {
