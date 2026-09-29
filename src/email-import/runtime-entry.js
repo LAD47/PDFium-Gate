@@ -31,6 +31,12 @@ const {
   buildEmailAttachmentImportRecordValues,
   buildEmailImportRegistrationPlan
 } = require('./metadata/email-metadata-projection');
+const {
+  attachmentWikilink,
+  renderEmailAttachmentLinkBlock,
+  upsertEmailAttachmentLinkBlock,
+  extractEmailAttachmentLinkPaths
+} = require('./metadata/email-attachment-links');
 
 module.exports = {
   parseEml,
@@ -57,5 +63,9 @@ module.exports = {
   verifiedPdfAttachmentBytes,
   buildEmailImportRecordValues,
   buildEmailAttachmentImportRecordValues,
-  buildEmailImportRegistrationPlan
+  buildEmailImportRegistrationPlan,
+  attachmentWikilink,
+  renderEmailAttachmentLinkBlock,
+  upsertEmailAttachmentLinkBlock,
+  extractEmailAttachmentLinkPaths
 };
