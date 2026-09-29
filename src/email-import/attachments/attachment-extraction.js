@@ -73,6 +73,18 @@ function verifiedAttachmentBytes(attachment) {
   return { bytes, sha256: actualSha256 };
 }
 
+function verifiedPdfAttachmentBytes(attachment) {
+  const verified = verifiedAttachmentBytes(attachment);
+  if (verified.bytes.length < 8 || verified.bytes.subarray(0, 5).toString('ascii') !== '%PDF-') {
+    throw new Error('Selected attachment is not a PDF payload.');
+  }
+  const tail = verified.bytes.subarray(Math.max(0, verified.bytes.length - 8192)).toString('latin1');
+  if (!tail.includes('%%EOF')) {
+    throw new Error('Selected PDF attachment is missing the PDF end-of-file marker.');
+  }
+  return verified;
+}
+
 function resolveInsideRoot(destinationRoot, filename) {
   if (!destinationRoot) throw new TypeError('destinationRoot is required.');
   const root = path.resolve(String(destinationRoot));
@@ -144,5 +156,6 @@ module.exports = {
   extensionForContentType,
   sanitizeAttachmentFilename,
   verifiedAttachmentBytes,
+  verifiedPdfAttachmentBytes,
   extractAttachment
 };
