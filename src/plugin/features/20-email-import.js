@@ -1,17 +1,5 @@
 'use strict';
 
-function emailImportNormalizeVaultPath(value) {
-  return String(value || '').replace(/\\/g,'/').replace(/^\/+|\/+$/g,'').trim();
-}
-
-function emailImportSafeFilenamePart(value, fallback='email') {
-  let text=String(value || '').replace(/[<>:"/\\|?*\x00-\x1f]/g,' ').replace(/\s+/g,' ').trim();
-  text=text.replace(/[. ]+$/g,'').trim();
-  if(!text) text=fallback;
-  if(/^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])$/i.test(text)) text=`_${text}`;
-  return text.slice(0,120).trim() || fallback;
-}
-
 function emailImportAddressText(addresses) {
   const list=Array.isArray(addresses)?addresses:[];
   return list.map(entry=>{
@@ -62,54 +50,29 @@ class EmailImportFeature {
   }
 
   emailImportSuggestedPdfPath(document) {
-    const subject=emailImportSafeFilenamePart(document?.message?.subject,'email');
-    const iso=String(document?.message?.dateTime?.iso || '');
-    const date=/^\d{4}-\d{2}-\d{2}/.test(iso)?iso.slice(0,10):'';
-    const base=emailImportSafeFilenamePart(`${date ? `${date} - ` : ''}${subject}`,'email');
-    const folder='Email Imports';
-    let index=1;
-    while(index<10000) {
-      const suffix=index===1?'':` (${index})`;
-      const candidate=`${folder}/${base}${suffix}.pdf`;
-      if(!this.obsidianVaultReadAdapter.getAbstractFileByPath(candidate)) return candidate;
-      index++;
-    }
-    throw new Error('Could not allocate a unique Email Import PDF path.');
+    return EMAIL_IMPORT_RUNTIME.suggestedEmailPdfPath(
+      document,
+      candidate=>Boolean(this.obsidianVaultReadAdapter.getAbstractFileByPath(candidate))
+    );
   }
 
   emailImportSuggestedAttachmentPdfPath(parentPdfPath, attachment) {
-    const parent=emailImportNormalizeVaultPath(parentPdfPath);
-    const slash=parent.lastIndexOf('/');
-    const folder=slash>=0?parent.slice(0,slash):'';
-    let filename=emailImportSafeFilenamePart(attachment?.filename || attachment?.id || 'attachment','attachment');
-    if(!/\.pdf$/i.test(filename)) filename=`${filename}.pdf`;
-    const stem=filename.replace(/\.pdf$/i,'');
-    let index=1;
-    while(index<10000) {
-      const suffix=index===1?'':` (${index})`;
-      const name=`${stem}${suffix}.pdf`;
-      const candidate=folder?`${folder}/${name}`:name;
-      if(!this.obsidianVaultReadAdapter.getAbstractFileByPath(candidate)) return candidate;
-      index++;
-    }
-    throw new Error('Could not allocate a unique attachment PDF path.');
+    return EMAIL_IMPORT_RUNTIME.suggestedAttachmentPdfPath(
+      parentPdfPath,
+      attachment,
+      candidate=>Boolean(this.obsidianVaultReadAdapter.getAbstractFileByPath(candidate))
+    );
   }
 
   emailImportValidateTargetPath(value) {
-    const target=emailImportNormalizeVaultPath(value);
-    if(!target || !/\.pdf$/i.test(target)) return {ok:false,error:'Target must be a vault-relative .pdf path.'};
-    const parts=target.split('/');
-    if(parts.some(part=>!part || part==='.' || part==='..')) return {ok:false,error:'Target path contains an unsafe segment.'};
-    const lower=target.toLowerCase();
-    if(lower==='.pdf-metadata' || lower.startsWith('.pdf-metadata/') || lower==='file metadata' || lower.startsWith('file metadata/')) {
-      return {ok:false,error:'Target PDF cannot be stored in plugin metadata areas.'};
-    }
-    if(this.obsidianVaultReadAdapter.getAbstractFileByPath(target)) return {ok:false,error:'Target path already exists.'};
-    return {ok:true,path:target};
+    return EMAIL_IMPORT_RUNTIME.validateTargetPdfPath(
+      value,
+      candidate=>Boolean(this.obsidianVaultReadAdapter.getAbstractFileByPath(candidate))
+    );
   }
 
   async ensureEmailImportTargetFolders(pdfPath) {
-    const parts=emailImportNormalizeVaultPath(pdfPath).split('/').slice(0,-1);
+    const parts=EMAIL_IMPORT_RUNTIME.normalizeVaultPath(pdfPath).split('/').slice(0,-1);
     let current='';
     for(const part of parts) {
       current=current ? `${current}/${part}` : part;
@@ -118,7 +81,7 @@ class EmailImportFeature {
   }
 
   async openEmailImportPdfPath(pdfPath) {
-    const file=this.obsidianVaultReadAdapter.getAbstractFileByPath(emailImportNormalizeVaultPath(pdfPath));
+    const file=this.obsidianVaultReadAdapter.getAbstractFileByPath(EMAIL_IMPORT_RUNTIME.normalizeVaultPath(pdfPath));
     if(!file || String(file.extension || '').toLowerCase()!=='pdf') throw new Error('Imported PDF could not be resolved in the vault.');
     const target=this.pdfLeafAdapter?.acquireOpenTarget?.(true);
     if(!target?.ok || !target.leaf) throw new Error(target?.error || 'No WorkspaceLeaf is available for the imported PDF.');
@@ -131,7 +94,7 @@ class EmailImportFeature {
     const view=active?.ok?active.leaf?.view:null;
     const file=view?.file || null;
     if(!file || String(file.extension || '').toLowerCase()!=='pdf') return null;
-    return emailImportNormalizeVaultPath(file.path);
+    return EMAIL_IMPORT_RUNTIME.normalizeVaultPath(file.path);
   }
 
   emailImportSourceDescriptorFromRecord(values) {
