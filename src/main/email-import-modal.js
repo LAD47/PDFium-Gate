@@ -6,7 +6,8 @@ class EmailImportReviewModal extends Modal {
     this.plugin=plugin;
     this.model=model || {};
     this.targetPath=String(this.model.suggestedPdfPath || '');
-    this.retentionChoice='';
+    this.retentionLocked=this.model.retentionLocked===true;
+    this.retentionChoice=this.retentionLocked?'keep':'';
     this.settled=false;
     this.resolveDecision=null;
     this.importButton=null;
@@ -74,18 +75,20 @@ class EmailImportReviewModal extends Modal {
         .setValue(this.targetPath)
         .onChange(value=>{ this.targetPath=String(value || ''); }));
 
-    new Setting(contentEl)
-      .setName(t('emailImport.modal.retention'))
-      .setDesc(t('emailImport.modal.retentionDesc'))
-      .addDropdown(dropdown=>dropdown
-        .addOption('',t('emailImport.modal.retentionChoose'))
-        .addOption('keep',t('emailImport.modal.retentionKeep'))
-        .addOption('discard',t('emailImport.modal.retentionDiscard'))
-        .setValue(this.retentionChoice)
-        .onChange(value=>{
-          this.retentionChoice=String(value || '');
-          this.updateImportEnabled();
-        }));
+    if(!this.retentionLocked) {
+      new Setting(contentEl)
+        .setName(t('emailImport.modal.retention'))
+        .setDesc(t('emailImport.modal.retentionDesc'))
+        .addDropdown(dropdown=>dropdown
+          .addOption('',t('emailImport.modal.retentionChoose'))
+          .addOption('keep',t('emailImport.modal.retentionKeep'))
+          .addOption('discard',t('emailImport.modal.retentionDiscard'))
+          .setValue(this.retentionChoice)
+          .onChange(value=>{
+            this.retentionChoice=String(value || '');
+            this.updateImportEnabled();
+          }));
+    }
 
     const actions=new Setting(contentEl);
     actions.addButton(button=>button
@@ -103,7 +106,7 @@ class EmailImportReviewModal extends Modal {
       button
         .setCta()
         .setButtonText(t('emailImport.modal.import'))
-        .setDisabled(true)
+        .setDisabled(!this.retentionChoice)
         .onClick(()=>{
           if(!this.retentionChoice) return;
           this.finish({
