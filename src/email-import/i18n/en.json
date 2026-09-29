@@ -41,5 +41,13 @@
   "emailImport.notice.noImportablePdfAttachments": "The retained email source contains no PDF attachments that can be imported.",
   "emailImport.notice.attachmentOpenFailed": "The PDF attachment was imported, but PDFium Gate could not open {{path}} automatically.",
   "emailImport.notice.attachmentImported": "PDF attachment imported to {{path}}.",
-  "emailImport.notice.attachmentImportFailed": "PDF attachment import failed: {{error}}"
+  "emailImport.notice.attachmentImportFailed": "PDF attachment import failed: {{error}}",
+  "settings.emailImport.section": "Email Import",
+  "settings.emailImport.dragDrop.name": "Automatically import dropped email files",
+  "settings.emailImport.dragDrop.description": "When an .eml or .msg file is added to the vault, import it automatically into the same folder without an additional review dialog.",
+  "settings.emailImport.attachments.name": "Automatically extract email attachments",
+  "settings.emailImport.attachments.description": "For automatic drag-and-drop imports, extract ordinary attachments next to the email PDF. Inline/CID resources stay embedded in the email rendering.",
+  "emailImport.notice.dragDropExisting": "This email was already imported. Opened the existing PDF: {{path}}.",
+  "emailImport.notice.dragDropImported": "Email imported automatically to {{path}}. Extracted attachments: {{count}}.",
+  "emailImport.notice.dragDropImportedWithAttachmentErrors": "Email imported automatically to {{path}}. Extracted attachments: {{count}}; failed: {{failed}}."
 }
