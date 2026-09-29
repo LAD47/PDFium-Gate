@@ -286,9 +286,42 @@ If PDF creation succeeds but metadata registration fails, the newly created atta
 
 This workflow was practically verified in Obsidian on Windows: attachment selection, editable destination, PDF creation/opening, normal PDF behavior, DocumentInfo, document-register registration, and intentionally empty user metadata fields all worked as designed.
 
-### D-029 placeholder — non-PDF attachment handling remains a separate decision
+### D-029 — Refactor Email Import before adding further attachment features
 
-No policy for importing or exposing ordinary non-PDF attachments is frozen by D-028. Their storage location, visibility, opening behavior, relationship metadata, and whether they should become normal vault files or remain source-backed exports must be decided separately.
+Before non-PDF attachment behavior or other substantial Email Import features are added, Email Import will undergo a behavior-preserving modular refactor.
+
+The purpose is to keep the already working feature maintainable as new ideas emerge. The current practical behavior is the regression boundary; the refactor must not deliberately change EML/MSG import, retained-source handling, PDF generation, duplicate behavior, inline/CID rendering, metadata integration, or the user-confirmed PDF-attachment import flow.
+
+The target direction follows the main PDFium Gate architecture: small logical modules, narrow orchestration, explicit ports/adapters, and no peer-feature implementation coupling.
+
+`src/plugin/features/20-email-import.js` should become a thin integration/facade layer responsible mainly for command registration, active-document/context acquisition, port wiring, controller invocation and high-level user feedback. Multi-step import workflows, retained-source verification, attachment policy, metadata construction, hashing and storage policy should live in bounded modules/controllers instead of accumulating in the plugin feature.
+
+Reusable workflow operations should exist once. In particular, reading a retained EML/MSG source, verifying its expected source SHA-256, parsing it, and reconstructing Canonical Email Document v1 should be a shared Email Import service used by PDF and future non-PDF attachment actions rather than copied per feature.
+
+Modals remain passive decision surfaces: they display information, collect user choices and return decisions; they do not own parsing, hashing, durable writes, metadata registration or rollback.
+
+The detailed refactoring direction and suggested implementation order are documented in `REFACTORING-AND-SHARED-SERVICES.md`.
+
+### D-030 — Generic integrity and content identity belong to shared PDFium Gate core
+
+SHA-256 over exact bytes is a general content-integrity/content-identity primitive, not an Email Import responsibility.
+
+The refactor should therefore promote the mature generic SHA-256/integrity primitive out of `src/email-import/` into a shared project-level core service. Email Import becomes a consumer of that service.
+
+Keep the boundary explicit:
+
+- generic shared code may calculate fingerprints, verify bytes against a fingerprint, compare fingerprints and later support grouping of byte-identical content;
+- Email Import retains email-specific policy such as looking up `email_import_source_sha256`, interpreting a match as an imported-email source duplicate, and deciding what the Email Import UI offers the user.
+
+Shared integrity code must not depend on EML/MSG parsing, Email Import metadata fields, Email Import UI, or attachment semantics.
+
+This architecture deliberately leaves room for a future vault-wide **find byte-identical duplicates** feature. Such a feature could hash relevant vault files, group equal fingerprints, and later use a cache based on cheap file facts such as path, size and modification state to avoid rehashing unchanged files. It must not be implemented as part of the current refactor merely because the shared primitive makes it possible.
+
+The principle is reuse without premature abstraction: promote mechanisms when their responsibility is genuinely general, while keeping feature-specific policy in the feature that owns it.
+
+### D-031 placeholder — non-PDF attachment handling remains a separate decision
+
+No policy for importing or exposing ordinary non-PDF attachments is frozen by D-028 through D-030. Their storage location, visibility, opening behavior, relationship metadata, and whether they should become normal vault files or remain source-backed exports must be decided separately after the modular refactor is verified.
 
 ## Open questions
 
@@ -297,13 +330,14 @@ The following are intentionally not yet frozen:
 1. Default user setting for retaining or discarding the original source.
 2. Exact visual design of the email PDF.
 3. Whether `Message-ID` should also be visible in the PDF or remain technical metadata only by default.
-4. User-facing behavior and storage rules for non-PDF attachments.
+4. User-facing behavior and storage rules for non-PDF attachments after the modular refactor.
 5. Naming rules for generated email PDF files beyond the current editable suggestion.
 6. Batch-import UX and duplicate summary behavior.
 7. Drag-and-drop UX and where it should be accepted in Obsidian.
 8. How malformed or partially parseable EML/MSG files should be represented to the user.
 9. Whether users should be able to configure semantic mappings from email fields to arbitrary custom metadata fields beyond the initial factory-UUID/property fallback mapping.
 10. Whether Email Import should later add stronger transactional rollback for a metadata record that was created before a downstream metadata verification failure.
+11. Exact scope and UX of a future vault-wide byte-identical duplicate finder; this is intentionally outside the current Email Import refactor.
 
 ## Change rule
 
