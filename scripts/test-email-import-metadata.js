@@ -12,8 +12,10 @@ const { metadataDocumentRegisterStandardBaseYaml } = require('../src/metadata/do
 const {
   FACTORY_FIELD_IDS,
   EMAIL_IMPORT_TECHNICAL_PROPERTIES,
+  EMAIL_IMPORT_ATTACHMENT_METADATA_VERSION,
   sourceWallClock,
   buildEmailImportRecordValues,
+  buildEmailAttachmentImportRecordValues,
   buildEmailImportRegistrationPlan
 } = require('../src/email-import/metadata/email-metadata-projection');
 
@@ -98,6 +100,42 @@ function clone(value) {
     'user schema collision with technical namespace fails closed'
   );
 
+  const pdfAttachment = emlDocument.attachments.find(attachment => attachment.filename === 'test-attachment-2.pdf');
+  assert.ok(pdfAttachment, 'PDF attachment exists for child-document provenance test');
+  const parentRecordId = '22222222-2222-4222-8222-222222222222';
+  const attachmentProjection = buildEmailAttachmentImportRecordValues({
+    schema: defaultSchema,
+    parentRecordId,
+    sourceSha256: emlDocument.source.sha256,
+    attachment: pdfAttachment
+  });
+  assert.equal(attachmentProjection.technicalValues.email_import_attachment_version, EMAIL_IMPORT_ATTACHMENT_METADATA_VERSION);
+  assert.equal(attachmentProjection.technicalValues.email_import_attachment_parent_record_id, parentRecordId, 'child provenance uses stable parent record ID');
+  assert.equal(attachmentProjection.technicalValues.email_import_attachment_source_sha256, emlDocument.source.sha256, 'child provenance retains parent email source SHA');
+  assert.equal(attachmentProjection.technicalValues.email_import_attachment_sha256, pdfAttachment.sha256, 'child provenance stores attachment payload SHA');
+  assert.equal(attachmentProjection.technicalValues.email_import_attachment_original_filename, 'test-attachment-2.pdf');
+  assert.equal(attachmentProjection.technicalValues.email_import_attachment_content_type, 'application/pdf');
+  assert.deepEqual(attachmentProjection.userFieldSuggestions, {}, 'attachment document does not inherit sender/date or other user schema values automatically');
+  assert.equal(Object.prototype.hasOwnProperty.call(attachmentProjection.values, 'document_date'), false);
+  assert.equal(Object.prototype.hasOwnProperty.call(attachmentProjection.values, 'sender'), false);
+  assert.throws(
+    () => buildEmailAttachmentImportRecordValues({ schema:collisionSchema, parentRecordId, sourceSha256:emlDocument.source.sha256, attachment:pdfAttachment }),
+    /reserved Email Import property namespace/i,
+    'attachment provenance also fails closed on reserved namespace collision'
+  );
+
+  const childRecordId = '33333333-3333-4333-8333-333333333333';
+  const childMarkdown = metadataRecord.metadataRecordSerializeMarkdown({
+    id: childRecordId,
+    pdfPath: 'Email Imports/test-attachment-2.pdf',
+    status: metadataRecord.METADATA_RECORD_STATUS_ACTIVE,
+    values: attachmentProjection.values
+  }, defaultSchema);
+  assert.match(childMarkdown, /filemeta_type: "pdf"/, 'attachment child is still a normal PDF record');
+  assert.match(childMarkdown, /filemeta_profile: "document"/, 'attachment child uses normal document profile');
+  assert.match(childMarkdown, /email_import_attachment_parent_record_id:/, 'attachment relationship serializes into ordinary Markdown record');
+  assert.doesNotMatch(childMarkdown, /document_date:/, 'attachment child does not receive parent user date implicitly');
+
   const freshPlan = buildEmailImportRegistrationPlan({
     document: emlDocument,
     schema: defaultSchema,
@@ -177,7 +215,7 @@ function clone(value) {
     assert.ok(property.startsWith('email_import_'), `technical property stays in reserved namespace: ${property}`);
   }
 
-  console.log('Email Import metadata integration OK: normal pdf/document records, hidden technical provenance, schema-aware user suggestions, source wall-clock preservation, fresh-record fail-closed policy and standard Document Register isolation verified for EML and MSG.');
+  console.log('Email Import metadata integration OK: normal pdf/document records, hidden email and attachment provenance, schema-aware user suggestions, no automatic parent-user-field inheritance, source wall-clock preservation, fresh-record fail-closed policy and standard Document Register isolation verified for EML and MSG.');
 })().catch(error => {
   console.error('Email Import metadata integration check failed.');
   console.error(error && error.stack ? error.stack : error);
