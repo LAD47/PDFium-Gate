@@ -41,5 +41,13 @@
   "emailImport.notice.noImportablePdfAttachments": "Den gemte e-mailkilde indeholder ingen PDF-vedhæftninger, der kan importeres.",
   "emailImport.notice.attachmentOpenFailed": "PDF-vedhæftningen blev importeret, men PDFium Gate kunne ikke åbne {{path}} automatisk.",
   "emailImport.notice.attachmentImported": "PDF-vedhæftning importeret til {{path}}.",
-  "emailImport.notice.attachmentImportFailed": "Import af PDF-vedhæftning mislykkedes: {{error}}"
+  "emailImport.notice.attachmentImportFailed": "Import af PDF-vedhæftning mislykkedes: {{error}}",
+  "settings.emailImport.section": "E-mailimport",
+  "settings.emailImport.dragDrop.name": "Importér e-mail automatisk med træk og slip",
+  "settings.emailImport.dragDrop.description": "Når en .eml- eller .msg-fil føjes til vaulten, importeres den automatisk til samme mappe uden en ekstra dialog.",
+  "settings.emailImport.attachments.name": "Udpak e-mailvedhæftninger automatisk",
+  "settings.emailImport.attachments.description": "Ved automatisk træk-og-slip-import gemmes almindelige vedhæftninger ved siden af e-mail-PDF'en. Inline/CID-ressourcer forbliver en del af e-mailvisningen.",
+  "emailImport.notice.dragDropExisting": "Denne e-mail er allerede importeret. Åbnede den eksisterende PDF: {{path}}.",
+  "emailImport.notice.dragDropImported": "E-mail importeret automatisk til {{path}}. Udpakkede vedhæftninger: {{count}}.",
+  "emailImport.notice.dragDropImportedWithAttachmentErrors": "E-mail importeret automatisk til {{path}}. Udpakkede vedhæftninger: {{count}}; fejl: {{failed}}."
 }
