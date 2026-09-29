@@ -41,5 +41,13 @@
   "emailImport.notice.noImportablePdfAttachments": "Die aufbewahrte E-Mail-Quelle enthält keine PDF-Anhänge, die importiert werden können.",
   "emailImport.notice.attachmentOpenFailed": "Der PDF-Anhang wurde importiert, aber PDFium Gate konnte {{path}} nicht automatisch öffnen.",
   "emailImport.notice.attachmentImported": "PDF-Anhang nach {{path}} importiert.",
-  "emailImport.notice.attachmentImportFailed": "Import des PDF-Anhangs fehlgeschlagen: {{error}}"
+  "emailImport.notice.attachmentImportFailed": "Import des PDF-Anhangs fehlgeschlagen: {{error}}",
+  "settings.emailImport.section": "E-Mail-Import",
+  "settings.emailImport.dragDrop.name": "E-Mails per Drag & Drop automatisch importieren",
+  "settings.emailImport.dragDrop.description": "Wenn eine .eml- oder .msg-Datei zum Vault hinzugefügt wird, wird sie ohne zusätzlichen Dialog automatisch in denselben Ordner importiert.",
+  "settings.emailImport.attachments.name": "E-Mail-Anhänge automatisch extrahieren",
+  "settings.emailImport.attachments.description": "Bei automatischen Drag-&-Drop-Importen werden normale Anhänge neben der E-Mail-PDF abgelegt. Inline-/CID-Ressourcen bleiben Teil der E-Mail-Darstellung.",
+  "emailImport.notice.dragDropExisting": "Diese E-Mail wurde bereits importiert. Vorhandene PDF geöffnet: {{path}}.",
+  "emailImport.notice.dragDropImported": "E-Mail automatisch nach {{path}} importiert. Extrahierte Anhänge: {{count}}.",
+  "emailImport.notice.dragDropImportedWithAttachmentErrors": "E-Mail automatisch nach {{path}} importiert. Extrahierte Anhänge: {{count}}; Fehler: {{failed}}."
 }
