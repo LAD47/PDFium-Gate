@@ -2,7 +2,7 @@
 
 const { renderEmailDocumentToHtml } = require('./email-html-renderer');
 const { appendRetainedSourceReference } = require('./email-source-reference');
-const { toBuffer } = require('../integrity/sha256');
+const { toBuffer } = require('../../core/integrity/sha256');
 
 function validateGeneratedPdf(pdfBytes) {
   const pdf = Buffer.from(toBuffer(pdfBytes));
