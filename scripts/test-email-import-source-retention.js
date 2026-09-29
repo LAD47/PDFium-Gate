@@ -9,6 +9,7 @@ const {
   SOURCE_STORAGE_ROOT,
   retainedSourceRelativePath,
   retainOriginalSource,
+  readVerifiedRetainedSource,
   removeRetainedSourceIfExact
 } = require('../src/email-import/storage/source-retention');
 const { renderEmailDocumentToHtml, sanitizeMessageHtml } = require('../src/email-import/render/email-html-renderer');
@@ -22,25 +23,14 @@ async function main() {
   const parsed = await parseEml({ sourceBytes, originalFilename: 'Original message æøå.eml' });
 
   const disabledRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'pdfium-email-disabled-'));
-  const disabled = await retainOriginalSource({
-    document: parsed,
-    sourceBytes,
-    vaultRootPath: disabledRoot,
-    enabled: false
-  });
+  const disabled = await retainOriginalSource({ document: parsed, sourceBytes, vaultRootPath: disabledRoot, enabled: false });
   assert.equal(disabled.document.source.retained, false, 'disabled retention remains false');
   assert.equal(disabled.document.source.retainedPath, null, 'disabled retention has no path');
   assert.equal(disabled.created, false, 'disabled retention owns no file');
   assert.equal(fs.existsSync(path.join(disabledRoot, '.pdf-metadata')), false, 'disabled retention writes nothing');
 
   const vaultRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'pdfium-email-retained-'));
-  const first = await retainOriginalSource({
-    document: parsed,
-    sourceBytes,
-    vaultRootPath: vaultRoot,
-    enabled: true
-  });
-
+  const first = await retainOriginalSource({ document: parsed, sourceBytes, vaultRootPath: vaultRoot, enabled: true });
   const expectedPath = retainedSourceRelativePath(parsed);
   assert.equal(first.document.source.retained, true, 'retention flag set');
   assert.equal(first.document.source.retainedPath, expectedPath, 'canonical retained path stored in document');
@@ -55,15 +45,30 @@ async function main() {
   const storedBytes = fs.readFileSync(storedAbsolute);
   assert.ok(storedBytes.equals(sourceBytes), 'retained source bytes are byte-identical to imported source');
 
-  const second = await retainOriginalSource({
-    document: parsed,
-    sourceBytes,
-    vaultRootPath: vaultRoot,
-    enabled: true
-  });
+  const verifiedRead = await readVerifiedRetainedSource({ source:first.document.source, vaultRootPath:vaultRoot });
+  assert.ok(verifiedRead.bytes.equals(sourceBytes), 'later retained-source read returns exact original bytes');
+  assert.equal(verifiedRead.retainedPath, expectedPath, 'later retained-source read preserves canonical path');
+
+  const second = await retainOriginalSource({ document: parsed, sourceBytes, vaultRootPath: vaultRoot, enabled: true });
   assert.equal(second.reused, true, 'same exact source reuses existing retained file');
   assert.equal(second.created, false, 'reused source is not owned by the second operation');
   assert.equal(second.retainedPath, first.retainedPath, 'same exact source has stable retained path');
+
+  const rereadRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'pdfium-email-reread-'));
+  const rereadSeed = await retainOriginalSource({ document:parsed, sourceBytes, vaultRootPath:rereadRoot, enabled:true });
+  const rereadAbsolute = path.join(rereadRoot, ...rereadSeed.retainedPath.split('/'));
+  const wrongPathSource = { ...rereadSeed.document.source, retainedPath:`${SOURCE_STORAGE_ROOT}/ff/not-canonical.eml` };
+  await assert.rejects(
+    () => readVerifiedRetainedSource({ source:wrongPathSource, vaultRootPath:rereadRoot }),
+    /canonical/i,
+    'later retained-source use refuses a metadata path that is not canonical for the recorded SHA'
+  );
+  fs.writeFileSync(rereadAbsolute, Buffer.from('tampered retained source'));
+  await assert.rejects(
+    () => readVerifiedRetainedSource({ source:rereadSeed.document.source, vaultRootPath:rereadRoot }),
+    /byte length mismatch|SHA-256 mismatch/i,
+    'later retained-source use fails closed when stored bytes were changed after import'
+  );
 
   const baseHtml = renderEmailDocumentToHtml(first.document);
   const sourceHtml = appendRetainedSourceReference(baseHtml, first.document);
@@ -80,20 +85,11 @@ async function main() {
   assert.doesNotMatch(hostileBody, /href="obsidian:/i, 'source email HTML cannot inject an Obsidian URI');
 
   const rollbackRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'pdfium-email-rollback-'));
-  const rollbackWrite = await retainOriginalSource({
-    document: parsed,
-    sourceBytes,
-    vaultRootPath: rollbackRoot,
-    enabled: true
-  });
+  const rollbackWrite = await retainOriginalSource({ document: parsed, sourceBytes, vaultRootPath: rollbackRoot, enabled: true });
   assert.equal(rollbackWrite.created, true, 'rollback fixture creates a fresh retained source');
   const rollbackAbsolute = path.join(rollbackRoot, ...rollbackWrite.retainedPath.split('/'));
   assert.equal(fs.existsSync(rollbackAbsolute), true, 'rollback fixture exists before cleanup');
-  const rollbackResult = await removeRetainedSourceIfExact({
-    document: rollbackWrite.document,
-    sourceBytes,
-    vaultRootPath: rollbackRoot
-  });
+  const rollbackResult = await removeRetainedSourceIfExact({ document: rollbackWrite.document, sourceBytes, vaultRootPath: rollbackRoot });
   assert.equal(rollbackResult.removed, true, 'exact owned retained source can be removed during rollback');
   assert.equal(fs.existsSync(rollbackAbsolute), false, 'rollback removes the exact retained source');
 
@@ -124,14 +120,11 @@ async function main() {
   );
   assert.equal(fs.existsSync(path.join(mismatchRoot, '.pdf-metadata')), false, 'mismatched source is rejected before storage directories are created');
 
-  fs.rmSync(disabledRoot, { recursive: true, force: true });
-  fs.rmSync(vaultRoot, { recursive: true, force: true });
-  fs.rmSync(rollbackRoot, { recursive: true, force: true });
-  fs.rmSync(reuseRollbackRoot, { recursive: true, force: true });
-  fs.rmSync(corruptRoot, { recursive: true, force: true });
-  fs.rmSync(mismatchRoot, { recursive: true, force: true });
+  for (const dir of [disabledRoot,vaultRoot,rereadRoot,rollbackRoot,reuseRollbackRoot,corruptRoot,mismatchRoot]) {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
 
-  console.log('Email Import retained source storage OK: optional no-write mode, byte-identical hidden storage, stable SHA path, documentary PDF provenance without a source-open link, exact-source reuse, owned-write rollback and fail-closed collision handling verified.');
+  console.log('Email Import retained source storage OK: optional no-write mode, byte-identical hidden storage, stable SHA path, later canonical-path/SHA reread verification, documentary PDF provenance without a source-open link, exact-source reuse, owned-write rollback and fail-closed collision handling verified.');
 }
 
 main().catch(error => {
