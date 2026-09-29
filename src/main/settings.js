@@ -58,6 +58,26 @@ class PdfiumGateSettingsTab extends PluginSettingTab {
         .setValue(this.plugin.settings?.backupOriginalPdf !== false)
         .onChange(async value => { await this.saveSetting('backupOriginalPdf', !!value); }));
 
+    containerEl.createEl('h3', { text: t('settings.emailImport.section') });
+
+    new Setting(containerEl)
+      .setName(t('settings.emailImport.dragDrop.name'))
+      .setDesc(t('settings.emailImport.dragDrop.description'))
+      .addToggle(toggle => toggle
+        .setValue(this.plugin.settings?.emailDragDropAutomaticImport !== false)
+        .onChange(async value => {
+          await this.saveSetting('emailDragDropAutomaticImport', !!value);
+        }));
+
+    new Setting(containerEl)
+      .setName(t('settings.emailImport.attachments.name'))
+      .setDesc(t('settings.emailImport.attachments.description'))
+      .addToggle(toggle => toggle
+        .setValue(this.plugin.settings?.emailDragDropExtractAttachments !== false)
+        .onChange(async value => {
+          await this.saveSetting('emailDragDropExtractAttachments', !!value);
+        }));
+
     containerEl.createEl('h3', { text: t('settings.regional.section') });
     containerEl.createEl('p', { text:t('settings.regional.description') });
 
