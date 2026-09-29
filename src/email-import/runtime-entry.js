@@ -21,10 +21,11 @@ const {
   validateTargetPdfPath
 } = require('./runtime/target-path-policy');
 const { runEmailPdfAttachmentImport } = require('./runtime/import-pdf-attachment-controller');
+const { runAutomaticEmailAttachmentExport } = require('./runtime/export-email-attachments-controller');
 const { runEmailImport } = require('./runtime/import-email-controller');
 const { generateEmailPdf, validateGeneratedPdf } = require('./render/email-pdf-generator');
 const { analyzeEmailAttachments } = require('./attachments/attachment-policy');
-const { verifiedPdfAttachmentBytes } = require('./attachments/attachment-extraction');
+const { verifiedAttachmentBytes, verifiedPdfAttachmentBytes } = require('./attachments/attachment-extraction');
 const {
   buildEmailImportRecordValues,
   buildEmailAttachmentImportRecordValues,
@@ -47,10 +48,12 @@ module.exports = {
   suggestedAttachmentPdfPath,
   validateTargetPdfPath,
   runEmailPdfAttachmentImport,
+  runAutomaticEmailAttachmentExport,
   runEmailImport,
   generateEmailPdf,
   validateGeneratedPdf,
   analyzeEmailAttachments,
+  verifiedAttachmentBytes,
   verifiedPdfAttachmentBytes,
   buildEmailImportRecordValues,
   buildEmailAttachmentImportRecordValues,
