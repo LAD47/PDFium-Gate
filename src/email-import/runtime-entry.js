@@ -8,6 +8,10 @@ const {
   readVerifiedRetainedSource,
   removeRetainedSourceIfExact
 } = require('./storage/source-retention');
+const {
+  sourceDescriptorFromEmailImportRecord,
+  loadCanonicalEmailFromRetainedRecord
+} = require('./runtime/retained-source-loader');
 const { generateEmailPdf, validateGeneratedPdf } = require('./render/email-pdf-generator');
 const { analyzeEmailAttachments } = require('./attachments/attachment-policy');
 const { verifiedPdfAttachmentBytes } = require('./attachments/attachment-extraction');
@@ -24,6 +28,8 @@ module.exports = {
   retainOriginalSource,
   readVerifiedRetainedSource,
   removeRetainedSourceIfExact,
+  sourceDescriptorFromEmailImportRecord,
+  loadCanonicalEmailFromRetainedRecord,
   generateEmailPdf,
   validateGeneratedPdf,
   analyzeEmailAttachments,
