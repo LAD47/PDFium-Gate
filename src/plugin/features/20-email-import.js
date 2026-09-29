@@ -20,6 +20,7 @@ class EmailImportFeature {
       onEmailFile:file=>this.startEmailImportFromVaultFile(file),
       onError:(error,file)=>console.error('[PDFium Gate] Vault email staging import failed',file?.path,error)
     });
+    this.emailImportVaultTrigger=trigger;
     this.obsidianPluginRegistrationAdapter.registerEvent(
       this.obsidianVaultLifecycleAdapter.onCreate(file=>{ void trigger.handleCreate(file); })
     );
@@ -96,7 +97,7 @@ class EmailImportFeature {
     }
   }
 
-  async runEmailImportFlow({chooseSource,readSourceBytes,chooseReview,services}) {
+  async runEmailImportFlow({chooseSource,readSourceBytes,chooseReview,services,notifySuccess=true}) {
     const t=(key,params)=>this.i18n.t(key,params);
     const transport=this.mainProcessTransport;
     if(!transport?.getCapabilities?.().loaded) {
@@ -141,11 +142,11 @@ class EmailImportFeature {
         return result;
       }
       if(result?.openedExisting) {
-        new Notice(t('emailImport.notice.existingOpened'),5000);
+        if(notifySuccess) new Notice(t('emailImport.notice.existingOpened'),5000);
         return result;
       }
 
-      if(result?.ok && result.pdfPath) {
+      if(result?.ok && result.pdfPath && notifySuccess) {
         if(result.openError) {
           console.warn('[PDFium Gate] Email Import succeeded but opening the generated PDF failed',result.openError);
           new Notice(t('emailImport.notice.openFailed',{path:result.pdfPath}),8000);
@@ -173,7 +174,47 @@ class EmailImportFeature {
     });
   }
 
+  async emailImportExistingRetainedSourceMatches(pdfPath,sourceBytes) {
+    try {
+      const adapter=this.emailImportAdapter();
+      await adapter.ensureDocumentRecordIndexReady();
+      const state=adapter.getDocumentMetadataRecordState(pdfPath);
+      if(!state?.ready || !state?.ok || !state?.registered || !state?.values) return false;
+      const loaded=await EMAIL_IMPORT_RUNTIME.loadCanonicalEmailFromRetainedRecord({
+        values:state.values,
+        vaultRootPath:adapter.getVaultRootPath()
+      });
+      return Buffer.from(loaded.retainedSource?.bytes || []).equals(Buffer.from(sourceBytes || []));
+    } catch(error) {
+      console.warn('[PDFium Gate] Could not verify existing retained email source for staging cleanup',pdfPath,error);
+      return false;
+    }
+  }
+
+  async exportAutomaticEmailAttachments(parentPdfPath) {
+    const adapter=this.emailImportAdapter();
+    return await EMAIL_IMPORT_RUNTIME.runAutomaticEmailAttachmentExport({
+      parentPdfPath,
+      ensureDocumentRecordIndexReady:adapter.ensureDocumentRecordIndexReady,
+      getDocumentMetadataRecordState:adapter.getDocumentMetadataRecordState,
+      vaultRootPath:adapter.getVaultRootPath(),
+      pathExists:adapter.pathExists,
+      getMetadataSchemaSnapshot:adapter.getMetadataSchemaSnapshot,
+      ensureTargetFolders:adapter.ensureTargetFolders,
+      createBinary:adapter.createBinary,
+      deleteFile:adapter.deleteFile,
+      saveDocumentMetadataRecordValues:adapter.saveDocumentMetadataRecordValues,
+      beforeCreateAttachment:targetPath=>this.emailImportVaultTrigger?.suppressPathOnce?.(targetPath),
+      onRollbackError:(error,targetPath)=>console.warn('[PDFium Gate] Automatic email attachment rollback failed',targetPath,error)
+    });
+  }
+
   async startEmailImportFromVaultFile(file) {
+    const t=(key,params)=>this.i18n.t(key,params);
+    if(this.settings?.emailDragDropAutomaticImport===false) {
+      return {ok:true,skipped:true,reason:'automatic-import-disabled'};
+    }
+
     const vaultPath=EMAIL_IMPORT_RUNTIME.normalizeVaultPath(file?.path);
     if(!vaultPath || !/\.(?:eml|msg)$/i.test(vaultPath)) return {ok:false,reason:'not-email-staging-file'};
     const slash=vaultPath.lastIndexOf('/');
@@ -188,19 +229,48 @@ class EmailImportFeature {
         importedSourceBytes=Buffer.from(bytes);
         return bytes;
       },
-      chooseReview:model=>new EmailImportReviewModal(this.app,this,{...model,retentionLocked:true}).openForDecision(),
+      chooseReview:async model=>{
+        const duplicate=(Array.isArray(model?.duplicates)?model.duplicates:[]).find(match=>match?.pdfPath);
+        if(duplicate) return {action:'open-existing',match:duplicate};
+        return {action:'import',retainSource:true,pdfPath:model.suggestedPdfPath};
+      },
       services:{
         suggestedEmailPdfPath:(document,pathExists)=>EMAIL_IMPORT_RUNTIME.suggestedEmailPdfPathInFolder(document,folder,pathExists)
-      }
+      },
+      notifySuccess:false
     });
 
+    let attachmentResult=null;
+    if(result?.ok && !result.openedExisting && result.pdfPath && this.settings?.emailDragDropExtractAttachments!==false) {
+      try {
+        attachmentResult=await this.exportAutomaticEmailAttachments(result.pdfPath);
+      } catch(error) {
+        console.error('[PDFium Gate] Automatic email attachment export failed',result.pdfPath,error);
+        attachmentResult={
+          ok:false,
+          failureCount:1,
+          exportedCount:0,
+          failures:[{filename:'',error:error instanceof Error?error.message:String(error)}]
+        };
+      }
+    }
+
+    let retainedVerified=false;
     if(result?.ok && !result.openedExisting && result.pdfPath && result.sourceRetained===true && result.retainedPath && importedSourceBytes) {
+      retainedVerified=true;
+    } else if(result?.ok && result.openedExisting && result.pdfPath && importedSourceBytes) {
+      retainedVerified=await this.emailImportExistingRetainedSourceMatches(result.pdfPath,importedSourceBytes);
+    }
+
+    let stagingRemoved=false;
+    if(retainedVerified && importedSourceBytes) {
       const current=this.obsidianVaultReadAdapter.getAbstractFileByPath(vaultPath);
       if(current) {
         try {
           const currentBytes=Buffer.from(await this.obsidianVaultReadAdapter.readBinary(current));
           if(currentBytes.equals(importedSourceBytes)) {
             await this.obsidianVaultWriteAdapter.deleteFile(current,true);
+            stagingRemoved=true;
           } else {
             console.warn('[PDFium Gate] Email staging file changed during import; leaving it in place',vaultPath);
           }
@@ -210,7 +280,19 @@ class EmailImportFeature {
       }
     }
 
-    return result;
+    if(result?.ok && result.openedExisting) {
+      new Notice(t('emailImport.notice.dragDropExisting',{path:result.pdfPath}),6000);
+    } else if(result?.ok && result.pdfPath) {
+      const exported=Number(attachmentResult?.exportedCount || 0);
+      const failed=Number(attachmentResult?.failureCount || 0);
+      if(failed>0) {
+        new Notice(t('emailImport.notice.dragDropImportedWithAttachmentErrors',{path:result.pdfPath,count:exported,failed}),9000);
+      } else {
+        new Notice(t('emailImport.notice.dragDropImported',{path:result.pdfPath,count:exported}),6000);
+      }
+    }
+
+    return { ...result, attachmentResult, stagingRemoved };
   }
 }
 
