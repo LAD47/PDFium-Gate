@@ -268,6 +268,28 @@ This decision supersedes the clickable-link requirement in D-005 and the link-me
 
 The failed link experiment remains useful architectural evidence: custom application URI schemes should not be assumed to survive Chromium `printToPDF()` as usable external PDF link annotations merely because they exist correctly in the pre-print HTML.
 
+### D-028 — Retained PDF attachments may be imported as independent PDFium Gate documents
+
+A PDF attachment is imported only through an explicit user action on an already-imported email PDF. The first runtime UX uses the command **Import PDF attachment from email** and imports one selected PDF attachment at a time; PDF attachments are never auto-created as separate documents during initial email import.
+
+Later attachment import requires that the original `.eml` or `.msg` source was retained. The attachment is reconstructed by re-reading that canonical retained source, verifying its exact source SHA-256 against the parent email document metadata, parsing it again into Canonical Email Document v1, and locating the selected PDF attachment in the freshly parsed canonical attachment list. If the original source was not retained, is missing, or no longer matches its recorded SHA-256, attachment import fails closed.
+
+A candidate must contain a decoded payload that is actually PDF bytes; filename or MIME type alone is not sufficient for runtime import. The decoded attachment payload is validated against its canonical byte size and SHA-256 before it is written.
+
+The initial suggested destination is the parent email PDF's folder using a filesystem-safe attachment filename. The path is editable before import and must be a fresh vault-relative `.pdf` path outside plugin metadata areas. Existing files or already-registered document paths are never silently overwritten or repurposed.
+
+A successfully imported attachment becomes a normal PDFium Gate `pdf/document` with its own ordinary File Metadata record and opens through the normal PDF viewer path. It does not automatically inherit the parent email's user-editable metadata such as date, sender, or document type, because those fields may describe the attachment document differently from the email that carried it.
+
+The attachment record stores technical relationship provenance under the reserved `email_import_*` namespace: a stable parent document-record ID, the parent email source SHA-256, the attachment's canonical ID, original attachment filename, MIME type, byte size, and attachment SHA-256. The relationship therefore does not depend on either document's current filename or vault path and survives later PDF rename/move handling through the existing document-record subsystem.
+
+If PDF creation succeeds but metadata registration fails, the newly created attachment PDF is removed best-effort. The retained email source is never modified or removed by attachment import.
+
+This workflow was practically verified in Obsidian on Windows: attachment selection, editable destination, PDF creation/opening, normal PDF behavior, DocumentInfo, document-register registration, and intentionally empty user metadata fields all worked as designed.
+
+### D-029 placeholder — non-PDF attachment handling remains a separate decision
+
+No policy for importing or exposing ordinary non-PDF attachments is frozen by D-028. Their storage location, visibility, opening behavior, relationship metadata, and whether they should become normal vault files or remain source-backed exports must be decided separately.
+
 ## Open questions
 
 The following are intentionally not yet frozen:
@@ -275,8 +297,8 @@ The following are intentionally not yet frozen:
 1. Default user setting for retaining or discarding the original source.
 2. Exact visual design of the email PDF.
 3. Whether `Message-ID` should also be visible in the PDF or remain technical metadata only by default.
-4. User-facing destination rules and relationship metadata for explicitly extracted/imported attachments.
-5. Naming rules for generated PDF files beyond the current editable suggestion.
+4. User-facing behavior and storage rules for non-PDF attachments.
+5. Naming rules for generated email PDF files beyond the current editable suggestion.
 6. Batch-import UX and duplicate summary behavior.
 7. Drag-and-drop UX and where it should be accepted in Obsidian.
 8. How malformed or partially parseable EML/MSG files should be represented to the user.
