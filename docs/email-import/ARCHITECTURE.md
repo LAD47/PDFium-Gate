@@ -125,6 +125,16 @@ src/main-bridge/features/09-email-import.js
 
 Parser, renderer, hashing, storage, attachment extraction, metadata projection, UI, and Electron main-process responsibilities remain separate.
 
+### Next structural milestone
+
+Before further attachment features are added, this structure will be refined through a behavior-preserving refactor. The target is to make `20-email-import.js` a thin integration/facade layer and move multi-step workflows into bounded controllers/services.
+
+Generic integrity mechanisms such as SHA-256 over exact bytes are not inherently Email Import responsibilities. The mature hashing/content-integrity primitive should move toward a shared project-level core service so Email Import and future unrelated PDFium Gate features can reuse it without depending on Email Import.
+
+Email-specific duplicate policy remains Email Import-owned. For example, interpreting `email_import_source_sha256` as an imported-email source duplicate is feature policy even when the fingerprint calculation itself is generic.
+
+The detailed accepted direction, proposed module split, regression boundary, and future vault-wide duplicate-finder opportunity are documented in `REFACTORING-AND-SHARED-SERVICES.md` and decisions D-029/D-030.
+
 ## 4. Import Controller
 
 The Import Controller is implemented in the plugin runtime and coordinates bounded services rather than absorbing their logic.
@@ -194,6 +204,8 @@ SHA-256 is calculated from the original source bytes before parsing, normalizati
 
 The stored hash represents the imported source, not the generated PDF.
 
+The hashing/content-integrity primitive is planned to become shared PDFium Gate core functionality during the next modular refactor. Email Import remains responsible for email-specific interpretation and duplicate UX, not for owning the generic fingerprint mechanism.
+
 ### Exact source duplicate
 
 Same SHA-256:
@@ -212,6 +224,8 @@ Same `Message-ID` but different source SHA-256:
 - may later produce a softer warning.
 
 Exact SHA-256 duplicate detection is the implemented first-level policy.
+
+A future vault-wide byte-identical duplicate finder may reuse the shared integrity layer, but it is explicitly not part of the Email Import refactor.
 
 ## 8. Rendering
 
@@ -295,11 +309,11 @@ An ordinary attachment is a PDF candidate when evidence comes from one or more o
 - decoded payload beginning with `%PDF-`;
 - `.pdf` filename.
 
-PDF-candidate status is advisory. A later UI may offer a separate PDFium Gate import action, but classification itself has no side effect.
+PDF-candidate status is advisory during initial email import. An explicit later command may import a verified PDF attachment as its own ordinary PDFium Gate document when the original email source was retained.
 
 ### Explicit extraction
 
-The attachment extraction service is a safe primitive for later UI/orchestration. It:
+The attachment extraction service is a safe primitive for UI/orchestration. It:
 
 - requires decoded payload bytes;
 - verifies size and SHA-256 when available;
@@ -309,7 +323,7 @@ The attachment extraction service is a safe primitive for later UI/orchestration
 - reuses an existing target only when bytes are identical;
 - fails closed on a different-file collision.
 
-The final user-facing destination and relationship model for extracted/imported attachments remains a later decision.
+The PDF-attachment import flow is user-verified. Non-PDF attachment behavior remains deliberately deferred until after the modular refactor.
 
 ## 12. Metadata and document-register boundary
 
@@ -334,7 +348,7 @@ Email Import reuses existing PDF features rather than duplicating them:
 - links;
 - search and future PDF functions.
 
-The same principle applies to a PDF attachment that the user later chooses to import separately: it should become a normal PDFium Gate PDF rather than a special email-attachment document type.
+The same principle applies to a PDF attachment that the user later chooses to import separately: it becomes a normal PDFium Gate PDF rather than a special email-attachment document type.
 
 ## 13. Runtime verification boundary
 
@@ -354,6 +368,8 @@ The replacement boundary requires:
 
 Architecture gates remain active. During integration they caught transport-contract, plugin-feature-port, and Main Bridge lexical-host boundary mismatches; those boundaries were updated or respected rather than disabled.
 
+The next refactor uses the current practical behavior as an additional regression boundary: structural improvements are not accepted if they change the user-confirmed Email Import or PDF-attachment workflows.
+
 ## 14. Development order
 
 Implemented milestones:
@@ -369,10 +385,13 @@ Implemented milestones:
 9. attachment handling refinement;
 10. MSG parser;
 11. metadata/document-register integration refinements;
-12. Import Controller + Obsidian command/UI/runtime integration.
+12. Import Controller + Obsidian command/UI/runtime integration;
+13. practical Email Import, retained-source, inline/CID and PDF-attachment import tests in Obsidian.
 
-Remaining milestone before this feature branch is considered ready for merge review:
+Next milestone before further feature expansion:
 
-13. practical Obsidian Email Import and existing-PDF regression testing.
+14. behavior-preserving modular refactor of Email Import and promotion of genuinely generic integrity/SHA primitives to shared PDFium Gate core, as specified in `REFACTORING-AND-SHARED-SERVICES.md` and D-029/D-030.
+
+After that milestone is verified, non-PDF attachment behavior and other new capabilities can be considered independently.
 
 Every milestone must continue to preserve existing PDF functionality.
