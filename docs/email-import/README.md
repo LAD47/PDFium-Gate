@@ -22,7 +22,7 @@ The PDF must include at least:
 
 The original `.eml` / `.msg` file is not required to remain visible in the vault.
 
-The import flow may optionally retain the original source file in a non-visible source area. Retained source bytes are stored unchanged under `.pdf-metadata/email-sources/` using a SHA-256-addressed sharded path. If the original source is retained, the generated PDF identifies the source filename, records the source SHA-256, and shows the retained vault-relative source path as documentary text. Opening the retained original is intentionally not part of the current PDF-link workflow.
+The import flow may retain the original source file in a non-visible source area. Retained source bytes are stored unchanged under `.pdf-metadata/email-sources/` using a SHA-256-addressed sharded path. The generated PDF identifies the source filename, records the source SHA-256, and shows the retained vault-relative source path as documentary text. Opening the retained original is intentionally not part of the current PDF-link workflow.
 
 ## Integrity and duplicate detection
 
@@ -33,29 +33,32 @@ The SHA-256 value serves two purposes:
 1. integrity evidence for a retained original source;
 2. exact duplicate detection when the same source file is imported again.
 
-An exact duplicate produces a warning and can offer the existing PDF instead of silently creating another copy or unconditionally blocking the import.
+In the automatic drag-and-drop flow, an exact duplicate opens the existing PDF, does not regenerate the PDF, does not re-export attachments, and removes the temporary staging file only after the existing retained source has been verified byte-identical.
 
 When available, the email `Message-ID` is retained as technical metadata. It may later support detection of the same logical message when two exported files are not byte-identical.
 
-Attachments whose decoded payload bytes are available also receive their own SHA-256. This allows tests and later extraction/import code to verify that an attachment recovered from an email is byte-identical to the embedded payload.
+Attachments whose decoded payload bytes are available also receive their own SHA-256. This allows extraction/import code to verify that an attachment recovered from an email is byte-identical to the embedded payload.
 
 ## Implementation direction
 
 The Email Import feature is designed as a main module with small submodules rather than one large implementation file.
 
-Implemented responsibilities now include:
+Implemented responsibilities include:
 
 - EML parsing with `mailparser`;
 - MSG parsing with `@kenjiuno/msgreader`;
 - canonical email document model;
-- SHA-256 and duplicate detection;
+- shared SHA-256/integrity services and exact duplicate detection;
 - safe HTML normalization/rendering;
 - Chromium/Electron PDF generation;
-- optional source retention;
-- attachment handling;
+- SHA-addressed source retention;
+- automatic attachment extraction;
+- PDF attachment registration and provenance;
+- native Obsidian wikilink relationship prototype for exported attachments;
 - projection into the existing `pdf/document` metadata record and Document Register model;
 - build-time dependency bundling into the self-contained plugin runtime;
-- an Obsidian command, source picker, review/decision modal, PDF creation, metadata registration, and handoff to the normal PDFium Gate viewer.
+- explicit/manual Command Palette import as a fallback;
+- automatic drag-and-drop import with settings-driven behavior and sequential multi-email processing.
 
 Both EML and MSG normalize into the same Canonical Email Document v1. Outlook-specific CFBF/MAPI handling remains inside the MSG parser boundary, while downstream rendering, source retention, attachment policy, metadata projection, and PDF generation remain source-format independent.
 
@@ -63,37 +66,77 @@ Permanent MSG verification uses deterministic synthetic CFBF/MSG sources generat
 
 Generated email PDFs remain ordinary PDFium Gate `pdf/document` records. Technical email provenance is stored as `email_import_*` properties in the same Markdown record without becoming default DocumentInfo/Bases columns. Compatible user fields such as date, time, and sender may receive initial suggestions without creating or redefining the user's schema.
 
-The initial user-facing runtime entry point is the command **Import email (.eml/.msg)**. The review modal requires an explicit retain/discard decision for the original source on every import and allows the suggested PDF path to be edited before durable writes occur. Drag-and-drop and batch import remain later UX work.
+## Automatic drag-and-drop milestone — practically verified
 
-The Import Controller + Obsidian runtime/UI milestone is implemented on the feature branch. Practical EML import, retained-source behavior, inline/CID handling, and explicit PDF-attachment import have now been user-verified in Obsidian.
+The current preferred UX for Thunderbird-to-Obsidian import is automatic and settings-driven rather than modal.
+
+Current behavior:
+
+- a dropped `.eml`/`.msg` staging file is imported automatically when the setting is enabled;
+- the exact source is retained in hidden SHA-addressed storage;
+- the generated email PDF is created in the chosen folder;
+- ordinary real attachments are automatically exported to the same folder when enabled;
+- inline/CID resources stay internal to the message and are not exported as ordinary files;
+- verified PDF attachments become normal registered PDFium Gate documents;
+- ordinary non-PDF attachments such as JPG, DOCX and XLSX remain normal vault files;
+- duplicate drag/drop opens the existing PDF and does not produce duplicate attachment copies;
+- multiple dropped emails are serialized through a simple queue with no modal dialog.
+
+Practical test points 1-11 for this flow were reported OK on 2026-09-29.
+
+The old Command Palette import remains available as an explicit/manual fallback.
+
+## Native attachment relationship milestone — partially verified
+
+The current prototype writes a plugin-managed Markdown block containing genuine Obsidian wikilinks to exported attachments into the parent email PDF's existing File Metadata record.
+
+Example:
+
+```markdown
+<!-- pdfium-gate:email-attachments:start -->
+- [[Cases/Email/report.pdf]]
+- [[Cases/Email/photo.jpg]]
+- [[Cases/Email/letter.docx]]
+<!-- pdfium-gate:email-attachments:end -->
+```
+
+The relationship is deliberately stored in Markdown rather than in a new database or in the user metadata schema.
+
+Practical testing confirmed that renaming an exported attachment inside Obsidian updates the relationship link automatically.
+
+A new finding is that Obsidian may rewrite the textual wikilink to a shortest-path/basename form during automatic link maintenance. The prototype already writes the full vault-relative path initially, so the next problem is not initial path generation. The next focused milestone is to preserve native Obsidian relationship handling while making the intended target visibly unambiguous to the user, preferably with full vault-relative path information.
+
+See `ATTACHMENT-RELATIONSHIPS.md` and `DECISIONS-2026-09-29.md`.
 
 ## Modular refactor milestone — completed
 
-The behavior-preserving refactor defined by D-029/D-030 has now been implemented on `feature/email-import` and verified by automated regression tests plus practical Obsidian testing.
+The behavior-preserving refactor defined by D-029/D-030 has been implemented on `feature/email-import` and verified by automated regression tests plus practical Obsidian testing.
 
 The current structure includes:
 
 - shared project-level `src/core/integrity/sha256.js` for exact-byte SHA-256/content identity;
 - `src/email-import/runtime/retained-source-loader.js` for canonical retained-source reread, SHA verification and EML/MSG reconstruction;
-- `src/email-import/runtime/target-path-policy.js` for safe, deterministic PDF destination handling;
+- `src/email-import/runtime/target-path-policy.js` for safe, deterministic destination handling;
 - `src/email-import/runtime/import-email-controller.js` for source-import orchestration;
 - `src/email-import/runtime/import-pdf-attachment-controller.js` for retained PDF-attachment import orchestration;
+- `src/email-import/runtime/export-email-attachments-controller.js` for verified automatic attachment export;
+- `src/email-import/metadata/email-attachment-links.js` for the bounded native wikilink relationship block;
 - `src/plugin/email-import/obsidian-email-import-adapter.js` as the explicit Obsidian/vault/viewer boundary;
-- `src/plugin/features/20-email-import.js` reduced to command registration, passive modal invocation, explicit plugin-port wiring and high-level user feedback.
+- `src/plugin/features/20-email-import.js` as the plugin integration/facade layer.
 
-The adapter uses explicit dependency injection rather than hiding peer-feature calls. The existing PDFium Gate plugin-port verifier therefore remains authoritative: Email Import still declares and visibly consumes the document-index, metadata-schema, document-state and metadata-save ports it depends on.
+The adapter uses explicit dependency injection rather than hiding peer-feature calls. Existing PDFium Gate plugin-port and architecture verification remains authoritative.
 
 Modals remain passive decision surfaces. Parsing, hashing, retained-source verification, durable writes, metadata construction and rollback remain outside modal classes.
-
-The controller refactor was practically tested in Obsidian after implementation: deliberate re-import of the synthetic EML preserved duplicate handling and generated-PDF behavior, and PDF-attachment import from the newly generated email PDF created/opened a normal registered PDF document as before.
 
 The detailed architectural rationale remains in `REFACTORING-AND-SHARED-SERVICES.md`.
 
 ## Next architectural/product milestone
 
-The refactor deliberately did not add new user-facing attachment behavior. The next open product decision is D-031: how ordinary **non-PDF attachments** should be exposed or extracted after import.
+The next focused task is attachment relationship visibility and move/delete behavior.
 
-The shared SHA/integrity layer also deliberately leaves room for a future vault-wide byte-identical duplicate finder, but that remains a separate project rather than part of Email Import.
+The design goal is to keep Obsidian as the native link resolver while ensuring that the user can identify the intended attachment unambiguously. Tests still required include folder moves, duplicate basenames, deletion warnings and backlink behavior for non-PDF files.
+
+The shared SHA/integrity layer also leaves room for a future vault-wide byte-identical duplicate finder, but that remains a separate project rather than part of Email Import.
 
 ## Rendering and PDF generation
 
@@ -112,17 +155,20 @@ The project follows these principles:
 - add one bounded capability at a time;
 - use synthetic test messages rather than private mail as permanent fixtures;
 - combine automated checks with explicit practical Obsidian testing;
-- record design changes in `DECISIONS.md` as the work evolves;
+- record design changes as the work evolves;
 - promote genuinely generic mechanisms to shared project services instead of coupling unrelated future features to Email Import.
 
 ## Documents
 
 - `ARCHITECTURE.md` — module boundaries, data flow, and internal model direction.
-- `DECISIONS.md` — accepted decisions and deliberately open questions.
+- `DECISIONS.md` — original accepted decisions and deliberately open questions through the modular-refactor phase.
+- `DECISIONS-2026-09-29.md` — automatic drag/drop, ordinary attachment extraction, and native attachment-link decisions reached after the refactor.
+- `ATTACHMENT-RELATIONSHIPS.md` — current native Obsidian wikilink architecture, practical findings, and next tests.
 - `REFACTORING-AND-SHARED-SERVICES.md` — modular Email Import refactor and reusable project-level integrity/SHA direction.
 - `EMAIL-DOCUMENT-MODEL.md` — Canonical Email Document v1 contract.
 - `ATTACHMENT-INTEGRITY.md` — attachment-level SHA-256 and fixture integrity policy.
 - `METADATA-INTEGRATION.md` — mapping into the existing Markdown document record, technical provenance, user-field suggestions, and Document Register behavior.
 - `RUNTIME-INTEGRATION.md` — command/UI flow, dependency bundling, main-process boundary, rollback policy, and practical-test boundary.
+- `HANDOFF-2026-09-29.md` — continuation state and ready-to-use prompt for the next development conversation.
 
 Synthetic permanent parser fixtures and fixture generators live under `test/fixtures/email/`.
