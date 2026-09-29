@@ -41,5 +41,13 @@
   "emailImport.notice.noImportablePdfAttachments": "Den beholdte e-postkilden inneholder ingen PDF-vedlegg som kan importeres.",
   "emailImport.notice.attachmentOpenFailed": "PDF-vedlegget ble importert, men PDFium Gate kunne ikke åpne {{path}} automatisk.",
   "emailImport.notice.attachmentImported": "PDF-vedlegg importert til {{path}}.",
-  "emailImport.notice.attachmentImportFailed": "Import av PDF-vedlegg mislyktes: {{error}}"
+  "emailImport.notice.attachmentImportFailed": "Import av PDF-vedlegg mislyktes: {{error}}",
+  "settings.emailImport.section": "E-postimport",
+  "settings.emailImport.dragDrop.name": "Importer e-post automatisk ved drag-and-drop",
+  "settings.emailImport.dragDrop.description": "Når en .eml- eller .msg-fil legges i vaulten, importeres den automatisk til samme mappe uten en ekstra dialog.",
+  "settings.emailImport.attachments.name": "Trekk ut e-postvedlegg automatisk",
+  "settings.emailImport.attachments.description": "Ved automatisk drag-and-drop-import legges ordinære vedlegg ved siden av e-post-PDF-en. Inline/CID-ressurser forblir en del av e-postvisningen.",
+  "emailImport.notice.dragDropExisting": "Denne e-posten er allerede importert. Åpnet eksisterende PDF: {{path}}.",
+  "emailImport.notice.dragDropImported": "E-post importert automatisk til {{path}}. Vedlegg hentet ut: {{count}}.",
+  "emailImport.notice.dragDropImportedWithAttachmentErrors": "E-post importert automatisk til {{path}}. Vedlegg hentet ut: {{count}}; feil: {{failed}}."
 }
