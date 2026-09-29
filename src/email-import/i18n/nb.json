@@ -1,5 +1,6 @@
 {
   "commands.importEmail": "Importer e-post (.eml/.msg)",
+  "commands.importEmailPdfAttachment": "Importer PDF-vedlegg fra e-post",
   "emailImport.modal.title": "Importer e-post",
   "emailImport.modal.intro": "Kontroller meldingen før PDFium Gate oppretter PDF-en og metadataregistreringen.",
   "emailImport.modal.source": "Kildefil",
@@ -18,6 +19,14 @@
   "emailImport.modal.cancel": "Avbryt",
   "emailImport.modal.openExisting": "Åpne eksisterende PDF",
   "emailImport.modal.import": "Importer",
+  "emailImport.attachmentModal.title": "Importer PDF-vedlegg",
+  "emailImport.attachmentModal.intro": "Velg ett PDF-vedlegg fra den beholdte originalkilden. Vedlegget blir et vanlig PDFium Gate-dokument.",
+  "emailImport.attachmentModal.parent": "E-post-PDF",
+  "emailImport.attachmentModal.select": "PDF-vedlegg",
+  "emailImport.attachmentModal.targetPath": "PDF-sti i vault",
+  "emailImport.attachmentModal.targetPathDesc": "Vedlegget foreslås lagret ved siden av e-post-PDF-en. Stien kan endres før import.",
+  "emailImport.attachmentModal.cancel": "Avbryt",
+  "emailImport.attachmentModal.import": "Importer vedlegg",
   "emailImport.notice.bridgeUnavailable": "E-postimport er ikke klar ennå. Vent til Obsidian-arbeidsområdet er ferdig lastet og prøv igjen.",
   "emailImport.notice.unsupportedSource": "Velg en .eml- eller .msg-fil.",
   "emailImport.notice.existingOpened": "Åpnet eksisterende PDF for denne identiske e-postkilden.",
@@ -25,5 +34,12 @@
   "emailImport.notice.invalidTarget": "PDF-målet er ikke gyldig: {{error}}",
   "emailImport.notice.openFailed": "E-posten ble importert, men PDFium Gate kunne ikke åpne {{path}} automatisk.",
   "emailImport.notice.imported": "E-post importert til {{path}}.",
-  "emailImport.notice.importFailed": "Import av e-post mislyktes: {{error}}"
+  "emailImport.notice.importFailed": "Import av e-post mislyktes: {{error}}",
+  "emailImport.notice.openEmailPdfFirst": "Åpne først en PDF som er opprettet med E-postimport.",
+  "emailImport.notice.notImportedEmailPdf": "Den aktive PDF-en er ikke registrert som en importert e-post.",
+  "emailImport.notice.sourceNotRetained": "Original e-postkilde ble ikke beholdt. Vedlegg kan derfor ikke hentes ut senere fra denne importen.",
+  "emailImport.notice.noImportablePdfAttachments": "Den beholdte e-postkilden inneholder ingen PDF-vedlegg som kan importeres.",
+  "emailImport.notice.attachmentOpenFailed": "PDF-vedlegget ble importert, men PDFium Gate kunne ikke åpne {{path}} automatisk.",
+  "emailImport.notice.attachmentImported": "PDF-vedlegg importert til {{path}}.",
+  "emailImport.notice.attachmentImportFailed": "Import av PDF-vedlegg mislyktes: {{error}}"
 }
