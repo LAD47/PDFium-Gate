@@ -20,11 +20,12 @@
     "test:email-import:retention": "node scripts/test-email-import-source-retention.js",
     "test:email-import:retained-loader": "node scripts/test-email-import-retained-source-loader.js",
     "test:email-import:target-paths": "node scripts/test-email-import-target-path-policy.js",
+    "test:email-import:source-controller": "node scripts/test-email-import-controller.js",
     "test:email-import:attachment-controller": "node scripts/test-email-import-pdf-attachment-controller.js",
     "test:email-import:attachments": "node scripts/test-email-import-attachments.js",
     "test:email-import:metadata": "node scripts/test-email-import-metadata.js",
     "test:email-import:pdf-electron": "electron scripts/test-email-import-pdf-electron.js",
-    "test:email-import": "npm run test:core:integrity && npm run test:email-import:parser && npm run test:email-import:msg-parser && npm run test:email-import:duplicates && npm run test:email-import:renderer && npm run test:email-import:retention && npm run test:email-import:retained-loader && npm run test:email-import:target-paths && npm run test:email-import:attachment-controller && npm run test:email-import:attachments && npm run test:email-import:metadata"
+    "test:email-import": "npm run test:core:integrity && npm run test:email-import:parser && npm run test:email-import:msg-parser && npm run test:email-import:duplicates && npm run test:email-import:renderer && npm run test:email-import:retention && npm run test:email-import:retained-loader && npm run test:email-import:target-paths && npm run test:email-import:source-controller && npm run test:email-import:attachment-controller && npm run test:email-import:attachments && npm run test:email-import:metadata"
   },
   "dependencies": {
     "@kenjiuno/msgreader": "1.28.0",
