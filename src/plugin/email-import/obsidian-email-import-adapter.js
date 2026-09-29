@@ -77,10 +77,10 @@ function createObsidianEmailImportAdapter({
     return Boolean(vaultRead.getAbstractFileByPath(candidate));
   }
 
-  function createPdf(pdfPath, bytes) {
+  function createBinary(vaultPath, bytes) {
     const buffer = Buffer.from(bytes || []);
     const arrayBuffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
-    return vaultWrite.createBinary(pdfPath, arrayBuffer);
+    return vaultWrite.createBinary(vaultPath, arrayBuffer);
   }
 
   return Object.freeze({
@@ -89,8 +89,10 @@ function createObsidianEmailImportAdapter({
     openPdf,
     activePdfPath,
     pathExists,
-    createPdf,
+    createBinary,
+    createPdf:createBinary,
     deletePdf: pdfFile => vaultWrite.deleteFile(pdfFile, true),
+    deleteFile: file => vaultWrite.deleteFile(file, true),
     getVaultRootPath: () => vaultRead.getBasePath(),
     getMetadataSchemaSnapshot,
     ensureDocumentRecordIndexReady,
