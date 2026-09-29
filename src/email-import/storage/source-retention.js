@@ -152,6 +152,24 @@ async function retainOriginalSource({ document, sourceBytes, vaultRootPath, enab
   };
 }
 
+async function readVerifiedRetainedSource({ source, vaultRootPath }) {
+  const document = { schemaVersion: 1, source: source || {} };
+  const { source: canonicalSource } = assertCanonicalSource(document);
+  if (canonicalSource.retained !== true || !canonicalSource.retainedPath) {
+    throw new Error('The email source was not retained.');
+  }
+
+  const canonicalPath = retainedSourceRelativePath(document);
+  if (String(canonicalSource.retainedPath) !== canonicalPath) {
+    throw new Error('Retained source metadata does not match the canonical SHA-addressed path.');
+  }
+
+  const targetPath = absolutePathForVaultRelative(vaultRootPath, canonicalPath);
+  const bytes = await fs.promises.readFile(targetPath);
+  verifySourceBytes(document, bytes);
+  return { bytes, retainedPath: canonicalPath, targetPath };
+}
+
 async function removeRetainedSourceIfExact({ document, sourceBytes, vaultRootPath }) {
   const source = document?.source || {};
   if (source.retained !== true || !source.retainedPath) return { removed:false, reason:'not-retained' };
@@ -184,6 +202,7 @@ module.exports = {
   retainedSourceRelativePath,
   verifySourceBytes,
   retainOriginalSource,
+  readVerifiedRetainedSource,
   removeRetainedSourceIfExact,
   withRetentionState
 };
