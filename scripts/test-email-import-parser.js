@@ -4,7 +4,7 @@ const assert = require('assert/strict');
 const fs = require('fs');
 const path = require('path');
 const { parseEml } = require('../src/email-import/parsers/eml-parser');
-const { sha256Hex } = require('../src/email-import/integrity/sha256');
+const { sha256Hex } = require('../src/core/integrity/sha256');
 
 const root = path.resolve(__dirname, '..');
 const fixtureRoot = path.join(root, 'test', 'fixtures', 'email');
