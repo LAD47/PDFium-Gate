@@ -1,5 +1,6 @@
 {
   "commands.importEmail": "Importera e-post (.eml/.msg)",
+  "commands.importEmailPdfAttachment": "Importera PDF-bilaga från e-post",
   "emailImport.modal.title": "Importera e-post",
   "emailImport.modal.intro": "Granska meddelandet innan PDFium Gate skapar PDF-filen och metadataposten.",
   "emailImport.modal.source": "Källfil",
@@ -18,6 +19,14 @@
   "emailImport.modal.cancel": "Avbryt",
   "emailImport.modal.openExisting": "Öppna befintlig PDF",
   "emailImport.modal.import": "Importera",
+  "emailImport.attachmentModal.title": "Importera PDF-bilaga",
+  "emailImport.attachmentModal.intro": "Välj en PDF-bilaga från den sparade originalkällan. Bilagan blir ett vanligt PDFium Gate-dokument.",
+  "emailImport.attachmentModal.parent": "E-post-PDF",
+  "emailImport.attachmentModal.select": "PDF-bilaga",
+  "emailImport.attachmentModal.targetPath": "PDF-sökväg i valvet",
+  "emailImport.attachmentModal.targetPathDesc": "Bilagan föreslås sparas bredvid e-post-PDF-filen. Sökvägen kan ändras före importen.",
+  "emailImport.attachmentModal.cancel": "Avbryt",
+  "emailImport.attachmentModal.import": "Importera bilaga",
   "emailImport.notice.bridgeUnavailable": "E-postimporten är inte klar ännu. Vänta tills Obsidian-arbetsytan har laddats färdigt och försök igen.",
   "emailImport.notice.unsupportedSource": "Välj en .eml- eller .msg-fil.",
   "emailImport.notice.existingOpened": "Den befintliga PDF-filen för denna identiska e-postkälla öppnades.",
@@ -25,5 +34,12 @@
   "emailImport.notice.invalidTarget": "PDF-målet är ogiltigt: {{error}}",
   "emailImport.notice.openFailed": "E-postmeddelandet importerades, men PDFium Gate kunde inte öppna {{path}} automatiskt.",
   "emailImport.notice.imported": "E-post importerad till {{path}}.",
-  "emailImport.notice.importFailed": "E-postimporten misslyckades: {{error}}"
+  "emailImport.notice.importFailed": "E-postimporten misslyckades: {{error}}",
+  "emailImport.notice.openEmailPdfFirst": "Öppna först en PDF som skapats med E-postimport.",
+  "emailImport.notice.notImportedEmailPdf": "Den aktiva PDF-filen är inte registrerad som importerad e-post.",
+  "emailImport.notice.sourceNotRetained": "Den ursprungliga e-postkällan sparades inte, så bilagor kan inte hämtas senare från denna import.",
+  "emailImport.notice.noImportablePdfAttachments": "Den sparade e-postkällan innehåller inga PDF-bilagor som kan importeras.",
+  "emailImport.notice.attachmentOpenFailed": "PDF-bilagan importerades, men PDFium Gate kunde inte öppna {{path}} automatiskt.",
+  "emailImport.notice.attachmentImported": "PDF-bilaga importerad till {{path}}.",
+  "emailImport.notice.attachmentImportFailed": "Importen av PDF-bilagan misslyckades: {{error}}"
 }
