@@ -19,6 +19,7 @@ const {
   suggestedAttachmentPdfPath,
   validateTargetPdfPath
 } = require('./runtime/target-path-policy');
+const { runEmailPdfAttachmentImport } = require('./runtime/import-pdf-attachment-controller');
 const { generateEmailPdf, validateGeneratedPdf } = require('./render/email-pdf-generator');
 const { analyzeEmailAttachments } = require('./attachments/attachment-policy');
 const { verifiedPdfAttachmentBytes } = require('./attachments/attachment-extraction');
@@ -42,6 +43,7 @@ module.exports = {
   suggestedEmailPdfPath,
   suggestedAttachmentPdfPath,
   validateTargetPdfPath,
+  runEmailPdfAttachmentImport,
   generateEmailPdf,
   validateGeneratedPdf,
   analyzeEmailAttachments,
