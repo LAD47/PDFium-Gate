@@ -14,33 +14,72 @@ assert.equal(isEmailStagingFile({ path:'Cases/file.pdf', extension:'pdf' }), fal
 assert.equal(isEmailStagingFile({ path:'.pdf-metadata/email-sources/aa/hash.eml', extension:'eml' }), false);
 
 async function run() {
-  const seen = [];
-  let release;
-  const blocker = new Promise(resolve => { release = resolve; });
-  const trigger = createVaultEmailCreateTrigger({
-    onEmailFile: async file => {
-      seen.push(file.path);
-      await blocker;
-      return { ok:true };
-    }
-  });
+  {
+    const seen = [];
+    let release;
+    const blocker = new Promise(resolve => { release = resolve; });
+    const trigger = createVaultEmailCreateTrigger({
+      onEmailFile: async file => {
+        seen.push(file.path);
+        await blocker;
+        return { ok:true };
+      }
+    });
 
-  const file = { path:'Cases/mail.eml', extension:'eml' };
-  const first = trigger.handleCreate(file);
-  const second = await trigger.handleCreate(file);
-  assert.equal(second.handled, false);
-  assert.equal(second.reason, 'already-pending');
-  assert.deepEqual(seen, ['Cases/mail.eml']);
-  release();
-  const completed = await first;
-  assert.equal(completed.handled, true);
-  assert.equal(completed.result.ok, true);
+    const file = { path:'Cases/mail.eml', extension:'eml' };
+    const first = trigger.handleCreate(file);
+    const second = await trigger.handleCreate(file);
+    assert.equal(second.handled, false);
+    assert.equal(second.reason, 'already-pending');
+    assert.deepEqual(seen, ['Cases/mail.eml']);
+    release();
+    const completed = await first;
+    assert.equal(completed.handled, true);
+    assert.equal(completed.result.ok, true);
+  }
 
+  {
+    const sequence = [];
+    let releaseFirst;
+    const firstBlocker = new Promise(resolve => { releaseFirst = resolve; });
+    const trigger = createVaultEmailCreateTrigger({
+      onEmailFile: async file => {
+        sequence.push(`start:${file.path}`);
+        if (file.path.endsWith('one.eml')) await firstBlocker;
+        sequence.push(`end:${file.path}`);
+        return {ok:true};
+      }
+    });
+    const first = trigger.handleCreate({path:'Cases/one.eml',extension:'eml'});
+    const second = trigger.handleCreate({path:'Cases/two.eml',extension:'eml'});
+    await Promise.resolve();
+    assert.deepEqual(sequence,['start:Cases/one.eml']);
+    releaseFirst();
+    await Promise.all([first,second]);
+    assert.deepEqual(sequence,[
+      'start:Cases/one.eml',
+      'end:Cases/one.eml',
+      'start:Cases/two.eml',
+      'end:Cases/two.eml'
+    ]);
+  }
+
+  {
+    let called = false;
+    const trigger = createVaultEmailCreateTrigger({ onEmailFile:async()=>{ called=true; } });
+    trigger.suppressPathOnce('Cases/attached.eml');
+    const suppressed = await trigger.handleCreate({path:'Cases/attached.eml',extension:'eml'});
+    assert.equal(suppressed.handled,false);
+    assert.equal(suppressed.reason,'suppressed');
+    assert.equal(called,false);
+  }
+
+  const trigger = createVaultEmailCreateTrigger({ onEmailFile:async()=>({ok:true}) });
   const ignored = await trigger.handleCreate({ path:'.pdf-metadata/email-sources/aa/source.eml', extension:'eml' });
   assert.equal(ignored.handled, false);
   assert.equal(ignored.reason, 'not-email-source');
 
-  console.log('Email Import vault staging trigger OK: EML/MSG detection, metadata-area exclusion and duplicate in-flight suppression verified.');
+  console.log('Email Import vault staging trigger OK: EML/MSG detection, metadata-area exclusion, duplicate suppression, sequential multi-file processing and one-shot attachment suppression verified.');
 }
 
 run().catch(error => {
