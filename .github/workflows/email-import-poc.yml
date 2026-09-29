@@ -5,11 +5,13 @@ on:
     branches: [feature/email-import]
     paths:
       - 'src/email-import/**'
+      - 'src/core/integrity/**'
       - 'src/main/email-import-modal.js'
       - 'src/plugin/**'
       - 'src/main-bridge/**'
       - 'src/platform/**'
       - 'test/fixtures/email/**'
+      - 'scripts/test-core-integrity.js'
       - 'scripts/test-email-import-*.js'
       - 'scripts/check-email-import-runtime-integration.js'
       - 'scripts/check-i18n*.js'
@@ -41,6 +43,7 @@ jobs:
       - name: Run Email Import Node tests
         run: npm run test:email-import
       - name: Run real Electron Chromium PDF generation test
+        timeout-minutes: 3
         run: xvfb-run -a npm run test:email-import:pdf-electron
       - name: Run existing PDFium Gate checks
         run: npm run check
