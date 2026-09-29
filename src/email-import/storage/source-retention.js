@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const { randomUUID } = require('crypto');
-const { sha256Hex, toBuffer } = require('../integrity/sha256');
+const { sha256Hex, toBuffer } = require('../../core/integrity/sha256');
 
 const SOURCE_STORAGE_ROOT = '.pdf-metadata/email-sources';
 const SHA256_RE = /^[0-9a-f]{64}$/;
