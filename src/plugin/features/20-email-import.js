@@ -56,14 +56,6 @@ class EmailImportFeature {
     );
   }
 
-  emailImportSuggestedAttachmentPdfPath(parentPdfPath, attachment) {
-    return EMAIL_IMPORT_RUNTIME.suggestedAttachmentPdfPath(
-      parentPdfPath,
-      attachment,
-      candidate=>Boolean(this.obsidianVaultReadAdapter.getAbstractFileByPath(candidate))
-    );
-  }
-
   emailImportValidateTargetPath(value) {
     return EMAIL_IMPORT_RUNTIME.validateTargetPdfPath(
       value,
@@ -97,96 +89,55 @@ class EmailImportFeature {
     return EMAIL_IMPORT_RUNTIME.normalizeVaultPath(file.path);
   }
 
-  emailImportSourceDescriptorFromRecord(values) {
-    return EMAIL_IMPORT_RUNTIME.sourceDescriptorFromEmailImportRecord(values);
-  }
-
   async startEmailPdfAttachmentImport() {
     const t=(key,params)=>this.i18n.t(key,params);
     try {
-      const parentPdfPath=this.emailImportActivePdfPath();
-      if(!parentPdfPath) {
+      const result=await EMAIL_IMPORT_RUNTIME.runEmailPdfAttachmentImport({
+        parentPdfPath:this.emailImportActivePdfPath(),
+        ensureDocumentRecordIndexReady:()=>this.ports.ensureDocumentRecordIndexReady(),
+        getDocumentMetadataRecordState:pdfPath=>this.ports.getDocumentMetadataRecordState(pdfPath),
+        vaultRootPath:this.obsidianVaultReadAdapter.getBasePath(),
+        pathExists:candidate=>Boolean(this.obsidianVaultReadAdapter.getAbstractFileByPath(candidate)),
+        chooseAttachment:model=>new EmailPdfAttachmentImportModal(this.app,this,model).openForDecision(),
+        getMetadataSchemaSnapshot:()=>this.ports.getMetadataSchemaSnapshot(),
+        ensureTargetFolders:pdfPath=>this.ensureEmailImportTargetFolders(pdfPath),
+        createPdf:(pdfPath,bytes)=>this.obsidianVaultWriteAdapter.createBinary(pdfPath,emailImportArrayBuffer(bytes)),
+        saveDocumentMetadataRecordValues:(pdfPath,values)=>this.ports.saveDocumentMetadataRecordValues(pdfPath,values),
+        deletePdf:pdfFile=>this.obsidianVaultWriteAdapter.deleteFile(pdfFile,true),
+        openPdf:pdfPath=>this.openEmailImportPdfPath(pdfPath),
+        onRollbackError:rollbackError=>console.warn('[PDFium Gate] Email attachment PDF rollback failed',rollbackError)
+      });
+
+      if(result?.reason==='no-active-pdf') {
         new Notice(t('emailImport.notice.openEmailPdfFirst'),8000);
-        return {ok:false,reason:'no-active-pdf'};
+        return result;
       }
-
-      await this.ports.ensureDocumentRecordIndexReady();
-      const parentState=this.ports.getDocumentMetadataRecordState(parentPdfPath);
-      if(!parentState?.ready || !parentState?.ok || !parentState?.registered || !parentState?.values?.email_import_source_sha256) {
+      if(result?.reason==='not-email-import') {
         new Notice(t('emailImport.notice.notImportedEmailPdf'),8000);
-        return {ok:false,reason:'not-email-import'};
+        return result;
       }
-
-      const source=this.emailImportSourceDescriptorFromRecord(parentState.values);
-      if(source.retained!==true || !source.retainedPath) {
+      if(result?.reason==='source-not-retained') {
         new Notice(t('emailImport.notice.sourceNotRetained'),9000);
-        return {ok:false,reason:'source-not-retained'};
+        return result;
       }
-
-      const vaultRootPath=this.obsidianVaultReadAdapter.getBasePath();
-      const loaded=await EMAIL_IMPORT_RUNTIME.loadCanonicalEmailFromRetainedRecord({
-        values:parentState.values,
-        vaultRootPath
-      });
-      const document=loaded.document;
-
-      const analysis=EMAIL_IMPORT_RUNTIME.analyzeEmailAttachments(document);
-      const pdfItems=(analysis.pdfCandidates || []).filter(item=>item?.extractable===true && Array.isArray(item.pdfEvidence) && item.pdfEvidence.includes('payload'));
-      if(!pdfItems.length) {
+      if(result?.reason==='no-pdf-attachments') {
         new Notice(t('emailImport.notice.noImportablePdfAttachments'),8000);
-        return {ok:true,reason:'no-pdf-attachments'};
+        return result;
       }
-
-      const modalItems=pdfItems.map(item=>({
-        ...item,
-        suggestedPdfPath:this.emailImportSuggestedAttachmentPdfPath(parentPdfPath,item.attachment)
-      }));
-      const decision=await new EmailPdfAttachmentImportModal(this.app,this,{parentPdfPath,items:modalItems}).openForDecision();
-      if(!decision || decision.action==='cancel') return {ok:true,canceled:true};
-      const selected=modalItems[Number(decision.index)];
-      if(!selected?.attachment) throw new Error('Selected PDF attachment could not be resolved.');
-
-      const target=this.emailImportValidateTargetPath(decision.pdfPath);
-      if(!target.ok) {
-        new Notice(t('emailImport.notice.invalidTarget',{error:target.error}),9000);
-        return {ok:false,reason:'invalid-target'};
+      if(result?.reason==='invalid-target') {
+        new Notice(t('emailImport.notice.invalidTarget',{error:result.error}),9000);
+        return result;
       }
+      if(result?.canceled) return result;
 
-      const verified=EMAIL_IMPORT_RUNTIME.verifiedPdfAttachmentBytes(selected.attachment);
-      const schema=this.ports.getMetadataSchemaSnapshot();
-      if(!schema) throw new Error('Metadata schema is unavailable.');
-      const existingTargetState=this.ports.getDocumentMetadataRecordState(target.path);
-      if(existingTargetState?.registered) throw new Error('Target PDF path is already registered in Document Metadata.');
-      if(existingTargetState?.ok===false) throw new Error(existingTargetState.error || existingTargetState.reason || 'Target metadata state is unsafe.');
-
-      const provenance=EMAIL_IMPORT_RUNTIME.buildEmailAttachmentImportRecordValues({
-        schema,
-        parentRecordId:parentState.id,
-        sourceSha256:source.sha256,
-        attachment:{...selected.attachment,sha256:verified.sha256}
-      });
-
-      let pdfFile=null;
-      try {
-        await this.ensureEmailImportTargetFolders(target.path);
-        pdfFile=await this.obsidianVaultWriteAdapter.createBinary(target.path,emailImportArrayBuffer(verified.bytes));
-        const saved=await this.ports.saveDocumentMetadataRecordValues(target.path,provenance.values);
-        if(!saved?.ok) throw new Error(saved?.error || 'Attachment document metadata registration failed.');
-      } catch(error) {
-        if(pdfFile) {
-          try { await this.obsidianVaultWriteAdapter.deleteFile(pdfFile,true); }
-          catch(rollbackError) { console.warn('[PDFium Gate] Email attachment PDF rollback failed',rollbackError); }
+      if(result?.ok && result.pdfPath) {
+        if(result.openError) {
+          console.warn('[PDFium Gate] Email attachment import succeeded but opening the PDF failed',result.openError);
+          new Notice(t('emailImport.notice.attachmentOpenFailed',{path:result.pdfPath}),8000);
         }
-        throw error;
+        new Notice(t('emailImport.notice.attachmentImported',{path:result.pdfPath}),7000);
       }
-
-      try { await this.openEmailImportPdfPath(target.path); }
-      catch(error) {
-        console.warn('[PDFium Gate] Email attachment import succeeded but opening the PDF failed',error);
-        new Notice(t('emailImport.notice.attachmentOpenFailed',{path:target.path}),8000);
-      }
-      new Notice(t('emailImport.notice.attachmentImported',{path:target.path}),7000);
-      return {ok:true,pdfPath:target.path,parentPdfPath,attachmentSha256:verified.sha256};
+      return result;
     } catch(error) {
       console.error('[PDFium Gate] Email PDF attachment import failed',error);
       new Notice(t('emailImport.notice.attachmentImportFailed',{error:error instanceof Error?error.message:String(error)}),10000);
