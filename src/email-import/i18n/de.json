@@ -1,5 +1,6 @@
 {
   "commands.importEmail": "E-Mail importieren (.eml/.msg)",
+  "commands.importEmailPdfAttachment": "PDF-Anhang aus E-Mail importieren",
   "emailImport.modal.title": "E-Mail importieren",
   "emailImport.modal.intro": "Prüfen Sie die Nachricht, bevor PDFium Gate die PDF-Datei und den Metadatensatz erstellt.",
   "emailImport.modal.source": "Quelldatei",
@@ -18,6 +19,14 @@
   "emailImport.modal.cancel": "Abbrechen",
   "emailImport.modal.openExisting": "Vorhandene PDF öffnen",
   "emailImport.modal.import": "Importieren",
+  "emailImport.attachmentModal.title": "PDF-Anhang importieren",
+  "emailImport.attachmentModal.intro": "Wählen Sie einen PDF-Anhang aus der aufbewahrten Originalquelle. Der Anhang wird zu einem normalen PDFium-Gate-Dokument.",
+  "emailImport.attachmentModal.parent": "E-Mail-PDF",
+  "emailImport.attachmentModal.select": "PDF-Anhang",
+  "emailImport.attachmentModal.targetPath": "PDF-Pfad im Vault",
+  "emailImport.attachmentModal.targetPathDesc": "Der Anhang wird neben der E-Mail-PDF vorgeschlagen. Der Pfad kann vor dem Import geändert werden.",
+  "emailImport.attachmentModal.cancel": "Abbrechen",
+  "emailImport.attachmentModal.import": "Anhang importieren",
   "emailImport.notice.bridgeUnavailable": "Der E-Mail-Import ist noch nicht bereit. Warten Sie, bis der Obsidian-Arbeitsbereich vollständig geladen ist, und versuchen Sie es erneut.",
   "emailImport.notice.unsupportedSource": "Wählen Sie eine .eml- oder .msg-Datei.",
   "emailImport.notice.existingOpened": "Die vorhandene PDF für diese identische E-Mail-Quelle wurde geöffnet.",
@@ -25,5 +34,12 @@
   "emailImport.notice.invalidTarget": "Das PDF-Ziel ist ungültig: {{error}}",
   "emailImport.notice.openFailed": "Die E-Mail wurde importiert, aber PDFium Gate konnte {{path}} nicht automatisch öffnen.",
   "emailImport.notice.imported": "E-Mail nach {{path}} importiert.",
-  "emailImport.notice.importFailed": "E-Mail-Import fehlgeschlagen: {{error}}"
+  "emailImport.notice.importFailed": "E-Mail-Import fehlgeschlagen: {{error}}",
+  "emailImport.notice.openEmailPdfFirst": "Öffnen Sie zuerst eine PDF, die mit dem E-Mail-Import erstellt wurde.",
+  "emailImport.notice.notImportedEmailPdf": "Die aktive PDF ist nicht als importierte E-Mail registriert.",
+  "emailImport.notice.sourceNotRetained": "Die ursprüngliche E-Mail-Quelle wurde nicht aufbewahrt. Anhänge können daher später nicht aus diesem Import wiederhergestellt werden.",
+  "emailImport.notice.noImportablePdfAttachments": "Die aufbewahrte E-Mail-Quelle enthält keine PDF-Anhänge, die importiert werden können.",
+  "emailImport.notice.attachmentOpenFailed": "Der PDF-Anhang wurde importiert, aber PDFium Gate konnte {{path}} nicht automatisch öffnen.",
+  "emailImport.notice.attachmentImported": "PDF-Anhang nach {{path}} importiert.",
+  "emailImport.notice.attachmentImportFailed": "Import des PDF-Anhangs fehlgeschlagen: {{error}}"
 }
