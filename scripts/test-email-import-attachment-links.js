@@ -5,7 +5,8 @@ const {
   attachmentWikilink,
   renderEmailAttachmentLinkBlock,
   upsertEmailAttachmentLinkBlock,
-  extractEmailAttachmentLinkPaths
+  extractEmailAttachmentLinkPaths,
+  normalizeResolvedEmailAttachmentLinkTargets
 } = require('../src/email-import/metadata/email-attachment-links');
 
 assert.equal(attachmentWikilink('Cases\\report.pdf'),'[[Cases/report.pdf]]');
@@ -37,14 +38,56 @@ assert.deepEqual(extractEmailAttachmentLinkPaths(withLinks),[
 ]);
 assert.ok(withLinks.includes('- [[Cases/brev.docx]]'));
 
-const renamedByObsidian = withLinks.replace('[[Cases/brev.docx]]','[[Cases/Vedlegg/brev.docx]]');
+const renamedByObsidian = withLinks.replace('[[Cases/brev.docx]]','[[brev-renamed.docx]]');
 assert.deepEqual(extractEmailAttachmentLinkPaths(renamedByObsidian),[
   'Cases/report.pdf',
   'Cases/photo.jpg',
-  'Cases/Vedlegg/brev.docx'
+  'brev-renamed.docx'
 ]);
 
-const replaced = upsertEmailAttachmentLinkBlock(renamedByObsidian,['Cases/report.pdf']);
+const resolvedTargets = new Map([
+  ['Cases/report.pdf','Cases/report.pdf'],
+  ['Cases/photo.jpg','Cases/photo.jpg'],
+  ['brev-renamed.docx','Cases/Vedlegg/brev-renamed.docx']
+]);
+const normalizedAfterRename = normalizeResolvedEmailAttachmentLinkTargets(
+  renamedByObsidian,
+  'File Metadata/11/11111111-1111-4111-8111-111111111111.md',
+  (linkPath,sourcePath) => {
+    assert.equal(sourcePath,'File Metadata/11/11111111-1111-4111-8111-111111111111.md');
+    return resolvedTargets.get(linkPath) || null;
+  }
+);
+assert.ok(normalizedAfterRename.includes('- [[Cases/Vedlegg/brev-renamed.docx]]'));
+assert.deepEqual(extractEmailAttachmentLinkPaths(normalizedAfterRename),[
+  'Cases/report.pdf',
+  'Cases/photo.jpg',
+  'Cases/Vedlegg/brev-renamed.docx'
+]);
+
+const ambiguousShortTarget = normalizedAfterRename.replace(
+  '[[Cases/Vedlegg/brev-renamed.docx]]',
+  '[[brev-renamed.docx]]'
+);
+const disambiguated = normalizeResolvedEmailAttachmentLinkTargets(
+  ambiguousShortTarget,
+  'File Metadata/11/11111111-1111-4111-8111-111111111111.md',
+  linkPath => linkPath==='brev-renamed.docx' ? 'Archive/Other/brev-renamed.docx' : resolvedTargets.get(linkPath) || null
+);
+assert.ok(disambiguated.includes('- [[Archive/Other/brev-renamed.docx]]'));
+
+const unresolvedAfterDelete = normalizedAfterRename.replace(
+  '[[Cases/photo.jpg]]',
+  '[[Cases/deleted-photo.jpg]]'
+);
+const preservedUnresolved = normalizeResolvedEmailAttachmentLinkTargets(
+  unresolvedAfterDelete,
+  'File Metadata/11/11111111-1111-4111-8111-111111111111.md',
+  linkPath => linkPath==='Cases/deleted-photo.jpg' ? null : resolvedTargets.get(linkPath) || null
+);
+assert.ok(preservedUnresolved.includes('- [[Cases/deleted-photo.jpg]]'));
+
+const replaced = upsertEmailAttachmentLinkBlock(normalizedAfterRename,['Cases/report.pdf']);
 assert.deepEqual(extractEmailAttachmentLinkPaths(replaced),['Cases/report.pdf']);
 assert.equal((replaced.match(/pdfium-gate:email-attachments:start/g) || []).length,1);
 assert.ok(replaced.includes('Existing body text.'));
@@ -54,4 +97,4 @@ assert.deepEqual(extractEmailAttachmentLinkPaths(removed),[]);
 assert.ok(!removed.includes('pdfium-gate:email-attachments:start'));
 assert.ok(removed.includes('Existing body text.'));
 
-console.log('Email Import attachment wikilink block OK: native links are deterministic, deduplicated, replaceable, removable, and remain parseable after an Obsidian-style path rewrite.');
+console.log('Email Import attachment wikilink block OK: native links remain deterministic and plugin-owned links can be normalized back to resolver-confirmed full vault paths after Obsidian link updates.');

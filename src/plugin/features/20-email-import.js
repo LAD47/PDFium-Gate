@@ -24,6 +24,41 @@ class EmailImportFeature {
     this.obsidianPluginRegistrationAdapter.registerEvent(
       this.obsidianVaultLifecycleAdapter.onCreate(file=>{ void trigger.handleCreate(file); })
     );
+    this.obsidianPluginRegistrationAdapter.registerEvent(
+      this.obsidianVaultLifecycleAdapter.onModify(file=>{
+        void this.normalizeManagedEmailAttachmentLinks(file).catch(error=>
+          console.warn('[PDFium Gate] Email attachment link normalization failed',file?.path,error)
+        );
+      })
+    );
+  }
+
+  async normalizeManagedEmailAttachmentLinks(file) {
+    const recordPath=EMAIL_IMPORT_RUNTIME.normalizeVaultPath(file?.path);
+    if(!recordPath || !/^File Metadata\//.test(recordPath) || !/\.md$/i.test(recordPath)) {
+      return {ok:true,skipped:true,reason:'not-email-metadata-record'};
+    }
+    if(String(file?.extension || '').toLowerCase()!=='md') {
+      return {ok:true,skipped:true,reason:'not-markdown'};
+    }
+
+    const inFlight=this.emailAttachmentLinkNormalizationInFlight || (this.emailAttachmentLinkNormalizationInFlight=new Set());
+    if(inFlight.has(recordPath)) return {ok:true,skipped:true,reason:'normalization-in-flight'};
+    inFlight.add(recordPath);
+    try {
+      const current=this.obsidianVaultReadAdapter.getAbstractFileByPath(recordPath) || file;
+      const before=String(await this.obsidianVaultReadAdapter.readText(current));
+      const after=EMAIL_IMPORT_RUNTIME.normalizeResolvedEmailAttachmentLinkTargets(
+        before,
+        recordPath,
+        (linkPath,sourcePath)=>this.obsidianMetadataCacheAdapter.resolveLinkPath(linkPath,sourcePath)
+      );
+      if(after===before) return {ok:true,changed:false,recordPath};
+      await this.obsidianVaultWriteAdapter.modifyText(current,after);
+      return {ok:true,changed:true,recordPath};
+    } finally {
+      inFlight.delete(recordPath);
+    }
   }
 
   emailImportAdapter() {

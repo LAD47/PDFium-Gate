@@ -35,7 +35,8 @@ const {
   attachmentWikilink,
   renderEmailAttachmentLinkBlock,
   upsertEmailAttachmentLinkBlock,
-  extractEmailAttachmentLinkPaths
+  extractEmailAttachmentLinkPaths,
+  normalizeResolvedEmailAttachmentLinkTargets
 } = require('./metadata/email-attachment-links');
 
 module.exports = {
@@ -67,5 +68,6 @@ module.exports = {
   attachmentWikilink,
   renderEmailAttachmentLinkBlock,
   upsertEmailAttachmentLinkBlock,
-  extractEmailAttachmentLinkPaths
+  extractEmailAttachmentLinkPaths,
+  normalizeResolvedEmailAttachmentLinkTargets
 };

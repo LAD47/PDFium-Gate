@@ -67,6 +67,27 @@ function extractEmailAttachmentLinkPaths(markdown) {
   return result;
 }
 
+function normalizeResolvedEmailAttachmentLinkTargets(markdown, sourcePath, resolveLinkPath) {
+  const source = String(markdown == null ? '' : markdown);
+  if (typeof resolveLinkPath !== 'function') throw new TypeError('resolveLinkPath is required.');
+  const match = attachmentBlockPattern().exec(source);
+  if (!match) return source;
+  const normalizedSourcePath = normalizeVaultPath(sourcePath);
+  const normalizedBlock = match[0].replace(/\[\[([^\]\r\n]+)\]\]/g, (whole, inner) => {
+    const linkPath = normalizeVaultPath(String(inner || '').split('|', 1)[0]);
+    if (!linkPath) return whole;
+    try {
+      const resolvedPath = normalizeVaultPath(resolveLinkPath(linkPath, normalizedSourcePath));
+      if (!resolvedPath) return whole;
+      return attachmentWikilink(resolvedPath);
+    } catch (_) {
+      return whole;
+    }
+  });
+  if (normalizedBlock === match[0]) return source;
+  return `${source.slice(0, match.index)}${normalizedBlock}${source.slice(match.index + match[0].length)}`;
+}
+
 module.exports = {
   BLOCK_START,
   BLOCK_END,
@@ -75,5 +96,6 @@ module.exports = {
   normalizeAttachmentPaths,
   renderEmailAttachmentLinkBlock,
   upsertEmailAttachmentLinkBlock,
-  extractEmailAttachmentLinkPaths
+  extractEmailAttachmentLinkPaths,
+  normalizeResolvedEmailAttachmentLinkTargets
 };

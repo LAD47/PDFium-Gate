@@ -12,6 +12,11 @@ function createObsidianMetadataCacheAdapter({metadataCache}) {
     const frontmatter=cache?.frontmatter;
     return frontmatter && typeof frontmatter==='object' && !Array.isArray(frontmatter) ? frontmatter : null;
   }
-  return Object.freeze({contractVersion:OBSIDIAN_METADATA_CACHE_CONTRACT_VERSION,onResolved,getFrontmatter});
+  function resolveLinkPath(linkPath,sourcePath) {
+    if(!metadataCache || typeof metadataCache.getFirstLinkpathDest!=='function') return null;
+    const file=metadataCache.getFirstLinkpathDest(String(linkPath || ''),String(sourcePath || ''));
+    return typeof file?.path==='string' ? file.path : null;
+  }
+  return Object.freeze({contractVersion:OBSIDIAN_METADATA_CACHE_CONTRACT_VERSION,onResolved,getFrontmatter,resolveLinkPath});
 }
 module.exports={OBSIDIAN_METADATA_CACHE_CONTRACT_VERSION,createObsidianMetadataCacheAdapter};
