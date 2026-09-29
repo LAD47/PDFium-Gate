@@ -41,5 +41,13 @@
   "emailImport.notice.noImportablePdfAttachments": "La fuente de correo conservada no contiene adjuntos PDF que puedan importarse.",
   "emailImport.notice.attachmentOpenFailed": "El adjunto PDF se importó, pero PDFium Gate no pudo abrir {{path}} automáticamente.",
   "emailImport.notice.attachmentImported": "Adjunto PDF importado a {{path}}.",
-  "emailImport.notice.attachmentImportFailed": "La importación del adjunto PDF falló: {{error}}"
+  "emailImport.notice.attachmentImportFailed": "La importación del adjunto PDF falló: {{error}}",
+  "settings.emailImport.section": "Importación de correo",
+  "settings.emailImport.dragDrop.name": "Importar automáticamente correos arrastrados",
+  "settings.emailImport.dragDrop.description": "Cuando se añade un archivo .eml o .msg al vault, se importa automáticamente en la misma carpeta sin un diálogo adicional.",
+  "settings.emailImport.attachments.name": "Extraer automáticamente los adjuntos del correo",
+  "settings.emailImport.attachments.description": "En las importaciones automáticas mediante arrastrar y soltar, los adjuntos normales se guardan junto al PDF del correo. Los recursos inline/CID permanecen integrados en la visualización del correo.",
+  "emailImport.notice.dragDropExisting": "Este correo ya estaba importado. Se abrió el PDF existente: {{path}}.",
+  "emailImport.notice.dragDropImported": "Correo importado automáticamente a {{path}}. Adjuntos extraídos: {{count}}.",
+  "emailImport.notice.dragDropImportedWithAttachmentErrors": "Correo importado automáticamente a {{path}}. Adjuntos extraídos: {{count}}; errores: {{failed}}."
 }
