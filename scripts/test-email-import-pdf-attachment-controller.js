@@ -22,6 +22,41 @@ function createHarness(overrides = {}) {
     content: Buffer.from('%PDF-test')
   };
 
+  const defaultServices = {
+    sourceDescriptorFromEmailImportRecord: () => ({
+      format: 'eml',
+      sha256: SOURCE_SHA,
+      byteSize: 123,
+      originalFilename: 'message.eml',
+      retained: true,
+      retainedPath: `.pdf-metadata/email-sources/${SOURCE_SHA.slice(0, 2)}/${SOURCE_SHA}.eml`
+    }),
+    loadCanonicalEmailFromRetainedRecord: async () => {
+      calls.push('load-retained');
+      return { document: { attachments: [attachment] } };
+    },
+    analyzeEmailAttachments: () => ({
+      pdfCandidates: [{ attachment, extractable: true, pdfEvidence: ['payload'] }]
+    }),
+    suggestedAttachmentPdfPath: () => 'Email Imports/document.pdf',
+    validateTargetPdfPath: value => ({ ok: true, path: value }),
+    verifiedPdfAttachmentBytes: selected => {
+      assert.equal(selected, attachment);
+      return { bytes: Buffer.from('%PDF-test'), sha256: ATTACHMENT_SHA };
+    },
+    buildEmailAttachmentImportRecordValues: ({ parentRecordId, sourceSha256, attachment: selected }) => {
+      assert.equal(parentRecordId, 'parent-record-id');
+      assert.equal(sourceSha256, SOURCE_SHA);
+      assert.equal(selected.sha256, ATTACHMENT_SHA);
+      return {
+        values: {
+          email_import_parent_record_id: parentRecordId,
+          email_import_attachment_sha256: selected.sha256
+        }
+      };
+    }
+  };
+
   const options = {
     parentPdfPath: 'Email Imports/message.pdf',
     ensureDocumentRecordIndexReady: async () => { calls.push('ensure-index'); },
@@ -56,44 +91,11 @@ function createHarness(overrides = {}) {
     deletePdf: async file => { calls.push(`delete:${file.path}`); },
     openPdf: async path => { calls.push(`open:${path}`); },
     onRollbackError: error => { calls.push(`rollback-error:${error.message}`); },
-    services: {
-      sourceDescriptorFromEmailImportRecord: () => ({
-        format: 'eml',
-        sha256: SOURCE_SHA,
-        byteSize: 123,
-        originalFilename: 'message.eml',
-        retained: true,
-        retainedPath: `.pdf-metadata/email-sources/${SOURCE_SHA.slice(0, 2)}/${SOURCE_SHA}.eml`
-      }),
-      loadCanonicalEmailFromRetainedRecord: async () => {
-        calls.push('load-retained');
-        return { document: { attachments: [attachment] } };
-      },
-      analyzeEmailAttachments: () => ({
-        pdfCandidates: [{ attachment, extractable: true, pdfEvidence: ['payload'] }]
-      }),
-      suggestedAttachmentPdfPath: () => 'Email Imports/document.pdf',
-      validateTargetPdfPath: value => ({ ok: true, path: value }),
-      verifiedPdfAttachmentBytes: selected => {
-        assert.equal(selected, attachment);
-        return { bytes: Buffer.from('%PDF-test'), sha256: ATTACHMENT_SHA };
-      },
-      buildEmailAttachmentImportRecordValues: ({ parentRecordId, sourceSha256, attachment: selected }) => {
-        assert.equal(parentRecordId, 'parent-record-id');
-        assert.equal(sourceSha256, SOURCE_SHA);
-        assert.equal(selected.sha256, ATTACHMENT_SHA);
-        return {
-          values: {
-            email_import_parent_record_id: parentRecordId,
-            email_import_attachment_sha256: selected.sha256
-          }
-        };
-      }
-    },
+    services: defaultServices,
     ...overrides
   };
 
-  if (overrides.services) options.services = { ...options.services, ...overrides.services };
+  if (overrides.services) options.services = { ...defaultServices, ...overrides.services };
   return { calls, options };
 }
 
