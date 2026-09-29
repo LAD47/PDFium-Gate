@@ -16,6 +16,7 @@ const {
   normalizeVaultPath,
   safeFilenamePart,
   suggestedEmailPdfPath,
+  suggestedEmailPdfPathInFolder,
   suggestedAttachmentPdfPath,
   validateTargetPdfPath
 } = require('./runtime/target-path-policy');
@@ -42,6 +43,7 @@ module.exports = {
   normalizeVaultPath,
   safeFilenamePart,
   suggestedEmailPdfPath,
+  suggestedEmailPdfPathInFolder,
   suggestedAttachmentPdfPath,
   validateTargetPdfPath,
   runEmailPdfAttachmentImport,
