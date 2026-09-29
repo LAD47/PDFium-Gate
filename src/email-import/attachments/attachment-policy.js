@@ -1,6 +1,6 @@
 'use strict';
 
-const { toBuffer } = require('../integrity/sha256');
+const { toBuffer } = require('../../core/integrity/sha256');
 
 function normalizeContentId(value) {
   const text = String(value == null ? '' : value).trim();
