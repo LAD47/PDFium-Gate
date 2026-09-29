@@ -4,6 +4,7 @@ const schemaApi = require('../../metadata/schema-contract');
 const { analyzeEmailAttachments } = require('../attachments/attachment-policy');
 
 const EMAIL_IMPORT_METADATA_VERSION = 1;
+const EMAIL_IMPORT_ATTACHMENT_METADATA_VERSION = 1;
 const EMAIL_IMPORT_TECHNICAL_PREFIX = 'email_import_';
 
 const FACTORY_FIELD_IDS = Object.freeze({
@@ -26,7 +27,14 @@ const EMAIL_IMPORT_TECHNICAL_PROPERTIES = Object.freeze([
   'email_import_attachment_count',
   'email_import_user_attachment_count',
   'email_import_inline_resource_count',
-  'email_import_pdf_candidate_count'
+  'email_import_pdf_candidate_count',
+  'email_import_attachment_version',
+  'email_import_attachment_parent_record_id',
+  'email_import_attachment_source_sha256',
+  'email_import_attachment_sha256',
+  'email_import_attachment_id',
+  'email_import_attachment_original_filename',
+  'email_import_attachment_content_type'
 ]);
 
 function nullableString(value) {
@@ -116,6 +124,13 @@ function technicalPropertyCollision(schema) {
   return activeFields(schema)
     .map(field => String(field.property || ''))
     .find(property => property.startsWith(EMAIL_IMPORT_TECHNICAL_PREFIX)) || null;
+}
+
+function assertTechnicalNamespaceAvailable(schema) {
+  const collision = technicalPropertyCollision(schema);
+  if (collision) {
+    throw new Error(`Metadata schema uses reserved Email Import property namespace: ${collision}`);
+  }
 }
 
 function buildTechnicalValues(document) {
@@ -217,10 +232,7 @@ function buildUserFieldSuggestions(document, schema) {
 }
 
 function buildEmailImportRecordValues({ document, schema }) {
-  const collision = technicalPropertyCollision(schema);
-  if (collision) {
-    throw new Error(`Metadata schema uses reserved Email Import property namespace: ${collision}`);
-  }
+  assertTechnicalNamespaceAvailable(schema);
 
   const technicalValues = buildTechnicalValues(document);
   const userProjection = buildUserFieldSuggestions(document, schema);
@@ -232,6 +244,31 @@ function buildEmailImportRecordValues({ document, schema }) {
     mappedFields: userProjection.mappedFields,
     dateTimeProjection: userProjection.dateTimeProjection
   };
+}
+
+function buildEmailAttachmentImportRecordValues({ schema, parentRecordId, sourceSha256, attachment }) {
+  assertTechnicalNamespaceAvailable(schema);
+  const parentId = nullableString(parentRecordId);
+  if (!parentId) throw new TypeError('Parent email document record ID is required.');
+  const sourceHash = nullableString(sourceSha256)?.toLowerCase();
+  if (!/^[0-9a-f]{64}$/.test(sourceHash || '')) throw new TypeError('Parent email source SHA-256 is required.');
+  const attachmentHash = nullableString(attachment?.sha256)?.toLowerCase();
+  if (!/^[0-9a-f]{64}$/.test(attachmentHash || '')) throw new TypeError('Attachment SHA-256 is required.');
+
+  const values = {
+    email_import_attachment_version: EMAIL_IMPORT_ATTACHMENT_METADATA_VERSION,
+    email_import_attachment_parent_record_id: parentId,
+    email_import_attachment_source_sha256: sourceHash,
+    email_import_attachment_sha256: attachmentHash
+  };
+  const attachmentId = nullableString(attachment?.id);
+  if (attachmentId) values.email_import_attachment_id = attachmentId;
+  const filename = nullableString(attachment?.filename);
+  if (filename) values.email_import_attachment_original_filename = filename;
+  const contentType = nullableString(attachment?.contentType);
+  if (contentType) values.email_import_attachment_content_type = contentType;
+
+  return { values, technicalValues: { ...values }, userFieldSuggestions: {} };
 }
 
 function buildEmailImportRegistrationPlan({ document, schema, documentRecordState = null }) {
@@ -271,6 +308,7 @@ function buildEmailImportRegistrationPlan({ document, schema, documentRecordStat
 
 module.exports = {
   EMAIL_IMPORT_METADATA_VERSION,
+  EMAIL_IMPORT_ATTACHMENT_METADATA_VERSION,
   EMAIL_IMPORT_TECHNICAL_PREFIX,
   EMAIL_IMPORT_TECHNICAL_PROPERTIES,
   FACTORY_FIELD_IDS,
@@ -281,5 +319,6 @@ module.exports = {
   buildTechnicalValues,
   buildUserFieldSuggestions,
   buildEmailImportRecordValues,
+  buildEmailAttachmentImportRecordValues,
   buildEmailImportRegistrationPlan
 };
