@@ -22,21 +22,26 @@ function requirePathExistsProbe(pathExists) {
   return pathExists;
 }
 
-function suggestedEmailPdfPath(document, pathExists) {
+function suggestedEmailPdfPathInFolder(document, folderPath, pathExists) {
   const exists = requirePathExistsProbe(pathExists);
   const subject = safeFilenamePart(document?.message?.subject, 'email');
   const iso = String(document?.message?.dateTime?.iso || '');
   const date = /^\d{4}-\d{2}-\d{2}/.test(iso) ? iso.slice(0, 10) : '';
   const base = safeFilenamePart(`${date ? `${date} - ` : ''}${subject}`, 'email');
-  const folder = 'Email Imports';
+  const folder = normalizeVaultPath(folderPath);
 
   for (let index = 1; index < 10000; index++) {
     const suffix = index === 1 ? '' : ` (${index})`;
-    const candidate = `${folder}/${base}${suffix}.pdf`;
+    const name = `${base}${suffix}.pdf`;
+    const candidate = folder ? `${folder}/${name}` : name;
     if (!exists(candidate)) return candidate;
   }
 
   throw new Error('Could not allocate a unique Email Import PDF path.');
+}
+
+function suggestedEmailPdfPath(document, pathExists) {
+  return suggestedEmailPdfPathInFolder(document, 'Email Imports', pathExists);
 }
 
 function suggestedAttachmentPdfPath(parentPdfPath, attachment, pathExists) {
@@ -86,6 +91,7 @@ module.exports = {
   normalizeVaultPath,
   safeFilenamePart,
   suggestedEmailPdfPath,
+  suggestedEmailPdfPathInFolder,
   suggestedAttachmentPdfPath,
   validateTargetPdfPath
 };
