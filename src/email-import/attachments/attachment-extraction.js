@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const { randomUUID } = require('crypto');
-const { sha256Hex, toBuffer } = require('../integrity/sha256');
+const { sha256Hex, toBuffer } = require('../../core/integrity/sha256');
 
 const SHA256_RE = /^[0-9a-f]{64}$/;
 const WINDOWS_RESERVED_RE = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i;
