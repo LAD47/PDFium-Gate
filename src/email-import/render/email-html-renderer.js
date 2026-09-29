@@ -1,7 +1,7 @@
 'use strict';
 
 const sanitizeHtml = require('sanitize-html');
-const { toBuffer } = require('../integrity/sha256');
+const { toBuffer } = require('../../core/integrity/sha256');
 const { normalizeContentId, decodeCidReference, analyzeEmailAttachments } = require('../attachments/attachment-policy');
 
 const ALLOWED_MESSAGE_TAGS = [
