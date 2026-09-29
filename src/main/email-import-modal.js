@@ -116,3 +116,92 @@ class EmailImportReviewModal extends Modal {
     this.updateImportEnabled();
   }
 }
+
+class EmailPdfAttachmentImportModal extends Modal {
+  constructor(app, plugin, model) {
+    super(app);
+    this.plugin=plugin;
+    this.model=model || {};
+    this.items=Array.isArray(this.model.items)?this.model.items:[];
+    this.selectedIndex=0;
+    this.targetPath=String(this.items[0]?.suggestedPdfPath || '');
+    this.targetInput=null;
+    this.settled=false;
+    this.resolveDecision=null;
+  }
+
+  openForDecision() {
+    return new Promise(resolve=>{
+      this.resolveDecision=resolve;
+      this.open();
+    });
+  }
+
+  finish(decision) {
+    if(this.settled) return;
+    this.settled=true;
+    const resolve=this.resolveDecision;
+    this.resolveDecision=null;
+    try { this.close(); } catch(_) {}
+    if(typeof resolve==='function') resolve(decision);
+  }
+
+  onOpen() { this.render(); }
+
+  onClose() {
+    this.contentEl.empty();
+    if(!this.settled) {
+      this.settled=true;
+      const resolve=this.resolveDecision;
+      this.resolveDecision=null;
+      if(typeof resolve==='function') resolve({action:'cancel'});
+    }
+  }
+
+  render() {
+    const t=(key,params)=>emailImportT(this.plugin,key,params);
+    const {contentEl}=this;
+    contentEl.empty();
+    contentEl.createEl('h2',{text:t('emailImport.attachmentModal.title')});
+    contentEl.createEl('p',{text:t('emailImport.attachmentModal.intro')});
+    new Setting(contentEl)
+      .setName(t('emailImport.attachmentModal.parent'))
+      .setDesc(String(this.model.parentPdfPath || ''));
+
+    new Setting(contentEl)
+      .setName(t('emailImport.attachmentModal.select'))
+      .addDropdown(dropdown=>{
+        this.items.forEach((item,index)=>{
+          const attachment=item?.attachment || {};
+          const name=String(attachment.filename || attachment.id || `#${index+1}`);
+          const size=Number.isInteger(attachment.size)?` · ${attachment.size} B`:'';
+          dropdown.addOption(String(index),`${name}${size}`);
+        });
+        dropdown.setValue(String(this.selectedIndex));
+        dropdown.onChange(value=>{
+          const index=Number(value);
+          if(!Number.isInteger(index) || index<0 || index>=this.items.length) return;
+          this.selectedIndex=index;
+          this.targetPath=String(this.items[index]?.suggestedPdfPath || '');
+          this.targetInput?.setValue?.(this.targetPath);
+        });
+      });
+
+    new Setting(contentEl)
+      .setName(t('emailImport.attachmentModal.targetPath'))
+      .setDesc(t('emailImport.attachmentModal.targetPathDesc'))
+      .addText(text=>{
+        this.targetInput=text;
+        text.setValue(this.targetPath).onChange(value=>{ this.targetPath=String(value || ''); });
+      });
+
+    const actions=new Setting(contentEl);
+    actions.addButton(button=>button
+      .setButtonText(t('emailImport.attachmentModal.cancel'))
+      .onClick(()=>this.finish({action:'cancel'})));
+    actions.addButton(button=>button
+      .setCta()
+      .setButtonText(t('emailImport.attachmentModal.import'))
+      .onClick(()=>this.finish({action:'import',index:this.selectedIndex,pdfPath:this.targetPath})));
+  }
+}
