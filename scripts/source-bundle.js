@@ -119,6 +119,10 @@ const MAIN_BRIDGE_FEATURE_ORDER = Object.freeze([
   '09-email-import.js'
 ]);
 
+const PLUGIN_SUPPORT_ORDER = Object.freeze([
+  'email-import/obsidian-email-import-adapter.js'
+]);
+
 const PLUGIN_FEATURE_ORDER = Object.freeze([
   '01-lifecycle.js',
   '02-renderer-bridge.js',
@@ -278,6 +282,7 @@ function buildMainBridgeSource(root) {
 function buildPluginSource(root) {
   return [
     moduleBody(root, 'src/plugin/feature-contracts.js'),
+    ...PLUGIN_SUPPORT_ORDER.map(file => moduleBody(root, `src/plugin/${file}`)),
     ...PLUGIN_FEATURE_ORDER.map(file => moduleBody(root, `src/plugin/features/${file}`)),
     read(root, 'src/plugin/plugin-composition.js')
   ].join('\n');
@@ -297,6 +302,7 @@ module.exports = {
   MAIN_BRIDGE_RUNTIME_ORDER,
   MAIN_BRIDGE_PLATFORM_ORDER,
   MAIN_BRIDGE_FEATURE_ORDER,
+  PLUGIN_SUPPORT_ORDER,
   PLUGIN_FEATURE_ORDER,
   moduleBody,
   buildAnnotatorSource,
