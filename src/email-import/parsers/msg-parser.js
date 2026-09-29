@@ -2,7 +2,7 @@
 
 const MsgReaderModule = require('@kenjiuno/msgreader');
 const { simpleParser } = require('mailparser');
-const { sha256Hex, toBuffer } = require('../integrity/sha256');
+const { sha256Hex, toBuffer } = require('../../core/integrity/sha256');
 
 const MsgReader = MsgReaderModule.default || MsgReaderModule;
 
