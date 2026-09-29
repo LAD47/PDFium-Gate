@@ -5,6 +5,7 @@ const {
   normalizeVaultPath,
   safeFilenamePart,
   suggestedEmailPdfPath,
+  suggestedEmailPdfPathInFolder,
   suggestedAttachmentPdfPath,
   validateTargetPdfPath
 } = require('../src/email-import/runtime/target-path-policy');
@@ -38,6 +39,20 @@ assert.equal(
   ])),
   'Email Imports/2026-09-29 - Quarterly report (3).pdf'
 );
+assert.equal(
+  suggestedEmailPdfPathInFolder(emailDocument, 'Cases/2026', existingSet([])),
+  'Cases/2026/2026-09-29 - Quarterly report.pdf'
+);
+assert.equal(
+  suggestedEmailPdfPathInFolder(emailDocument, '', existingSet([])),
+  '2026-09-29 - Quarterly report.pdf'
+);
+assert.equal(
+  suggestedEmailPdfPathInFolder(emailDocument, 'Cases/2026', existingSet([
+    'Cases/2026/2026-09-29 - Quarterly report.pdf'
+  ])),
+  'Cases/2026/2026-09-29 - Quarterly report (2).pdf'
+);
 
 const attachment = { filename: 'supporting-document.pdf' };
 assert.equal(
@@ -65,4 +80,4 @@ assert.equal(validateTargetPdfPath('.pdf-metadata/new.pdf', existingSet([])).ok,
 assert.equal(validateTargetPdfPath('File Metadata/new.pdf', existingSet([])).ok, false);
 assert.equal(validateTargetPdfPath('Email Imports/existing.pdf', existingSet(['Email Imports/existing.pdf'])).ok, false);
 
-console.log('Email Import target-path policy OK: normalization, safe filenames, deterministic unique allocation and fail-closed target validation verified.');
+console.log('Email Import target-path policy OK: normalization, same-folder drop suggestions, safe filenames, deterministic unique allocation and fail-closed target validation verified.');
