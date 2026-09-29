@@ -5,7 +5,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { parseEml } = require('../src/email-import/parsers/eml-parser');
-const { sha256Hex } = require('../src/email-import/integrity/sha256');
+const { sha256Hex } = require('../src/core/integrity/sha256');
 const { analyzeEmailAttachments } = require('../src/email-import/attachments/attachment-policy');
 const {
   sanitizeAttachmentFilename,
