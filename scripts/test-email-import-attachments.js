@@ -5,10 +5,12 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { parseEml } = require('../src/email-import/parsers/eml-parser');
+const { sha256Hex } = require('../src/email-import/integrity/sha256');
 const { analyzeEmailAttachments } = require('../src/email-import/attachments/attachment-policy');
 const {
   sanitizeAttachmentFilename,
   verifiedAttachmentBytes,
+  verifiedPdfAttachmentBytes,
   extractAttachment
 } = require('../src/email-import/attachments/attachment-extraction');
 
@@ -47,6 +49,38 @@ async function parseFixture(filename) {
   assert.equal(verified.sha256, pdfAttachment.sha256, 'decoded payload hash verified before extraction');
   assert.ok(verified.bytes.equals(fs.readFileSync(path.join(attachmentRoot, 'test-attachment-1.pdf'))), 'decoded PDF bytes match reference fixture');
 
+  const verifiedPdf = verifiedPdfAttachmentBytes(pdfAttachment);
+  assert.equal(verifiedPdf.sha256, pdfAttachment.sha256, 'PDF attachment hash verified before document import');
+  assert.equal(verifiedPdf.bytes.subarray(0,5).toString('ascii'), '%PDF-', 'PDF document import requires real PDF payload signature');
+
+  const fakePdfBytes = Buffer.from('this is not actually a PDF');
+  const fakePdf = {
+    ...pdfAttachment,
+    filename:'looks-like.pdf',
+    contentType:'application/pdf',
+    content:fakePdfBytes,
+    size:fakePdfBytes.length,
+    sha256:sha256Hex(fakePdfBytes)
+  };
+  await assert.rejects(
+    async () => verifiedPdfAttachmentBytes(fakePdf),
+    /not a PDF payload/i,
+    'filename and MIME evidence alone cannot be imported as a PDF document without PDF payload bytes'
+  );
+
+  const truncatedPdfBytes = Buffer.from('%PDF-1.7\n1 0 obj\n<<>>\nendobj\n');
+  const truncatedPdf = {
+    ...pdfAttachment,
+    content:truncatedPdfBytes,
+    size:truncatedPdfBytes.length,
+    sha256:sha256Hex(truncatedPdfBytes)
+  };
+  await assert.rejects(
+    async () => verifiedPdfAttachmentBytes(truncatedPdf),
+    /end-of-file marker/i,
+    'truncated PDF payload is refused before document import'
+  );
+
   assert.equal(sanitizeAttachmentFilename('../outside.pdf', pdfAttachment), 'outside.pdf', 'path traversal components removed from filename');
   assert.equal(sanitizeAttachmentFilename('folder\\nested\\report.pdf', pdfAttachment), 'report.pdf', 'Windows path components removed from filename');
   assert.equal(sanitizeAttachmentFilename('CON.pdf', pdfAttachment), '_CON.pdf', 'Windows reserved name neutralized');
@@ -82,7 +116,7 @@ async function parseFixture(filename) {
     await fs.promises.rm(tempRoot, { recursive: true, force: true });
   }
 
-  console.log('Email Import attachment handling OK: inline/CID resources separated from user attachments, PDF candidates identified, safe filenames enforced, and explicit extraction preserves exact bytes with fail-closed collisions.');
+  console.log('Email Import attachment handling OK: inline/CID resources separated from user attachments, PDF candidates identified, actual PDF payload verified before document import, safe filenames enforced, and explicit extraction preserves exact bytes with fail-closed collisions.');
 })().catch(error => {
   console.error('Email Import attachment handling check failed.');
   console.error(error && error.stack ? error.stack : error);
