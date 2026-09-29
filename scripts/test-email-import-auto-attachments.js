@@ -39,7 +39,7 @@ function createHarness(overrides = {}) {
     parentPdfPath:'Cases/mail.pdf',
     ensureDocumentRecordIndexReady:async()=>calls.push('ensure-index'),
     getDocumentMetadataRecordState:path=>path==='Cases/mail.pdf'
-      ? { ready:true, ok:true, registered:true, id:'parent-record', values:{ email_import_source_sha256:SOURCE_SHA } }
+      ? { ready:true, ok:true, registered:true, id:'parent-record', recordPath:'File Metadata/pa/parent-record.md', values:{ email_import_source_sha256:SOURCE_SHA } }
       : { ready:true, ok:true, registered:false },
     vaultRootPath:'/vault',
     pathExists:()=>false,
@@ -48,6 +48,10 @@ function createHarness(overrides = {}) {
     createBinary:async(path,bytes)=>{ calls.push(`create:${path}:${Buffer.from(bytes).toString('ascii')}`); return {path}; },
     deleteFile:async file=>calls.push(`delete:${file.path}`),
     saveDocumentMetadataRecordValues:async(path,values)=>{ calls.push(`save:${path}:${values.email_import_attachment_sha256}`); return {ok:true}; },
+    updateParentAttachmentLinks:async model=>{
+      calls.push(`links:${model.parentRecordPath}:${model.attachmentPaths.join('|')}`);
+      return {ok:true,linkedCount:model.attachmentPaths.length};
+    },
     beforeCreateAttachment:async path=>calls.push(`before:${path}`),
     onRollbackError:error=>calls.push(`rollback-error:${error.message}`),
     services,
@@ -73,6 +77,8 @@ async function run() {
     assert.equal(result.ok,true);
     assert.equal(result.exportedCount,2);
     assert.equal(result.failureCount,0);
+    assert.equal(result.linkedCount,2);
+    assert.equal(result.relationError,null);
     assert.deepEqual(result.exported.map(item=>[item.path,item.pdfRegistered]),[
       ['Cases/notes.txt',false],
       ['Cases/report.pdf',true]
@@ -82,6 +88,7 @@ async function run() {
     assert.ok(calls.includes('create:Cases/notes.txt:notes'));
     assert.ok(calls.includes('create:Cases/report.pdf:%PDF-test\n%%EOF'));
     assert.ok(calls.includes(`save:Cases/report.pdf:${PDF_SHA}`));
+    assert.ok(calls.includes('links:File Metadata/pa/parent-record.md:Cases/notes.txt|Cases/report.pdf'));
     assert.ok(!calls.some(item=>item.includes('logo.png')));
   }
 
@@ -95,9 +102,22 @@ async function run() {
     assert.equal(result.ok,true);
     assert.equal(result.exportedCount,1);
     assert.equal(result.failureCount,1);
+    assert.equal(result.linkedCount,1);
     assert.equal(result.failures[0].filename,'report.pdf');
     assert.ok(calls.includes('delete:Cases/report.pdf'));
     assert.ok(calls.includes('create:Cases/notes.txt:notes'));
+    assert.ok(calls.includes('links:File Metadata/pa/parent-record.md:Cases/notes.txt'));
+  }
+
+  {
+    const { options } = createHarness({
+      updateParentAttachmentLinks:async()=>{ throw new Error('link write failed'); }
+    });
+    const result = await runAutomaticEmailAttachmentExport(options);
+    assert.equal(result.ok,true);
+    assert.equal(result.exportedCount,2);
+    assert.equal(result.linkedCount,0);
+    assert.equal(result.relationError,'link write failed');
   }
 
   {
@@ -107,9 +127,10 @@ async function run() {
     const result = await runAutomaticEmailAttachmentExport(options);
     assert.equal(result.reason,'no-attachments');
     assert.deepEqual(result.exported,[]);
+    assert.equal(result.linkedCount,0);
   }
 
-  console.log('Email Import automatic attachment export OK: ordinary attachments export beside parent PDF, inline resources stay hidden, PDFs receive provenance metadata, and PDF metadata failures roll back only the child PDF.');
+  console.log('Email Import automatic attachment export OK: ordinary attachments export beside parent PDF, inline resources stay hidden, PDFs receive provenance metadata, native parent links cover only successful exports, and relation-write failures preserve exported files.');
 }
 
 run().catch(error=>{
