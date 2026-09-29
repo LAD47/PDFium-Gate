@@ -14,9 +14,23 @@ class EmailImportFeature {
     });
   }
 
+  emailImportAdapter() {
+    return createObsidianEmailImportAdapter({
+      runtime:EMAIL_IMPORT_RUNTIME,
+      vaultRead:this.obsidianVaultReadAdapter,
+      metadataCache:this.obsidianMetadataCacheAdapter,
+      vaultWrite:this.obsidianVaultWriteAdapter,
+      pdfLeaf:this.pdfLeafAdapter,
+      ensureDocumentRecordIndexReady:()=>this.ports.ensureDocumentRecordIndexReady(),
+      getMetadataSchemaSnapshot:()=>this.ports.getMetadataSchemaSnapshot(),
+      getDocumentMetadataRecordState:pdfPath=>this.ports.getDocumentMetadataRecordState(pdfPath),
+      saveDocumentMetadataRecordValues:(pdfPath,values)=>this.ports.saveDocumentMetadataRecordValues(pdfPath,values)
+    });
+  }
+
   async startEmailPdfAttachmentImport() {
     const t=(key,params)=>this.i18n.t(key,params);
-    const adapter=createObsidianEmailImportAdapter(this);
+    const adapter=this.emailImportAdapter();
     try {
       const result=await EMAIL_IMPORT_RUNTIME.runEmailPdfAttachmentImport({
         parentPdfPath:adapter.activePdfPath(),
@@ -79,7 +93,7 @@ class EmailImportFeature {
       return {ok:false,reason:'main-bridge-unavailable'};
     }
 
-    const adapter=createObsidianEmailImportAdapter(this);
+    const adapter=this.emailImportAdapter();
     try {
       const result=await EMAIL_IMPORT_RUNTIME.runEmailImport({
         chooseSource:()=>transport.chooseEmailImportSource({
