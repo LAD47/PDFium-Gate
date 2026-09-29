@@ -198,6 +198,8 @@ async function runEmailImport({
     ok: true,
     pdfPath: target.path,
     duplicate: duplicateFacts.exactDuplicate,
+    sourceRetained: retained?.document?.source?.retained === true,
+    retainedPath: retained?.retainedPath || null,
     openError
   };
 }
