@@ -34,6 +34,11 @@ class EmailImportFeature {
       name:this.i18n.t('commands.importEmail'),
       callback:()=>{ void this.startEmailImport(); }
     });
+    this.obsidianPluginRegistrationAdapter.addCommand({
+      id:'import-email-pdf-attachment',
+      name:this.i18n.t('commands.importEmailPdfAttachment'),
+      callback:()=>{ void this.startEmailPdfAttachmentImport(); }
+    });
   }
 
   async findEmailImportDuplicatesBySha256(sourceSha256) {
@@ -72,6 +77,24 @@ class EmailImportFeature {
     throw new Error('Could not allocate a unique Email Import PDF path.');
   }
 
+  emailImportSuggestedAttachmentPdfPath(parentPdfPath, attachment) {
+    const parent=emailImportNormalizeVaultPath(parentPdfPath);
+    const slash=parent.lastIndexOf('/');
+    const folder=slash>=0?parent.slice(0,slash):'';
+    let filename=emailImportSafeFilenamePart(attachment?.filename || attachment?.id || 'attachment','attachment');
+    if(!/\.pdf$/i.test(filename)) filename=`${filename}.pdf`;
+    const stem=filename.replace(/\.pdf$/i,'');
+    let index=1;
+    while(index<10000) {
+      const suffix=index===1?'':` (${index})`;
+      const name=`${stem}${suffix}.pdf`;
+      const candidate=folder?`${folder}/${name}`:name;
+      if(!this.obsidianVaultReadAdapter.getAbstractFileByPath(candidate)) return candidate;
+      index++;
+    }
+    throw new Error('Could not allocate a unique attachment PDF path.');
+  }
+
   emailImportValidateTargetPath(value) {
     const target=emailImportNormalizeVaultPath(value);
     if(!target || !/\.pdf$/i.test(target)) return {ok:false,error:'Target must be a vault-relative .pdf path.'};
@@ -101,6 +124,124 @@ class EmailImportFeature {
     if(!target?.ok || !target.leaf) throw new Error(target?.error || 'No WorkspaceLeaf is available for the imported PDF.');
     await target.leaf.openFile(file);
     return true;
+  }
+
+  emailImportActivePdfPath() {
+    const active=this.pdfLeafAdapter?.getActiveLeaf?.();
+    const view=active?.ok?active.leaf?.view:null;
+    const file=view?.file || null;
+    if(!file || String(file.extension || '').toLowerCase()!=='pdf') return null;
+    return emailImportNormalizeVaultPath(file.path);
+  }
+
+  emailImportSourceDescriptorFromRecord(values) {
+    const source=values && typeof values==='object'?values:{};
+    const format=String(source.email_import_source_format || '').toLowerCase();
+    const sha256=String(source.email_import_source_sha256 || '').toLowerCase();
+    const byteSize=Number(source.email_import_source_byte_size);
+    const originalFilename=String(source.email_import_original_filename || '').trim();
+    const retainedPath=String(source.email_import_retained_path || '').trim();
+    const retained=source.email_import_source_retained===true || String(source.email_import_source_retained).toLowerCase()==='true';
+    if(!['eml','msg'].includes(format) || !/^[0-9a-f]{64}$/.test(sha256) || !Number.isInteger(byteSize) || byteSize<0) {
+      throw new Error('Email provenance metadata is incomplete or invalid.');
+    }
+    return {format,sha256,byteSize,originalFilename,retained,retainedPath};
+  }
+
+  async startEmailPdfAttachmentImport() {
+    const t=(key,params)=>this.i18n.t(key,params);
+    try {
+      const parentPdfPath=this.emailImportActivePdfPath();
+      if(!parentPdfPath) {
+        new Notice(t('emailImport.notice.openEmailPdfFirst'),8000);
+        return {ok:false,reason:'no-active-pdf'};
+      }
+
+      await this.ports.ensureDocumentRecordIndexReady();
+      const parentState=this.ports.getDocumentMetadataRecordState(parentPdfPath);
+      if(!parentState?.ready || !parentState?.ok || !parentState?.registered || !parentState?.values?.email_import_source_sha256) {
+        new Notice(t('emailImport.notice.notImportedEmailPdf'),8000);
+        return {ok:false,reason:'not-email-import'};
+      }
+
+      const source=this.emailImportSourceDescriptorFromRecord(parentState.values);
+      if(source.retained!==true || !source.retainedPath) {
+        new Notice(t('emailImport.notice.sourceNotRetained'),9000);
+        return {ok:false,reason:'source-not-retained'};
+      }
+
+      const vaultRootPath=this.obsidianVaultReadAdapter.getBasePath();
+      const retained=await EMAIL_IMPORT_RUNTIME.readVerifiedRetainedSource({source,vaultRootPath});
+      const originalFilename=source.originalFilename || path.basename(source.retainedPath);
+      const document=source.format==='eml'
+        ? await EMAIL_IMPORT_RUNTIME.parseEml({sourceBytes:retained.bytes,originalFilename})
+        : await EMAIL_IMPORT_RUNTIME.parseMsg({sourceBytes:retained.bytes,originalFilename});
+      if(String(document?.source?.sha256 || '').toLowerCase()!==source.sha256) {
+        throw new Error('Reparsed retained source no longer matches recorded source SHA-256.');
+      }
+
+      const analysis=EMAIL_IMPORT_RUNTIME.analyzeEmailAttachments(document);
+      const pdfItems=(analysis.pdfCandidates || []).filter(item=>item?.extractable===true && Array.isArray(item.pdfEvidence) && item.pdfEvidence.includes('payload'));
+      if(!pdfItems.length) {
+        new Notice(t('emailImport.notice.noImportablePdfAttachments'),8000);
+        return {ok:true,reason:'no-pdf-attachments'};
+      }
+
+      const modalItems=pdfItems.map(item=>({
+        ...item,
+        suggestedPdfPath:this.emailImportSuggestedAttachmentPdfPath(parentPdfPath,item.attachment)
+      }));
+      const decision=await new EmailPdfAttachmentImportModal(this.app,this,{parentPdfPath,items:modalItems}).openForDecision();
+      if(!decision || decision.action==='cancel') return {ok:true,canceled:true};
+      const selected=modalItems[Number(decision.index)];
+      if(!selected?.attachment) throw new Error('Selected PDF attachment could not be resolved.');
+
+      const target=this.emailImportValidateTargetPath(decision.pdfPath);
+      if(!target.ok) {
+        new Notice(t('emailImport.notice.invalidTarget',{error:target.error}),9000);
+        return {ok:false,reason:'invalid-target'};
+      }
+
+      const verified=EMAIL_IMPORT_RUNTIME.verifiedPdfAttachmentBytes(selected.attachment);
+      const schema=this.ports.getMetadataSchemaSnapshot();
+      if(!schema) throw new Error('Metadata schema is unavailable.');
+      const existingTargetState=this.ports.getDocumentMetadataRecordState(target.path);
+      if(existingTargetState?.registered) throw new Error('Target PDF path is already registered in Document Metadata.');
+      if(existingTargetState?.ok===false) throw new Error(existingTargetState.error || existingTargetState.reason || 'Target metadata state is unsafe.');
+
+      const provenance=EMAIL_IMPORT_RUNTIME.buildEmailAttachmentImportRecordValues({
+        schema,
+        parentRecordId:parentState.id,
+        sourceSha256:source.sha256,
+        attachment:{...selected.attachment,sha256:verified.sha256}
+      });
+
+      let pdfFile=null;
+      try {
+        await this.ensureEmailImportTargetFolders(target.path);
+        pdfFile=await this.obsidianVaultWriteAdapter.createBinary(target.path,emailImportArrayBuffer(verified.bytes));
+        const saved=await this.ports.saveDocumentMetadataRecordValues(target.path,provenance.values);
+        if(!saved?.ok) throw new Error(saved?.error || 'Attachment document metadata registration failed.');
+      } catch(error) {
+        if(pdfFile) {
+          try { await this.obsidianVaultWriteAdapter.deleteFile(pdfFile,true); }
+          catch(rollbackError) { console.warn('[PDFium Gate] Email attachment PDF rollback failed',rollbackError); }
+        }
+        throw error;
+      }
+
+      try { await this.openEmailImportPdfPath(target.path); }
+      catch(error) {
+        console.warn('[PDFium Gate] Email attachment import succeeded but opening the PDF failed',error);
+        new Notice(t('emailImport.notice.attachmentOpenFailed',{path:target.path}),8000);
+      }
+      new Notice(t('emailImport.notice.attachmentImported',{path:target.path}),7000);
+      return {ok:true,pdfPath:target.path,parentPdfPath,attachmentSha256:verified.sha256};
+    } catch(error) {
+      console.error('[PDFium Gate] Email PDF attachment import failed',error);
+      new Notice(t('emailImport.notice.attachmentImportFailed',{error:error instanceof Error?error.message:String(error)}),10000);
+      return {ok:false,reason:'attachment-import-failed',error:error instanceof Error?error.message:String(error)};
+    }
   }
 
   async startEmailImport() {
