@@ -1,7 +1,7 @@
 'use strict';
 
 const { simpleParser } = require('mailparser');
-const { sha256Hex, toBuffer } = require('../integrity/sha256');
+const { sha256Hex, toBuffer } = require('../../core/integrity/sha256');
 
 function nullableString(value) {
   if (value === undefined || value === null) return null;
