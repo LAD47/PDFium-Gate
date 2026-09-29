@@ -1,6 +1,6 @@
 'use strict';
 
-const { sha256Hex, toBuffer } = require('./sha256');
+const { sha256Hex, toBuffer } = require('../../core/integrity/sha256');
 
 function normalizeLookupMatches(value) {
   if (value === undefined || value === null) return [];
