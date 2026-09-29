@@ -41,5 +41,13 @@
   "emailImport.notice.noImportablePdfAttachments": "Den sparade e-postkällan innehåller inga PDF-bilagor som kan importeras.",
   "emailImport.notice.attachmentOpenFailed": "PDF-bilagan importerades, men PDFium Gate kunde inte öppna {{path}} automatiskt.",
   "emailImport.notice.attachmentImported": "PDF-bilaga importerad till {{path}}.",
-  "emailImport.notice.attachmentImportFailed": "Importen av PDF-bilagan misslyckades: {{error}}"
+  "emailImport.notice.attachmentImportFailed": "Importen av PDF-bilagan misslyckades: {{error}}",
+  "settings.emailImport.section": "E-postimport",
+  "settings.emailImport.dragDrop.name": "Importera e-post automatiskt med dra och släpp",
+  "settings.emailImport.dragDrop.description": "När en .eml- eller .msg-fil läggs till i valvet importeras den automatiskt till samma mapp utan en extra dialogruta.",
+  "settings.emailImport.attachments.name": "Extrahera e-postbilagor automatiskt",
+  "settings.emailImport.attachments.description": "Vid automatisk dra-och-släpp-import sparas vanliga bilagor bredvid e-post-PDF-filen. Inline/CID-resurser förblir en del av e-postvisningen.",
+  "emailImport.notice.dragDropExisting": "Det här e-postmeddelandet har redan importerats. Den befintliga PDF-filen öppnades: {{path}}.",
+  "emailImport.notice.dragDropImported": "E-post importerades automatiskt till {{path}}. Extraherade bilagor: {{count}}.",
+  "emailImport.notice.dragDropImportedWithAttachmentErrors": "E-post importerades automatiskt till {{path}}. Extraherade bilagor: {{count}}; fel: {{failed}}."
 }
