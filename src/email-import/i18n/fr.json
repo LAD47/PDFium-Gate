@@ -41,5 +41,13 @@
   "emailImport.notice.noImportablePdfAttachments": "La source d’e-mail conservée ne contient aucune pièce jointe PDF pouvant être importée.",
   "emailImport.notice.attachmentOpenFailed": "La pièce jointe PDF a été importée, mais PDFium Gate n’a pas pu ouvrir {{path}} automatiquement.",
   "emailImport.notice.attachmentImported": "Pièce jointe PDF importée vers {{path}}.",
-  "emailImport.notice.attachmentImportFailed": "Échec de l’importation de la pièce jointe PDF : {{error}}"
+  "emailImport.notice.attachmentImportFailed": "Échec de l’importation de la pièce jointe PDF : {{error}}",
+  "settings.emailImport.section": "Importation d’e-mails",
+  "settings.emailImport.dragDrop.name": "Importer automatiquement les e-mails déposés",
+  "settings.emailImport.dragDrop.description": "Lorsqu’un fichier .eml ou .msg est ajouté au coffre, il est importé automatiquement dans le même dossier sans boîte de dialogue supplémentaire.",
+  "settings.emailImport.attachments.name": "Extraire automatiquement les pièces jointes",
+  "settings.emailImport.attachments.description": "Pour les imports automatiques par glisser-déposer, les pièces jointes ordinaires sont placées à côté du PDF de l’e-mail. Les ressources inline/CID restent intégrées au rendu de l’e-mail.",
+  "emailImport.notice.dragDropExisting": "Cet e-mail avait déjà été importé. Le PDF existant a été ouvert : {{path}}.",
+  "emailImport.notice.dragDropImported": "E-mail importé automatiquement vers {{path}}. Pièces jointes extraites : {{count}}.",
+  "emailImport.notice.dragDropImportedWithAttachmentErrors": "E-mail importé automatiquement vers {{path}}. Pièces jointes extraites : {{count}} ; échecs : {{failed}}."
 }
