@@ -12,6 +12,13 @@ const {
   sourceDescriptorFromEmailImportRecord,
   loadCanonicalEmailFromRetainedRecord
 } = require('./runtime/retained-source-loader');
+const {
+  normalizeVaultPath,
+  safeFilenamePart,
+  suggestedEmailPdfPath,
+  suggestedAttachmentPdfPath,
+  validateTargetPdfPath
+} = require('./runtime/target-path-policy');
 const { generateEmailPdf, validateGeneratedPdf } = require('./render/email-pdf-generator');
 const { analyzeEmailAttachments } = require('./attachments/attachment-policy');
 const { verifiedPdfAttachmentBytes } = require('./attachments/attachment-extraction');
@@ -30,6 +37,11 @@ module.exports = {
   removeRetainedSourceIfExact,
   sourceDescriptorFromEmailImportRecord,
   loadCanonicalEmailFromRetainedRecord,
+  normalizeVaultPath,
+  safeFilenamePart,
+  suggestedEmailPdfPath,
+  suggestedAttachmentPdfPath,
+  validateTargetPdfPath,
   generateEmailPdf,
   validateGeneratedPdf,
   analyzeEmailAttachments,
