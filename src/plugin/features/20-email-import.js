@@ -12,6 +12,7 @@ class EmailImportFeature {
       name:this.i18n.t('commands.importEmailPdfAttachment'),
       callback:()=>{ void this.startEmailPdfAttachmentImport(); }
     });
+    this.obsidianWorkspaceLifecycleAdapter.onLayoutReady(()=>this.installEmailImportVaultTrigger());
   }
 
   installEmailImportVaultTrigger() {
