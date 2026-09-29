@@ -5,13 +5,14 @@
   "scripts": {
     "build": "node build.js",
     "verify": "node scripts/verify-build.js",
-    "check": "npm run build && npm run check:i18n && npm run check:i18n-ui && npm run check:architecture-docs && npm run check:examples && npm run check:filemeta && npm run check:identity && npm run verify",
+    "check": "npm run build && npm run test:core:integrity && npm run check:i18n && npm run check:i18n-ui && npm run check:architecture-docs && npm run check:examples && npm run check:filemeta && npm run check:identity && npm run verify",
     "check:i18n": "node scripts/check-i18n.js",
     "check:i18n-ui": "node scripts/check-i18n-ui.js",
     "check:architecture-docs": "node scripts/check-architecture-docs.js",
     "check:examples": "node scripts/check-examples.js",
     "check:filemeta": "node scripts/check-filemeta-foundation.js",
     "check:identity": "node scripts/check-product-identity.js",
+    "test:core:integrity": "node scripts/test-core-integrity.js",
     "test:email-import:parser": "node scripts/test-email-import-parser.js",
     "test:email-import:msg-parser": "node scripts/test-email-import-msg-parser.js",
     "test:email-import:duplicates": "node scripts/test-email-import-duplicates.js",
@@ -20,7 +21,7 @@
     "test:email-import:attachments": "node scripts/test-email-import-attachments.js",
     "test:email-import:metadata": "node scripts/test-email-import-metadata.js",
     "test:email-import:pdf-electron": "electron scripts/test-email-import-pdf-electron.js",
-    "test:email-import": "npm run test:email-import:parser && npm run test:email-import:msg-parser && npm run test:email-import:duplicates && npm run test:email-import:renderer && npm run test:email-import:retention && npm run test:email-import:attachments && npm run test:email-import:metadata"
+    "test:email-import": "npm run test:core:integrity && npm run test:email-import:parser && npm run test:email-import:msg-parser && npm run test:email-import:duplicates && npm run test:email-import:renderer && npm run test:email-import:retention && npm run test:email-import:attachments && npm run test:email-import:metadata"
   },
   "dependencies": {
     "@kenjiuno/msgreader": "1.28.0",
