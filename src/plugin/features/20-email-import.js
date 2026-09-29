@@ -135,17 +135,7 @@ class EmailImportFeature {
   }
 
   emailImportSourceDescriptorFromRecord(values) {
-    const source=values && typeof values==='object'?values:{};
-    const format=String(source.email_import_source_format || '').toLowerCase();
-    const sha256=String(source.email_import_source_sha256 || '').toLowerCase();
-    const byteSize=Number(source.email_import_source_byte_size);
-    const originalFilename=String(source.email_import_original_filename || '').trim();
-    const retainedPath=String(source.email_import_retained_path || '').trim();
-    const retained=source.email_import_source_retained===true || String(source.email_import_source_retained).toLowerCase()==='true';
-    if(!['eml','msg'].includes(format) || !/^[0-9a-f]{64}$/.test(sha256) || !Number.isInteger(byteSize) || byteSize<0) {
-      throw new Error('Email provenance metadata is incomplete or invalid.');
-    }
-    return {format,sha256,byteSize,originalFilename,retained,retainedPath};
+    return EMAIL_IMPORT_RUNTIME.sourceDescriptorFromEmailImportRecord(values);
   }
 
   async startEmailPdfAttachmentImport() {
@@ -171,14 +161,11 @@ class EmailImportFeature {
       }
 
       const vaultRootPath=this.obsidianVaultReadAdapter.getBasePath();
-      const retained=await EMAIL_IMPORT_RUNTIME.readVerifiedRetainedSource({source,vaultRootPath});
-      const originalFilename=source.originalFilename || path.basename(source.retainedPath);
-      const document=source.format==='eml'
-        ? await EMAIL_IMPORT_RUNTIME.parseEml({sourceBytes:retained.bytes,originalFilename})
-        : await EMAIL_IMPORT_RUNTIME.parseMsg({sourceBytes:retained.bytes,originalFilename});
-      if(String(document?.source?.sha256 || '').toLowerCase()!==source.sha256) {
-        throw new Error('Reparsed retained source no longer matches recorded source SHA-256.');
-      }
+      const loaded=await EMAIL_IMPORT_RUNTIME.loadCanonicalEmailFromRetainedRecord({
+        values:parentState.values,
+        vaultRootPath
+      });
+      const document=loaded.document;
 
       const analysis=EMAIL_IMPORT_RUNTIME.analyzeEmailAttachments(document);
       const pdfItems=(analysis.pdfCandidates || []).filter(item=>item?.extractable===true && Array.isArray(item.pdfEvidence) && item.pdfEvidence.includes('payload'));
