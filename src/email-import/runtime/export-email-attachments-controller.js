@@ -63,6 +63,7 @@ async function runAutomaticEmailAttachmentExport({
   createBinary,
   deleteFile,
   saveDocumentMetadataRecordValues,
+  updateParentAttachmentLinks,
   beforeCreateAttachment,
   onRollbackError,
   services
@@ -77,6 +78,7 @@ async function runAutomaticEmailAttachmentExport({
   const create = requireFunction('createBinary', createBinary);
   const remove = requireFunction('deleteFile', deleteFile);
   const saveMetadata = requireFunction('saveDocumentMetadataRecordValues', saveDocumentMetadataRecordValues);
+  const updateLinks = requireFunction('updateParentAttachmentLinks', updateParentAttachmentLinks);
   const runtime = buildServices(services);
 
   await ensureIndex();
@@ -103,7 +105,9 @@ async function runAutomaticEmailAttachmentExport({
       parentPdfPath,
       sourceSha256:source.sha256,
       exported:[],
-      failures:[]
+      failures:[],
+      linkedCount:0,
+      relationError:null
     };
   }
 
@@ -179,6 +183,22 @@ async function runAutomaticEmailAttachmentExport({
     }
   }
 
+  let relationError = null;
+  let linkedCount = 0;
+  if (exported.length) {
+    try {
+      const relation = await updateLinks({
+        parentPdfPath,
+        parentRecordPath:parentState.recordPath,
+        attachmentPaths:exported.map(item => item.path)
+      });
+      if (relation?.ok === false) throw new Error(relation.error || 'Attachment link relation update failed.');
+      linkedCount = Number.isInteger(relation?.linkedCount) ? relation.linkedCount : exported.length;
+    } catch (error) {
+      relationError = error instanceof Error ? error.message : String(error);
+    }
+  }
+
   return {
     ok:true,
     parentPdfPath,
@@ -187,7 +207,9 @@ async function runAutomaticEmailAttachmentExport({
     failures,
     attachmentCount:items.length,
     exportedCount:exported.length,
-    failureCount:failures.length
+    failureCount:failures.length,
+    linkedCount,
+    relationError
   };
 }
 
