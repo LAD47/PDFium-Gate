@@ -1,5 +1,6 @@
 {
   "commands.importEmail": "Importar correo (.eml/.msg)",
+  "commands.importEmailPdfAttachment": "Importar adjunto PDF del correo",
   "emailImport.modal.title": "Importar correo",
   "emailImport.modal.intro": "Revise el mensaje antes de que PDFium Gate cree el PDF y el registro de metadatos.",
   "emailImport.modal.source": "Archivo de origen",
@@ -18,6 +19,14 @@
   "emailImport.modal.cancel": "Cancelar",
   "emailImport.modal.openExisting": "Abrir PDF existente",
   "emailImport.modal.import": "Importar",
+  "emailImport.attachmentModal.title": "Importar adjunto PDF",
+  "emailImport.attachmentModal.intro": "Elija un adjunto PDF de la fuente original conservada. El adjunto se convertirá en un documento normal de PDFium Gate.",
+  "emailImport.attachmentModal.parent": "PDF del correo",
+  "emailImport.attachmentModal.select": "Adjunto PDF",
+  "emailImport.attachmentModal.targetPath": "Ruta del PDF en el vault",
+  "emailImport.attachmentModal.targetPathDesc": "Se propone guardar el adjunto junto al PDF del correo. La ruta puede cambiarse antes de importar.",
+  "emailImport.attachmentModal.cancel": "Cancelar",
+  "emailImport.attachmentModal.import": "Importar adjunto",
   "emailImport.notice.bridgeUnavailable": "La importación de correo todavía no está lista. Espere a que termine de cargar el espacio de trabajo de Obsidian e inténtelo de nuevo.",
   "emailImport.notice.unsupportedSource": "Elija un archivo .eml o .msg.",
   "emailImport.notice.existingOpened": "Se abrió el PDF existente para esta fuente de correo idéntica.",
@@ -25,5 +34,12 @@
   "emailImport.notice.invalidTarget": "El destino del PDF no es válido: {{error}}",
   "emailImport.notice.openFailed": "El correo se importó, pero PDFium Gate no pudo abrir {{path}} automáticamente.",
   "emailImport.notice.imported": "Correo importado a {{path}}.",
-  "emailImport.notice.importFailed": "La importación del correo falló: {{error}}"
+  "emailImport.notice.importFailed": "La importación del correo falló: {{error}}",
+  "emailImport.notice.openEmailPdfFirst": "Abra primero un PDF creado mediante Importar correo.",
+  "emailImport.notice.notImportedEmailPdf": "El PDF activo no está registrado como un correo importado.",
+  "emailImport.notice.sourceNotRetained": "La fuente original del correo no se conservó, por lo que los adjuntos no pueden recuperarse posteriormente de esta importación.",
+  "emailImport.notice.noImportablePdfAttachments": "La fuente de correo conservada no contiene adjuntos PDF que puedan importarse.",
+  "emailImport.notice.attachmentOpenFailed": "El adjunto PDF se importó, pero PDFium Gate no pudo abrir {{path}} automáticamente.",
+  "emailImport.notice.attachmentImported": "Adjunto PDF importado a {{path}}.",
+  "emailImport.notice.attachmentImportFailed": "La importación del adjunto PDF falló: {{error}}"
 }
