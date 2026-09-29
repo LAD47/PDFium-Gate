@@ -16,7 +16,9 @@ async onload() {
       includeHeaderFooterText:persistedSettings.includeHeaderFooterText === true,
       backupOriginalPdf:persistedSettings.backupOriginalPdf !== false,
       hideDocumentMetadataFilesInExplorer:persistedSettings.hideDocumentMetadataFilesInExplorer !== false,
-      rememberDocumentRegisterFilters:persistedSettings.rememberDocumentRegisterFilters === true
+      rememberDocumentRegisterFilters:persistedSettings.rememberDocumentRegisterFilters === true,
+      emailDragDropAutomaticImport:persistedSettings.emailDragDropAutomaticImport !== false,
+      emailDragDropExtractAttachments:persistedSettings.emailDragDropExtractAttachments !== false
     };
     this.i18n = createPdfiumI18n({
       requestedLanguage:this.settings.uiLanguage,
