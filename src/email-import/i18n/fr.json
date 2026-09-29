@@ -1,5 +1,6 @@
 {
   "commands.importEmail": "Importer un e-mail (.eml/.msg)",
+  "commands.importEmailPdfAttachment": "Importer une pièce jointe PDF depuis l’e-mail",
   "emailImport.modal.title": "Importer un e-mail",
   "emailImport.modal.intro": "Vérifiez le message avant que PDFium Gate crée le PDF et l’enregistrement de métadonnées.",
   "emailImport.modal.source": "Fichier source",
@@ -18,6 +19,14 @@
   "emailImport.modal.cancel": "Annuler",
   "emailImport.modal.openExisting": "Ouvrir le PDF existant",
   "emailImport.modal.import": "Importer",
+  "emailImport.attachmentModal.title": "Importer une pièce jointe PDF",
+  "emailImport.attachmentModal.intro": "Choisissez une pièce jointe PDF dans la source originale conservée. La pièce jointe devient un document PDFium Gate normal.",
+  "emailImport.attachmentModal.parent": "PDF de l’e-mail",
+  "emailImport.attachmentModal.select": "Pièce jointe PDF",
+  "emailImport.attachmentModal.targetPath": "Chemin du PDF dans le coffre",
+  "emailImport.attachmentModal.targetPathDesc": "La pièce jointe est proposée à côté du PDF de l’e-mail. Le chemin peut être modifié avant l’importation.",
+  "emailImport.attachmentModal.cancel": "Annuler",
+  "emailImport.attachmentModal.import": "Importer la pièce jointe",
   "emailImport.notice.bridgeUnavailable": "L’importation d’e-mails n’est pas encore prête. Attendez la fin du chargement de l’espace de travail Obsidian puis réessayez.",
   "emailImport.notice.unsupportedSource": "Choisissez un fichier .eml ou .msg.",
   "emailImport.notice.existingOpened": "Le PDF existant correspondant à cette source d’e-mail identique a été ouvert.",
@@ -25,5 +34,12 @@
   "emailImport.notice.invalidTarget": "La destination du PDF n’est pas valide : {{error}}",
   "emailImport.notice.openFailed": "L’e-mail a été importé, mais PDFium Gate n’a pas pu ouvrir {{path}} automatiquement.",
   "emailImport.notice.imported": "E-mail importé vers {{path}}.",
-  "emailImport.notice.importFailed": "Échec de l’importation de l’e-mail : {{error}}"
+  "emailImport.notice.importFailed": "Échec de l’importation de l’e-mail : {{error}}",
+  "emailImport.notice.openEmailPdfFirst": "Ouvrez d’abord un PDF créé avec l’importation d’e-mails.",
+  "emailImport.notice.notImportedEmailPdf": "Le PDF actif n’est pas enregistré comme un e-mail importé.",
+  "emailImport.notice.sourceNotRetained": "La source originale de l’e-mail n’a pas été conservée ; les pièces jointes ne peuvent donc pas être récupérées ultérieurement depuis cette importation.",
+  "emailImport.notice.noImportablePdfAttachments": "La source d’e-mail conservée ne contient aucune pièce jointe PDF pouvant être importée.",
+  "emailImport.notice.attachmentOpenFailed": "La pièce jointe PDF a été importée, mais PDFium Gate n’a pas pu ouvrir {{path}} automatiquement.",
+  "emailImport.notice.attachmentImported": "Pièce jointe PDF importée vers {{path}}.",
+  "emailImport.notice.attachmentImportFailed": "Échec de l’importation de la pièce jointe PDF : {{error}}"
 }
