@@ -67,23 +67,33 @@ The initial user-facing runtime entry point is the command **Import email (.eml/
 
 The Import Controller + Obsidian runtime/UI milestone is implemented on the feature branch. Practical EML import, retained-source behavior, inline/CID handling, and explicit PDF-attachment import have now been user-verified in Obsidian.
 
-## Current next architectural milestone
+## Modular refactor milestone — completed
 
-Before adding further user-facing attachment behavior, the project will perform a **behavior-preserving modular refactor** of Email Import.
+The behavior-preserving refactor defined by D-029/D-030 has now been implemented on `feature/email-import` and verified by automated regression tests plus practical Obsidian testing.
 
-The goals are:
+The current structure includes:
 
-- split orchestration into smaller logical controllers/services;
-- keep `src/plugin/features/20-email-import.js` as a thin command/context/port integration layer;
-- centralize retained-source loading and verification instead of duplicating it across attachment features;
-- keep modals passive decision surfaces rather than workflow owners;
-- identify mechanisms that are genuinely reusable across PDFium Gate and move them out of Email Import.
+- shared project-level `src/core/integrity/sha256.js` for exact-byte SHA-256/content identity;
+- `src/email-import/runtime/retained-source-loader.js` for canonical retained-source reread, SHA verification and EML/MSG reconstruction;
+- `src/email-import/runtime/target-path-policy.js` for safe, deterministic PDF destination handling;
+- `src/email-import/runtime/import-email-controller.js` for source-import orchestration;
+- `src/email-import/runtime/import-pdf-attachment-controller.js` for retained PDF-attachment import orchestration;
+- `src/plugin/email-import/obsidian-email-import-adapter.js` as the explicit Obsidian/vault/viewer boundary;
+- `src/plugin/features/20-email-import.js` reduced to command registration, passive modal invocation, explicit plugin-port wiring and high-level user feedback.
 
-SHA-256/content integrity is the first explicit shared-service candidate. Exact byte hashing is not inherently an email operation, so the generic primitive should move toward a project-level integrity layer while Email Import retains only email-specific duplicate policy such as lookup by `email_import_source_sha256`.
+The adapter uses explicit dependency injection rather than hiding peer-feature calls. The existing PDFium Gate plugin-port verifier therefore remains authoritative: Email Import still declares and visibly consumes the document-index, metadata-schema, document-state and metadata-save ports it depends on.
 
-This is deliberately designed to support later unrelated features, including a possible vault-wide byte-identical duplicate finder, without building that feature during the Email Import refactor.
+Modals remain passive decision surfaces. Parsing, hashing, retained-source verification, durable writes, metadata construction and rollback remain outside modal classes.
 
-The authoritative detail for this milestone is in `REFACTORING-AND-SHARED-SERVICES.md`.
+The controller refactor was practically tested in Obsidian after implementation: deliberate re-import of the synthetic EML preserved duplicate handling and generated-PDF behavior, and PDF-attachment import from the newly generated email PDF created/opened a normal registered PDF document as before.
+
+The detailed architectural rationale remains in `REFACTORING-AND-SHARED-SERVICES.md`.
+
+## Next architectural/product milestone
+
+The refactor deliberately did not add new user-facing attachment behavior. The next open product decision is D-031: how ordinary **non-PDF attachments** should be exposed or extracted after import.
+
+The shared SHA/integrity layer also deliberately leaves room for a future vault-wide byte-identical duplicate finder, but that remains a separate project rather than part of Email Import.
 
 ## Rendering and PDF generation
 
@@ -109,7 +119,7 @@ The project follows these principles:
 
 - `ARCHITECTURE.md` — module boundaries, data flow, and internal model direction.
 - `DECISIONS.md` — accepted decisions and deliberately open questions.
-- `REFACTORING-AND-SHARED-SERVICES.md` — accepted next structural milestone: modular Email Import refactor and reusable project-level integrity/SHA direction.
+- `REFACTORING-AND-SHARED-SERVICES.md` — modular Email Import refactor and reusable project-level integrity/SHA direction.
 - `EMAIL-DOCUMENT-MODEL.md` — Canonical Email Document v1 contract.
 - `ATTACHMENT-INTEGRITY.md` — attachment-level SHA-256 and fixture integrity policy.
 - `METADATA-INTEGRATION.md` — mapping into the existing Markdown document record, technical provenance, user-field suggestions, and Document Register behavior.
