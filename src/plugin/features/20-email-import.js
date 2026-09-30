@@ -12,6 +12,10 @@ class EmailImportFeature {
       name:this.i18n.t('commands.importEmailPdfAttachment'),
       callback:()=>{ void this.startEmailPdfAttachmentImport(); }
     });
+    this.obsidianPluginRegistrationAdapter.registerObsidianProtocolHandler(
+      EMAIL_IMPORT_RUNTIME.EMAIL_ATTACHMENT_PROTOCOL_ACTION,
+      params=>{ void this.openEmailAttachmentFromProtocol(params); }
+    );
     this.obsidianWorkspaceLifecycleAdapter.onLayoutReady(()=>this.installEmailImportVaultTrigger());
   }
 
@@ -73,6 +77,72 @@ class EmailImportFeature {
       getDocumentMetadataRecordState:pdfPath=>this.ports.getDocumentMetadataRecordState(pdfPath),
       saveDocumentMetadataRecordValues:(pdfPath,values)=>this.ports.saveDocumentMetadataRecordValues(pdfPath,values)
     });
+  }
+
+  async openEmailAttachmentFromProtocol(params) {
+    const sourceSha256=String(params?.source || '').trim().toLowerCase();
+    const attachmentSha256=String(params?.attachment || '').trim().toLowerCase();
+    const parsedIndex=Number.parseInt(String(params?.index ?? ''),10);
+    const preferredIndex=Number.isInteger(parsedIndex) && parsedIndex>=0 ? parsedIndex : -1;
+
+    const fail=(reason,error)=>{
+      if(error) console.warn('[PDFium Gate] Email attachment protocol link failed',reason,error);
+      else console.warn('[PDFium Gate] Email attachment protocol link failed',reason);
+      new Notice(this.i18n.t('emailImport.notice.attachmentLinkFailed'),8000);
+      return {ok:false,reason,error:error instanceof Error?error.message:(error?String(error):null)};
+    };
+
+    if(!/^[0-9a-f]{64}$/.test(sourceSha256) || !/^[0-9a-f]{64}$/.test(attachmentSha256)) {
+      return fail('invalid-protocol-identity');
+    }
+
+    try {
+      const adapter=this.emailImportAdapter();
+      const parents=await adapter.findDuplicatesBySha256(sourceSha256);
+      if(!parents.length) return fail('source-record-not-found');
+
+      const matches=new Map();
+      const preferredMatches=new Map();
+      const hashedPaths=new Set();
+
+      for(const parent of parents) {
+        const recordPath=EMAIL_IMPORT_RUNTIME.normalizeVaultPath(parent?.recordPath);
+        if(!recordPath) continue;
+        const recordFile=this.obsidianVaultReadAdapter.getAbstractFileByPath(recordPath);
+        if(!recordFile || String(recordFile.extension || '').toLowerCase()!=='md') continue;
+        const markdown=String(await this.obsidianVaultReadAdapter.readText(recordFile));
+        const linkPaths=EMAIL_IMPORT_RUNTIME.extractEmailAttachmentLinkPaths(markdown);
+
+        for(let index=0;index<linkPaths.length;index++) {
+          const linkPath=linkPaths[index];
+          const resolved=EMAIL_IMPORT_RUNTIME.normalizeVaultPath(
+            this.obsidianMetadataCacheAdapter.resolveLinkPath(linkPath,recordPath) || linkPath
+          );
+          if(!resolved || hashedPaths.has(resolved)) {
+            if(resolved && index===preferredIndex && matches.has(resolved)) preferredMatches.set(resolved,matches.get(resolved));
+            continue;
+          }
+          const file=this.obsidianVaultReadAdapter.getAbstractFileByPath(resolved);
+          if(!file || typeof file.path!=='string' || typeof file.extension!=='string') continue;
+          hashedPaths.add(resolved);
+          const bytes=Buffer.from(await this.obsidianVaultReadAdapter.readBinary(file));
+          if(EMAIL_IMPORT_RUNTIME.sha256Hex(bytes)!==attachmentSha256) continue;
+          const match={path:resolved,recordPath,index};
+          matches.set(resolved,match);
+          if(index===preferredIndex) preferredMatches.set(resolved,match);
+        }
+      }
+
+      const preferred=[...preferredMatches.values()];
+      const all=[...matches.values()];
+      const selected=preferred.length===1 ? preferred[0] : (preferred.length===0 && all.length===1 ? all[0] : null);
+      if(!selected) return fail(all.length || preferred.length ? 'attachment-target-ambiguous' : 'attachment-target-not-found');
+
+      await adapter.openVaultFile(selected.path);
+      return {ok:true,path:selected.path,recordPath:selected.recordPath,index:selected.index};
+    } catch(error) {
+      return fail('attachment-open-failed',error);
+    }
   }
 
   async startEmailPdfAttachmentImport() {
