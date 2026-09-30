@@ -17,7 +17,8 @@ const REQUIRED_MAIN_BRIDGE_METHODS = Object.freeze([
   'ensurePdfRuntime',
   'setIncludeHeaderFooterText',
   'chooseEmailImportSource',
-  'printControlledEmailHtmlToPdf'
+  'printControlledEmailHtmlToPdf',
+  'resolveEmailAttachmentPdfPoint'
 ]);
 
 function createMainProcessTransport({ remoteRequireAdapter }) {
@@ -134,7 +135,8 @@ function createMainProcessTransport({ remoteRequireAdapter }) {
     ensurePdfRuntime: (...args) => invoke('ensurePdfRuntime', ...args),
     setIncludeHeaderFooterText: (...args) => invoke('setIncludeHeaderFooterText', ...args),
     chooseEmailImportSource: (...args) => invoke('chooseEmailImportSource', ...args),
-    printControlledEmailHtmlToPdf: (...args) => invoke('printControlledEmailHtmlToPdf', ...args)
+    printControlledEmailHtmlToPdf: (...args) => invoke('printControlledEmailHtmlToPdf', ...args),
+    resolveEmailAttachmentPdfPoint: (...args) => invoke('resolveEmailAttachmentPdfPoint', ...args)
   });
 }
 
