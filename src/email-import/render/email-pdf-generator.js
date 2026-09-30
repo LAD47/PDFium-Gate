@@ -1,7 +1,6 @@
 'use strict';
 
 const { renderEmailDocumentToHtml } = require('./email-html-renderer');
-const { appendRetainedSourceReference } = require('./email-source-reference');
 const { toBuffer } = require('../../core/integrity/sha256');
 
 function validateGeneratedPdf(pdfBytes) {
@@ -24,10 +23,9 @@ async function generateEmailPdf({ document, printHtmlToPdf }) {
   }
 
   // The printer never receives source email HTML directly. It receives only the
-  // controlled document emitted by the safe renderer plus plugin-generated source
-  // provenance when an unchanged original has been retained.
-  const baseHtml = renderEmailDocumentToHtml(document);
-  const html = appendRetainedSourceReference(baseHtml, document);
+  // controlled document emitted by the safe renderer. Retained-source provenance
+  // stays in plugin metadata and is deliberately not rendered into the user PDF.
+  const html = renderEmailDocumentToHtml(document);
   const pdfBytes = await printHtmlToPdf({ html });
   return validateGeneratedPdf(pdfBytes);
 }
