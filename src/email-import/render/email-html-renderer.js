@@ -4,6 +4,8 @@ const sanitizeHtml = require('sanitize-html');
 const { toBuffer } = require('../../core/integrity/sha256');
 const { normalizeContentId, decodeCidReference, analyzeEmailAttachments } = require('../attachments/attachment-policy');
 
+const EMAIL_ATTACHMENT_PROTOCOL_ACTION = 'pdfium-gate-email-attachment';
+
 const ALLOWED_MESSAGE_TAGS = [
   'p', 'div', 'span', 'br', 'strong', 'b', 'em', 'i', 'u', 's',
   'ul', 'ol', 'li', 'blockquote', 'pre', 'code',
@@ -117,16 +119,27 @@ function renderBody(document) {
   return renderPlainTextBody(document?.body?.text);
 }
 
+function emailAttachmentProtocolUri(document, attachment, index) {
+  const sourceSha256 = String(document?.source?.sha256 || '').trim().toLowerCase();
+  const attachmentSha256 = String(attachment?.sha256 || '').trim().toLowerCase();
+  if (!/^[0-9a-f]{64}$/.test(sourceSha256) || !/^[0-9a-f]{64}$/.test(attachmentSha256)) return null;
+  const ordinal = Number.isInteger(index) && index >= 0 ? index : 0;
+  return `obsidian://${EMAIL_ATTACHMENT_PROTOCOL_ACTION}?source=${encodeURIComponent(sourceSha256)}&attachment=${encodeURIComponent(attachmentSha256)}&index=${ordinal}`;
+}
+
 function renderAttachmentList(document) {
   const analysis = analyzeEmailAttachments(document);
   const list = analysis.attachments;
 
   return list.length
-    ? `<ul class="email-attachments">${list.map(item => {
-      const filename = item.attachment?.filename || '(unnamed attachment)';
-      return `<li><strong>${escapeHtml(filename)}</strong></li>`;
+    ? `<ul class="email-attachments">${list.map((item, index) => {
+      const attachment = item.attachment || {};
+      const filename = attachment.filename || '(unnamed attachment)';
+      const uri = emailAttachmentProtocolUri(document, attachment, index);
+      const label = `<strong>${escapeHtml(filename)}</strong>`;
+      return `<li>${uri ? `<a href="${escapeHtml(uri)}">${label}</a>` : label}</li>`;
     }).join('')}</ul>`
-    : '<p class="email-no-attachments">None</p>';
+    : '<p class="email-no-attachments">Ingen vedlegg</p>';
 }
 
 function renderHeaderRow(label, value) {
@@ -168,6 +181,7 @@ function renderEmailDocumentToHtml(document) {
   .email-html-body table { border-collapse: collapse; max-width: 100%; }
   .email-html-body th, .email-html-body td { border: 1px solid #bbb; padding: 4px 6px; }
   .attachments { margin-top: 28px; border-top: 1px solid #ccc; padding-top: 16px; }
+  .email-attachments a { color: inherit; text-decoration: underline; }
 </style>
 </head>
 <body>
@@ -175,7 +189,7 @@ function renderEmailDocumentToHtml(document) {
 <h1>${escapeHtml(subject)}</h1>
 <table class="email-header"><tbody>${rows}</tbody></table>
 <section class="email-body">${renderBody(document)}</section>
-<section class="attachments"><h2>Attachments</h2>${renderAttachmentList(document)}</section>
+<section class="attachments"><h2>Vedlegg</h2>${renderAttachmentList(document)}</section>
 </main>
 </body>
 </html>
@@ -183,11 +197,13 @@ function renderEmailDocumentToHtml(document) {
 }
 
 module.exports = {
+  EMAIL_ATTACHMENT_PROTOCOL_ACTION,
   CONTENT_SECURITY_POLICY,
   escapeHtml,
   sanitizeMessageHtml,
   renderEmailDocumentToHtml,
   renderAttachmentList,
+  emailAttachmentProtocolUri,
   attachmentDataUrlForCid,
   formatAddress,
   formatAddressList
