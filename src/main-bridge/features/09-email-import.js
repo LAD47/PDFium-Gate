@@ -28,79 +28,79 @@ function navigationUrlFromArgument(value) {
   return '';
 }
 
-class MainBridgeEmailImportFeature {
-  emailAttachmentProtocolRuntime() {
-    if (!this.runtime.emailAttachmentProtocol) {
-      this.runtime.emailAttachmentProtocol = {
-        listeners:new Map(),
-        webContentsCreatedHandler:null,
-        lastForwardedUrl:null,
-        lastForwardedAt:0
-      };
-    }
-    return this.runtime.emailAttachmentProtocol;
-  }
-
-  attachEmailAttachmentProtocolForwarder(ownerWc) {
-    const runtime = this.emailAttachmentProtocolRuntime();
-    if (!ownerWc || typeof ownerWc.on !== 'function' || runtime.listeners.has(ownerWc.id)) return false;
-
-    const forward = (event, navigation) => {
-      const parsed = parseEmailAttachmentProtocolUrl(navigationUrlFromArgument(navigation));
-      if (!parsed) return false;
-      try { event?.preventDefault?.(); } catch (_) {}
-
-      const now = Date.now();
-      if (runtime.lastForwardedUrl === parsed.url && now - runtime.lastForwardedAt < EMAIL_ATTACHMENT_PROTOCOL_DEDUPE_MS) {
-        return true;
-      }
-      runtime.lastForwardedUrl = parsed.url;
-      runtime.lastForwardedAt = now;
-
-      try {
-        const result = shell.openExternal(parsed.url);
-        if (result && typeof result.catch === 'function') {
-          void result.catch(error => console.error('[PDFium Gate] Could not forward email attachment Obsidian URI', error));
-        }
-      } catch (error) {
-        console.error('[PDFium Gate] Could not forward email attachment Obsidian URI', error);
-      }
-      return true;
+function ensureEmailAttachmentProtocolRuntime(host) {
+  if (!host.runtime.emailAttachmentProtocol) {
+    host.runtime.emailAttachmentProtocol = {
+      listeners:new Map(),
+      webContentsCreatedHandler:null,
+      lastForwardedUrl:null,
+      lastForwardedAt:0
     };
+  }
+  return host.runtime.emailAttachmentProtocol;
+}
 
-    const willNavigateHandler = (event, url) => { forward(event, url); };
-    const willFrameNavigateHandler = (event, details) => { forward(event, details); };
+function attachEmailAttachmentProtocolForwarder(host, ownerWc) {
+  const runtime = ensureEmailAttachmentProtocolRuntime(host);
+  if (!ownerWc || typeof ownerWc.on !== 'function' || runtime.listeners.has(ownerWc.id)) return false;
+
+  const forward = (event, navigation) => {
+    const parsed = parseEmailAttachmentProtocolUrl(navigationUrlFromArgument(navigation));
+    if (!parsed) return false;
+    try { event?.preventDefault?.(); } catch (_) {}
+
+    const now = Date.now();
+    if (runtime.lastForwardedUrl === parsed.url && now - runtime.lastForwardedAt < EMAIL_ATTACHMENT_PROTOCOL_DEDUPE_MS) {
+      return true;
+    }
+    runtime.lastForwardedUrl = parsed.url;
+    runtime.lastForwardedAt = now;
 
     try {
-      ownerWc.on('will-navigate', willNavigateHandler);
-      ownerWc.on('will-frame-navigate', willFrameNavigateHandler);
-      runtime.listeners.set(ownerWc.id, { wc:ownerWc, willNavigateHandler, willFrameNavigateHandler });
-      return true;
+      const result = shell.openExternal(parsed.url);
+      if (result && typeof result.catch === 'function') {
+        void result.catch(error => console.error('[PDFium Gate] Could not forward email attachment Obsidian URI', error));
+      }
     } catch (error) {
-      try { ownerWc.removeListener?.('will-navigate', willNavigateHandler); } catch (_) {}
-      try { ownerWc.removeListener?.('will-frame-navigate', willFrameNavigateHandler); } catch (_) {}
-      console.error('[PDFium Gate] Could not install email attachment protocol forwarding', error);
-      return false;
+      console.error('[PDFium Gate] Could not forward email attachment Obsidian URI', error);
     }
-  }
+    return true;
+  };
 
+  const willNavigateHandler = (event, url) => { forward(event, url); };
+  const willFrameNavigateHandler = (event, details) => { forward(event, details); };
+
+  try {
+    ownerWc.on('will-navigate', willNavigateHandler);
+    ownerWc.on('will-frame-navigate', willFrameNavigateHandler);
+    runtime.listeners.set(ownerWc.id, { wc:ownerWc, willNavigateHandler, willFrameNavigateHandler });
+    return true;
+  } catch (error) {
+    try { ownerWc.removeListener?.('will-navigate', willNavigateHandler); } catch (_) {}
+    try { ownerWc.removeListener?.('will-frame-navigate', willFrameNavigateHandler); } catch (_) {}
+    console.error('[PDFium Gate] Could not install email attachment protocol forwarding', error);
+    return false;
+  }
+}
+
+class MainBridgeEmailImportFeature {
   installEmailAttachmentProtocolForwarder() {
-    const runtime = this.emailAttachmentProtocolRuntime();
+    const runtime = ensureEmailAttachmentProtocolRuntime(this);
     if (runtime.webContentsCreatedHandler) return { ok:true, already:true, listenerCount:runtime.listeners.size };
 
     let existing = [];
     try { existing = webContents.getAllWebContents() || []; } catch (_) { existing = []; }
-    for (const wc of existing) this.attachEmailAttachmentProtocolForwarder(wc);
+    for (const wc of existing) attachEmailAttachmentProtocolForwarder(this, wc);
 
     runtime.webContentsCreatedHandler = (_event, wc) => {
-      this.attachEmailAttachmentProtocolForwarder(wc);
+      attachEmailAttachmentProtocolForwarder(this, wc);
     };
     app.on('web-contents-created', runtime.webContentsCreatedHandler);
     return { ok:true, already:false, listenerCount:runtime.listeners.size };
   }
 
   uninstallEmailAttachmentProtocolForwarder() {
-    const runtime = this.emailAttachmentProtocolRuntime();
+    const runtime = ensureEmailAttachmentProtocolRuntime(this);
     if (runtime.webContentsCreatedHandler) {
       try { app.removeListener('web-contents-created', runtime.webContentsCreatedHandler); } catch (_) {}
       runtime.webContentsCreatedHandler = null;
@@ -130,5 +130,7 @@ module.exports = {
   MainBridgeEmailImportFeature,
   EMAIL_ATTACHMENT_PROTOCOL_ACTION,
   parseEmailAttachmentProtocolUrl,
-  navigationUrlFromArgument
+  navigationUrlFromArgument,
+  ensureEmailAttachmentProtocolRuntime,
+  attachEmailAttachmentProtocolForwarder
 };
