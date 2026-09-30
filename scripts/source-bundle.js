@@ -104,7 +104,8 @@ const MAIN_BRIDGE_PLATFORM_ORDER = Object.freeze([
   'screen-point.js',
   'renderer-event-dispatch.js',
   'obsidian-command-dispatch.js',
-  'email-import-main-process.js'
+  'email-import-main-process.js',
+  'email-attachment-pdf-point.js'
 ]);
 
 const MAIN_BRIDGE_FEATURE_ORDER = Object.freeze([
@@ -121,7 +122,8 @@ const MAIN_BRIDGE_FEATURE_ORDER = Object.freeze([
 
 const PLUGIN_SUPPORT_ORDER = Object.freeze([
   'email-import/vault-email-create-trigger.js',
-  'email-import/obsidian-email-import-adapter.js'
+  'email-import/obsidian-email-import-adapter.js',
+  'email-import/email-attachment-link-controller.js'
 ]);
 
 const PLUGIN_FEATURE_ORDER = Object.freeze([
