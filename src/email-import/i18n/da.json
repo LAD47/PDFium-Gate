@@ -42,6 +42,7 @@
   "emailImport.notice.attachmentOpenFailed": "PDF-vedhæftningen blev importeret, men PDFium Gate kunne ikke åbne {{path}} automatisk.",
   "emailImport.notice.attachmentImported": "PDF-vedhæftning importeret til {{path}}.",
   "emailImport.notice.attachmentImportFailed": "Import af PDF-vedhæftning mislykkedes: {{error}}",
+  "emailImport.notice.attachmentLinkFailed": "Vedhæftningen kunne ikke åbnes. Kontrollér, at den stadig findes i vaulten og fortsat er knyttet til e-mailen.",
   "settings.emailImport.section": "E-mailimport",
   "settings.emailImport.dragDrop.name": "Importér e-mail automatisk med træk og slip",
   "settings.emailImport.dragDrop.description": "Når en .eml- eller .msg-fil føjes til vaulten, importeres den automatisk til samme mappe uden en ekstra dialog.",
