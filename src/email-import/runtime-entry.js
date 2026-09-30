@@ -29,6 +29,11 @@ const { EMAIL_ATTACHMENT_PROTOCOL_ACTION } = require('./render/email-html-render
 const { analyzeEmailAttachments } = require('./attachments/attachment-policy');
 const { verifiedAttachmentBytes, verifiedPdfAttachmentBytes } = require('./attachments/attachment-extraction');
 const {
+  parseEmailAttachmentProtocolUri,
+  pointInsideAnnotationRect,
+  resolveEmailAttachmentPdfLink
+} = require('./attachments/pdf-link-hit-test');
+const {
   buildEmailImportRecordValues,
   buildEmailAttachmentImportRecordValues,
   buildEmailImportRegistrationPlan
@@ -66,6 +71,9 @@ module.exports = {
   analyzeEmailAttachments,
   verifiedAttachmentBytes,
   verifiedPdfAttachmentBytes,
+  parseEmailAttachmentProtocolUri,
+  pointInsideAnnotationRect,
+  resolveEmailAttachmentPdfLink,
   buildEmailImportRecordValues,
   buildEmailAttachmentImportRecordValues,
   buildEmailImportRegistrationPlan,
