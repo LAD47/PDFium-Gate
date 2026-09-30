@@ -73,6 +73,10 @@ class MainBridgeRuntime {
       focusMatchesToken:this.ports.webContentsFocusMatchesPdfToken,
       focusedPdfToken:this.ports.focusedPdfTokenForWebContents
     });
+    this.emailAttachmentPdfPointAdapter = createEmailAttachmentPdfPointAdapter({
+      resolvePdfTarget:token=>this.embeddedPdfTargetAdapter.resolveExact(token)?.target || null,
+      capturePdfViewerPoint:(target,x,y)=>this.chromiumPdfRuntimeDriver.captureViewerPoint(target,x,y)
+    });
 
     this.pdfIframeAdapter = createPdfIframeAdapter();
     this.pdfWrapperFrameAdapter = createPdfWrapperFrameAdapter({listFrameSubtree:this.ports.listFrameSubtree});
@@ -85,13 +89,10 @@ class MainBridgeRuntime {
 const mainBridgeRuntime = new MainBridgeRuntime();
 
 function installMainBridge() {
-  const result = mainBridgeRuntime.ports.install();
-  mainBridgeRuntime.ports.installEmailAttachmentProtocolForwarder();
-  return result;
+  return mainBridgeRuntime.ports.install();
 }
 
 function uninstallMainBridge() {
-  mainBridgeRuntime.ports.uninstallEmailAttachmentProtocolForwarder();
   return mainBridgeRuntime.ports.uninstall();
 }
 
@@ -110,5 +111,6 @@ module.exports = {
   ensurePdfRuntime: mainBridgeRuntime.ports.ensurePdfRuntime,
   setIncludeHeaderFooterText: mainBridgeRuntime.ports.setIncludeHeaderFooterText,
   chooseEmailImportSource: mainBridgeRuntime.ports.chooseEmailImportSource,
-  printControlledEmailHtmlToPdf: mainBridgeRuntime.ports.printControlledEmailHtmlToPdf
+  printControlledEmailHtmlToPdf: mainBridgeRuntime.ports.printControlledEmailHtmlToPdf,
+  resolveEmailAttachmentPdfPoint: mainBridgeRuntime.ports.resolveEmailAttachmentPdfPoint
 };
