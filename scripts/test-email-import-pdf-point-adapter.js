@@ -5,18 +5,16 @@ const { createEmailAttachmentPdfPointAdapter } = require('../src/platform/email-
 
 async function run() {
   const calls = [];
-  const runtimeFrame = {
-    async executeJavaScript(code, userGesture) {
-      assert.match(code, /#scroller/);
-      assert.equal(userGesture, true);
-      return {ok:true,left:12,top:34,width:800,height:600};
-    }
-  };
+  const runtimeFrame = { executeJavaScript() { throw new Error('platform adapter must not query Chromium viewer DOM directly'); } };
   const target = { runtimeFrame };
   const adapter = createEmailAttachmentPdfPointAdapter({
     resolvePdfTarget(token) {
       assert.equal(token, 'token-1');
       return target;
+    },
+    async captureScrollerOffset(frame) {
+      assert.equal(frame, runtimeFrame);
+      return {ok:true,left:12,top:34,width:800,height:600};
     },
     async capturePdfViewerPoint(frame, x, y) {
       calls.push({frame,x,y});
@@ -40,13 +38,14 @@ async function run() {
 
   const unresolved = createEmailAttachmentPdfPointAdapter({
     resolvePdfTarget:()=>null,
+    captureScrollerOffset:async()=>({ok:true,left:0,top:0,width:1,height:1}),
     capturePdfViewerPoint:async()=>({ok:true,candidates:[]})
   });
   const unresolvedResult = await unresolved.resolve({token:'token-2',x:1,y:2});
   assert.equal(unresolvedResult.ok, false);
   assert.match(unresolvedResult.error, /embedded PDF-target/i);
 
-  console.log('Email Import PDF point adapter OK: wrapper click coordinates map through viewer scroller geometry and fail closed when identity is unavailable.');
+  console.log('Email Import PDF point adapter OK: wrapper click coordinates reuse RuntimeDriver scroller geometry and fail closed when identity is unavailable.');
 }
 
 run().catch(error => {
