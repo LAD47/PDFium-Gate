@@ -25,6 +25,7 @@ async function run() {
       calls.push(`lookup:${path}`);
       if (path === 'Folder/open.pdf') return { path, extension: 'pdf' };
       if (path === 'Folder/existing.pdf') return { path, extension: 'pdf' };
+      if (path === 'Folder/photo.jpg') return { path, extension: 'jpg' };
       return null;
     },
     getBasePath: () => '/vault'
@@ -97,6 +98,9 @@ async function run() {
   await adapter.openPdf('Folder/open.pdf');
   assert.ok(calls.includes('open:Folder/open.pdf'));
 
+  await adapter.openVaultFile('Folder/photo.jpg');
+  assert.ok(calls.includes('open:Folder/photo.jpg'));
+
   await adapter.deletePdf({ path: 'Folder/new.pdf' });
   assert.ok(calls.includes('delete:Folder/new.pdf:true'));
 
@@ -106,9 +110,10 @@ async function run() {
 
   await assert.rejects(() => adapter.findDuplicatesBySha256('bad'), /Invalid email source SHA-256/);
   await assert.rejects(() => adapter.openPdf('Folder/missing.pdf'), /could not be resolved/);
+  await assert.rejects(() => adapter.openVaultFile('Folder/missing.docx'), /could not be resolved/);
   assert.throws(() => createObsidianEmailImportAdapter({}), /runtime is required/);
 
-  console.log('Email Import Obsidian adapter OK: explicit dependencies, vault/provenance lookup, path/open/write boundaries and plugin-port forwarding verified.');
+  console.log('Email Import Obsidian adapter OK: explicit dependencies, vault/provenance lookup, generic attachment opening, path/write boundaries and plugin-port forwarding verified.');
 }
 
 run().catch(error => {
