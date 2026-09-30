@@ -28,7 +28,13 @@ async function parseFixture(filename) {
   const inlineOutput = renderEmailDocumentToHtml(inlineDocument);
   assert.match(inlineOutput, /data:image\/png;base64,/, 'CID image embedded from decoded attachment bytes');
   assert.doesNotMatch(inlineOutput, /src="cid:/i, 'CID URL is not left unresolved');
+  assert.match(inlineOutput, /<h2>Vedlegg<\/h2>/, 'attachment heading uses the requested Norwegian presentation');
   assert.match(inlineOutput, /<strong>test-attachment-2\.pdf<\/strong>/, 'ordinary attachment filename listed');
+  assert.match(
+    inlineOutput,
+    /href="obsidian:\/\/pdfium-gate-email-attachment\?source=[0-9a-f]{64}&amp;attachment=[0-9a-f]{64}&amp;index=0"/,
+    'ordinary attachment receives a stable PDFium Gate Obsidian protocol link'
+  );
   assert.doesNotMatch(inlineOutput, /Embedded inline resources:/, 'embedded resource count is not shown to users');
   assert.doesNotMatch(inlineOutput, /<strong>inline-logo\.png<\/strong>/, 'inline resource not presented as ordinary attachment');
   assert.doesNotMatch(inlineOutput, /application\/pdf/, 'attachment MIME type is not shown to users');
@@ -46,7 +52,7 @@ async function parseFixture(filename) {
     },
     body: {
       text: null,
-      html: '<style>body{display:none}</style><script>alert(1)</script><p onclick="alert(1)">Hello <strong>world</strong></p><img src="https://tracker.invalid/pixel" onerror="alert(1)" alt="tracker"><a href="javascript:alert(1)">bad</a><a href="https://example.invalid/page">good</a>'
+      html: '<style>body{display:none}</style><script>alert(1)</script><p onclick="alert(1)">Hello <strong>world</strong></p><img src="https://tracker.invalid/pixel" onerror="alert(1)" alt="tracker"><a href="javascript:alert(1)">bad</a><a href="obsidian://pdfium-gate-email-attachment?source=forged">forged</a><a href="https://example.invalid/page">good</a>'
     },
     attachments: [],
     diagnostics: { warnings: [] }
@@ -58,6 +64,7 @@ async function parseFixture(filename) {
   assert.doesNotMatch(safeOutput, /onclick=/i, 'event handlers removed');
   assert.doesNotMatch(safeOutput, /onerror=/i, 'image event handlers removed');
   assert.doesNotMatch(safeOutput, /javascript:/i, 'javascript URLs removed');
+  assert.doesNotMatch(safeOutput, /obsidian:\/\/pdfium-gate-email-attachment\?source=forged/i, 'source email cannot inject PDFium Gate protocol links');
   assert.doesNotMatch(safeOutput, /https:\/\/tracker\.invalid\/pixel/, 'remote image source removed');
   assert.match(safeOutput, /\[image blocked\]/, 'blocked image remains visibly represented');
   assert.match(safeOutput, /href="https:\/\/example\.invalid\/page"/, 'ordinary remote hyperlink retained without auto-fetching resource');
@@ -69,7 +76,7 @@ async function parseFixture(filename) {
   const plainOutput = renderEmailDocumentToHtml(plainDocument);
   assert.match(plainOutput, /&lt;script&gt;alert\(1\)&lt;\/script&gt;/, 'plain text is HTML-escaped');
 
-  console.log('Email Import safe HTML renderer OK: controlled shell, sanitized message HTML, blocked remote images, CID embedding, user-focused attachment filenames, escaped plain text and deterministic output verified.');
+  console.log('Email Import safe HTML renderer OK: controlled shell, sanitized message HTML, blocked remote images, CID embedding, stable Obsidian attachment protocol links, escaped plain text and deterministic output verified.');
 })().catch(error => {
   console.error('Email Import safe HTML renderer check failed.');
   console.error(error && error.stack ? error.stack : error);
