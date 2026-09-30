@@ -107,8 +107,9 @@ const attachmentRoot = path.join(root, 'test', 'fixtures', 'email', 'attachments
   const rendered = renderEmailDocumentToHtml(withAttachments);
   assert.match(rendered, /Synthetic MSG with attachments/);
   assert.match(rendered, /data:image\/png;base64,/, 'MSG CID image reaches common safe renderer');
-  assert.match(rendered, /test-attachment-1\.pdf/, 'MSG PDF attachment reaches common attachment list');
-  assert.match(rendered, /Embedded inline resources: 1/, 'MSG inline resource presentation matches EML behavior');
+  assert.match(rendered, /<strong>test-attachment-1\.pdf<\/strong>/, 'MSG PDF attachment reaches simplified attachment list');
+  assert.doesNotMatch(rendered, /Embedded inline resources:/, 'MSG inline resource count stays out of user presentation');
+  assert.doesNotMatch(rendered, /application\/pdf/, 'MSG attachment MIME type stays out of user presentation');
 
   await assert.rejects(
     () => parseMsg({ sourceBytes: Buffer.from('not an msg'), originalFilename: 'broken.msg' }),
@@ -116,7 +117,7 @@ const attachmentRoot = path.join(root, 'test', 'fixtures', 'email', 'attachments
     'non-MSG bytes fail closed'
   );
 
-  console.log('Email Import MSG parser OK: real deterministic synthetic CFBF/MSG sources normalize to Canonical Email Document v1, preserve Unicode/identity/recipients/dates, and keep PDF/CID attachment bytes intact.');
+  console.log('Email Import MSG parser OK: real deterministic synthetic CFBF/MSG sources normalize to Canonical Email Document v1, preserve Unicode/identity/recipients/dates, keep PDF/CID attachment bytes intact, and use the simplified user attachment presentation.');
 })().catch(error => {
   console.error('Email Import MSG parser check failed.');
   console.error(error && error.stack ? error.stack : error);
