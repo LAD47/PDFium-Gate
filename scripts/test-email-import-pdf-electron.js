@@ -55,7 +55,10 @@ async function run() {
   assertChromiumPdf(inlinePdf, 'CID image fixture');
   assert.match(inlineCapture.html, /data:image\/png;base64,/, 'CID image reaches printer only as internal data URL');
   assert.doesNotMatch(inlineCapture.html, /src="cid:/i, 'printer does not receive unresolved CID URLs');
+  assert.match(inlineCapture.html, /<h2>Vedlegg<\/h2>/, 'Norwegian attachment heading reaches printer');
   assert.match(inlineCapture.html, /<strong>test-attachment-2\.pdf<\/strong>/, 'attachment filename reaches printer');
+  assert.match(inlineCapture.html, /obsidian:\/\/pdfium-gate-email-attachment\?source=/, 'PDFium Gate attachment URI reaches Chromium printer');
+  assert.match(inlinePdf.toString('latin1'), /pdfium-gate-email-attachment/, 'Chromium printToPDF preserves the attachment URI in the PDF');
   assert.doesNotMatch(inlineCapture.html, /application\/pdf/, 'attachment MIME type does not reach user PDF');
   assert.doesNotMatch(inlineCapture.html, /Embedded inline resources:/, 'inline resource count does not reach user PDF');
 
@@ -85,7 +88,7 @@ async function run() {
   assert.doesNotMatch(hostileCapture.html, /https:\/\/tracker\.invalid/i, 'remote tracking resource never reaches Chromium printer');
   assert.match(hostileCapture.html, /Content-Security-Policy/, 'controlled document CSP reaches Chromium printer');
 
-  console.log(`Email Import Electron PDF generation OK: Electron ${process.versions.electron}, Chromium ${process.versions.chrome}; real printToPDF output validated for clean user presentation, CID image and hostile-source fixtures.`);
+  console.log(`Email Import Electron PDF generation OK: Electron ${process.versions.electron}, Chromium ${process.versions.chrome}; real printToPDF output validated for clickable attachment URI, clean user presentation, CID image and hostile-source fixtures.`);
 }
 
 run().then(() => {
