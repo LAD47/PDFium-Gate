@@ -75,7 +75,8 @@ class MainBridgeRuntime {
     });
     this.emailAttachmentPdfPointAdapter = createEmailAttachmentPdfPointAdapter({
       resolvePdfTarget:token=>this.embeddedPdfTargetAdapter.resolveExact(token)?.target || null,
-      capturePdfViewerPoint:(target,x,y)=>this.chromiumPdfRuntimeDriver.captureViewerPoint(target,x,y)
+      capturePdfViewerPoint:(target,x,y)=>this.chromiumPdfRuntimeDriver.captureViewerPoint(target,x,y),
+      captureScrollerOffset:target=>this.chromiumPdfRuntimeDriver.captureScrollerOffset(target)
     });
 
     this.pdfIframeAdapter = createPdfIframeAdapter();
