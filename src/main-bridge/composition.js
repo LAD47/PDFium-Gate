@@ -84,9 +84,20 @@ class MainBridgeRuntime {
 
 const mainBridgeRuntime = new MainBridgeRuntime();
 
+function installMainBridge() {
+  const result = mainBridgeRuntime.ports.install();
+  mainBridgeRuntime.ports.installEmailAttachmentProtocolForwarder();
+  return result;
+}
+
+function uninstallMainBridge() {
+  mainBridgeRuntime.ports.uninstallEmailAttachmentProtocolForwarder();
+  return mainBridgeRuntime.ports.uninstall();
+}
+
 module.exports = {
-  install: mainBridgeRuntime.ports.install,
-  uninstall: mainBridgeRuntime.ports.uninstall,
+  install: installMainBridge,
+  uninstall: uninstallMainBridge,
   getState: mainBridgeRuntime.ports.getState,
   getPlatformCapabilities: mainBridgeRuntime.ports.getPlatformCapabilities,
   setRendererMenuOpen: mainBridgeRuntime.ports.setRendererMenuOpen,
