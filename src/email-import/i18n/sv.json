@@ -42,6 +42,7 @@
   "emailImport.notice.attachmentOpenFailed": "PDF-bilagan importerades, men PDFium Gate kunde inte öppna {{path}} automatiskt.",
   "emailImport.notice.attachmentImported": "PDF-bilaga importerad till {{path}}.",
   "emailImport.notice.attachmentImportFailed": "Importen av PDF-bilagan misslyckades: {{error}}",
+  "emailImport.notice.attachmentLinkFailed": "Bilagan kunde inte öppnas. Kontrollera att den fortfarande finns i valvet och fortfarande är länkad till e-postmeddelandet.",
   "settings.emailImport.section": "E-postimport",
   "settings.emailImport.dragDrop.name": "Importera e-post automatiskt med dra och släpp",
   "settings.emailImport.dragDrop.description": "När en .eml- eller .msg-fil läggs till i valvet importeras den automatiskt till samma mapp utan en extra dialogruta.",
