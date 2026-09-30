@@ -29,8 +29,9 @@
     "test:email-import:obsidian-adapter": "node scripts/test-email-import-obsidian-adapter.js",
     "test:email-import:attachments": "node scripts/test-email-import-attachments.js",
     "test:email-import:metadata": "node scripts/test-email-import-metadata.js",
+    "test:email-import:main-bridge-protocol": "node scripts/test-email-import-main-bridge-protocol.js",
     "test:email-import:pdf-electron": "electron scripts/test-email-import-pdf-electron.js",
-    "test:email-import": "npm run test:core:integrity && npm run test:email-import:parser && npm run test:email-import:msg-parser && npm run test:email-import:duplicates && npm run test:email-import:renderer && npm run test:email-import:retention && npm run test:email-import:retained-loader && npm run test:email-import:target-paths && npm run test:email-import:vault-trigger && npm run test:email-import:vault-staging-flow && npm run test:email-import:source-controller && npm run test:email-import:attachment-controller && npm run test:email-import:auto-attachments && npm run test:email-import:attachment-links && npm run test:email-import:obsidian-adapter && npm run test:email-import:attachments && npm run test:email-import:metadata"
+    "test:email-import": "npm run test:core:integrity && npm run test:email-import:parser && npm run test:email-import:msg-parser && npm run test:email-import:duplicates && npm run test:email-import:renderer && npm run test:email-import:retention && npm run test:email-import:retained-loader && npm run test:email-import:target-paths && npm run test:email-import:vault-trigger && npm run test:email-import:vault-staging-flow && npm run test:email-import:source-controller && npm run test:email-import:attachment-controller && npm run test:email-import:auto-attachments && npm run test:email-import:attachment-links && npm run test:email-import:obsidian-adapter && npm run test:email-import:attachments && npm run test:email-import:metadata && npm run test:email-import:main-bridge-protocol"
   },
   "dependencies": {
     "@kenjiuno/msgreader": "1.28.0",
