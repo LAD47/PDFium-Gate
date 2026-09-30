@@ -39,6 +39,13 @@ function createObsidianPluginRegistrationAdapter({ plugin }) {
     return plugin.registerBasesView(viewType, registration);
   }
 
+  function registerObsidianProtocolHandler(action, handler) {
+    if (!plugin || typeof plugin.registerObsidianProtocolHandler !== 'function') throw new Error('plugin.registerObsidianProtocolHandler er ikke tilgjengelig');
+    if (!String(action || '').trim()) throw new Error('registerObsidianProtocolHandler action mangler');
+    if (typeof handler !== 'function') throw new Error('registerObsidianProtocolHandler handler mangler');
+    return plugin.registerObsidianProtocolHandler(String(action).trim(), handler);
+  }
+
   return Object.freeze({
     contractVersion: OBSIDIAN_PLUGIN_REGISTRATION_CONTRACT_VERSION,
     addSettingTab,
@@ -46,7 +53,8 @@ function createObsidianPluginRegistrationAdapter({ plugin }) {
     registerEvent,
     addCommand,
     registerExtensions,
-    registerBasesView
+    registerBasesView,
+    registerObsidianProtocolHandler
   });
 }
 
