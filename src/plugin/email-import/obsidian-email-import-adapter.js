@@ -52,17 +52,27 @@ function createObsidianEmailImportAdapter({
     }
   }
 
-  async function openPdf(pdfPath) {
-    const file = vaultRead.getAbstractFileByPath(normalizePdfPath(pdfPath));
-    if (!file || String(file.extension || '').toLowerCase() !== 'pdf') {
-      throw new Error('Imported PDF could not be resolved in the vault.');
+  async function openVaultFile(vaultPath) {
+    const normalizedPath = normalizePdfPath(vaultPath);
+    const file = vaultRead.getAbstractFileByPath(normalizedPath);
+    if (!file || typeof file.path !== 'string' || typeof file.extension !== 'string') {
+      throw new Error('Vault file could not be resolved.');
     }
     const target = pdfLeaf?.acquireOpenTarget?.(true);
     if (!target?.ok || !target.leaf) {
-      throw new Error(target?.error || 'No WorkspaceLeaf is available for the imported PDF.');
+      throw new Error(target?.error || 'No WorkspaceLeaf is available for the vault file.');
     }
     await target.leaf.openFile(file);
     return true;
+  }
+
+  async function openPdf(pdfPath) {
+    const normalizedPath = normalizePdfPath(pdfPath);
+    const file = vaultRead.getAbstractFileByPath(normalizedPath);
+    if (!file || String(file.extension || '').toLowerCase() !== 'pdf') {
+      throw new Error('Imported PDF could not be resolved in the vault.');
+    }
+    return openVaultFile(normalizedPath);
   }
 
   function activePdfPath() {
@@ -86,6 +96,7 @@ function createObsidianEmailImportAdapter({
   return Object.freeze({
     findDuplicatesBySha256,
     ensureTargetFolders,
+    openVaultFile,
     openPdf,
     activePdfPath,
     pathExists,
