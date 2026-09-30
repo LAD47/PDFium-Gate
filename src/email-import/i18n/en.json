@@ -42,6 +42,7 @@
   "emailImport.notice.attachmentOpenFailed": "The PDF attachment was imported, but PDFium Gate could not open {{path}} automatically.",
   "emailImport.notice.attachmentImported": "PDF attachment imported to {{path}}.",
   "emailImport.notice.attachmentImportFailed": "PDF attachment import failed: {{error}}",
+  "emailImport.notice.attachmentLinkFailed": "The attachment could not be opened. Check that it still exists in the vault and remains linked to the email.",
   "settings.emailImport.section": "Email Import",
   "settings.emailImport.dragDrop.name": "Automatically import dropped email files",
   "settings.emailImport.dragDrop.description": "When an .eml or .msg file is added to the vault, import it automatically into the same folder without an additional review dialog.",
