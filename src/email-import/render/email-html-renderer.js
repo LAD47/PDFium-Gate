@@ -121,22 +121,12 @@ function renderAttachmentList(document) {
   const analysis = analyzeEmailAttachments(document);
   const list = analysis.attachments;
 
-  const attachmentMarkup = list.length
+  return list.length
     ? `<ul class="email-attachments">${list.map(item => {
-      const attachment = item.attachment;
-      const filename = attachment?.filename || '(unnamed attachment)';
-      const contentType = attachment?.contentType || 'unknown type';
-      const size = Number.isInteger(attachment?.size) ? `${attachment.size} bytes` : 'unknown size';
-      const kind = item.pdfCandidate ? ', PDF' : '';
-      return `<li><strong>${escapeHtml(filename)}</strong> <span class="attachment-meta">(${escapeHtml(contentType)}, ${escapeHtml(size)}${escapeHtml(kind)})</span></li>`;
+      const filename = item.attachment?.filename || '(unnamed attachment)';
+      return `<li><strong>${escapeHtml(filename)}</strong></li>`;
     }).join('')}</ul>`
     : '<p class="email-no-attachments">None</p>';
-
-  const inlineMarkup = analysis.inlineResources.length
-    ? `<p class="inline-resource-meta">Embedded inline resources: ${analysis.inlineResources.length}</p>`
-    : '';
-
-  return `${attachmentMarkup}${inlineMarkup}`;
 }
 
 function renderHeaderRow(label, value) {
@@ -178,7 +168,6 @@ function renderEmailDocumentToHtml(document) {
   .email-html-body table { border-collapse: collapse; max-width: 100%; }
   .email-html-body th, .email-html-body td { border: 1px solid #bbb; padding: 4px 6px; }
   .attachments { margin-top: 28px; border-top: 1px solid #ccc; padding-top: 16px; }
-  .attachment-meta, .inline-resource-meta { color: #555; }
 </style>
 </head>
 <body>
