@@ -1,6 +1,6 @@
 'use strict';
 
-const { app, globalShortcut, webContents, webFrameMain, clipboard, BrowserWindow, screen } = require('electron');
+const { app, globalShortcut, webContents, webFrameMain, clipboard, BrowserWindow, dialog, screen, shell } = require('electron');
 
 const VERSION = '0.1.194';
 const categories = [
@@ -42,7 +42,6 @@ const OBSIDIAN_RESERVED_SHORTCUTS = [
     { id: 'selection-page-down', accelerator: 'Shift+PageDown', direction: 'down', unit: 'viewport', routeType: 'pdf-keyboard' },
     { id: 'selection-all', accelerator: 'CommandOrControl+A', direction: 'all', unit: 'select-all', routeType: 'pdf-keyboard' },
 ];
-
 // BEGIN GENERATED SHARED BRIDGE CONTRACTS
 // Canonical Main Bridge -> renderer event contract. Production actions travel
 // only through these explicit events; diagnostics may mirror state but must not
@@ -1555,6 +1554,153 @@ function createObsidianCommandDispatchAdapter({rendererEventDispatchAdapter=null
   return Object.freeze({contractVersion:OBSIDIAN_COMMAND_DISPATCH_CONTRACT_VERSION,dispatchExact});
 }
 
+const EMAIL_IMPORT_MAIN_PROCESS_CONTRACT_VERSION = '0.1';
+
+function createEmailImportMainProcessAdapter({ app, BrowserWindow, dialog }) {
+  function requireAppReady() {
+    if (!app || typeof app.whenReady !== 'function') throw new Error('Email Import requires Electron app.whenReady().');
+    return app.whenReady();
+  }
+
+  async function chooseSource({ title = '', emailFilterName = '' } = {}) {
+    await requireAppReady();
+    if (!dialog || typeof dialog.showOpenDialog !== 'function') throw new Error('Email Import source picker requires Electron dialog.showOpenDialog().');
+    if (!BrowserWindow || typeof BrowserWindow.getFocusedWindow !== 'function') throw new Error('Email Import source picker requires BrowserWindow.getFocusedWindow().');
+    const options = {
+      title:String(title || 'Email Import'),
+      properties:['openFile'],
+      filters:[{ name:String(emailFilterName || 'Email'), extensions:['eml','msg'] }]
+    };
+    const owner = BrowserWindow.getFocusedWindow();
+    const result = owner && !owner.isDestroyed()
+      ? await dialog.showOpenDialog(owner, options)
+      : await dialog.showOpenDialog(options);
+    const filePath = Array.isArray(result?.filePaths) && result.filePaths.length === 1
+      ? String(result.filePaths[0] || '')
+      : '';
+    return {
+      canceled:result?.canceled === true || !filePath,
+      filePath:filePath || null
+    };
+  }
+
+  async function printControlledHtmlToPdf({ html, printOptions = {} } = {}) {
+    await requireAppReady();
+    if (typeof BrowserWindow !== 'function') throw new Error('Email Import PDF printing requires the Electron BrowserWindow constructor.');
+    const source = String(html || '');
+    if (!/^<!doctype html>/i.test(source.trimStart())) throw new Error('Email PDF printer requires the controlled HTML document shell.');
+    if (!/Content-Security-Policy/i.test(source)) throw new Error('Email PDF printer requires a Content Security Policy.');
+
+    const window = new BrowserWindow({
+      show:false,
+      width:1200,
+      height:1600,
+      useContentSize:true,
+      webPreferences:{
+        javascript:false,
+        nodeIntegration:false,
+        contextIsolation:true,
+        sandbox:true,
+        webSecurity:true,
+        allowRunningInsecureContent:false
+      }
+    });
+    const navigationGuard = event => {
+      const url = String(event?.url || '');
+      if (!url.startsWith('data:text/html')) event?.preventDefault?.();
+    };
+
+    try {
+      window.webContents.on('will-navigate', navigationGuard);
+      window.webContents.setWindowOpenHandler(() => ({ action:'deny' }));
+      await window.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(source)}`);
+      const bytes = await window.webContents.printToPDF({
+        printBackground:true,
+        preferCSSPageSize:true,
+        ...(printOptions && typeof printOptions === 'object' ? printOptions : {})
+      });
+      const pdf = Buffer.from(bytes || []);
+      if (pdf.length < 8 || pdf.subarray(0, 5).toString('ascii') !== '%PDF-') throw new Error('Electron did not return a PDF document.');
+      const tail = pdf.subarray(Math.max(0, pdf.length - 2048)).toString('latin1');
+      if (!tail.includes('%%EOF')) throw new Error('Generated PDF is missing the end-of-file marker.');
+      return pdf;
+    } finally {
+      try { window.webContents.removeListener('will-navigate', navigationGuard); } catch (_) {}
+      if (!window.isDestroyed()) window.destroy();
+    }
+  }
+
+  return Object.freeze({
+    contractVersion:EMAIL_IMPORT_MAIN_PROCESS_CONTRACT_VERSION,
+    chooseSource,
+    printControlledHtmlToPdf
+  });
+}
+
+const EMAIL_ATTACHMENT_PDF_POINT_CONTRACT_VERSION = '0.1';
+
+function createEmailAttachmentPdfPointAdapter({ resolvePdfTarget, capturePdfViewerPoint, captureScrollerOffset }) {
+  if (typeof resolvePdfTarget !== 'function') throw new TypeError('resolvePdfTarget must be a function');
+  if (typeof capturePdfViewerPoint !== 'function') throw new TypeError('capturePdfViewerPoint must be a function');
+  if (typeof captureScrollerOffset !== 'function') throw new TypeError('captureScrollerOffset must be a function');
+
+  async function resolve({ token, x, y } = {}) {
+    const safeToken = String(token || '').trim();
+    const wrapperX = Number(x);
+    const wrapperY = Number(y);
+    const out = {
+      ok:false,
+      token:safeToken || null,
+      wrapperPoint:{ x:wrapperX, y:wrapperY },
+      scrollerRect:null,
+      viewerRootPoint:null,
+      candidates:[],
+      viewerPoint:null,
+      error:null
+    };
+
+    if (!safeToken || ![wrapperX, wrapperY].every(Number.isFinite)) {
+      out.error = 'PDF token/klikkpunkt mangler';
+      return out;
+    }
+
+    try {
+      const pdfTarget = resolvePdfTarget(safeToken);
+      if (!pdfTarget?.runtimeFrame || typeof pdfTarget.runtimeFrame.executeJavaScript !== 'function') {
+        throw new Error('Eksakt embedded PDF-target ikke funnet');
+      }
+
+      const scroller = await captureScrollerOffset(pdfTarget.runtimeFrame);
+      if (!scroller?.ok) throw new Error(scroller?.error || 'PDF scroller-geometri mangler');
+
+      out.scrollerRect = {
+        left:Number(scroller.left || 0),
+        top:Number(scroller.top || 0),
+        width:Number(scroller.width || 0),
+        height:Number(scroller.height || 0)
+      };
+      const rootX = wrapperX + out.scrollerRect.left;
+      const rootY = wrapperY + out.scrollerRect.top;
+      out.viewerRootPoint = { x:rootX, y:rootY };
+
+      const hit = await capturePdfViewerPoint(pdfTarget.runtimeFrame, rootX, rootY);
+      out.candidates = Array.isArray(hit?.candidates) ? hit.candidates : [];
+      out.viewerPoint = hit || null;
+      out.ok = hit?.ok === true && out.candidates.length > 0;
+      if (!out.ok) out.error = hit?.error || 'Ingen PDF-sidekoordinat for klikket';
+      return out;
+    } catch (error) {
+      out.error = error instanceof Error ? error.message : String(error);
+      return out;
+    }
+  }
+
+  return Object.freeze({
+    contractVersion:EMAIL_ATTACHMENT_PDF_POINT_CONTRACT_VERSION,
+    resolve
+  });
+}
+
 // END GENERATED MAIN-BRIDGE PLATFORM CONTRACTS
 // Main Bridge feature contracts: implementations depend on root-bound operation ports,
 // not on peer feature implementations. Flat state mutation retains a single explicit owner.
@@ -1822,6 +1968,12 @@ const MAIN_BRIDGE_FEATURE_CONTRACTS = Object.freeze({
       "focusedPdfTokenForWebContents",
       "describeFrame"
     ]
+  },
+  "emailImport": {
+    "file": "09-email-import.js",
+    "className": "MainBridgeEmailImportFeature",
+    "stateFields": [],
+    "ports": []
   }
 });
 
@@ -4840,6 +4992,23 @@ class MainBridgeLifecycleFeature {
   }
 }
 
+class MainBridgeEmailImportFeature {
+  async chooseEmailImportSource(options = {}) {
+    const __bridgeRuntime = this;
+    return await __bridgeRuntime.emailImportMainProcessAdapter.chooseSource(options);
+  }
+
+  async printControlledEmailHtmlToPdf(options = {}) {
+    const __bridgeRuntime = this;
+    return await __bridgeRuntime.emailImportMainProcessAdapter.printControlledHtmlToPdf(options);
+  }
+
+  async resolveEmailAttachmentPdfPoint(input = {}) {
+    const __bridgeRuntime = this;
+    return await __bridgeRuntime.emailAttachmentPdfPointAdapter.resolve(input);
+  }
+}
+
 'use strict';
 
 const MAIN_BRIDGE_FEATURE_CLASSES = Object.freeze({
@@ -4850,7 +5019,8 @@ const MAIN_BRIDGE_FEATURE_CLASSES = Object.freeze({
   selectionOperations: MainBridgeSelectionOperationsFeature,
   inputRouter: MainBridgeInputRouterFeature,
   wrapperLifecycle: MainBridgeWrapperLifecycleFeature,
-  lifecycle: MainBridgeLifecycleFeature
+  lifecycle: MainBridgeLifecycleFeature,
+  emailImport: MainBridgeEmailImportFeature
 });
 
 function createBoundMainBridgePorts(host) {
@@ -4899,6 +5069,7 @@ class MainBridgeRuntime {
 
     this.chromiumPdfRuntimeDriver = createChromiumPdfRuntimeDriver();
     this.rendererEventDispatchAdapter = createRendererEventDispatchAdapter({validateDetail:validateRendererBridgeEventDetail});
+    this.emailImportMainProcessAdapter = createEmailImportMainProcessAdapter({app,BrowserWindow,dialog});
 
     this.embeddedPdfTargetAdapter = createEmbeddedPdfTargetAdapter({
       webContents,
@@ -4913,6 +5084,11 @@ class MainBridgeRuntime {
       focusMatchesToken:this.ports.webContentsFocusMatchesPdfToken,
       focusedPdfToken:this.ports.focusedPdfTokenForWebContents
     });
+    this.emailAttachmentPdfPointAdapter = createEmailAttachmentPdfPointAdapter({
+      resolvePdfTarget:token=>this.embeddedPdfTargetAdapter.resolveExact(token)?.target || null,
+      capturePdfViewerPoint:(target,x,y)=>this.chromiumPdfRuntimeDriver.captureViewerPoint(target,x,y),
+      captureScrollerOffset:target=>this.chromiumPdfRuntimeDriver.captureScrollerOffset(target)
+    });
 
     this.pdfIframeAdapter = createPdfIframeAdapter();
     this.pdfWrapperFrameAdapter = createPdfWrapperFrameAdapter({listFrameSubtree:this.ports.listFrameSubtree});
@@ -4924,9 +5100,17 @@ class MainBridgeRuntime {
 
 const mainBridgeRuntime = new MainBridgeRuntime();
 
+function installMainBridge() {
+  return mainBridgeRuntime.ports.install();
+}
+
+function uninstallMainBridge() {
+  return mainBridgeRuntime.ports.uninstall();
+}
+
 module.exports = {
-  install: mainBridgeRuntime.ports.install,
-  uninstall: mainBridgeRuntime.ports.uninstall,
+  install: installMainBridge,
+  uninstall: uninstallMainBridge,
   getState: mainBridgeRuntime.ports.getState,
   getPlatformCapabilities: mainBridgeRuntime.ports.getPlatformCapabilities,
   setRendererMenuOpen: mainBridgeRuntime.ports.setRendererMenuOpen,
@@ -4937,5 +5121,8 @@ module.exports = {
   setActivePdfIdentity: mainBridgeRuntime.ports.setActivePdfIdentity,
   focusPdfRuntime: mainBridgeRuntime.ports.focusPdfRuntime,
   ensurePdfRuntime: mainBridgeRuntime.ports.ensurePdfRuntime,
-  setIncludeHeaderFooterText: mainBridgeRuntime.ports.setIncludeHeaderFooterText
+  setIncludeHeaderFooterText: mainBridgeRuntime.ports.setIncludeHeaderFooterText,
+  chooseEmailImportSource: mainBridgeRuntime.ports.chooseEmailImportSource,
+  printControlledEmailHtmlToPdf: mainBridgeRuntime.ports.printControlledEmailHtmlToPdf,
+  resolveEmailAttachmentPdfPoint: mainBridgeRuntime.ports.resolveEmailAttachmentPdfPoint
 };
