@@ -95,7 +95,9 @@ class RendererBridgeFeature {
     this.state.bridge.pdfMouseActivation.handler = event => {
       const parsed=readRendererBridgeEventDetail(RENDERER_BRIDGE_EVENTS.PDF_MOUSE_ACTIVATION,event);
       if(!parsed?.ok) { console.warn(`[PDFium Gate ${PLUGIN_VERSION}] pdf-mouse-activation bridge rejected`,parsed?.error); return; }
-      void this.ports.handlePdfMouseActivationBridgeEvent(parsed.detail);
+      void Promise.resolve(this.ports.handlePdfMouseActivationBridgeEvent(parsed.detail))
+        .then(()=>handleEmailAttachmentPdfMouseActivation(this,parsed.detail))
+        .catch(error=>console.warn(`[PDFium Gate ${PLUGIN_VERSION}] email attachment PDF-link hit-test failed`,error));
     };
 
   }
