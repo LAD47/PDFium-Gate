@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
     paths:
+      - '.github/workflows/build-generated-runtime.yml'
       - 'src/**'
       - 'build.js'
       - 'scripts/source-bundle.js'
