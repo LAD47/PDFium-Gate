@@ -2,9 +2,10 @@
 
 const EMAIL_ATTACHMENT_PDF_POINT_CONTRACT_VERSION = '0.1';
 
-function createEmailAttachmentPdfPointAdapter({ resolvePdfTarget, capturePdfViewerPoint }) {
+function createEmailAttachmentPdfPointAdapter({ resolvePdfTarget, capturePdfViewerPoint, captureScrollerOffset }) {
   if (typeof resolvePdfTarget !== 'function') throw new TypeError('resolvePdfTarget must be a function');
   if (typeof capturePdfViewerPoint !== 'function') throw new TypeError('capturePdfViewerPoint must be a function');
+  if (typeof captureScrollerOffset !== 'function') throw new TypeError('captureScrollerOffset must be a function');
 
   async function resolve({ token, x, y } = {}) {
     const safeToken = String(token || '').trim();
@@ -32,15 +33,7 @@ function createEmailAttachmentPdfPointAdapter({ resolvePdfTarget, capturePdfView
         throw new Error('Eksakt embedded PDF-target ikke funnet');
       }
 
-      const scroller = await pdfTarget.runtimeFrame.executeJavaScript(`(() => {
-        try {
-          const viewer=document.querySelector('pdf-viewer');
-          const el=viewer?.shadowRoot?.querySelector('#scroller')||null;
-          if(!el||typeof el.getBoundingClientRect!=='function') return {ok:false,error:'PDF scroller ikke funnet'};
-          const r=el.getBoundingClientRect();
-          return {ok:true,left:Number(r.left||0),top:Number(r.top||0),width:Number(r.width||0),height:Number(r.height||0)};
-        } catch(e) { return {ok:false,error:String(e&&e.message||e)}; }
-      })()`, true);
+      const scroller = await captureScrollerOffset(pdfTarget.runtimeFrame);
       if (!scroller?.ok) throw new Error(scroller?.error || 'PDF scroller-geometri mangler');
 
       out.scrollerRect = {
