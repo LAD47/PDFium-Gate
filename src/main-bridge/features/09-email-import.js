@@ -85,22 +85,24 @@ function attachEmailAttachmentProtocolForwarder(host, ownerWc) {
 
 class MainBridgeEmailImportFeature {
   installEmailAttachmentProtocolForwarder() {
-    const runtime = ensureEmailAttachmentProtocolRuntime(this);
+    const __bridgeRuntime = this;
+    const runtime = ensureEmailAttachmentProtocolRuntime(__bridgeRuntime);
     if (runtime.webContentsCreatedHandler) return { ok:true, already:true, listenerCount:runtime.listeners.size };
 
     let existing = [];
     try { existing = webContents.getAllWebContents() || []; } catch (_) { existing = []; }
-    for (const wc of existing) attachEmailAttachmentProtocolForwarder(this, wc);
+    for (const wc of existing) attachEmailAttachmentProtocolForwarder(__bridgeRuntime, wc);
 
     runtime.webContentsCreatedHandler = (_event, wc) => {
-      attachEmailAttachmentProtocolForwarder(this, wc);
+      attachEmailAttachmentProtocolForwarder(__bridgeRuntime, wc);
     };
     app.on('web-contents-created', runtime.webContentsCreatedHandler);
     return { ok:true, already:false, listenerCount:runtime.listeners.size };
   }
 
   uninstallEmailAttachmentProtocolForwarder() {
-    const runtime = ensureEmailAttachmentProtocolRuntime(this);
+    const __bridgeRuntime = this;
+    const runtime = ensureEmailAttachmentProtocolRuntime(__bridgeRuntime);
     if (runtime.webContentsCreatedHandler) {
       try { app.removeListener('web-contents-created', runtime.webContentsCreatedHandler); } catch (_) {}
       runtime.webContentsCreatedHandler = null;
