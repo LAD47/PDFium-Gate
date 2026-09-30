@@ -25,6 +25,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
+      - name: Install dependencies
+        run: npm ci
       - name: Verify source and generated runtime
         run: npm run check
       - name: Commit generated runtime when needed
