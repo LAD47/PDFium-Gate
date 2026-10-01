@@ -2,6 +2,16 @@
 
 const assert = require('assert/strict');
 
+let duplicateDecisionFactory=model=>({action:'open-existing',match:model.duplicates[0]});
+global.EmailImportReviewModal = class EmailImportReviewModal {
+  constructor(app,plugin,model) {
+    this.model=model;
+  }
+  async openForDecision() {
+    return duplicateDecisionFactory(this.model);
+  }
+};
+
 global.EMAIL_IMPORT_RUNTIME = {
   normalizeVaultPath(value) {
     return String(value || '').replace(/\\/g, '/').replace(/^\/+|\/+$/g, '').trim();
@@ -14,11 +24,16 @@ global.Notice = class Notice {};
 
 const { EmailImportFeature } = require('../src/plugin/features/20-email-import');
 
-function createFeature({ result, reads, existingMatches = false }) {
+function createFeature({ result, reads, existingMatches = false, duplicateDecision = null }) {
   const feature = Object.create(EmailImportFeature.prototype);
   const deleted = [];
   const file = { path:'Cases/mail.eml', extension:'eml' };
   let readIndex = 0;
+  const duplicateModels=[];
+
+  duplicateDecisionFactory=typeof duplicateDecision==='function'
+    ? duplicateDecision
+    : model=>({action:'open-existing',match:model.duplicates[0]});
 
   feature.settings = {
     emailDragDropAutomaticImport:true,
@@ -45,19 +60,28 @@ function createFeature({ result, reads, existingMatches = false }) {
       options.services.suggestedEmailPdfPath({}, () => false),
       'Cases/mail.pdf'
     );
+
     const normalDecision = await options.chooseReview({suggestedPdfPath:'Cases/mail.pdf',duplicates:[]});
     assert.deepEqual(normalDecision,{action:'import',retainSource:true,pdfPath:'Cases/mail.pdf'});
-    const duplicateDecision = await options.chooseReview({
-      suggestedPdfPath:'Cases/mail.pdf',
-      duplicates:[{pdfPath:'Cases/existing.pdf'}]
-    });
-    assert.equal(duplicateDecision.action,'open-existing');
-    assert.equal(duplicateDecision.match.pdfPath,'Cases/existing.pdf');
+
+    const duplicateModel={
+      suggestedPdfPath:'Cases/mail (2).pdf',
+      duplicates:[{pdfPath:'Cases/existing.pdf'}],
+      summary:{sourceFilename:'mail.eml',subject:'Mail',sender:'Sender',date:'2026-09-29'}
+    };
+    const duplicateChoice = await options.chooseReview(duplicateModel);
+    duplicateModels.push(duplicateModel);
+    assert.equal(duplicateChoice.action,duplicateDecisionFactory(duplicateModel).action);
+    if(duplicateChoice.action==='open-existing') assert.equal(duplicateChoice.match.pdfPath,'Cases/existing.pdf');
+    if(duplicateChoice.action==='import') {
+      assert.equal(duplicateChoice.retainSource,true);
+      assert.equal(duplicateChoice.pdfPath,'Cases/mail (2).pdf');
+    }
     return result;
   };
   feature.app = {};
 
-  return { feature, file, deleted, getReadCount:() => readIndex };
+  return { feature, file, deleted, duplicateModels, getReadCount:() => readIndex };
 }
 
 async function run() {
@@ -94,14 +118,42 @@ async function run() {
   }
 
   {
-    const { feature, file, deleted } = createFeature({
+    const { feature, file, deleted, duplicateModels } = createFeature({
       result:{ ok:true, openedExisting:true, pdfPath:'Cases/existing.pdf' },
       reads:['original-bytes','original-bytes'],
-      existingMatches:true
+      existingMatches:true,
+      duplicateDecision:model=>({action:'open-existing',match:model.duplicates[0]})
     });
     const result=await feature.startEmailImportFromVaultFile(file);
+    assert.equal(duplicateModels.length,1);
     assert.equal(result.stagingRemoved,true);
     assert.deepEqual(deleted,[{path:'Cases/mail.eml',force:true}]);
+  }
+
+  {
+    const { feature, file, deleted, duplicateModels } = createFeature({
+      result:{ ok:true, pdfPath:'Cases/mail (2).pdf', sourceRetained:true, retainedPath:'.pdf-metadata/email-sources/aa/hash.eml' },
+      reads:['original-bytes','original-bytes'],
+      duplicateDecision:model=>({action:'import',retainSource:true,pdfPath:model.suggestedPdfPath})
+    });
+    const result=await feature.startEmailImportFromVaultFile(file);
+    assert.equal(duplicateModels.length,1);
+    assert.equal(result.pdfPath,'Cases/mail (2).pdf');
+    assert.equal(result.stagingRemoved,true);
+    assert.deepEqual(deleted,[{path:'Cases/mail.eml',force:true}]);
+  }
+
+  {
+    const { feature, file, deleted, duplicateModels } = createFeature({
+      result:{ ok:true, canceled:true },
+      reads:['original-bytes'],
+      duplicateDecision:()=>({action:'cancel'})
+    });
+    const result=await feature.startEmailImportFromVaultFile(file);
+    assert.equal(duplicateModels.length,1);
+    assert.equal(result.canceled,true);
+    assert.equal(result.stagingRemoved,false);
+    assert.deepEqual(deleted,[]);
   }
 
   {
@@ -126,7 +178,7 @@ async function run() {
     assert.deepEqual(deleted,[]);
   }
 
-  console.log('Email Import vault staging flow OK: dialog-free same-folder import, forced retention, exact-byte cleanup, duplicate retained-source verification, changed-file safety and disable setting verified.');
+  console.log('Email Import vault staging flow OK: same-folder import, explicit duplicate decision UX, re-import, cancel preservation, exact-byte cleanup, duplicate retained-source verification, changed-file safety and disable setting verified.');
 }
 
 run().catch(error => {
