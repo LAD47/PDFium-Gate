@@ -1,6 +1,6 @@
 'use strict';
 
-const METADATA_RECORD_CONTRACT_VERSION = '0.2';
+const METADATA_RECORD_CONTRACT_VERSION = '0.3';
 const METADATA_RECORD_FORMAT_VERSION = 2;
 const METADATA_RECORD_DEFAULT_FILE_TYPE = 'pdf';
 const METADATA_RECORD_DEFAULT_PROFILE = 'document';
@@ -11,6 +11,7 @@ const METADATA_RECORD_PROFILE = METADATA_RECORD_DEFAULT_PROFILE;
 const METADATA_RECORDS_ROOT = 'File Metadata';
 const METADATA_RECORD_STATUS_ACTIVE = 'active';
 const METADATA_RECORD_STATUS_MISSING = 'missing';
+const METADATA_RECORD_STATUS_TRASHED = 'trashed';
 const METADATA_RECORD_SYSTEM_PROPERTIES = Object.freeze([
   'filemeta_type',
   'filemeta_profile',
@@ -116,7 +117,7 @@ function metadataRecordFromFrontmatter(frontmatter, schema = null) {
   if(!metadataRecordSupportedDescriptor(fileType,profile)) return {ok:false,error:`filemeta_type/profile støttes ikke: ${fileType || '(tom)'}/${profile || '(tom)'}`};
   if(Number(frontmatter.filemeta_version)!==METADATA_RECORD_FORMAT_VERSION) return {ok:false,error:`filemeta_version må være ${METADATA_RECORD_FORMAT_VERSION}`};
   const status=String(frontmatter.filemeta_status || '');
-  if(![METADATA_RECORD_STATUS_ACTIVE,METADATA_RECORD_STATUS_MISSING].includes(status)) return {ok:false,error:'filemeta_status er ugyldig'};
+  if(![METADATA_RECORD_STATUS_ACTIVE,METADATA_RECORD_STATUS_MISSING,METADATA_RECORD_STATUS_TRASHED].includes(status)) return {ok:false,error:'filemeta_status er ugyldig'};
   const filePath=metadataRecordFilePathFromLink(frontmatter.filemeta_file);
   if(!metadataRecordValidateSupportedFilePath(fileType,profile,filePath)) return {ok:false,error:'filemeta_file peker ikke til en støttet fil for type/profile'};
 
@@ -150,7 +151,7 @@ function metadataRecordSerializeMarkdown(record, schema = null) {
   const profile=String(record.profile || METADATA_RECORD_DEFAULT_PROFILE);
   const filePath=metadataRecordNormalizeVaultPath(record.filePath || record.pdfPath);
   if(!metadataRecordValidateSupportedFilePath(fileType,profile,filePath)) throw new Error('metadata record file path/type/profile er ugyldig');
-  if(![METADATA_RECORD_STATUS_ACTIVE,METADATA_RECORD_STATUS_MISSING].includes(record.status)) throw new Error('metadata record status er ugyldig');
+  if(![METADATA_RECORD_STATUS_ACTIVE,METADATA_RECORD_STATUS_MISSING,METADATA_RECORD_STATUS_TRASHED].includes(record.status)) throw new Error('metadata record status er ugyldig');
 
   const lines=['---'];
   lines.push(`filemeta_type: ${metadataRecordYamlScalar(fileType)}`);
@@ -199,6 +200,7 @@ const metadataRecordContract=Object.freeze({
   METADATA_RECORDS_ROOT,
   METADATA_RECORD_STATUS_ACTIVE,
   METADATA_RECORD_STATUS_MISSING,
+  METADATA_RECORD_STATUS_TRASHED,
   METADATA_RECORD_SYSTEM_PROPERTIES,
   METADATA_RECORD_LEGACY_PREFIX,
   METADATA_RECORD_SUPPORTED,

@@ -10,6 +10,7 @@ if(JSON.stringify(record.METADATA_RECORD_SYSTEM_PROPERTIES)!==JSON.stringify(exp
 if(record.METADATA_RECORDS_ROOT!=='File Metadata') fail('record root must be File Metadata');
 if(record.METADATA_RECORD_DEFAULT_FILE_TYPE!=='pdf') fail('current default file type must be pdf');
 if(record.METADATA_RECORD_DEFAULT_PROFILE!=='document') fail('current default profile must be document');
+if(record.METADATA_RECORD_STATUS_TRASHED!=='trashed') fail('trashed document-record status is missing');
 if(!record.metadataRecordSupportedDescriptor('pdf','document')) fail('pdf/document descriptor is missing');
 if(record.metadataRecordSupportedDescriptor('html','web_page')) fail('HTML must not be enabled in 0.1.223');
 const presentationSchema={fields:[{property:'sender',label:'Sender',type:'text',active:true,show_in_default_base:true}]};
@@ -21,6 +22,10 @@ const frontmatter={filemeta_type:'pdf',filemeta_profile:'document',filemeta_vers
 const parsed=record.metadataRecordFromFrontmatter(frontmatter,{fields:[]});
 if(!parsed.ok) fail(`canonical frontmatter did not parse: ${parsed.error}`);
 if(parsed.record.filePath!=='Example/test.pdf' || parsed.record.pdfPath!==parsed.record.filePath) fail('generic path and current PDF adapter alias diverge');
+const trashed=record.metadataRecordFromFrontmatter({...frontmatter,filemeta_status:'trashed'},{fields:[]});
+if(!trashed.ok || trashed.record.status!=='trashed') fail('trashed frontmatter did not parse');
+const trashedMarkdown=record.metadataRecordSerializeMarkdown({id,fileType:'pdf',profile:'document',filePath:'Example/test.pdf',status:'trashed',values:{}},{fields:[]});
+if(!trashedMarkdown.includes('filemeta_status: "trashed"')) fail('trashed Markdown did not serialize');
 const markdown=record.metadataRecordSerializeMarkdown({id,fileType:'pdf',profile:'document',filePath:'Example/test.pdf',status:'active',values:{}},{fields:[]});
 for(const field of expected) if(!markdown.includes(`${field}:`)) fail(`serialized Markdown missing ${field}`);
 if(markdown.includes('pdfmeta_') || markdown.includes('pdf_document')) fail('serialized Markdown contains old system identity');

@@ -11,7 +11,7 @@ module.exports=async function verifyDocumentRecordsContract(){
   const schema=schemaApi.metadataDefaultSchema();
   const id='123e4567-e89b-42d3-a456-426614174000';
 
-  if(recordApi.METADATA_RECORD_CONTRACT_VERSION!=='0.2') fail('metadata record contract version drifted');
+  if(recordApi.METADATA_RECORD_CONTRACT_VERSION!=='0.3') fail('metadata record contract version drifted');
   if(recordApi.METADATA_RECORD_FORMAT_VERSION!==2) fail('metadata record format version drifted');
   if(recordApi.METADATA_RECORDS_ROOT!=='File Metadata') fail(`metadata record root drifted: ${recordApi.METADATA_RECORDS_ROOT}`);
   if(recordApi.METADATA_RECORDS_ROOT.startsWith('.')) fail('metadata record root is hidden from Obsidian indexing');
@@ -81,7 +81,7 @@ module.exports=async function verifyDocumentRecordsContract(){
   for(const required of ['vaultWriteAdapter.createText','frontmatterAdapter.processFrontMatter','verifyRecordPath']) if(!repositorySource.includes(required)) fail(`metadata record repository persistence contract missing: ${required}`);
   if(!vaultRead.includes('listMarkdownFiles()')||!vaultRead.includes('vault.getMarkdownFiles()')) fail('metadata RAM-index does not enumerate Obsidian-indexed Markdown files');
   if(!feature.includes('parseDocumentRecordFile(file,schema,true)')) fail('cold-start record index does not force canonical disk frontmatter reads');
-  for(const required of ['byPdfPath','byId','metadataUuidV4()','METADATA_RECORD_STATUS_MISSING','updateDocumentRecordForPdfRename','markDocumentRecordMissingForPdfDelete','relinkMissingDocumentRecord','ambiguousPdfPaths','resolveDocumentRecordPdfPath','obsidianLinkResolutionAdapter?.resolveFirst']) if(!feature.includes(required)) fail(`DocumentRecords feature contract missing: ${required}`);
+  for(const required of ['byPdfPath','byId','metadataUuidV4()','METADATA_RECORD_STATUS_MISSING','METADATA_RECORD_STATUS_TRASHED','updateDocumentRecordForPdfRename','markDocumentRecordTrashedForPdfDelete','relinkMissingDocumentRecord','ambiguousPdfPaths','resolveDocumentRecordPdfPath','obsidianLinkResolutionAdapter?.resolveFirst']) if(!feature.includes(required)) fail(`DocumentRecords feature contract missing: ${required}`);
   if(feature.includes('refreshDocumentInfoViews')) fail('DocumentRecords calls back into DocumentInfo and creates a cross-feature cycle');
   if(!lifecycle.includes('onLayoutReady(() =>')||!lifecycle.includes('handleDocumentRecordVaultRename')||!lifecycle.includes('handleDocumentRecordVaultDelete')) fail('metadata record lifecycle listeners missing from layout-ready orchestration');
   if(lifecycle.indexOf('onLayoutReady(() =>')>lifecycle.indexOf('handleDocumentRecordVaultRename')) fail('metadata record vault listeners are registered before layoutReady');
@@ -119,10 +119,10 @@ module.exports=async function verifyDocumentRecordsContract(){
   lifecycleAdapter.cancelIdle(idleHandle);
   if(cancelledIdleId!==77) fail('idle scheduler cancellation did not use cancelIdleCallback');
 
-  // Behavioral integration of the owner: lazy create -> indexed lookup -> PDF rename -> delete/missing -> ambiguity fail-closed.
+  // Behavioral integration of the owner: lazy create -> indexed lookup -> PDF rename -> delete/trashed -> explicit missing recovery -> ambiguity fail-closed.
   const globalKeys=[
     'METADATA_RECORD_CONTRACT_VERSION','METADATA_RECORD_FORMAT_VERSION','METADATA_RECORD_TYPE','METADATA_RECORDS_ROOT',
-    'METADATA_RECORD_STATUS_ACTIVE','METADATA_RECORD_STATUS_MISSING','METADATA_RECORD_SYSTEM_PROPERTIES',
+    'METADATA_RECORD_STATUS_ACTIVE','METADATA_RECORD_STATUS_MISSING','METADATA_RECORD_STATUS_TRASHED','METADATA_RECORD_SYSTEM_PROPERTIES',
     'metadataRecordNormalizeVaultPath','metadataRecordIsUuidV4','metadataRecordPathFromId','metadataRecordIsPath',
     'metadataRecordPdfLink','metadataRecordPdfPathFromLink','metadataRecordClone','metadataRecordIsEmptyUserValue',
     'metadataRecordNormalizeFrontmatterValue','metadataRecordFromFrontmatter','metadataRecordSerializeMarkdown'
@@ -252,13 +252,24 @@ module.exports=async function verifyDocumentRecordsContract(){
   lifecycleResult=await owner.handleDocumentRecordVaultDelete({path:'Archive/a.pdf',extension:'pdf'});
   if(!lifecycleResult?.ok||owner.getDocumentMetadataRecordState('Archive/a.pdf').registered) fail('PDF delete retained an active path binding');
   const retained=files.get(firstRecordPath)?.record;
-  if(!retained||retained.status!==recordApi.METADATA_RECORD_STATUS_MISSING||retained.pdfPath!=='Archive/a.pdf') fail('PDF delete did not retain the record as missing');
+  if(!retained||retained.status!==recordApi.METADATA_RECORD_STATUS_TRASHED||retained.pdfPath!=='Archive/a.pdf') fail('PDF delete did not retain the record as trashed');
 
-  // Reappearance at the same path must not auto-bind a missing record. Path alone is not identity.
+  // Reappearance at the same path must not auto-bind a trashed record. Path alone is not identity.
   pdfFiles.set('Archive/a.pdf',{path:'Archive/a.pdf',extension:'pdf'});
   const createResult=owner.handleDocumentRecordVaultCreate({path:'Archive/a.pdf',extension:'pdf'});
   if(createResult!==undefined) fail('PDF create unexpectedly entered document-record create handler');
-  if(owner.getDocumentMetadataRecordState('Archive/a.pdf').registered) fail('missing record auto-rebound when a PDF merely reappeared at the same path');
+  if(owner.getDocumentMetadataRecordState('Archive/a.pdf').registered) fail('trashed record auto-rebound when a PDF merely reappeared at the same path');
+
+  // Keep missing/relink as a separate lifecycle from deliberate trash.
+  const missingId='623e4567-e89b-42d3-a456-426614174000';
+  const missingRecordPath=recordApi.metadataRecordPathFromId(missingId);
+  const missingFile={path:missingRecordPath,extension:'md'};
+  files.set(missingRecordPath,{file:missingFile,record:{
+    id:missingId,
+    pdfPath:'Lost/a.pdf',
+    status:recordApi.METADATA_RECORD_STATUS_MISSING,
+    values:{sender:'Oslo kommune',document_date:'2016-03-17'}
+  }});
 
   // Explicit relink must fail closed when the target PDF already has another active record.
   const occupiedId='523e4567-e89b-42d3-a456-426614174000';
@@ -267,16 +278,17 @@ module.exports=async function verifyDocumentRecordsContract(){
   files.set(occupiedRecordPath,{file:occupiedFile,record:{id:occupiedId,pdfPath:'Taken/occupied.pdf',status:recordApi.METADATA_RECORD_STATUS_ACTIVE,values:{sender:'Annen record'}}});
   owner.state.documentRecords=makeState();
   await owner.ensureDocumentRecordIndexReady();
-  let relink=await owner.relinkMissingDocumentRecord(firstId,'Taken/occupied.pdf');
+  let relink=await owner.relinkMissingDocumentRecord(missingId,'Taken/occupied.pdf');
   if(relink.ok) fail('explicit missing-record relink overwrote an already-owned PDF target');
-  if(files.get(firstRecordPath)?.record?.status!==recordApi.METADATA_RECORD_STATUS_MISSING) fail('failed relink mutated missing record status');
+  if(files.get(missingRecordPath)?.record?.status!==recordApi.METADATA_RECORD_STATUS_MISSING) fail('failed relink mutated missing record status');
 
   // Explicit safe relink preserves UUID and user metadata while activating the chosen PDF.
-  relink=await owner.relinkMissingDocumentRecord(firstId,'Recovered/a.pdf');
-  if(!relink.ok||relink.id!==firstId||relink.status!==recordApi.METADATA_RECORD_STATUS_ACTIVE||relink.pdfPath!=='Recovered/a.pdf') fail(`explicit missing-record relink failed: ${relink.error || 'unknown'}`);
+  relink=await owner.relinkMissingDocumentRecord(missingId,'Recovered/a.pdf');
+  if(!relink.ok||relink.id!==missingId||relink.status!==recordApi.METADATA_RECORD_STATUS_ACTIVE||relink.pdfPath!=='Recovered/a.pdf') fail(`explicit missing-record relink failed: ${relink.error || 'unknown'}`);
   lookup=owner.getDocumentMetadataRecordState('Recovered/a.pdf');
-  if(!lookup.registered||lookup.id!==firstId||lookup.values.sender!=='Oslo kommune'||lookup.values.document_date!=='2016-03-17') fail('explicit relink did not preserve record identity and metadata');
+  if(!lookup.registered||lookup.id!==missingId||lookup.values.sender!=='Oslo kommune'||lookup.values.document_date!=='2016-03-17') fail('explicit relink did not preserve record identity and metadata');
   if(owner.getDocumentMetadataRecordState('Archive/a.pdf').registered) fail('explicit relink left stale old-path binding active');
+  if(files.get(firstRecordPath)?.record?.status!==recordApi.METADATA_RECORD_STATUS_TRASHED) fail('missing-record relink mutated trashed record');
 
   const benchmarkResult=await owner.runDocumentRecordIndexBenchmark();
   if(!benchmarkResult?.ok || benchmarkResult?.forcedBuild?.reason!=='benchmark-forced' || typeof benchmarkResult?.lookup?.rawAverageUs!=='number') fail('document record benchmark instrumentation failed');
@@ -327,8 +339,8 @@ module.exports=async function verifyDocumentRecordsContract(){
     behavioralRenamePreservesId:true,
     coldStartRenameReadsCanonicalDisk:true,
     wikilinkRepresentationResolvesToCanonicalTFilePath:true,
-    behavioralDeleteRetainsMissing:true,
-    missingPdfDoesNotAutoRebind:true,
+    behavioralDeleteRetainsTrashed:true,
+    trashedPdfDoesNotAutoRebind:true,
     explicitMissingRelinkPreservesId:true,
     explicitRelinkConflictFailClosed:true,
     behavioralAmbiguityFailClosed:true,
