@@ -8,6 +8,7 @@ class EmailImportReviewModal extends Modal {
     this.targetPath=String(this.model.suggestedPdfPath || '');
     this.retentionLocked=this.model.retentionLocked===true;
     this.retentionChoice=this.retentionLocked?'keep':'';
+    this.selectedDuplicateIndex=0;
     this.settled=false;
     this.resolveDecision=null;
     this.importButton=null;
@@ -49,7 +50,15 @@ class EmailImportReviewModal extends Modal {
     const t=(key,params)=>emailImportT(this.plugin,key,params);
     const {contentEl}=this;
     contentEl.empty();
-    contentEl.createEl('h2',{text:t('emailImport.modal.title')});
+
+    const duplicates=Array.isArray(this.model.duplicates)?this.model.duplicates:[];
+    const openableDuplicates=duplicates.filter(match=>match?.pdfPath);
+    if(this.selectedDuplicateIndex<0 || this.selectedDuplicateIndex>=openableDuplicates.length) this.selectedDuplicateIndex=0;
+    const duplicateDecision=this.retentionLocked && duplicates.length>0;
+
+    contentEl.createEl('h2',{text:duplicateDecision
+      ? t('emailImport.modal.duplicateWarning',{count:duplicates.length})
+      : t('emailImport.modal.title')});
     contentEl.createEl('p',{text:t('emailImport.modal.intro')});
 
     const summary=this.model.summary || {};
@@ -58,12 +67,24 @@ class EmailImportReviewModal extends Modal {
     new Setting(contentEl).setName(t('emailImport.modal.sender')).setDesc(String(summary.sender || ''));
     new Setting(contentEl).setName(t('emailImport.modal.date')).setDesc(String(summary.date || ''));
 
-    const duplicates=Array.isArray(this.model.duplicates)?this.model.duplicates:[];
     if(duplicates.length) {
       const warning=contentEl.createDiv({cls:'pdfium-email-import-duplicate-warning'});
-      warning.createEl('strong',{text:t('emailImport.modal.duplicateWarning',{count:duplicates.length})});
+      if(!duplicateDecision) warning.createEl('strong',{text:t('emailImport.modal.duplicateWarning',{count:duplicates.length})});
       const list=warning.createEl('ul');
       for(const match of duplicates.slice(0,10)) list.createEl('li',{text:String(match.pdfPath || match.recordPath || match.id || '')});
+
+      if(openableDuplicates.length>1) {
+        new Setting(contentEl)
+          .setName(t('emailImport.modal.openExisting'))
+          .addDropdown(dropdown=>{
+            openableDuplicates.forEach((match,index)=>dropdown.addOption(String(index),String(match.pdfPath)));
+            dropdown.setValue(String(this.selectedDuplicateIndex));
+            dropdown.onChange(value=>{
+              const index=Number(value);
+              if(Number.isInteger(index) && index>=0 && index<openableDuplicates.length) this.selectedDuplicateIndex=index;
+            });
+          });
+      }
     } else {
       contentEl.createEl('p',{text:t('emailImport.modal.noDuplicates')});
     }
@@ -95,10 +116,13 @@ class EmailImportReviewModal extends Modal {
       .setButtonText(t('emailImport.modal.cancel'))
       .onClick(()=>this.finish({action:'cancel'})));
 
-    if(duplicates.length===1 && duplicates[0]?.pdfPath) {
+    if(openableDuplicates.length) {
       actions.addButton(button=>button
         .setButtonText(t('emailImport.modal.openExisting'))
-        .onClick(()=>this.finish({action:'open-existing',match:duplicates[0]})));
+        .onClick(()=>{
+          const match=openableDuplicates[this.selectedDuplicateIndex] || null;
+          if(match?.pdfPath) this.finish({action:'open-existing',match});
+        }));
     }
 
     actions.addButton(button=>{
