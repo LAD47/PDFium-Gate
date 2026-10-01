@@ -3872,7 +3872,7 @@ function createMetadataSchemaRepository({
   return Object.freeze({ contractVersion:METADATA_SCHEMA_REPOSITORY_CONTRACT_VERSION, readSchema, writeSchema, loadOrCreateDefault });
 }
 
-const METADATA_RECORD_CONTRACT_VERSION = '0.2';
+const METADATA_RECORD_CONTRACT_VERSION = '0.3';
 const METADATA_RECORD_FORMAT_VERSION = 2;
 const METADATA_RECORD_DEFAULT_FILE_TYPE = 'pdf';
 const METADATA_RECORD_DEFAULT_PROFILE = 'document';
@@ -3883,6 +3883,7 @@ const METADATA_RECORD_PROFILE = METADATA_RECORD_DEFAULT_PROFILE;
 const METADATA_RECORDS_ROOT = 'File Metadata';
 const METADATA_RECORD_STATUS_ACTIVE = 'active';
 const METADATA_RECORD_STATUS_MISSING = 'missing';
+const METADATA_RECORD_STATUS_TRASHED = 'trashed';
 const METADATA_RECORD_SYSTEM_PROPERTIES = Object.freeze([
   'filemeta_type',
   'filemeta_profile',
@@ -3988,7 +3989,7 @@ function metadataRecordFromFrontmatter(frontmatter, schema = null) {
   if(!metadataRecordSupportedDescriptor(fileType,profile)) return {ok:false,error:`filemeta_type/profile støttes ikke: ${fileType || '(tom)'}/${profile || '(tom)'}`};
   if(Number(frontmatter.filemeta_version)!==METADATA_RECORD_FORMAT_VERSION) return {ok:false,error:`filemeta_version må være ${METADATA_RECORD_FORMAT_VERSION}`};
   const status=String(frontmatter.filemeta_status || '');
-  if(![METADATA_RECORD_STATUS_ACTIVE,METADATA_RECORD_STATUS_MISSING].includes(status)) return {ok:false,error:'filemeta_status er ugyldig'};
+  if(![METADATA_RECORD_STATUS_ACTIVE,METADATA_RECORD_STATUS_MISSING,METADATA_RECORD_STATUS_TRASHED].includes(status)) return {ok:false,error:'filemeta_status er ugyldig'};
   const filePath=metadataRecordFilePathFromLink(frontmatter.filemeta_file);
   if(!metadataRecordValidateSupportedFilePath(fileType,profile,filePath)) return {ok:false,error:'filemeta_file peker ikke til en støttet fil for type/profile'};
 
@@ -4022,7 +4023,7 @@ function metadataRecordSerializeMarkdown(record, schema = null) {
   const profile=String(record.profile || METADATA_RECORD_DEFAULT_PROFILE);
   const filePath=metadataRecordNormalizeVaultPath(record.filePath || record.pdfPath);
   if(!metadataRecordValidateSupportedFilePath(fileType,profile,filePath)) throw new Error('metadata record file path/type/profile er ugyldig');
-  if(![METADATA_RECORD_STATUS_ACTIVE,METADATA_RECORD_STATUS_MISSING].includes(record.status)) throw new Error('metadata record status er ugyldig');
+  if(![METADATA_RECORD_STATUS_ACTIVE,METADATA_RECORD_STATUS_MISSING,METADATA_RECORD_STATUS_TRASHED].includes(record.status)) throw new Error('metadata record status er ugyldig');
 
   const lines=['---'];
   lines.push(`filemeta_type: ${metadataRecordYamlScalar(fileType)}`);
@@ -4071,6 +4072,7 @@ const metadataRecordContract=Object.freeze({
   METADATA_RECORDS_ROOT,
   METADATA_RECORD_STATUS_ACTIVE,
   METADATA_RECORD_STATUS_MISSING,
+  METADATA_RECORD_STATUS_TRASHED,
   METADATA_RECORD_SYSTEM_PROPERTIES,
   METADATA_RECORD_LEGACY_PREFIX,
   METADATA_RECORD_SUPPORTED,
@@ -75348,7 +75350,7 @@ class DocumentRecordsFeature {
     return {ok:true,id,status:record.status,pdfPath:record.pdfPath};
   }
 
-  async markDocumentRecordMissingForPdfDelete(pdfPath) {
+  async markDocumentRecordTrashedForPdfDelete(pdfPath) {
     const path=metadataRecordNormalizeVaultPath(pdfPath);
     if(!path || !/\.pdf$/i.test(path)) return {ok:true,ignored:true};
     if(this.state.documentRecords.ambiguousPdfPaths.has(path)) return {ok:false,error:'PDF-sti er tvetydig; delete håndteres fail closed'};
@@ -75360,11 +75362,11 @@ class DocumentRecordsFeature {
     const readBack=await this.getDocumentRecordRepository().updateRecord(entry.file,{
       id:entry.id,
       pdfPath:entry.pdfPath,
-      status:METADATA_RECORD_STATUS_MISSING,
+      status:METADATA_RECORD_STATUS_TRASHED,
       values:metadataRecordClone(entry.values || {})
     },schema);
     this.replaceDocumentRecordEntry(readBack);
-    return {ok:true,id,status:METADATA_RECORD_STATUS_MISSING};
+    return {ok:true,id,status:METADATA_RECORD_STATUS_TRASHED};
   }
 
   async relinkMissingDocumentRecord(recordId,newPdfPath) {
@@ -75435,7 +75437,7 @@ class DocumentRecordsFeature {
     const path=metadataRecordNormalizeVaultPath(file?.path);
     if(this.state.documentRecords.benchmarkEventSuppression && (metadataBenchmarkIsRecordPath(path) || metadataBenchmarkIsPdfPath(path))) return Promise.resolve({ok:true,ignored:true,benchmarkSuppressed:true});
     const tasks=[];
-    if(/\.pdf$/i.test(path)) tasks.push(()=>this.markDocumentRecordMissingForPdfDelete(path));
+    if(/\.pdf$/i.test(path)) tasks.push(()=>this.markDocumentRecordTrashedForPdfDelete(path));
     if(metadataRecordIsPath(path) && String(file?.extension || '').toLowerCase()==='md') tasks.push(()=>{
       this.removeDocumentRecordEntryByPath(path);
       return {ok:true};
