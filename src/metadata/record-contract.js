@@ -1,6 +1,6 @@
 'use strict';
 
-const METADATA_RECORD_CONTRACT_VERSION = '0.3';
+const METADATA_RECORD_CONTRACT_VERSION = '0.4';
 const METADATA_RECORD_FORMAT_VERSION = 2;
 const METADATA_RECORD_DEFAULT_FILE_TYPE = 'pdf';
 const METADATA_RECORD_DEFAULT_PROFILE = 'document';
@@ -12,13 +12,15 @@ const METADATA_RECORDS_ROOT = 'File Metadata';
 const METADATA_RECORD_STATUS_ACTIVE = 'active';
 const METADATA_RECORD_STATUS_MISSING = 'missing';
 const METADATA_RECORD_STATUS_TRASHED = 'trashed';
+const METADATA_RECORD_SHA256_PATTERN = /^[0-9a-f]{64}$/i;
 const METADATA_RECORD_SYSTEM_PROPERTIES = Object.freeze([
   'filemeta_type',
   'filemeta_profile',
   'filemeta_version',
   'filemeta_id',
   'filemeta_file',
-  'filemeta_status'
+  'filemeta_status',
+  'filemeta_sha256'
 ]);
 const METADATA_RECORD_SYSTEM_PROPERTY_SET = new Set(METADATA_RECORD_SYSTEM_PROPERTIES);
 const METADATA_RECORD_LEGACY_PREFIX = 'pdfmeta_';
@@ -31,6 +33,13 @@ const METADATA_RECORD_SUPPORTED = Object.freeze({
 
 function metadataRecordNormalizeVaultPath(value) {
   return String(value || '').replace(/\\/g, '/').replace(/^\/+|\/+$/g, '');
+}
+
+function metadataRecordNormalizeSha256(value) {
+  const text=String(value == null ? '' : value).trim().toLowerCase();
+  if(!text) return '';
+  if(!METADATA_RECORD_SHA256_PATTERN.test(text)) throw new Error('filemeta_sha256 må være 64 heksadesimale tegn');
+  return text;
 }
 
 function metadataRecordIsUuidV4(value) {
@@ -120,6 +129,9 @@ function metadataRecordFromFrontmatter(frontmatter, schema = null) {
   if(![METADATA_RECORD_STATUS_ACTIVE,METADATA_RECORD_STATUS_MISSING,METADATA_RECORD_STATUS_TRASHED].includes(status)) return {ok:false,error:'filemeta_status er ugyldig'};
   const filePath=metadataRecordFilePathFromLink(frontmatter.filemeta_file);
   if(!metadataRecordValidateSupportedFilePath(fileType,profile,filePath)) return {ok:false,error:'filemeta_file peker ikke til en støttet fil for type/profile'};
+  let sha256='';
+  try { sha256=metadataRecordNormalizeSha256(frontmatter.filemeta_sha256); }
+  catch(error) { return {ok:false,error:error instanceof Error?error.message:String(error)}; }
 
   const fields=Array.isArray(schema?.fields) ? schema.fields : [];
   const byProperty=new Map(fields.map(field=>[field.property,field]));
@@ -129,7 +141,7 @@ function metadataRecordFromFrontmatter(frontmatter, schema = null) {
     const field=byProperty.get(key);
     values[key]=field ? metadataRecordNormalizeFrontmatterValue(field,raw) : metadataRecordClone(raw);
   }
-  return {ok:true,record:{id,fileType,profile,filePath,pdfPath:filePath,status,values}};
+  return {ok:true,record:{id,fileType,profile,filePath,pdfPath:filePath,status,sha256:sha256 || null,values}};
 }
 
 function metadataRecordYamlScalar(value, field = null) {
@@ -152,6 +164,7 @@ function metadataRecordSerializeMarkdown(record, schema = null) {
   const filePath=metadataRecordNormalizeVaultPath(record.filePath || record.pdfPath);
   if(!metadataRecordValidateSupportedFilePath(fileType,profile,filePath)) throw new Error('metadata record file path/type/profile er ugyldig');
   if(![METADATA_RECORD_STATUS_ACTIVE,METADATA_RECORD_STATUS_MISSING,METADATA_RECORD_STATUS_TRASHED].includes(record.status)) throw new Error('metadata record status er ugyldig');
+  const sha256=metadataRecordNormalizeSha256(record.sha256);
 
   const lines=['---'];
   lines.push(`filemeta_type: ${metadataRecordYamlScalar(fileType)}`);
@@ -160,6 +173,7 @@ function metadataRecordSerializeMarkdown(record, schema = null) {
   lines.push(`filemeta_id: ${metadataRecordYamlScalar(String(record.id).toLowerCase())}`);
   lines.push(`filemeta_file: ${metadataRecordYamlScalar(metadataRecordFileLink(filePath))}`);
   lines.push(`filemeta_status: ${metadataRecordYamlScalar(record.status)}`);
+  if(sha256) lines.push(`filemeta_sha256: ${metadataRecordYamlScalar(sha256)}`);
 
   const values=record.values && typeof record.values==='object' && !Array.isArray(record.values) ? record.values : {};
   const fields=Array.isArray(schema?.fields) ? schema.fields : [];
@@ -201,10 +215,12 @@ const metadataRecordContract=Object.freeze({
   METADATA_RECORD_STATUS_ACTIVE,
   METADATA_RECORD_STATUS_MISSING,
   METADATA_RECORD_STATUS_TRASHED,
+  METADATA_RECORD_SHA256_PATTERN,
   METADATA_RECORD_SYSTEM_PROPERTIES,
   METADATA_RECORD_LEGACY_PREFIX,
   METADATA_RECORD_SUPPORTED,
   metadataRecordNormalizeVaultPath,
+  metadataRecordNormalizeSha256,
   metadataRecordIsUuidV4,
   metadataRecordPathFromId,
   metadataRecordIsPath,
