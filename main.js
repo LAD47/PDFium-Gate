@@ -76211,8 +76211,10 @@ class EmailImportFeature {
         return bytes;
       },
       chooseReview:async model=>{
-        const duplicate=(Array.isArray(model?.duplicates)?model.duplicates:[]).find(match=>match?.pdfPath);
-        if(duplicate) return {action:'open-existing',match:duplicate};
+        const duplicates=Array.isArray(model?.duplicates)?model.duplicates:[];
+        if(duplicates.length) {
+          return await new EmailImportReviewModal(this.app,this,{...model,retentionLocked:true}).openForDecision();
+        }
         return {action:'import',retainSource:true,pdfPath:model.suggestedPdfPath};
       },
       services:{
