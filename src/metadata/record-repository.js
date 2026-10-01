@@ -1,6 +1,6 @@
 'use strict';
 
-const metadataRecordCrypto=typeof crypto!=='undefined' ? crypto : require('crypto');
+const metadataRecordCrypto=require('crypto');
 const METADATA_RECORD_REPOSITORY_CONTRACT_VERSION='0.2';
 
 function createMetadataRecordRepository({vaultReadAdapter,vaultWriteAdapter,frontmatterAdapter,parseYamlFn,recordApi}) {
