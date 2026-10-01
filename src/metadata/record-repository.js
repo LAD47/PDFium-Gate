@@ -1,7 +1,7 @@
 'use strict';
 
 const crypto=require('crypto');
-const METADATA_RECORD_REPOSITORY_CONTRACT_VERSION='0.3';
+const METADATA_RECORD_REPOSITORY_CONTRACT_VERSION='0.2';
 
 function createMetadataRecordRepository({vaultReadAdapter,vaultWriteAdapter,frontmatterAdapter,parseYamlFn,recordApi}) {
   if(!vaultReadAdapter || typeof vaultReadAdapter.readText!=='function' || typeof vaultReadAdapter.readBinary!=='function' || typeof vaultReadAdapter.getAbstractFileByPath!=='function') throw new Error('metadata record repository: vault read adapter incomplete');
