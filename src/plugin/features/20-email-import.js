@@ -103,7 +103,7 @@ class EmailImportFeature {
 
       const matches=new Map();
       const preferredMatches=new Map();
-      const hashedPaths=new Set();
+      const resolvedPaths=new Set();
 
       for(const parent of parents) {
         const recordPath=EMAIL_IMPORT_RUNTIME.normalizeVaultPath(parent?.recordPath);
@@ -118,15 +118,17 @@ class EmailImportFeature {
           const resolved=EMAIL_IMPORT_RUNTIME.normalizeVaultPath(
             this.obsidianMetadataCacheAdapter.resolveLinkPath(linkPath,recordPath) || linkPath
           );
-          if(!resolved || hashedPaths.has(resolved)) {
+          if(!resolved || resolvedPaths.has(resolved)) {
             if(resolved && index===preferredIndex && matches.has(resolved)) preferredMatches.set(resolved,matches.get(resolved));
             continue;
           }
           const file=this.obsidianVaultReadAdapter.getAbstractFileByPath(resolved);
           if(!file || typeof file.path!=='string' || typeof file.extension!=='string') continue;
-          hashedPaths.add(resolved);
-          const bytes=Buffer.from(await this.obsidianVaultReadAdapter.readBinary(file));
-          if(EMAIL_IMPORT_RUNTIME.sha256Hex(bytes)!==attachmentSha256) continue;
+          resolvedPaths.add(resolved);
+
+          // attachmentSha256 identifies the immutable original attachment payload.
+          // The exported vault document is intentionally mutable, so its current bytes
+          // must not be compared with the import-time hash when resolving the live link.
           const match={path:resolved,recordPath,index};
           matches.set(resolved,match);
           if(index===preferredIndex) preferredMatches.set(resolved,match);

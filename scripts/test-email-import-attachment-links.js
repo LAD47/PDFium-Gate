@@ -97,4 +97,71 @@ assert.deepEqual(extractEmailAttachmentLinkPaths(removed),[]);
 assert.ok(!removed.includes('pdfium-gate:email-attachments:start'));
 assert.ok(removed.includes('Existing body text.'));
 
-console.log('Email Import attachment wikilink block OK: native links remain deterministic and plugin-owned links can be normalized back to resolver-confirmed full vault paths after Obsidian link updates.');
+async function verifyMutableLiveAttachmentResolution() {
+  const sourceSha256='a'.repeat(64);
+  const attachmentSha256='b'.repeat(64);
+  const recordPath='File Metadata/11/11111111-1111-4111-8111-111111111111.md';
+  const attachmentPath='Cases/report.pdf';
+  const recordFile={path:recordPath,extension:'md'};
+  const attachmentFile={path:attachmentPath,extension:'pdf'};
+  const opened=[];
+  let liveAttachmentReadAttempted=false;
+
+  global.EMAIL_IMPORT_RUNTIME={
+    normalizeVaultPath:value=>String(value || '').replace(/\\/g,'/').replace(/^\/+|\/+$/g,''),
+    extractEmailAttachmentLinkPaths
+  };
+  global.Notice=function Notice() {};
+
+  const { EmailImportFeature } = require('../src/plugin/features/20-email-import');
+  const feature=new EmailImportFeature();
+  feature.i18n={t:key=>key};
+  feature.obsidianVaultReadAdapter={
+    getAbstractFileByPath(path) {
+      if(path===recordPath) return recordFile;
+      if(path===attachmentPath) return attachmentFile;
+      return null;
+    },
+    async readText(file) {
+      assert.equal(file.path,recordPath);
+      return withLinks;
+    },
+    async readBinary() {
+      liveAttachmentReadAttempted=true;
+      throw new Error('Live attachment bytes must not be integrity-gated after import.');
+    }
+  };
+  feature.obsidianMetadataCacheAdapter={
+    resolveLinkPath:(linkPath,sourcePath)=>{
+      assert.equal(sourcePath,recordPath);
+      return linkPath;
+    }
+  };
+  feature.emailImportAdapter=()=>({
+    findDuplicatesBySha256:async sha=>{
+      assert.equal(sha,sourceSha256);
+      return [{recordPath,pdfPath:'Cases/mail.pdf'}];
+    },
+    openVaultFile:async path=>{ opened.push(path); return true; }
+  });
+
+  const result=await feature.openEmailAttachmentFromProtocol({
+    source:sourceSha256,
+    attachment:attachmentSha256,
+    index:0
+  });
+
+  assert.equal(result.ok,true);
+  assert.equal(result.path,attachmentPath);
+  assert.deepEqual(opened,[attachmentPath]);
+  assert.equal(liveAttachmentReadAttempted,false,'Resolver must not hash/read the mutable exported attachment before opening it.');
+}
+
+verifyMutableLiveAttachmentResolution()
+  .then(()=>{
+    console.log('Email Import attachment wikilink block OK: native links remain deterministic, plugin-owned links normalize to resolver-confirmed paths, and mutable/annotated exported attachments remain openable without import-time SHA revalidation.');
+  })
+  .catch(error=>{
+    console.error(error);
+    process.exitCode=1;
+  });
