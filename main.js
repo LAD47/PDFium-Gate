@@ -3884,13 +3884,15 @@ const METADATA_RECORDS_ROOT = 'File Metadata';
 const METADATA_RECORD_STATUS_ACTIVE = 'active';
 const METADATA_RECORD_STATUS_MISSING = 'missing';
 const METADATA_RECORD_STATUS_TRASHED = 'trashed';
+const METADATA_RECORD_SHA256_PATTERN = /^[0-9a-f]{64}$/i;
 const METADATA_RECORD_SYSTEM_PROPERTIES = Object.freeze([
   'filemeta_type',
   'filemeta_profile',
   'filemeta_version',
   'filemeta_id',
   'filemeta_file',
-  'filemeta_status'
+  'filemeta_status',
+  'filemeta_sha256'
 ]);
 const METADATA_RECORD_SYSTEM_PROPERTY_SET = new Set(METADATA_RECORD_SYSTEM_PROPERTIES);
 const METADATA_RECORD_LEGACY_PREFIX = 'pdfmeta_';
@@ -3903,6 +3905,13 @@ const METADATA_RECORD_SUPPORTED = Object.freeze({
 
 function metadataRecordNormalizeVaultPath(value) {
   return String(value || '').replace(/\\/g, '/').replace(/^\/+|\/+$/g, '');
+}
+
+function metadataRecordNormalizeSha256(value) {
+  const text=String(value == null ? '' : value).trim().toLowerCase();
+  if(!text) return '';
+  if(!METADATA_RECORD_SHA256_PATTERN.test(text)) throw new Error('filemeta_sha256 må være 64 heksadesimale tegn');
+  return text;
 }
 
 function metadataRecordIsUuidV4(value) {
@@ -3992,6 +4001,9 @@ function metadataRecordFromFrontmatter(frontmatter, schema = null) {
   if(![METADATA_RECORD_STATUS_ACTIVE,METADATA_RECORD_STATUS_MISSING,METADATA_RECORD_STATUS_TRASHED].includes(status)) return {ok:false,error:'filemeta_status er ugyldig'};
   const filePath=metadataRecordFilePathFromLink(frontmatter.filemeta_file);
   if(!metadataRecordValidateSupportedFilePath(fileType,profile,filePath)) return {ok:false,error:'filemeta_file peker ikke til en støttet fil for type/profile'};
+  let sha256='';
+  try { sha256=metadataRecordNormalizeSha256(frontmatter.filemeta_sha256); }
+  catch(error) { return {ok:false,error:error instanceof Error?error.message:String(error)}; }
 
   const fields=Array.isArray(schema?.fields) ? schema.fields : [];
   const byProperty=new Map(fields.map(field=>[field.property,field]));
@@ -4001,7 +4013,7 @@ function metadataRecordFromFrontmatter(frontmatter, schema = null) {
     const field=byProperty.get(key);
     values[key]=field ? metadataRecordNormalizeFrontmatterValue(field,raw) : metadataRecordClone(raw);
   }
-  return {ok:true,record:{id,fileType,profile,filePath,pdfPath:filePath,status,values}};
+  return {ok:true,record:{id,fileType,profile,filePath,pdfPath:filePath,status,sha256:sha256 || null,values}};
 }
 
 function metadataRecordYamlScalar(value, field = null) {
@@ -4024,6 +4036,7 @@ function metadataRecordSerializeMarkdown(record, schema = null) {
   const filePath=metadataRecordNormalizeVaultPath(record.filePath || record.pdfPath);
   if(!metadataRecordValidateSupportedFilePath(fileType,profile,filePath)) throw new Error('metadata record file path/type/profile er ugyldig');
   if(![METADATA_RECORD_STATUS_ACTIVE,METADATA_RECORD_STATUS_MISSING,METADATA_RECORD_STATUS_TRASHED].includes(record.status)) throw new Error('metadata record status er ugyldig');
+  const sha256=metadataRecordNormalizeSha256(record.sha256);
 
   const lines=['---'];
   lines.push(`filemeta_type: ${metadataRecordYamlScalar(fileType)}`);
@@ -4032,6 +4045,7 @@ function metadataRecordSerializeMarkdown(record, schema = null) {
   lines.push(`filemeta_id: ${metadataRecordYamlScalar(String(record.id).toLowerCase())}`);
   lines.push(`filemeta_file: ${metadataRecordYamlScalar(metadataRecordFileLink(filePath))}`);
   lines.push(`filemeta_status: ${metadataRecordYamlScalar(record.status)}`);
+  if(sha256) lines.push(`filemeta_sha256: ${metadataRecordYamlScalar(sha256)}`);
 
   const values=record.values && typeof record.values==='object' && !Array.isArray(record.values) ? record.values : {};
   const fields=Array.isArray(schema?.fields) ? schema.fields : [];
@@ -4073,10 +4087,12 @@ const metadataRecordContract=Object.freeze({
   METADATA_RECORD_STATUS_ACTIVE,
   METADATA_RECORD_STATUS_MISSING,
   METADATA_RECORD_STATUS_TRASHED,
+  METADATA_RECORD_SHA256_PATTERN,
   METADATA_RECORD_SYSTEM_PROPERTIES,
   METADATA_RECORD_LEGACY_PREFIX,
   METADATA_RECORD_SUPPORTED,
   metadataRecordNormalizeVaultPath,
+  metadataRecordNormalizeSha256,
   metadataRecordIsUuidV4,
   metadataRecordPathFromId,
   metadataRecordIsPath,
@@ -4485,10 +4501,11 @@ const metadataBenchmarkContract=Object.freeze({
   metadataBenchmarkManifest
 });
 
+const metadataRecordCrypto=require('crypto');
 const METADATA_RECORD_REPOSITORY_CONTRACT_VERSION='0.2';
 
 function createMetadataRecordRepository({vaultReadAdapter,vaultWriteAdapter,frontmatterAdapter,parseYamlFn,recordApi}) {
-  if(!vaultReadAdapter || typeof vaultReadAdapter.readText!=='function' || typeof vaultReadAdapter.getAbstractFileByPath!=='function') throw new Error('metadata record repository: vault read adapter incomplete');
+  if(!vaultReadAdapter || typeof vaultReadAdapter.readText!=='function' || typeof vaultReadAdapter.readBinary!=='function' || typeof vaultReadAdapter.getAbstractFileByPath!=='function') throw new Error('metadata record repository: vault read adapter incomplete');
   if(!vaultWriteAdapter || typeof vaultWriteAdapter.createText!=='function' || typeof vaultWriteAdapter.ensureFolder!=='function') throw new Error('metadata record repository: vault write adapter incomplete');
   if(!frontmatterAdapter || typeof frontmatterAdapter.processFrontMatter!=='function') throw new Error('metadata record repository: frontmatter adapter incomplete');
   if(typeof parseYamlFn!=='function') throw new Error('metadata record repository: parseYaml function missing');
@@ -4511,6 +4528,27 @@ function createMetadataRecordRepository({vaultReadAdapter,vaultWriteAdapter,fron
     return parsed.ok ? {...parsed,file,recordPath:String(file.path || '')} : {...parsed,file,recordPath:String(file.path || '')};
   }
 
+  async function computeFileSha256(filePath) {
+    const path=recordApi.metadataRecordNormalizeVaultPath(filePath);
+    if(!path) return '';
+    const file=vaultReadAdapter.getAbstractFileByPath(path);
+    if(!file || String(file.extension || '').toLowerCase()!=='pdf') return '';
+    const bytes=await vaultReadAdapter.readBinary(file);
+    const buffer=Buffer.isBuffer(bytes)
+      ? bytes
+      : bytes instanceof ArrayBuffer
+        ? Buffer.from(new Uint8Array(bytes))
+        : Buffer.from(bytes);
+    return metadataRecordCrypto.createHash('sha256').update(buffer).digest('hex');
+  }
+
+  async function activeRecordSha256(record,filePath) {
+    const explicit=recordApi.metadataRecordNormalizeSha256(record?.sha256);
+    if(explicit) return explicit;
+    if(String(record?.status || '')!==recordApi.METADATA_RECORD_STATUS_ACTIVE) return '';
+    return await computeFileSha256(filePath);
+  }
+
   async function verifyRecordPath(recordPath,expectedId,schema) {
     const file=vaultReadAdapter.getAbstractFileByPath(recordPath);
     if(!file || String(file.extension || '').toLowerCase()!=='md') throw new Error(`metadata record write verification failed: ${recordPath} mangler`);
@@ -4527,7 +4565,9 @@ function createMetadataRecordRepository({vaultReadAdapter,vaultWriteAdapter,fron
     await vaultWriteAdapter.ensureFolder(recordApi.METADATA_RECORDS_ROOT);
     await vaultWriteAdapter.ensureFolder(shardFolder);
     if(vaultReadAdapter.getAbstractFileByPath(recordPath)) throw new Error(`metadata record finnes allerede: ${recordPath}`);
-    const markdown=recordApi.metadataRecordSerializeMarkdown(record,schema);
+    const filePath=record.filePath || record.pdfPath;
+    const sha256=await activeRecordSha256(record,filePath);
+    const markdown=recordApi.metadataRecordSerializeMarkdown({...record,sha256:sha256 || record.sha256 || null},schema);
     const file=await vaultWriteAdapter.createText(recordPath,markdown);
     return await verifyRecordPath(recordPath,record.id,schema);
   }
@@ -4539,6 +4579,7 @@ function createMetadataRecordRepository({vaultReadAdapter,vaultWriteAdapter,fron
     const profile=String(record.profile || recordApi.METADATA_RECORD_DEFAULT_PROFILE);
     const filePath=record.filePath || record.pdfPath;
     if(!recordApi.metadataRecordValidateSupportedFilePath(fileType,profile,filePath)) throw new Error('metadata record update har ugyldig file type/profile/path');
+    const sha256=await activeRecordSha256(record,filePath);
     await frontmatterAdapter.processFrontMatter(file,frontmatter=>{
       frontmatter.filemeta_type=fileType;
       frontmatter.filemeta_profile=profile;
@@ -4546,6 +4587,12 @@ function createMetadataRecordRepository({vaultReadAdapter,vaultWriteAdapter,fron
       frontmatter.filemeta_id=String(record.id).toLowerCase();
       frontmatter.filemeta_file=recordApi.metadataRecordFileLink(filePath);
       frontmatter.filemeta_status=record.status;
+      if(sha256) frontmatter.filemeta_sha256=sha256;
+      else if(record.sha256 != null) {
+        const explicit=recordApi.metadataRecordNormalizeSha256(record.sha256);
+        if(explicit) frontmatter.filemeta_sha256=explicit;
+        else delete frontmatter.filemeta_sha256;
+      }
       const values=record.values && typeof record.values==='object' && !Array.isArray(record.values) ? record.values : {};
       for(const property of fieldProperties) {
         if(Object.prototype.hasOwnProperty.call(values,property) && !recordApi.metadataRecordIsEmptyUserValue(values[property])) frontmatter[property]=recordApi.metadataRecordClone(values[property]);
@@ -4561,7 +4608,8 @@ function createMetadataRecordRepository({vaultReadAdapter,vaultWriteAdapter,fron
     readRecordFile,
     createRecord,
     updateRecord,
-    verifyRecordPath
+    verifyRecordPath,
+    computeFileSha256
   });
 }
 
