@@ -1,6 +1,6 @@
 'use strict';
 
-const crypto=require('crypto');
+const metadataMissingRecoveryCrypto=typeof crypto!=='undefined' ? crypto : require('crypto');
 const METADATA_MISSING_RECOVERY_CONTRACT_VERSION='0.1';
 
 function metadataMissingRecoveryNormalizeSha256(value) {
@@ -17,7 +17,7 @@ async function metadataMissingRecoveryFileSha256(vaultReadAdapter,file) {
     : bytes instanceof ArrayBuffer
       ? Buffer.from(new Uint8Array(bytes))
       : Buffer.from(bytes);
-  return crypto.createHash('sha256').update(buffer).digest('hex');
+  return metadataMissingRecoveryCrypto.createHash('sha256').update(buffer).digest('hex');
 }
 
 async function metadataFindExactMissingPdfMatches({vaultReadAdapter,sha256}) {
