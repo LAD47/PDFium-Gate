@@ -1,6 +1,6 @@
 'use strict';
 
-const crypto=require('crypto');
+const metadataRecordCrypto=typeof crypto!=='undefined' ? crypto : require('crypto');
 const METADATA_RECORD_REPOSITORY_CONTRACT_VERSION='0.2';
 
 function createMetadataRecordRepository({vaultReadAdapter,vaultWriteAdapter,frontmatterAdapter,parseYamlFn,recordApi}) {
@@ -38,7 +38,7 @@ function createMetadataRecordRepository({vaultReadAdapter,vaultWriteAdapter,fron
       : bytes instanceof ArrayBuffer
         ? Buffer.from(new Uint8Array(bytes))
         : Buffer.from(bytes);
-    return crypto.createHash('sha256').update(buffer).digest('hex');
+    return metadataRecordCrypto.createHash('sha256').update(buffer).digest('hex');
   }
 
   async function activeRecordSha256(record,filePath) {
