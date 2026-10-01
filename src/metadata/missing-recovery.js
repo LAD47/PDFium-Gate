@@ -1,6 +1,6 @@
 'use strict';
 
-const metadataMissingRecoveryCrypto=typeof crypto!=='undefined' ? crypto : require('crypto');
+const metadataMissingRecoveryCrypto=require('crypto');
 const METADATA_MISSING_RECOVERY_CONTRACT_VERSION='0.1';
 
 function metadataMissingRecoveryNormalizeSha256(value) {
