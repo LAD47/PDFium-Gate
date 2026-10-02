@@ -17,6 +17,12 @@ Internal `0.1.x` builds remain development history. The planned public sequence 
 
 Before public/live release, any change to persisted formats, file layouts, configuration structures, IDs, or other user-data representations requires an explicit migration/backward-compatibility review. Pre-release test data may be destructively changed only while that test-phase policy remains explicitly in force.
 
+## Backup/restore readiness before public release
+
+Before the first public beta, the durable document-metadata backup/restore contract must be implemented and practically tested. At minimum, destructive document-register maintenance must be gated by a validated current backup, full snapshot restore must create a pre-restore safety backup, and disposable indexes/caches must be rebuilt after restore.
+
+The approved direction and implementation checklist are tracked in [Document metadata backup and maintenance plan](../planning/DOCUMENT-METADATA-BACKUP-AND-MAINTENANCE.md).
+
 ## Distribution direction
 
 GitHub Releases are the intended test/public artifact channel. During private beta, BRAT may be used for test installation/update workflows. Final plugin name, plugin ID, author metadata, license and Community Plugins submission details must be frozen before the first public beta.
