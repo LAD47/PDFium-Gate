@@ -403,8 +403,8 @@
   "documentRegister.relink.matchesLimited": "{{count}} Treffer · die ersten {{visible}} werden angezeigt",
   "documentRegister.relink.matches": "{{count}} Treffer",
   "documentRegister.relink.noMatches": "Keine PDFs entsprechen der Suche.",
-  "documentRegister.relink.failed": "Der Metadatensatz konnte nicht mit der ausgewählten PDF verknüpft werden.",
-  "documentRegister.relink.done": "Metadaten mit {{path}} verknüpft",
+  "documentRegister.relink.failed": "Die Original-PDF konnte nicht sicher wiedergefunden werden.",
+  "documentRegister.relink.done": "Original-PDF gefunden und verknüpft: {{path}}",
   "documentRegister.filter.invalid": "Ungültiger Wert",
   "documentRegister.filter.title": "Filter: {{label}}",
   "documentRegister.filter.persisted": "Der Filter passt sich an den Datentyp der Spalte an. Aktive Filter werden in dieser Base-Ansicht gespeichert.",
@@ -438,8 +438,8 @@
   "documentRegister.pdf": "PDF",
   "documentRegister.pdfMissing": "PDF fehlt",
   "documentRegister.openPdfAria": "PDF {{name}} öffnen",
-  "documentRegister.relinkButton": "PDF neu verknüpfen…",
-  "documentRegister.relinkAria": "Metadatensatz {{id}} erneut mit PDF verknüpfen",
+  "documentRegister.relinkButton": "Originaldatei finden",
+  "documentRegister.relinkAria": "Original-PDF für Metadatensatz {{id}} per SHA-256 finden",
   "documentRegister.noFilterMatches": "Keine Dokumente entsprechen den aktiven Spaltenfiltern.",
   "documentRegister.baseExistsNotBase": "{{path}} existiert bereits, ist aber keine Base-Datei.",
   "documentRegister.schemaUnavailableShort": "Metadatenschema ist nicht verfügbar.",
@@ -571,5 +571,9 @@
   "mainBridge.listenerMany": "Listener",
   "mainBridge.installFailed": "PDFium {{version}}: Main-process UX Bridge konnte nicht installiert werden: {{error}}",
   "annotation.copyCategoryFailed": "PDFium {{version}}: Kategoriehervorhebung konnte nicht kopiert werden — {{error}}",
-  "selectionLinks.copiedNotice": "PDFium {{version}}: {{message}}"
+  "selectionLinks.copiedNotice": "PDFium {{version}}: {{message}}",
+  "documentRegister.relinkSearching": "Suche per SHA-256…",
+  "documentRegister.relink.missingSha256": "Dieser Metadatensatz hat keinen SHA-256-Wert und kann nicht automatisch wiederhergestellt werden.",
+  "documentRegister.relink.multipleMatches": "Mehrere byte-identische PDFs stimmen überein. Keine Datei wurde verknüpft.",
+  "documentRegister.relink.noExactMatch": "Im Vault wurde keine byte-identische PDF gefunden."
 }
