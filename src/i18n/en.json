@@ -403,8 +403,8 @@
   "documentRegister.relink.matchesLimited": "{{count}} matches · showing the first {{visible}}",
   "documentRegister.relink.matches": "{{count}} matches",
   "documentRegister.relink.noMatches": "No PDFs match the search.",
-  "documentRegister.relink.failed": "The metadata record could not be linked to the selected PDF.",
-  "documentRegister.relink.done": "Metadata linked to {{path}}",
+  "documentRegister.relink.failed": "The original PDF could not be recovered safely.",
+  "documentRegister.relink.done": "Original PDF found and linked: {{path}}",
   "documentRegister.filter.invalid": "Invalid value",
   "documentRegister.filter.title": "Filter: {{label}}",
   "documentRegister.filter.persisted": "The filter adapts to the column data type. Active filters are stored in this Base view.",
@@ -438,8 +438,8 @@
   "documentRegister.pdf": "PDF",
   "documentRegister.pdfMissing": "PDF missing",
   "documentRegister.openPdfAria": "Open PDF {{name}}",
-  "documentRegister.relinkButton": "Relink PDF…",
-  "documentRegister.relinkAria": "Relink metadata record {{id}} to PDF",
+  "documentRegister.relinkButton": "Find original file",
+  "documentRegister.relinkAria": "Find the original PDF for metadata record {{id}} using SHA-256",
   "documentRegister.noFilterMatches": "No documents match the active column filters.",
   "documentRegister.baseExistsNotBase": "{{path}} already exists, but it is not a Base file.",
   "documentRegister.schemaUnavailableShort": "Metadata schema is not available.",
@@ -571,5 +571,9 @@
   "mainBridge.listenerMany": "listeners",
   "mainBridge.installFailed": "PDFium {{version}}: main-process UX bridge could not be installed: {{error}}",
   "annotation.copyCategoryFailed": "PDFium {{version}}: could not copy category highlight — {{error}}",
-  "selectionLinks.copiedNotice": "PDFium {{version}}: {{message}}"
+  "selectionLinks.copiedNotice": "PDFium {{version}}: {{message}}",
+  "documentRegister.relinkSearching": "Searching by SHA-256…",
+  "documentRegister.relink.missingSha256": "This metadata record has no SHA-256 and cannot be recovered automatically.",
+  "documentRegister.relink.multipleMatches": "Several byte-identical PDFs match. No file was linked.",
+  "documentRegister.relink.noExactMatch": "No byte-identical PDF was found in the vault."
 }
