@@ -8,6 +8,10 @@ This directory contains active architecture documentation, focused test notes, c
 - [`architecture/`](architecture/) — detailed architecture contracts by domain.
 - [`../TRANSLATING.md`](../TRANSLATING.md) — translation contribution guide and locale policy.
 
+## Active planning
+
+- [`planning/DOCUMENT-METADATA-BACKUP-AND-MAINTENANCE.md`](planning/DOCUMENT-METADATA-BACKUP-AND-MAINTENANCE.md) — approved backup/restore and document-register maintenance direction, including the active/missing-only lifecycle and rejected relink/SHA-recovery experiments.
+
 The architecture documents and automated verification describe the current intended contracts. Historical notes may contain experiments or policies that have since been superseded.
 
 ## Examples
