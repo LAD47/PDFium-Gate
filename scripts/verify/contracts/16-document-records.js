@@ -53,6 +53,8 @@ module.exports=async function verifyDocumentRecordsContract(){
   if(!parsed.ok||parsed.record.id!==id||parsed.record.pdfPath!=='Cases/2016/example.pdf'||parsed.record.values.document_date!=='2016-03-17'||parsed.record.values.response_received!==false) fail('metadata record frontmatter parse contract failed');
 
   const repositorySource=read('src/metadata/record-repository.js');
+  const missingRecoverySource=read('src/metadata/missing-recovery.js');
+  const sourceBundle=read('scripts/source-bundle.js');
   const cacheSource=read('src/metadata/record-index-cache.js');
   const feature=read('src/plugin/features/16-document-records.js');
   const lifecycle=read('src/plugin/features/01-lifecycle.js');
@@ -81,7 +83,9 @@ module.exports=async function verifyDocumentRecordsContract(){
   for(const required of ['vaultWriteAdapter.createText','frontmatterAdapter.processFrontMatter','verifyRecordPath']) if(!repositorySource.includes(required)) fail(`metadata record repository persistence contract missing: ${required}`);
   if(!vaultRead.includes('listMarkdownFiles()')||!vaultRead.includes('vault.getMarkdownFiles()')) fail('metadata RAM-index does not enumerate Obsidian-indexed Markdown files');
   if(!feature.includes('parseDocumentRecordFile(file,schema,true)')) fail('cold-start record index does not force canonical disk frontmatter reads');
-  for(const required of ['byPdfPath','byId','metadataUuidV4()','METADATA_RECORD_STATUS_MISSING','updateDocumentRecordForPdfRename','markDocumentRecordMissingForPdfDelete','relinkMissingDocumentRecord','ambiguousPdfPaths','resolveDocumentRecordPdfPath','obsidianLinkResolutionAdapter?.resolveFirst']) if(!feature.includes(required)) fail(`DocumentRecords feature contract missing: ${required}`);
+  for(const required of ['byPdfPath','byId','metadataUuidV4()','METADATA_RECORD_STATUS_MISSING','updateDocumentRecordForPdfRename','markDocumentRecordMissingForPdfDelete','recoverMissingDocumentRecordByExactSha','metadataFindExactMissingPdfMatches','metadataMissingRecoveryFileSha256','relinkMissingDocumentRecord','ambiguousPdfPaths','resolveDocumentRecordPdfPath','obsidianLinkResolutionAdapter?.resolveFirst']) if(!feature.includes(required)) fail(`DocumentRecords feature contract missing: ${required}`);
+  if(!missingRecoverySource.includes("multiple-exact-matches")||!missingRecoverySource.includes("no-exact-match")||!missingRecoverySource.includes("exact-match")) fail('exact SHA missing-recovery fail-closed outcomes missing');
+  if(!sourceBundle.includes("'missing-recovery.js'")) fail('missing-recovery runtime is not bundled into main.js');
   if(feature.includes('refreshDocumentInfoViews')) fail('DocumentRecords calls back into DocumentInfo and creates a cross-feature cycle');
   if(!lifecycle.includes('onLayoutReady(() =>')||!lifecycle.includes('handleDocumentRecordVaultRename')||!lifecycle.includes('handleDocumentRecordVaultDelete')) fail('metadata record lifecycle listeners missing from layout-ready orchestration');
   if(lifecycle.indexOf('onLayoutReady(() =>')>lifecycle.indexOf('handleDocumentRecordVaultRename')) fail('metadata record vault listeners are registered before layoutReady');
@@ -341,6 +345,7 @@ module.exports=async function verifyDocumentRecordsContract(){
     wikilinkRepresentationResolvesToCanonicalTFilePath:true,
     behavioralDeleteRetainsMissing:true,
     missingPdfDoesNotAutoRebind:true,
+    exactShaMissingRecoveryOperation:true,
     explicitMissingRelinkPreservesId:true,
     explicitRelinkConflictFailClosed:true,
     behavioralAmbiguityFailClosed:true,
