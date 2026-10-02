@@ -67,8 +67,7 @@ class DocumentRegisterBasesFeature {
         getFrontmatter:file => this.obsidianMetadataCacheAdapter?.getFrontmatter?.(file) || null,
         resolvePdfPath:(linkTarget, recordPath) => this.ports.resolveDocumentRecordPdfPath(linkTarget, recordPath),
         saveValues:(pdfPath, updates) => this.ports.saveDocumentMetadataRecordValues(pdfPath, updates),
-        relinkMissingRecord:(recordId, pdfPath) => this.ports.relinkMissingDocumentRecord(recordId, pdfPath),
-        listPdfFiles:() => (this.obsidianVaultReadAdapter?.listFiles?.() || []).filter(file => String(file?.extension || '').toLowerCase()==='pdf'),
+        recoverMissingRecord:(recordId) => this.ports.recoverMissingDocumentRecordByExactSha(recordId),
         openLink:(path, sourcePath) => this.app.workspace.openLinkText(path, sourcePath || '')
       })
     });
