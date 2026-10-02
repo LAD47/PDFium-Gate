@@ -403,8 +403,8 @@
   "documentRegister.relink.matchesLimited": "{{count}} coincidencias · mostrando las primeras {{visible}}",
   "documentRegister.relink.matches": "{{count}} coincidencias",
   "documentRegister.relink.noMatches": "Ningún PDF coincide con la búsqueda.",
-  "documentRegister.relink.failed": "No se pudo vincular el registro de metadatos al PDF seleccionado.",
-  "documentRegister.relink.done": "Metadatos vinculados a {{path}}",
+  "documentRegister.relink.failed": "No se pudo recuperar de forma segura el PDF original.",
+  "documentRegister.relink.done": "PDF original encontrado y vinculado: {{path}}",
   "documentRegister.filter.invalid": "Valor no válido",
   "documentRegister.filter.title": "Filtro: {{label}}",
   "documentRegister.filter.persisted": "El filtro se adapta al tipo de datos de la columna. Los filtros activos se guardan en esta vista Base.",
@@ -438,8 +438,8 @@
   "documentRegister.pdf": "PDF",
   "documentRegister.pdfMissing": "Falta el PDF",
   "documentRegister.openPdfAria": "Abrir PDF {{name}}",
-  "documentRegister.relinkButton": "Volver a vincular PDF…",
-  "documentRegister.relinkAria": "Volver a vincular el registro de metadatos {{id}} al PDF",
+  "documentRegister.relinkButton": "Buscar archivo original",
+  "documentRegister.relinkAria": "Buscar el PDF original del registro de metadatos {{id}} mediante SHA-256",
   "documentRegister.noFilterMatches": "Ningún documento coincide con los filtros de columna activos.",
   "documentRegister.baseExistsNotBase": "{{path}} ya existe, pero no es un archivo Base.",
   "documentRegister.schemaUnavailableShort": "El esquema de metadatos no está disponible.",
@@ -571,5 +571,9 @@
   "mainBridge.listenerMany": "listeners",
   "mainBridge.installFailed": "PDFium {{version}}: no se pudo instalar Main-process UX bridge: {{error}}",
   "annotation.copyCategoryFailed": "PDFium {{version}}: no se pudo copiar el resaltado de categoría — {{error}}",
-  "selectionLinks.copiedNotice": "PDFium {{version}}: {{message}}"
+  "selectionLinks.copiedNotice": "PDFium {{version}}: {{message}}",
+  "documentRegister.relinkSearching": "Buscando mediante SHA-256…",
+  "documentRegister.relink.missingSha256": "Este registro de metadatos no tiene SHA-256 y no se puede recuperar automáticamente.",
+  "documentRegister.relink.multipleMatches": "Coinciden varios PDF idénticos byte a byte. No se vinculó ningún archivo.",
+  "documentRegister.relink.noExactMatch": "No se encontró ningún PDF idéntico byte a byte en el vault."
 }
