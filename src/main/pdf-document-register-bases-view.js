@@ -682,32 +682,6 @@ class PdfDocumentRegisterBasesView extends BasesViewBase {
       } else {
         const label = resolvedPath ? String(resolvedPath).split('/').pop() : (linkTarget ? String(linkTarget).split('/').pop() : this.t('documentRegister.pdfMissing'));
         pdfCell.createSpan({ cls:'pdfium-document-register-missing-path', text:label || this.t('documentRegister.pdfMissing') });
-        const relinkButton = pdfCell.createEl('button', { cls:'pdfium-document-register-relink', text:this.t('documentRegister.relinkButton') });
-        relinkButton.setAttribute('aria-label',this.t('documentRegister.relinkAria',{id:parsedRecord.record.id}));
-        relinkButton.addEventListener('click',async event=>{
-          event.preventDefault();
-          event.stopPropagation();
-          if (relinkButton.disabled) return;
-          relinkButton.disabled = true;
-          const originalText = relinkButton.textContent;
-          relinkButton.setText(this.t('documentRegister.relinkSearching'));
-          const outcome = await this.host?.recoverMissingRecord?.(parsedRecord.record.id);
-          if (outcome?.ok) {
-            new Notice(this.t('documentRegister.relink.done',{path:String(outcome.pdfPath || '')}),5000);
-            this.onDataUpdated();
-          } else {
-            const key = outcome?.reason === 'missing-sha256'
-              ? 'documentRegister.relink.missingSha256'
-              : outcome?.reason === 'multiple-exact-matches'
-                ? 'documentRegister.relink.multipleMatches'
-                : outcome?.reason === 'no-exact-match'
-                  ? 'documentRegister.relink.noExactMatch'
-                  : 'documentRegister.relink.failed';
-            new Notice(this.t(key),7000);
-          }
-          relinkButton.disabled = false;
-          relinkButton.setText(originalText || this.t('documentRegister.relinkButton'));
-        });
       }
     }
     if (!visibleRows && this.headerFilters.size) {
