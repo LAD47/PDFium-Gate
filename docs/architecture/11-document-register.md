@@ -2,6 +2,13 @@
 
 The custom `pdfium-document-register` view is a presentation/editing layer over Obsidian Bases and the canonical DocumentRecords write path. Bases remains query/sort owner; the custom view must not become a second metadata database.
 
+## Current missing-document policy
+
+Missing records are visible historical metadata and are read-only in the document register. The register must not offer manual PDF selection, relink or SHA-based recovery for ordinary PDFs. If a PDF exists without an active record, it is handled as an unregistered document and can receive new metadata through the normal metadata workflow.
+
+Cleanup of retained missing records belongs to the backup-backed maintenance workflow described in [Document metadata backup and maintenance plan](../planning/DOCUMENT-METADATA-BACKUP-AND-MAINTENANCE.md).
+
+
 ## 0.1.196 Bases presentation and future localization boundary
 
 The permanent metadata contract remains language-neutral. `field.property`, select/multiselect option `value`, UUID identities and `filemeta_*` system properties are storage/API identifiers, not localized UI strings.
@@ -42,7 +49,7 @@ Creation rules:
 - technical UUID/record filenames are not standard columns;
 - default sort is `document_date` descending, with `file.mtime` descending only when `document_date` is unavailable.
 
-The custom `pdfium-document-register` view remains a presentation/edit surface, not a metadata persistence owner. It renders human status and PDF actions, while user field writes continue through `saveDocumentMetadataRecordValues` and missing relink continues through `relinkMissingDocumentRecord`. Native Bases continues to own membership, filtering, sorting and search.
+The custom `pdfium-document-register` view remains a presentation/edit surface, not a metadata persistence owner. It renders human status and PDF actions, while user field writes continue through `saveDocumentMetadataRecordValues`. Missing records remain informational/read-only and are not rebound from this view. Native Bases continues to own membership, filtering, sorting and search.
 
 ## 0.1.205 clickable register headers test boundary
 
