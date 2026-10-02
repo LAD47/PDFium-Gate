@@ -81,7 +81,7 @@ module.exports=async function verifyDocumentRecordsContract(){
   for(const required of ['vaultWriteAdapter.createText','frontmatterAdapter.processFrontMatter','verifyRecordPath']) if(!repositorySource.includes(required)) fail(`metadata record repository persistence contract missing: ${required}`);
   if(!vaultRead.includes('listMarkdownFiles()')||!vaultRead.includes('vault.getMarkdownFiles()')) fail('metadata RAM-index does not enumerate Obsidian-indexed Markdown files');
   if(!feature.includes('parseDocumentRecordFile(file,schema,true)')) fail('cold-start record index does not force canonical disk frontmatter reads');
-  for(const required of ['byPdfPath','byId','metadataUuidV4()','METADATA_RECORD_STATUS_MISSING','METADATA_RECORD_STATUS_TRASHED','updateDocumentRecordForPdfRename','markDocumentRecordTrashedForPdfDelete','relinkMissingDocumentRecord','ambiguousPdfPaths','resolveDocumentRecordPdfPath','obsidianLinkResolutionAdapter?.resolveFirst']) if(!feature.includes(required)) fail(`DocumentRecords feature contract missing: ${required}`);
+  for(const required of ['byPdfPath','byId','metadataUuidV4()','METADATA_RECORD_STATUS_MISSING','METADATA_RECORD_STATUS_TRASHED','updateDocumentRecordForPdfRename','markDocumentRecordMissingForPdfDelete','relinkMissingDocumentRecord','ambiguousPdfPaths','resolveDocumentRecordPdfPath','obsidianLinkResolutionAdapter?.resolveFirst']) if(!feature.includes(required)) fail(`DocumentRecords feature contract missing: ${required}`);
   if(feature.includes('refreshDocumentInfoViews')) fail('DocumentRecords calls back into DocumentInfo and creates a cross-feature cycle');
   if(!lifecycle.includes('onLayoutReady(() =>')||!lifecycle.includes('handleDocumentRecordVaultRename')||!lifecycle.includes('handleDocumentRecordVaultDelete')) fail('metadata record lifecycle listeners missing from layout-ready orchestration');
   if(lifecycle.indexOf('onLayoutReady(() =>')>lifecycle.indexOf('handleDocumentRecordVaultRename')) fail('metadata record vault listeners are registered before layoutReady');
@@ -119,7 +119,7 @@ module.exports=async function verifyDocumentRecordsContract(){
   lifecycleAdapter.cancelIdle(idleHandle);
   if(cancelledIdleId!==77) fail('idle scheduler cancellation did not use cancelIdleCallback');
 
-  // Behavioral integration of the owner: lazy create -> indexed lookup -> PDF rename -> delete/trashed -> explicit missing recovery -> ambiguity fail-closed.
+  // Behavioral integration of the owner: lazy create -> indexed lookup -> PDF rename -> unexpected disappearance/missing -> explicit missing recovery -> ambiguity fail-closed.
   const globalKeys=[
     'METADATA_RECORD_CONTRACT_VERSION','METADATA_RECORD_FORMAT_VERSION','METADATA_RECORD_TYPE','METADATA_RECORDS_ROOT',
     'METADATA_RECORD_STATUS_ACTIVE','METADATA_RECORD_STATUS_MISSING','METADATA_RECORD_STATUS_TRASHED','METADATA_RECORD_SYSTEM_PROPERTIES',
@@ -252,15 +252,15 @@ module.exports=async function verifyDocumentRecordsContract(){
   lifecycleResult=await owner.handleDocumentRecordVaultDelete({path:'Archive/a.pdf',extension:'pdf'});
   if(!lifecycleResult?.ok||owner.getDocumentMetadataRecordState('Archive/a.pdf').registered) fail('PDF delete retained an active path binding');
   const retained=files.get(firstRecordPath)?.record;
-  if(!retained||retained.status!==recordApi.METADATA_RECORD_STATUS_TRASHED||retained.pdfPath!=='Archive/a.pdf') fail('PDF delete did not retain the record as trashed');
+  if(!retained||retained.status!==recordApi.METADATA_RECORD_STATUS_MISSING||retained.pdfPath!=='Archive/a.pdf') fail('PDF disappearance did not retain the record as missing');
 
-  // Reappearance at the same path must not auto-bind a trashed record. Path alone is not identity.
+  // Reappearance at the same path must not auto-bind a missing record. Path alone is not identity.
   pdfFiles.set('Archive/a.pdf',{path:'Archive/a.pdf',extension:'pdf'});
   const createResult=owner.handleDocumentRecordVaultCreate({path:'Archive/a.pdf',extension:'pdf'});
   if(createResult!==undefined) fail('PDF create unexpectedly entered document-record create handler');
-  if(owner.getDocumentMetadataRecordState('Archive/a.pdf').registered) fail('trashed record auto-rebound when a PDF merely reappeared at the same path');
+  if(owner.getDocumentMetadataRecordState('Archive/a.pdf').registered) fail('missing record auto-rebound when a PDF merely reappeared at the same path');
 
-  // Keep missing/relink as a separate lifecycle from deliberate trash.
+  // Add a second missing record to exercise explicit recovery independently of the first missing record.
   const missingId='623e4567-e89b-42d3-a456-426614174000';
   const missingRecordPath=recordApi.metadataRecordPathFromId(missingId);
   const missingFile={path:missingRecordPath,extension:'md'};
@@ -288,7 +288,7 @@ module.exports=async function verifyDocumentRecordsContract(){
   lookup=owner.getDocumentMetadataRecordState('Recovered/a.pdf');
   if(!lookup.registered||lookup.id!==missingId||lookup.values.sender!=='Oslo kommune'||lookup.values.document_date!=='2016-03-17') fail('explicit relink did not preserve record identity and metadata');
   if(owner.getDocumentMetadataRecordState('Archive/a.pdf').registered) fail('explicit relink left stale old-path binding active');
-  if(files.get(firstRecordPath)?.record?.status!==recordApi.METADATA_RECORD_STATUS_TRASHED) fail('missing-record relink mutated trashed record');
+  if(files.get(firstRecordPath)?.record?.status!==recordApi.METADATA_RECORD_STATUS_MISSING) fail('missing-record relink mutated another missing record');
 
   const benchmarkResult=await owner.runDocumentRecordIndexBenchmark();
   if(!benchmarkResult?.ok || benchmarkResult?.forcedBuild?.reason!=='benchmark-forced' || typeof benchmarkResult?.lookup?.rawAverageUs!=='number') fail('document record benchmark instrumentation failed');
@@ -339,8 +339,8 @@ module.exports=async function verifyDocumentRecordsContract(){
     behavioralRenamePreservesId:true,
     coldStartRenameReadsCanonicalDisk:true,
     wikilinkRepresentationResolvesToCanonicalTFilePath:true,
-    behavioralDeleteRetainsTrashed:true,
-    trashedPdfDoesNotAutoRebind:true,
+    behavioralDeleteRetainsMissing:true,
+    missingPdfDoesNotAutoRebind:true,
     explicitMissingRelinkPreservesId:true,
     explicitRelinkConflictFailClosed:true,
     behavioralAmbiguityFailClosed:true,
