@@ -8,7 +8,7 @@ Markdown/YAML document records are the permanent metadata source of truth. Index
 
 Permanent records are ordinary Markdown notes under `File Metadata/<first-two-UUID-hex>/<filemeta_id>.md`. The root remains a normal indexed vault folder so Obsidian properties and Bases can consume the records. Since 0.1.195, the root may be visually hidden from File Explorer by a presentation-only feature; it is not moved into a dot-folder or excluded from indexing. `.pdf-metadata/` remains reserved for hidden technical config and backup.
 
-Each record has stable UUID v4 identity and canonical system properties `filemeta_type`, `filemeta_version`, `filemeta_id`, `filemeta_file`, and `filemeta_status`. `filemeta_file` is an Obsidian wikilink to the PDF. User metadata values use the schema properties directly. Markdown/YAML is source of truth; `state.documentRecords` is cache/index only.
+Each record has stable UUID v4 identity and canonical system properties `filemeta_type`, `filemeta_profile`, `filemeta_version`, `filemeta_id`, `filemeta_file`, and `filemeta_status`. Ordinary PDF document records have only two supported lifecycle states: `active` and `missing`. `filemeta_file` is an Obsidian wikilink to the PDF. User metadata values use the schema properties directly. Markdown/YAML is source of truth; `state.documentRecords` is cache/index only.
 
 The index has two canonical lookup directions: active unambiguous `byPdfPath` and unique `byId`. Duplicate active PDF-path bindings fail closed. Records are created lazily on first valid DocumentInfo save. Existing frontmatter updates use the `FileManager.processFrontMatter` platform adapter and are read back/validated before the index is replaced.
 
@@ -36,15 +36,20 @@ This rule is orthogonal to PDF runtime identity (`PDF token`, `processId + routi
 
 This owner must never participate in record persistence, record identity, RAM indexing, metadata parsing or lifecycle mutation. Disabling the setting or unloading the plugin removes the body class. Therefore an Obsidian DOM change is deliberately fail-open: `File Metadata` can become visible again, but the underlying indexed Markdown records remain untouched.
 
-## Missing-PDF / relink boundary
+## Missing-PDF boundary
 
-Deletion breaks reliable file continuity, so document identity must remain fail-closed after a PDF is deleted. `DocumentRecordsFeature` retains the record as `missing` and must never reactivate it merely because a later create event produces the same path or filename.
+Loss of reliable file continuity must fail closed. If a registered PDF disappears and there is no trusted rename/move event, `DocumentRecordsFeature` retains the Markdown record and changes its status to `missing`.
 
-Move/rename inside the vault is different: Obsidian's rename event supplies both old and new path for the same file lifecycle event, so the existing record may be updated automatically while preserving `filemeta_id`.
+Move/rename inside the vault is different: Obsidian's rename event supplies the old and new path for the same file lifecycle event, so the existing record may be updated automatically while preserving `filemeta_id`.
 
-Manual relink is the only supported transition from `missing` back to `active` in 0.1.198. The custom Bases register presents **Koble til PDF…**, but the view is not a write owner. It sends `(recordId, targetPdfPath)` through the explicit `relinkMissingDocumentRecord` operation. `DocumentRecordsFeature` verifies unique record ID, `missing` status, target PDF existence, and absence of another active record binding before writing via the canonical repository and read-back verification.
+A missing record is historical metadata. It must not be reactivated merely because a PDF later appears at the same path or with the same filename. Ordinary PDF records do not use content-hash recovery and PDFium Gate does not offer a manual PDF picker/relink operation. A PDF without an active record is treated as unregistered and may receive a new record through the normal metadata create/save workflow.
 
-Relink preserves the record UUID and all user metadata. Only the PDF binding and status change. A conflicting target fails closed and leaves the missing record untouched.
+The deliberate product rule is therefore simple:
+
+- `active` — the registered PDF has reliable current continuity;
+- `missing` — the PDF can no longer be located with reliable continuity.
+
+There is no ordinary-document `trashed` state. Permanent removal of retained missing metadata belongs to the planned backup-backed maintenance workflow, not to PDF disappearance handling. See [Document metadata backup and maintenance plan](../planning/DOCUMENT-METADATA-BACKUP-AND-MAINTENANCE.md).
 
 ## Disposable document-record index cache
 
