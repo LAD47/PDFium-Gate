@@ -27,99 +27,6 @@ function pdfDocumentRegisterEntries(data) {
   return out;
 }
 
-class PdfDocumentRelinkModal extends Modal {
-  constructor(app, host, recordId, previousPath) {
-    super(app);
-    this.host = host || {};
-    this.recordId = String(recordId || '').toLowerCase();
-    this.previousPath = String(previousPath || '');
-    this.pdfFiles = [];
-    this.busy = false;
-  }
-
-  onOpen() {
-    this.modalEl?.addClass?.('pdfium-document-relink-modal');
-    this.pdfFiles = (this.host?.listPdfFiles?.() || [])
-      .filter(file => String(file?.extension || '').toLowerCase() === 'pdf' && String(file?.path || ''))
-      .slice()
-      .sort((a,b) => String(a.path).localeCompare(String(b.path), undefined, { numeric:true, sensitivity:'base' }));
-    this.render();
-  }
-
-  onClose() { this.contentEl.empty(); }
-
-  render() {
-    const { contentEl } = this;
-    const t=(key,params)=>pdfDocumentRegisterT(this.host,key,params);
-    contentEl.empty();
-    contentEl.createEl('h2', { text:t('documentRegister.relink.title') });
-    contentEl.createEl('p', { text:t('documentRegister.relink.intro') });
-    if (this.previousPath) {
-      const previous = contentEl.createDiv({ cls:'pdfium-document-relink-previous' });
-      previous.createSpan({ text:`${t('documentRegister.relink.previous')} ` });
-      previous.createEl('code', { text:this.previousPath });
-    }
-    contentEl.createEl('p', { cls:'pdfium-document-relink-warning', text:t('documentRegister.relink.warning') });
-
-    const search = contentEl.createEl('input', { cls:'pdfium-document-relink-search', type:'search', placeholder:t('documentRegister.relink.searchPlaceholder') });
-    search.setAttribute('aria-label',t('documentRegister.relink.searchAria'));
-    const resultInfo = contentEl.createDiv({ cls:'pdfium-document-relink-result-info' });
-    const results = contentEl.createDiv({ cls:'pdfium-document-relink-results' });
-    const errorEl = contentEl.createDiv({ cls:'pdfium-document-relink-error' });
-    errorEl.setAttribute('aria-live','polite');
-
-    const renderResults = () => {
-      const query = String(search.value || '').trim().toLocaleLowerCase();
-      const matching = query
-        ? this.pdfFiles.filter(file => String(file.path || '').toLocaleLowerCase().includes(query))
-        : this.pdfFiles;
-      const visible = matching.slice(0,100);
-      results.empty();
-      resultInfo.setText(matching.length > visible.length
-        ? t('documentRegister.relink.matchesLimited',{count:matching.length,visible:visible.length})
-        : t('documentRegister.relink.matches',{count:matching.length}));
-      if (!visible.length) {
-        results.createDiv({ cls:'pdfium-document-relink-empty', text:t('documentRegister.relink.noMatches') });
-        return;
-      }
-      for (const file of visible) {
-        const button = results.createEl('button', { cls:'pdfium-document-relink-choice' });
-        button.createSpan({ cls:'pdfium-document-relink-choice-name', text:String(file.name || String(file.path).split('/').pop() || file.path) });
-        button.createSpan({ cls:'pdfium-document-relink-choice-path', text:String(file.path || '') });
-        button.addEventListener('click', async event => {
-          event.preventDefault();
-          event.stopPropagation();
-          if (this.busy) return;
-          this.busy = true;
-          errorEl.setText('');
-          search.disabled = true;
-          for (const candidate of results.querySelectorAll('button')) candidate.disabled = true;
-          const outcome = await this.host?.relinkMissingRecord?.(this.recordId, String(file.path || ''));
-          if (!outcome?.ok) {
-            this.busy = false;
-            search.disabled = false;
-            for (const candidate of results.querySelectorAll('button')) candidate.disabled = false;
-            errorEl.setText(outcome?.error || t('documentRegister.relink.failed'));
-            return;
-          }
-          new Notice(t('documentRegister.relink.done',{path:String(file.path || '')}), 5000);
-          this.close();
-        });
-      }
-    };
-
-    search.addEventListener('input',renderResults);
-    search.addEventListener('keydown',event=>{
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        this.close();
-      }
-    });
-    renderResults();
-    search.focus();
-  }
-}
-
 function pdfDocumentRegisterBareProperty(property) {
   return String(property || '').replace(/^(?:note|formula|file)\./,'');
 }
@@ -777,10 +684,29 @@ class PdfDocumentRegisterBasesView extends BasesViewBase {
         pdfCell.createSpan({ cls:'pdfium-document-register-missing-path', text:label || this.t('documentRegister.pdfMissing') });
         const relinkButton = pdfCell.createEl('button', { cls:'pdfium-document-register-relink', text:this.t('documentRegister.relinkButton') });
         relinkButton.setAttribute('aria-label',this.t('documentRegister.relinkAria',{id:parsedRecord.record.id}));
-        relinkButton.addEventListener('click',event=>{
+        relinkButton.addEventListener('click',async event=>{
           event.preventDefault();
           event.stopPropagation();
-          new PdfDocumentRelinkModal(this.host?.app, this.host, parsedRecord.record.id, parsedRecord.record.pdfPath || linkTarget).open();
+          if (relinkButton.disabled) return;
+          relinkButton.disabled = true;
+          const originalText = relinkButton.textContent;
+          relinkButton.setText(this.t('documentRegister.relinkSearching'));
+          const outcome = await this.host?.recoverMissingRecord?.(parsedRecord.record.id);
+          if (outcome?.ok) {
+            new Notice(this.t('documentRegister.relink.done',{path:String(outcome.pdfPath || '')}),5000);
+            this.onDataUpdated();
+          } else {
+            const key = outcome?.reason === 'missing-sha256'
+              ? 'documentRegister.relink.missingSha256'
+              : outcome?.reason === 'multiple-exact-matches'
+                ? 'documentRegister.relink.multipleMatches'
+                : outcome?.reason === 'no-exact-match'
+                  ? 'documentRegister.relink.noExactMatch'
+                  : 'documentRegister.relink.failed';
+            new Notice(this.t(key),7000);
+          }
+          relinkButton.disabled = false;
+          relinkButton.setText(originalText || this.t('documentRegister.relinkButton'));
         });
       }
     }
