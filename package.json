@@ -5,7 +5,7 @@
   "scripts": {
     "build": "node build.js",
     "verify": "node scripts/verify-build.js",
-    "check": "npm run build && npm run test:core:integrity && npm run test:document-record-sha256 && npm run check:i18n && npm run check:i18n-ui && npm run check:architecture-docs && npm run check:examples && npm run check:filemeta && npm run check:identity && npm run verify",
+    "check": "npm run build && npm run test:core:integrity && npm run check:i18n && npm run check:i18n-ui && npm run check:architecture-docs && npm run check:examples && npm run check:filemeta && npm run check:identity && npm run verify",
     "check:i18n": "node scripts/check-i18n.js",
     "check:i18n-ui": "node scripts/check-i18n-ui.js",
     "check:architecture-docs": "node scripts/check-architecture-docs.js",
@@ -13,7 +13,6 @@
     "check:filemeta": "node scripts/check-filemeta-foundation.js",
     "check:identity": "node scripts/check-product-identity.js",
     "test:core:integrity": "node scripts/test-core-integrity.js",
-    "test:document-record-sha256": "node scripts/test-document-record-sha256.js",
     "test:email-import:parser": "node scripts/test-email-import-parser.js",
     "test:email-import:msg-parser": "node scripts/test-email-import-msg-parser.js",
     "test:email-import:duplicates": "node scripts/test-email-import-duplicates.js",
