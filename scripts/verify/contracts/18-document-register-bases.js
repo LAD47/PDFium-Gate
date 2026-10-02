@@ -102,8 +102,8 @@ module.exports=function verifyDocumentRegisterBasesContract(){
   if(!viewSource.includes('this.host?.saveValues?.(pdfPath')) fail('custom Bases inline edit does not route through explicit save operation');
   if(viewSource.includes('processFrontMatter(')||viewSource.includes('obsidianVaultWriteAdapter')||viewSource.includes('createText(')) fail('custom Bases view writes metadata directly');
   if(viewSource.includes("document_type==='letter'")||viewSource.includes("'letter':'Brev'")||viewSource.includes('letter → Brev')) fail('custom Bases view hardcodes document-type translation');
-  if(viewSource.includes('class PdfDocumentRelinkModal extends Modal')||viewSource.includes('this.host?.listPdfFiles?.(')||viewSource.includes('this.host?.relinkMissingRecord?.(')) fail('manual missing-PDF picker/relink UX must not be exposed');
-  if(!viewSource.includes("documentRegister.relinkButton")||!viewSource.includes('this.host?.recoverMissingRecord?.(')||!viewSource.includes("documentRegister.relinkSearching")||!viewSource.includes("multiple-exact-matches")||!viewSource.includes("no-exact-match")) fail('exact SHA missing-PDF recovery UX missing from custom Bases view');
+  if(/PdfDocumentRelinkModal|listPdfFiles|relinkMissingRecord|recoverMissingRecord|documentRegister\.relink/.test(viewSource)) fail('missing-PDF relink/recovery UX must not be exposed');
+  if(!viewSource.includes("pdfium-document-register-missing-path")) fail('missing records must remain visibly identifiable in the custom Bases view');
   if(!viewSource.includes('getSortDirection(property)')||!viewSource.includes('this.config.setSortProperty(propertyId, next)')||!viewSource.includes('pdfDocumentRegisterPropertyId(property)')) fail('clickable header sort does not route through Bases setSortProperty operation');
   if(!viewSource.includes('nextSortDirection(current)')||!viewSource.includes("return current === 'ASC' ? 'DESC' : 'ASC'")) fail('simple ASC/DESC click toggle contract missing');
   if(viewSource.includes('event.shiftKey')||viewSource.includes('shiftKey')) fail('Dokumentregister sorting must not depend on Shift');
@@ -138,8 +138,8 @@ module.exports=function verifyDocumentRegisterBasesContract(){
     if(Object.keys(serialized).length!==4||serialized.unsafe) fail('stored header-filter serialization failed');
   }
   if(!featureSource.includes("name:this.i18n.t('documentRegister.viewName')")||!featureSource.includes('registerBasesView(')) fail('custom Bases registration feature missing');
-  if(!featureSource.includes('this.ports.getMetadataSchemaSnapshot()')||!featureSource.includes('this.ports.resolveDocumentRecordPdfPath(')||!featureSource.includes('this.ports.saveDocumentMetadataRecordValues(')||!featureSource.includes('this.ports.recoverMissingDocumentRecordByExactSha(')) fail('custom Bases feature does not use explicit schema/identity/save/exact-recovery ports');
-  if(featureSource.includes('this.ports.relinkMissingDocumentRecord(')||featureSource.includes('listPdfFiles:')) fail('custom Bases feature still exposes arbitrary PDF relink selection');
+  if(!featureSource.includes('this.ports.getMetadataSchemaSnapshot()')||!featureSource.includes('this.ports.resolveDocumentRecordPdfPath(')||!featureSource.includes('this.ports.saveDocumentMetadataRecordValues(')) fail('custom Bases feature does not use explicit schema/identity/save ports');
+  if(/recoverMissingDocumentRecordByExactSha|relinkMissingDocumentRecord|listPdfFiles:/.test(featureSource)) fail('custom Bases feature must not expose missing-PDF recovery or manual relink');
   if(featureSource.includes('obsidianFrontmatterAdapter')||featureSource.includes('processFrontMatter(')||featureSource.includes('modifyText(')) fail('custom Bases feature unexpectedly mutates metadata or overwrites Base files');
   if(!featureSource.includes('metadataDocumentRegisterStandardBaseYaml(schema)')||!featureSource.includes('this.obsidianVaultWriteAdapter.createText(path, yaml)')) fail('canonical English standard Document Register Base create-only path missing');
   if(!featureSource.includes("name:this.i18n.t('commands.openDocumentRegister')")||!featureSource.includes("getLeaf?.('tab')")||!featureSource.includes('await leaf.openFile(ensured.file)')) fail('standard Dokumentregister open command missing');
@@ -168,10 +168,9 @@ module.exports=function verifyDocumentRegisterBasesContract(){
     editUsesFieldTypeRegistry:true,
     invalidDateRejectedBeforeWrite:true,
     canonicalSaveOperationOnly:true,
-    missingRecordsReadOnlyUntilExplicitRelink:true,
-    exactShaMissingPdfRecoveryUi:true,
+    missingRecordsReadOnly:true,
+    missingPdfRecoveryUi:false,
     manualPdfRelinkPickerExposed:false,
-    recoveryUsesCanonicalDocumentRecordsOperation:true,
     standardBaseCreateOnly:true,
     standardBaseUserOwnedAfterCreation:true,
     standardBaseScopedToRecordRoot:true,
