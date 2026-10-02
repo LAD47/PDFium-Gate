@@ -20,6 +20,11 @@ This file is a running list of observations found during practical testing that 
    - Metadata field labels are currently shown with English words even when the UI language is set to Norwegian Bokmål.
    - Review localization/presentation so Norwegian Bokmål labels are shown when that language is selected.
 
+3. **PDF Document Register: PDFs without user metadata are not registered**
+   - A PDF dragged into the vault does not appear in **PDF Dokumentregister** until the user first saves a metadata value.
+   - Reconsider the current lazy-first-save model.
+   - Preferred direction to evaluate: automatically create a minimal system record (UUID, file link/path, status and SHA-256) when a PDF is discovered, while leaving all user metadata fields optional/empty.
+
 ## Completed items
 
 _None yet._
