@@ -390,7 +390,7 @@ const PLUGIN_FEATURE_CONTRACTS = Object.freeze({
       "getMetadataSchemaSnapshot",
       "resolveDocumentRecordPdfPath",
       "saveDocumentMetadataRecordValues",
-      "relinkMissingDocumentRecord"
+      "recoverMissingDocumentRecordByExactSha"
     ],
     "mutableStateFields": []
   },
