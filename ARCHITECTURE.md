@@ -21,7 +21,7 @@
 6. [Annotations, categories and backup](docs/architecture/06-annotations-and-categories.md) — annotation invariants, category ownership and backup.
 7. [Selection links and outward copy](docs/architecture/07-selection-links.md) — outward link/copy responsibility and boundaries.
 8. [Metadata schema and hidden configuration](docs/architecture/08-metadata-schema.md) — schema, field identity and safe hidden config writes.
-9. [Document records, identity and startup cache](docs/architecture/09-document-records.md) — Markdown records, relink, cache and startup readiness.
+9. [Document records, identity and startup cache](docs/architecture/09-document-records.md) — Markdown records, active/missing lifecycle, cache and startup readiness.
 10. [DocumentInfo](docs/architecture/10-document-info.md) — active-PDF metadata UI and focus return.
 11. [PDF Document Register / Bases](docs/architecture/11-document-register.md) — Bases query/sort/filter/edit boundaries.
 12. [Internationalization](docs/architecture/12-i18n.md) — UI translation vs canonical persistent data.
