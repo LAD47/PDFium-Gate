@@ -77,7 +77,8 @@ const METADATA_SOURCE_ORDER = Object.freeze([
   'example-files.js',
   'record-index-cache.js',
   'benchmark-contract.js',
-  'record-repository.js'
+  'record-repository.js',
+  'missing-recovery.js'
 ]);
 
 const RENDERER_FOUNDATION_ORDER = Object.freeze([
