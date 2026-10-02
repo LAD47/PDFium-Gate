@@ -75398,23 +75398,23 @@ class DocumentRecordsFeature {
     return {ok:true,id,status:record.status,pdfPath:record.pdfPath};
   }
 
-  async markDocumentRecordTrashedForPdfDelete(pdfPath) {
+  async markDocumentRecordMissingForPdfDelete(pdfPath) {
     const path=metadataRecordNormalizeVaultPath(pdfPath);
     if(!path || !/\.pdf$/i.test(path)) return {ok:true,ignored:true};
     if(this.state.documentRecords.ambiguousPdfPaths.has(path)) return {ok:false,error:'PDF-sti er tvetydig; delete håndteres fail closed'};
     const id=this.state.documentRecords.byPdfPath.get(path);
     if(!id) return {ok:true,ignored:true};
     const entry=this.state.documentRecords.byId.get(id);
-    if(!entry?.file) return {ok:false,error:'Metadata-record for slettet PDF mangler'};
+    if(!entry?.file) return {ok:false,error:'Metadata-record for forsvunnet PDF mangler'};
     const schema=this.ports.getMetadataSchemaSnapshot();
     const readBack=await this.getDocumentRecordRepository().updateRecord(entry.file,{
       id:entry.id,
       pdfPath:entry.pdfPath,
-      status:METADATA_RECORD_STATUS_TRASHED,
+      status:METADATA_RECORD_STATUS_MISSING,
       values:metadataRecordClone(entry.values || {})
     },schema);
     this.replaceDocumentRecordEntry(readBack);
-    return {ok:true,id,status:METADATA_RECORD_STATUS_TRASHED};
+    return {ok:true,id,status:METADATA_RECORD_STATUS_MISSING};
   }
 
   async relinkMissingDocumentRecord(recordId,newPdfPath) {
@@ -75485,7 +75485,7 @@ class DocumentRecordsFeature {
     const path=metadataRecordNormalizeVaultPath(file?.path);
     if(this.state.documentRecords.benchmarkEventSuppression && (metadataBenchmarkIsRecordPath(path) || metadataBenchmarkIsPdfPath(path))) return Promise.resolve({ok:true,ignored:true,benchmarkSuppressed:true});
     const tasks=[];
-    if(/\.pdf$/i.test(path)) tasks.push(()=>this.markDocumentRecordTrashedForPdfDelete(path));
+    if(/\.pdf$/i.test(path)) tasks.push(()=>this.markDocumentRecordMissingForPdfDelete(path));
     if(metadataRecordIsPath(path) && String(file?.extension || '').toLowerCase()==='md') tasks.push(()=>{
       this.removeDocumentRecordEntryByPath(path);
       return {ok:true};
