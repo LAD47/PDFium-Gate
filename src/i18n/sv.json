@@ -403,8 +403,8 @@
   "documentRegister.relink.matchesLimited": "{{count}} träffar · visar de första {{visible}}",
   "documentRegister.relink.matches": "{{count}} träffar",
   "documentRegister.relink.noMatches": "Inga PDF-filer matchar sökningen.",
-  "documentRegister.relink.failed": "Metadataposten kunde inte länkas till vald PDF.",
-  "documentRegister.relink.done": "Metadata länkade till {{path}}",
+  "documentRegister.relink.failed": "Original-PDF:en kunde inte återfinnas på ett säkert sätt.",
+  "documentRegister.relink.done": "Original-PDF hittad och länkad: {{path}}",
   "documentRegister.filter.invalid": "Ogiltigt värde",
   "documentRegister.filter.title": "Filter: {{label}}",
   "documentRegister.filter.persisted": "Filtret anpassas till kolumnens datatyp. Aktiva filter sparas i den här Base-vyn.",
@@ -438,8 +438,8 @@
   "documentRegister.pdf": "PDF",
   "documentRegister.pdfMissing": "PDF saknas",
   "documentRegister.openPdfAria": "Öppna PDF {{name}}",
-  "documentRegister.relinkButton": "Länka PDF igen…",
-  "documentRegister.relinkAria": "Länka metadatapost {{id}} till PDF igen",
+  "documentRegister.relinkButton": "Hitta originalfil",
+  "documentRegister.relinkAria": "Hitta original-PDF för metadatapost {{id}} med SHA-256",
   "documentRegister.noFilterMatches": "Inga dokument matchar de aktiva kolumnfiltren.",
   "documentRegister.baseExistsNotBase": "{{path}} finns redan men är inte en Base-fil.",
   "documentRegister.schemaUnavailableShort": "Metadataschemat är inte tillgängligt.",
@@ -571,5 +571,9 @@
   "mainBridge.listenerMany": "listeners",
   "mainBridge.installFailed": "PDFium {{version}}: Main-process UX bridge kunde inte installeras: {{error}}",
   "annotation.copyCategoryFailed": "PDFium {{version}}: kunde inte kopiera kategorimarkering — {{error}}",
-  "selectionLinks.copiedNotice": "PDFium {{version}}: {{message}}"
+  "selectionLinks.copiedNotice": "PDFium {{version}}: {{message}}",
+  "documentRegister.relinkSearching": "Söker med SHA-256…",
+  "documentRegister.relink.missingSha256": "Den här metadataposten saknar SHA-256 och kan inte återställas automatiskt.",
+  "documentRegister.relink.multipleMatches": "Flera byte-identiska PDF-filer matchar. Ingen fil länkades.",
+  "documentRegister.relink.noExactMatch": "Ingen byte-identisk PDF hittades i vaulten."
 }
