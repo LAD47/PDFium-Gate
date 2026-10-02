@@ -403,8 +403,8 @@
   "documentRegister.relink.matchesLimited": "{{count}} correspondances · affichage des {{visible}} premières",
   "documentRegister.relink.matches": "{{count}} correspondances",
   "documentRegister.relink.noMatches": "Aucun PDF ne correspond à la recherche.",
-  "documentRegister.relink.failed": "L’enregistrement de métadonnées n’a pas pu être lié au PDF sélectionné.",
-  "documentRegister.relink.done": "Métadonnées liées à {{path}}",
+  "documentRegister.relink.failed": "Le PDF original n’a pas pu être retrouvé de manière sûre.",
+  "documentRegister.relink.done": "PDF original retrouvé et relié : {{path}}",
   "documentRegister.filter.invalid": "Valeur non valide",
   "documentRegister.filter.title": "Filtre : {{label}}",
   "documentRegister.filter.persisted": "Le filtre s’adapte au type de données de la colonne. Les filtres actifs sont enregistrés dans cette vue Base.",
@@ -438,8 +438,8 @@
   "documentRegister.pdf": "PDF",
   "documentRegister.pdfMissing": "PDF manquant",
   "documentRegister.openPdfAria": "Ouvrir le PDF {{name}}",
-  "documentRegister.relinkButton": "Relier le PDF…",
-  "documentRegister.relinkAria": "Relier l’enregistrement de métadonnées {{id}} au PDF",
+  "documentRegister.relinkButton": "Retrouver le fichier original",
+  "documentRegister.relinkAria": "Retrouver le PDF original de l’enregistrement {{id}} avec SHA-256",
   "documentRegister.noFilterMatches": "Aucun document ne correspond aux filtres de colonne actifs.",
   "documentRegister.baseExistsNotBase": "{{path}} existe déjà, mais ce n’est pas un fichier Base.",
   "documentRegister.schemaUnavailableShort": "Le schéma de métadonnées n’est pas disponible.",
@@ -571,5 +571,9 @@
   "mainBridge.listenerMany": "listeners",
   "mainBridge.installFailed": "PDFium {{version}} : Main-process UX bridge n’a pas pu être installé : {{error}}",
   "annotation.copyCategoryFailed": "PDFium {{version}} : impossible de copier le surlignage de catégorie — {{error}}",
-  "selectionLinks.copiedNotice": "PDFium {{version}} : {{message}}"
+  "selectionLinks.copiedNotice": "PDFium {{version}} : {{message}}",
+  "documentRegister.relinkSearching": "Recherche par SHA-256…",
+  "documentRegister.relink.missingSha256": "Cet enregistrement de métadonnées ne contient pas de SHA-256 et ne peut pas être restauré automatiquement.",
+  "documentRegister.relink.multipleMatches": "Plusieurs PDF identiques octet par octet correspondent. Aucun fichier n’a été relié.",
+  "documentRegister.relink.noExactMatch": "Aucun PDF identique octet par octet n’a été trouvé dans le vault."
 }
