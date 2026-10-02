@@ -2,7 +2,7 @@ name: Build generated runtime
 
 on:
   push:
-    branches: [main, feature/missing-sha256-recovery]
+    branches: [main]
     paths:
       - '.github/workflows/build-generated-runtime.yml'
       - 'src/**'
