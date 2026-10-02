@@ -23,17 +23,19 @@ This file is a running list of observations found during practical testing that 
 3. **PDF Document Register: PDFs without user metadata are not registered**
    - A PDF dragged into the vault does not appear in **PDF Dokumentregister** until the user first saves a metadata value.
    - Reconsider the current lazy-first-save model.
-   - Preferred direction to evaluate: automatically create a minimal system record (UUID, file link/path, status and SHA-256) when a PDF is discovered, while leaving all user metadata fields optional/empty.
+   - Preferred direction to evaluate: automatically create a minimal system record (UUID, file link/path and status) when a PDF is discovered, while leaving all user metadata fields optional/empty.
 
 4. **PDF Document Register: current user interface needs redesign**
-   - Practical SHA-256 recovery worked, but the current Document Register user interface was judged unusable/poor in practice.
+   - The current Document Register user interface was judged unusable/poor in practical testing.
    - Treat this as a UI/interaction redesign task rather than a small cosmetic fix.
-   - Preserve the fail-closed recovery behavior while simplifying how status, document identity, actions and feedback are presented.
+   - Keep the new simple lifecycle visible: active records are usable; missing records are informational/read-only; unregistered PDFs can receive new metadata.
 
 ## Completed items
 
-- **Missing PDF recovery foundation**
+- **Missing PDF lifecycle and recovery experiment**
   - Practical test confirmed: active record -> unexpected PDF disappearance -> `missing`.
   - Reappearance at the same path did not auto-bind.
-  - Practical test confirmed: explicit exact SHA-256 recovery found the byte-identical PDF and restored the same record to `active`.
+  - Exact SHA-256 recovery was experimentally implemented and worked for an unchanged byte-identical PDF.
+  - Practical annotation testing then showed why that direction is unsuitable for ordinary editable PDFs: adding a highlight changes SHA-256, and removing the highlight does not restore the previous SHA-256.
+  - Product decision: ordinary PDF records use only `active`/`missing`; no SHA recovery, no manual relink and no `trashed` state. Backup/restore plus maintenance replaces that complexity.
 
