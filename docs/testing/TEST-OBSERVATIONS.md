@@ -25,6 +25,15 @@ This file is a running list of observations found during practical testing that 
    - Reconsider the current lazy-first-save model.
    - Preferred direction to evaluate: automatically create a minimal system record (UUID, file link/path, status and SHA-256) when a PDF is discovered, while leaving all user metadata fields optional/empty.
 
+4. **PDF Document Register: current user interface needs redesign**
+   - Practical SHA-256 recovery worked, but the current Document Register user interface was judged unusable/poor in practice.
+   - Treat this as a UI/interaction redesign task rather than a small cosmetic fix.
+   - Preserve the fail-closed recovery behavior while simplifying how status, document identity, actions and feedback are presented.
+
 ## Completed items
 
-_None yet._
+- **Missing PDF recovery foundation**
+  - Practical test confirmed: active record -> unexpected PDF disappearance -> `missing`.
+  - Reappearance at the same path did not auto-bind.
+  - Practical test confirmed: explicit exact SHA-256 recovery found the byte-identical PDF and restored the same record to `active`.
+
