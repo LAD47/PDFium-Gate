@@ -571,5 +571,13 @@
   "missingRecords.deleteMetadata": "Supprimer les métadonnées",
   "missingRecords.deleted": "Métadonnées supprimées pour {{count}} documents manquants.",
   "missingRecords.deleteFailed": "Impossible de supprimer les métadonnées des documents manquants : {{error}}",
-  "missingRecords.openFailed": "Impossible d’ouvrir l’examen des documents manquants : {{error}}"
+  "missingRecords.openFailed": "Impossible d’ouvrir l’examen des documents manquants : {{error}}",
+  "settings.documentRegister.registerExisting.name": "Enregistrer les PDF existants",
+  "settings.documentRegister.registerExisting.description": "Analyse le coffre à la recherche de PDF utilisateur existants qui n’ont pas encore d’enregistrement de métadonnées actif. Les sauvegardes PDF techniques et les fichiers de benchmark sont exclus.",
+  "settings.documentRegister.registerExisting.button": "Analyser et enregistrer",
+  "settings.documentRegister.registerExisting.none": "Aucun PDF non enregistré n’a été trouvé. PDF au total : {{total}}. Déjà enregistrés : {{registered}}. Problèmes ignorés : {{problems}}.",
+  "settings.documentRegister.registerExisting.confirm": "PDFium Gate a trouvé {{count}} PDF non enregistrés sur {{total}} PDF utilisateur. Problèmes ignorés : {{problems}}. Les enregistrer maintenant ?",
+  "settings.documentRegister.registerExisting.success": "{{created}} PDF enregistrés. Déjà enregistrés : {{registered}}. Problèmes ignorés : {{problems}}.",
+  "settings.documentRegister.registerExisting.failedUnknown": "Erreur d’enregistrement inconnue",
+  "settings.documentRegister.registerExisting.failed": "Impossible d’enregistrer les PDF existants : {{error}}"
 }
