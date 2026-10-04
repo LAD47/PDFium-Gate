@@ -48,6 +48,12 @@ This file is a running list of observations found during practical testing that 
    - Review how such attachments are retained, represented, opened/exported and linked from the imported email without assuming that every attachment is directly viewable in the PDF-oriented UI.
    - This must not weaken Email Import's existing exact-byte SHA-256 use for retained immutable source/integrity handling.
 
+7. **PDF annotation backup: reassess `.pdfium-backup` after the independent backup solution exists**
+   - Keep the current `backupOriginalPdf` safety function for now: it stores one original PDF copy before PDFium Gate first modifies the file and never overwrites an existing copy.
+   - Reassess whether this separate per-PDF original-copy mechanism is still needed once the independent backup project provides a validated backup/restore workflow.
+   - Do not remove or merge the behavior merely because both features use the word "backup"; compare their actual protection scope, restore semantics and failure modes first.
+   - If the generic backup solution fully replaces this protection later, remove the old setting and `.pdfium-backup` workflow through an explicit migration/release decision rather than silently changing behavior.
+
 ## Completed items
 
 - **Missing PDF lifecycle and recovery experiment**
