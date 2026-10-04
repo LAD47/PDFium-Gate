@@ -10,9 +10,48 @@ Permanent records are ordinary Markdown notes under `File Metadata/<first-two-UU
 
 Each record has stable UUID v4 identity and canonical system properties `filemeta_type`, `filemeta_profile`, `filemeta_version`, `filemeta_id`, `filemeta_file`, and `filemeta_status`. Ordinary PDF document records have only two supported lifecycle states: `active` and `missing`. `filemeta_file` is an Obsidian wikilink to the PDF. User metadata values use the schema properties directly. Markdown/YAML is source of truth; `state.documentRecords` is cache/index only.
 
-The index has two canonical lookup directions: active unambiguous `byPdfPath` and unique `byId`. Duplicate active PDF-path bindings fail closed. Records are created lazily on first valid DocumentInfo save. Existing frontmatter updates use the `FileManager.processFrontMatter` platform adapter and are read back/validated before the index is replaced.
+The index has two canonical lookup directions: active unambiguous `byPdfPath` and unique `byId`. Duplicate active PDF-path bindings fail closed. The current runtime still creates records lazily on first valid DocumentInfo save, but that behavior is now an implementation gap: the approved next direction is automatic minimal system records for PDFs according to the registration policy below. Existing frontmatter updates use the `FileManager.processFrontMatter` platform adapter and are read back/validated before the index is replaced.
 
 Vault lifecycle listeners are installed only after workspace layout readiness. PDF rename/move updates the existing record's `filemeta_file`. PDF deletion retains the metadata note and changes status to `missing`; it is not automatically rebound if a different PDF later appears at the same path. Manual record create/modify/rename/delete updates only the affected index entries.
+
+## Approved minimal-record registration direction
+
+**Decision date:** 2026-10-04  
+**Implementation status:** Pending.
+
+The target model is that a PDF managed by PDFium Gate can have a minimal active record even when the user has never entered user metadata. The minimal record contains the canonical system identity/state only (including UUID, file link and `active` status); schema-defined user metadata fields may remain empty.
+
+Registration behavior is intentionally split into two different user choices:
+
+1. **New PDFs** — a persistent setting controls whether newly detected PDFs receive a minimal record automatically. The intended default is enabled. A PDF added while Obsidian/PDFium Gate is running should use the same lifecycle path regardless of whether it was created through Obsidian or copied into the vault with ordinary file management, once Obsidian reports the vault `create` event.
+2. **PDFs that already existed before PDFium Gate/this feature** — bulk registration is an explicit user action, not a persistent "old files" toggle. On first relevant onboarding, PDFium Gate may count unregistered existing PDFs and ask whether the user wants to register them. The same action remains available later from Settings so the user can defer the choice and run it manually.
+
+The lifecycle listener remains registered only after workspace layout readiness. This deliberately avoids treating Obsidian's startup `create` notifications for every already-loaded vault file as genuine new-file events.
+
+A runtime `create` event for a PDF follows fail-closed rules:
+
+- if an unambiguous active record already owns the canonical PDF path: no-op;
+- if no active record owns the path and automatic new-PDF registration is enabled: create one new minimal active record with a fresh UUID;
+- an older `missing` record with the same persisted path does not block creation of the new record and is never reactivated; the new PDF receives a new UUID;
+- record-creation failure must not modify/delete the PDF.
+
+PDFs copied into the vault while Obsidian/PDFium Gate is not running cannot be reliably distinguished from older unregistered PDFs at the next startup without maintaining additional historical inventory state. The first implementation therefore does not invent such state: those files are discovered by the explicit existing/unregistered-PDF registration action. A later reconciliation policy may be considered separately if practical testing shows a need.
+
+## Approved controlled document deletion direction
+
+**Decision date:** 2026-10-04  
+**Implementation status:** Pending.
+
+A deliberate **Delete document and metadata** operation is distinct from unexpected file disappearance.
+
+Target semantics:
+
+- unexpected/ordinary external disappearance of an active PDF: retain the record and change it to `missing`;
+- deliberate PDFium Gate **Delete document and metadata**: remove/trash the PDF and its associated active metadata record as one controlled user action;
+- a retained `missing` record is not removed by this command; historical missing-record cleanup remains a separate maintenance operation;
+- a missing record at the same textual path never becomes the identity of a later new PDF.
+
+The deletion implementation should prefer Obsidian's normal trash behavior rather than irreversible raw deletion. The detailed sequencing, confirmation UX and failure recovery must be designed so partial failure preserves metadata rather than silently losing it.
 
 ## Canonical record-link identity
 
