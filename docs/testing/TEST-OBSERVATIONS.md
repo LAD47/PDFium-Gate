@@ -37,7 +37,15 @@ This file is a running list of observations found during practical testing that 
    - Treat this as a UI/interaction redesign task rather than a small cosmetic fix.
    - Keep the new simple lifecycle visible: active records are usable; missing records are informational/read-only; unregistered PDFs can receive new metadata.
 
-5. **Document deletion: implement approved delete-document-and-metadata workflow**
+5. **Missing documents: complete review dialog and offline reconciliation**
+   - New first slice: when a live vault delete event changes a document record to `missing`, show a dialog with the total number of missing documents.
+   - The dialog currently offers **Delete metadata** and **Close**. Delete metadata removes only `missing` records.
+   - Missing is a temporary safety state awaiting user choice, not a relink/recovery identity.
+   - Future backup integration should add **Restore from backup** as the alternative resolution path.
+   - Still pending: detect PDFs that disappeared while Obsidian/PDFium Gate was not running and bring those records into the same missing-document review flow.
+   - Practical testing required before this item is considered confirmed.
+
+6. **Document deletion: implement approved delete-document-and-metadata workflow**
    - Add an explicit user-facing **Delete document and metadata** operation for an active document.
    - Deliberate PDFium Gate deletion removes/trashes the PDF and its associated active record through one controlled operation.
    - This remains distinct from unexpected/external disappearance, which continues to retain the record as `missing`.
@@ -45,13 +53,13 @@ This file is a running list of observations found during practical testing that 
    - Detailed sequencing must fail safely: partial failure should preserve metadata rather than silently lose it.
    - Cleanup of already-missing historical records remains a separate maintenance operation.
 
-6. **Email Import attachments: better support for non-PDF file types**
+7. **Email Import attachments: better support for non-PDF file types**
    - Improve handling of email attachments that are not PDFs.
    - ZIP archives are an explicit practical example that should be supported more clearly.
    - Review how such attachments are retained, represented, opened/exported and linked from the imported email without assuming that every attachment is directly viewable in the PDF-oriented UI.
    - This must not weaken Email Import's existing exact-byte SHA-256 use for retained immutable source/integrity handling.
 
-7. **PDF annotation backup: reassess `.pdfium-backup` after the independent backup solution exists**
+8. **PDF annotation backup: reassess `.pdfium-backup` after the independent backup solution exists**
    - Keep the current `backupOriginalPdf` safety function for now: it stores one original PDF copy before PDFium Gate first modifies the file and never overwrites an existing copy.
    - Reassess whether this separate per-PDF original-copy mechanism is still needed once the independent backup project provides a validated backup/restore workflow.
    - Do not remove or merge the behavior merely because both features use the word "backup"; compare their actual protection scope, restore semantics and failure modes first.
