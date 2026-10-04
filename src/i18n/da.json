@@ -560,5 +560,16 @@
   "annotation.copyCategoryFailed": "PDFium {{version}}: kunne ikke kopiere kategorimarkering — {{error}}",
   "selectionLinks.copiedNotice": "PDFium {{version}}: {{message}}",
   "settings.documentRegister.autoRegisterNewPdfs.name": "Registrer nye PDF-filer automatisk",
-  "settings.documentRegister.autoRegisterNewPdfs.description": "Når dette er slået til, får en ny PDF, der registreres mens Obsidian kører, automatisk en minimal metadataregistrering. Eksisterende PDF-filer masseregistreres ikke af denne indstilling."
+  "settings.documentRegister.autoRegisterNewPdfs.description": "Når dette er slået til, får en ny PDF, der registreres mens Obsidian kører, automatisk en minimal metadataregistrering. Eksisterende PDF-filer masseregistreres ikke af denne indstilling.",
+  "commands.reviewMissingDocuments": "Gennemgå manglende dokumenter",
+  "missingRecords.title": "Manglende dokumenter",
+  "missingRecords.none": "Der blev ikke fundet manglende dokumenter.",
+  "missingRecords.count": "Manglende dokumenter: {{count}}",
+  "missingRecords.description": "PDF-filerne mangler, men deres metadata er stadig bevaret. En manglende metadataregistrering forbindes ikke med en nyimporteret PDF.",
+  "missingRecords.deleteWarning": "Slet metadata fjerner metadata for alle {{count}} manglende dokumenter. PDFium Gate kan ikke fortryde denne handling.",
+  "missingRecords.close": "Luk",
+  "missingRecords.deleteMetadata": "Slet metadata",
+  "missingRecords.deleted": "Metadata for {{count}} manglende dokumenter blev slettet.",
+  "missingRecords.deleteFailed": "Kunne ikke slette metadata for manglende dokumenter: {{error}}",
+  "missingRecords.openFailed": "Kunne ikke åbne gennemgangen af manglende dokumenter: {{error}}"
 }
