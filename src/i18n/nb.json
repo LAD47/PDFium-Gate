@@ -571,5 +571,13 @@
   "missingRecords.deleteMetadata": "Slett metadata",
   "missingRecords.deleted": "Slettet metadata for {{count}} manglende dokumenter.",
   "missingRecords.deleteFailed": "Kunne ikke slette metadata for manglende dokumenter: {{error}}",
-  "missingRecords.openFailed": "Kunne ikke åpne oversikten over manglende dokumenter: {{error}}"
+  "missingRecords.openFailed": "Kunne ikke åpne oversikten over manglende dokumenter: {{error}}",
+  "settings.documentRegister.registerExisting.name": "Registrer eksisterende PDF-er",
+  "settings.documentRegister.registerExisting.description": "Skanner vaulten etter eksisterende bruker-PDF-er som ennå ikke har en aktiv metadataregistrering. Tekniske PDF-sikkerhetskopier og benchmark-filer utelates.",
+  "settings.documentRegister.registerExisting.button": "Skann og registrer",
+  "settings.documentRegister.registerExisting.none": "Ingen uregistrerte PDF-er ble funnet. Totalt antall PDF-er: {{total}}. Allerede registrert: {{registered}}. Problemer hoppet over: {{problems}}.",
+  "settings.documentRegister.registerExisting.confirm": "PDFium Gate fant {{count}} uregistrerte PDF-er av totalt {{total}} bruker-PDF-er. Problemer hoppet over: {{problems}}. Vil du registrere de uregistrerte PDF-ene nå?",
+  "settings.documentRegister.registerExisting.success": "Registrerte {{created}} PDF-er. Allerede registrert: {{registered}}. Problemer hoppet over: {{problems}}.",
+  "settings.documentRegister.registerExisting.failedUnknown": "Ukjent registreringsfeil",
+  "settings.documentRegister.registerExisting.failed": "Kunne ikke registrere eksisterende PDF-er: {{error}}"
 }
