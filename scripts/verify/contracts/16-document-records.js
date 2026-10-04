@@ -229,6 +229,9 @@ module.exports=async function verifyDocumentRecordsContract(){
   if(ownerIdleCancelled!==1) fail('on-demand readiness did not cancel pending idle warmup');
   if(!owner.state.documentRecords.lastBuildMetrics || owner.state.documentRecords.lastBuildMetrics.reason!=='cold-start-demand') fail('document record on-demand cold-start metrics were not captured');
   if(owner.state.documentRecords.lastBuildMetrics.startupScheduleMode!=='on-demand-before-idle') fail('on-demand startup scheduling mode not captured');
+  const technicalCreate=await owner.handleDocumentRecordVaultCreate({path:'Docs/.pdfium-backup/a.pdf',extension:'pdf'});
+  if(!technicalCreate?.ignored||technicalCreate.reason!=='technical-pdf') fail('live automatic registration did not exclude .pdfium-backup PDF');
+
   owner.settings.autoRegisterNewPdfs=false;
   let disabledCreate=await owner.handleDocumentRecordVaultCreate({path:'Recovered/a.pdf',extension:'pdf'});
   if(!disabledCreate?.ignored||disabledCreate.reason!=='auto-registration-disabled') fail('disabled automatic PDF registration did not ignore PDF create');
@@ -393,6 +396,7 @@ module.exports=async function verifyDocumentRecordsContract(){
     autoRegisterNewPdfsSetting:true,
     explicitExistingPdfRegistration:true,
     existingPdfRegistrationExcludesTechnicalPdfs:true,
+    liveRegistrationExcludesTechnicalPdfs:true,
     existingPdfRegistrationIsIdempotent:true,
     systemProperties:[...recordApi.METADATA_RECORD_SYSTEM_PROPERTIES],
     markdownYamlSourceOfTruth:true,
