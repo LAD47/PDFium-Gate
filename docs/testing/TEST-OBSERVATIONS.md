@@ -20,7 +20,7 @@ This file is a running list of observations found during practical testing that 
    - Metadata field labels are currently shown with English words even when the UI language is set to Norwegian Bokmål.
    - Review localization/presentation so Norwegian Bokmål labels are shown when that language is selected.
 
-3. **PDF Document Register: existing-PDF bulk registration remains pending**
+3. **PDF Document Register: existing-PDF registration implemented; practical test pending**
    - Automatic minimal-record creation for newly detected PDFs is implemented and practically confirmed.
    - Practical test on 2026-10-04 confirmed all of the following:
      - the Settings toggle exists, defaults to enabled and can be disabled;
@@ -29,8 +29,11 @@ This file is a running list of observations found during practical testing that 
      - DocumentInfo sees the record before user metadata is entered;
      - saving user metadata preserves the same UUID;
      - disabling the toggle prevents automatic record creation.
-   - Existing/unregistered PDFs are still pending: add a one-time/user-invoked scan/action to register them rather than treating "old files" as a permanent toggle.
-   - Remaining identity test before closing the new-PDF slice: a new PDF appearing at the same path as a retained missing record receives a new UUID and does not reactivate the missing record.
+   - A user-invoked **Register existing PDFs** action is now implemented in Settings.
+   - The action scans current user PDFs, reports unregistered/registered/problem counts, asks for confirmation and creates minimal records only for unregistered PDFs.
+   - `.pdfium-backup` PDFs and generated benchmark PDFs are excluded.
+   - A current PDF sharing a textual path with a retained `missing` record receives a fresh UUID rather than reusing the missing identity.
+   - Practical test still required for the Settings scan/registration flow and its idempotence.
 
 4. **PDF Document Register: current user interface needs redesign**
    - The current Document Register user interface was judged unusable/poor in practical testing.
