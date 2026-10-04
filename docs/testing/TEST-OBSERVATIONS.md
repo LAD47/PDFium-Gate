@@ -35,7 +35,13 @@ This file is a running list of observations found during practical testing that 
      - confirmation creates minimal active records with fresh UUIDs and correct file links;
      - a second scan is idempotent and does not create duplicate records or replace UUIDs.
    - `.pdfium-backup` PDFs and generated benchmark PDFs are excluded by the implementation and automated verifier.
-   - Remaining practical identity test: a current PDF sharing a textual path with a retained `missing` record must receive a fresh UUID rather than reusing the missing identity.
+   - Final practical identity test on 2026-10-04 also passed:
+     - the original record changed to `missing`;
+     - a different PDF copied to the same path stayed unregistered while automatic registration was disabled;
+     - **Register existing PDFs** registered the new PDF;
+     - the new PDF received a fresh UUID different from the historical missing record;
+     - the old record remained `missing` with its original UUID.
+   - Registration identity behavior is therefore practically confirmed for both new and existing PDFs.
 
 4. **PDF Document Register: current user interface needs redesign**
    - The current Document Register user interface was judged unusable/poor in practical testing.
