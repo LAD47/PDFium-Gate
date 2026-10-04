@@ -5,7 +5,9 @@ function createPluginState() {
     lifecycle:{
       originalPdfViewType:null,
       overrideInstalled:false,
-      pdfRuntimeRegistration:{seq:0,last:null,reconcileSeq:0,lastReconcile:null}
+      pdfRuntimeRegistration:{seq:0,last:null,reconcileSeq:0,lastReconcile:null},
+      missingRecordsDialogTimer:null,
+      missingRecordsDialogOpen:false
     },
     navigation: {
       lastKnownPdfFilePath: null,
