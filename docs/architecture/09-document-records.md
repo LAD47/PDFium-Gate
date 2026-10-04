@@ -30,6 +30,7 @@ The lifecycle listener remains registered only after workspace layout readiness.
 
 A runtime `create` event for a PDF follows fail-closed rules:
 
+- technical PDFs under any `.pdfium-backup` path and generated benchmark PDFs under `PDFium Benchmark/PDF` are ignored by document registration;
 - if an unambiguous active record already owns the canonical PDF path: no-op;
 - if no active record owns the path and automatic new-PDF registration is enabled: create one new minimal active record with a fresh UUID;
 - an older `missing` record with the same persisted path does not block creation of the new record and is never reactivated; the new PDF receives a new UUID;
