@@ -745,6 +745,7 @@ class DocumentRecordsFeature {
     if(this.state.documentRecords.benchmarkEventSuppression && (metadataBenchmarkIsRecordPath(file?.path) || metadataBenchmarkIsPdfPath(file?.path))) return Promise.resolve({ok:true,ignored:true,benchmarkSuppressed:true});
     const extension=String(file?.extension || '').toLowerCase();
     if(extension==='pdf') {
+      if(!this.isDocumentRegistrationPdfPath(file?.path)) return Promise.resolve({ok:true,ignored:true,reason:'technical-pdf'});
       if(this.settings?.autoRegisterNewPdfs === false) return Promise.resolve({ok:true,ignored:true,reason:'auto-registration-disabled'});
       return this.ensureMinimalDocumentRecordForPdf(file?.path);
     }
