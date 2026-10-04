@@ -20,14 +20,17 @@ This file is a running list of observations found during practical testing that 
    - Metadata field labels are currently shown with English words even when the UI language is set to Norwegian Bokmål.
    - Review localization/presentation so Norwegian Bokmål labels are shown when that language is selected.
 
-3. **PDF Document Register: complete and practically test minimal-record registration**
-   - First implementation slice now auto-creates a minimal system record for newly detected PDFs (fresh UUID, file link/path and active status; user metadata remains optional/empty).
-   - A persistent Settings toggle for automatic registration of **newly detected** PDFs is implemented and defaults to enabled.
+3. **PDF Document Register: existing-PDF bulk registration remains pending**
+   - Automatic minimal-record creation for newly detected PDFs is implemented and practically confirmed.
+   - Practical test on 2026-10-04 confirmed all of the following:
+     - the Settings toggle exists, defaults to enabled and can be disabled;
+     - copying a PDF into the vault with Windows File Explorer while Obsidian is running creates a record automatically;
+     - UUID, file link and `active` status are correct;
+     - DocumentInfo sees the record before user metadata is entered;
+     - saving user metadata preserves the same UUID;
+     - disabling the toggle prevents automatic record creation.
    - Existing/unregistered PDFs are still pending: add a one-time/user-invoked scan/action to register them rather than treating "old files" as a permanent toggle.
-   - Files copied into the vault through ordinary file management while Obsidian is running must follow the same new-PDF event path when Obsidian reports them.
-   - Practical test required: copy PDF into the vault with Windows File Explorer and confirm automatic record creation.
-   - Practical test required: choose not to bulk-register existing PDFs and confirm they remain unregistered across restart until the explicit scan/action is used.
-   - Practical test required: a new PDF appearing at the same path as a retained missing record receives a new UUID and does not reactivate the missing record.
+   - Remaining identity test before closing the new-PDF slice: a new PDF appearing at the same path as a retained missing record receives a new UUID and does not reactivate the missing record.
 
 4. **PDF Document Register: current user interface needs redesign**
    - The current Document Register user interface was judged unusable/poor in practical testing.
