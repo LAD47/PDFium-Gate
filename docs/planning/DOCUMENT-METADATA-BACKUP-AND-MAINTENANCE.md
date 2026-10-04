@@ -1,9 +1,31 @@
 # Document metadata backup and maintenance plan
 
 **Decision date:** 2026-10-02  
-**Status:** Approved product direction; implementation not started.
+**Separation decision:** 2026-10-04  
+**Status:** Approved PDFium Gate safety requirements; backup-engine implementation deferred to an independent project.
 
 This plan replaces the abandoned ordinary-PDF SHA recovery, manual relink and logical Trash experiments with a simpler backup-backed maintenance model.
+
+## Implementation ownership decision
+
+Backup/restore is no longer planned as a large subsystem inside PDFium Gate.
+
+While PDFium Gate is still developed entirely with test data, the priority is to complete and stabilize the plugin's core product functions, deferred fixes and document-register design before freezing durable user-data formats around a backup implementation.
+
+The reusable backup engine is planned as a separate project:
+
+`LAD47/PDFium-Backup`
+
+The independent project should provide general Obsidian snapshot, manifest, integrity, retention, restore and rollback capabilities without understanding PDFium Gate-specific record semantics.
+
+This document remains in PDFium Gate as the authoritative record of:
+
+- why backup/rollback is required for destructive PDFium Gate maintenance;
+- which PDFium Gate-owned durable data must eventually be protectable;
+- which PDFium Gate-specific data must not be confused with disposable cache or unrelated retained sources;
+- the safety boundary that destructive maintenance must fail closed when an adequate validated backup/rollback path is unavailable.
+
+PDFium Gate must not become unconditionally dependent on another plugin merely because the backup engine is developed independently. Any future integration contract is a separate architectural decision.
 
 ## Product decision
 
@@ -30,9 +52,9 @@ This deliberately avoids asking users to choose among potentially hundreds of PD
 
 ## Backup purpose
 
-PDFium Gate backup protects metadata/configuration owned by PDFium Gate. It is not intended to replace the user's normal backup of the PDF/document collection.
+The future backup capability used by PDFium Gate must protect metadata/configuration owned by PDFium Gate. It is not intended to replace the user's normal backup of the PDF/document collection.
 
-The first implementation should protect durable metadata/configuration needed to reconstruct the document register, while excluding disposable caches and generated/runtime files.
+The protected set must cover durable metadata/configuration needed to reconstruct the document register, while excluding disposable caches and generated/runtime files.
 
 ### Initial protected set
 
@@ -52,25 +74,25 @@ Do not include as part of the document-metadata backup:
 - the user-owned `PDF Dokumentregister.base`;
 - retained Email Import source archives merely because they live below a technical PDFium Gate folder. Email source retention/backups remain a separate concern.
 
-Exact archive format and configurable backup destination are implementation decisions to finalize before coding.
+The independent backup project owns the generic archive/manifest/restore design. PDFium Gate owns the semantic definition of its protected durable data.
 
-## Backup operations
+## Backup operations required by PDFium Gate
 
-The product should provide:
+The eventual backup solution should be able to provide:
 
 - **Back up now** — explicit on-demand snapshot;
 - **automatic scheduled backup** — optional;
 - **retention policy** — keep a configurable set of recent daily, weekly and monthly snapshots;
-- **backup list/status** — timestamp, PDFium Gate version, record count and validation state;
+- **backup list/status** — timestamp, version/context, protected-data counts and validation state;
 - **validate backup** — verify manifest/content integrity before a snapshot is considered restorable.
 
-Retention must delete only backups that belong to the PDFium Gate backup set and must never infer ownership from a filename alone.
+Retention must delete only backups that provably belong to the managed backup set and must never infer ownership from a filename alone.
 
-A practical initial retention policy to evaluate is 7 daily, 4 weekly and 12 monthly snapshots, all user-configurable.
+A practical initial retention policy to evaluate remains 7 daily, 4 weekly and 12 monthly snapshots, all user-configurable.
 
-## Restore operations
+## Restore safety requirements
 
-Full snapshot restore is the first supported restore mode.
+Full snapshot restore is the first restore mode PDFium Gate needs.
 
 Before restoring an older snapshot:
 
@@ -103,28 +125,30 @@ Planned safe actions:
 - create new metadata for an unregistered PDF through the normal metadata workflow;
 - run register consistency validation.
 
-Before any maintenance operation that permanently removes durable metadata, PDFium Gate must create and validate a current backup. If backup fails, destructive maintenance does not proceed.
+Permanent destructive maintenance is deferred until an adequate validated backup/rollback path is available. If the required backup step fails, destructive maintenance must not proceed.
 
 There is no automatic age-based deletion of missing records in the initial design.
 
-## Implementation checklist
+## PDFium Gate implementation checklist
 
-- [ ] Remove abandoned ordinary-PDF `filemeta_sha256` persistence and recovery code.
-- [ ] Remove manual missing-PDF relink UI and operation ports.
-- [ ] Remove the experimental `trashed` document-record state; retain only `active` and `missing`.
-- [ ] Update verifiers so SHA/relink/Trash cannot silently return to the ordinary PDF record contract.
-- [ ] Define the backup manifest/version contract.
-- [ ] Finalize snapshot archive format and default/configurable destination.
-- [ ] Implement protected-set discovery without including disposable caches or Email Import source archives.
-- [ ] Implement **Back up now** and read-back/integrity validation.
-- [ ] Implement retention policy and safe pruning.
-- [ ] Implement backup browser/status UI.
-- [ ] Implement full restore with mandatory pre-restore safety backup.
-- [ ] Rebuild/invalidate document-record cache after restore.
-- [ ] Implement Document register maintenance report.
-- [ ] Implement backup-gated permanent removal of missing records.
-- [ ] Add focused automated tests for backup corruption, interrupted restore, retention pruning and destructive-maintenance backup failure.
-- [ ] Perform practical restore tests on a clean test vault before public release.
+Completed ordinary-PDF cleanup:
+
+- [x] Remove abandoned ordinary-PDF `filemeta_sha256` persistence and recovery code.
+- [x] Remove manual missing-PDF relink UI and operation ports.
+- [x] Remove the experimental `trashed` document-record state; retain only `active` and `missing`.
+- [x] Update verifiers so SHA/relink/Trash cannot silently return to the ordinary PDF record contract.
+
+Deferred while core PDFium Gate functionality is completed:
+
+- [ ] Complete and stabilize deferred core functions and practical test observations.
+- [ ] Reconsider lazy-first-save versus automatic minimal system records for discovered PDFs.
+- [ ] Redesign the PDF Document Register UI/interaction model.
+- [ ] Implement the Document register maintenance report without enabling unsafe destructive cleanup prematurely.
+- [ ] Define any future integration boundary with the independent backup project only after the generic backup design is stable.
+- [ ] Gate permanent removal of durable metadata behind a validated backup/rollback capability before public use.
+- [ ] Perform practical destructive-maintenance and restore tests on a clean test vault before public release.
+
+Generic backup-engine work such as snapshot format, manifest, SHA-256 integrity, retention, staging, journal and rollback belongs in the independent backup project rather than being implemented here.
 
 ## Explicitly rejected directions
 
@@ -136,4 +160,4 @@ For ordinary editable PDFs, do not reintroduce without a new architectural decis
 - arbitrary manual PDF selection/relink;
 - an internal `trashed` lifecycle solely to emulate a second recycle bin.
 
-SHA-256 remains appropriate in other bounded contexts where exact byte identity is the requirement, including Email Import integrity/duplicate handling.
+SHA-256 remains appropriate in other bounded contexts where exact byte identity is the requirement, including Email Import integrity/duplicate handling and generic backup-file integrity.
