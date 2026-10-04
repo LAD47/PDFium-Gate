@@ -31,6 +31,7 @@ const fragments = [
   '__PDFIUM_GATE_EMBEDDED_MAIN_BRIDGE__',
   read('src/main/category-modals.js'),
   read('src/main/diagnostic-modals.js'),
+  read('src/main/missing-document-records-modal.js'),
   read('src/main/benchmark-modals.js'),
   read('src/main/pdfium-gate-view.js'),
   read('src/main/metadata-schema-modal.js'),
