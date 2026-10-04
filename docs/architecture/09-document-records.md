@@ -17,7 +17,7 @@ Vault lifecycle listeners are installed only after workspace layout readiness. P
 ## Approved minimal-record registration direction
 
 **Decision date:** 2026-10-04  
-**Implementation status:** Pending.
+**Implementation status:** First slice implemented on the development branch; bulk registration of existing PDFs remains pending practical design/test.
 
 The target model is that a PDF managed by PDFium Gate can have a minimal active record even when the user has never entered user metadata. The minimal record contains the canonical system identity/state only (including UUID, file link and `active` status); schema-defined user metadata fields may remain empty.
 
