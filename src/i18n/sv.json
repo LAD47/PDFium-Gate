@@ -558,5 +558,7 @@
   "mainBridge.listenerMany": "listeners",
   "mainBridge.installFailed": "PDFium {{version}}: Main-process UX bridge kunde inte installeras: {{error}}",
   "annotation.copyCategoryFailed": "PDFium {{version}}: kunde inte kopiera kategorimarkering — {{error}}",
-  "selectionLinks.copiedNotice": "PDFium {{version}}: {{message}}"
+  "selectionLinks.copiedNotice": "PDFium {{version}}: {{message}}",
+  "settings.documentRegister.autoRegisterNewPdfs.name": "Registrera nya PDF-filer automatiskt",
+  "settings.documentRegister.autoRegisterNewPdfs.description": "När detta är aktiverat får en ny PDF som upptäcks medan Obsidian körs automatiskt en minimal metadatapost. Befintliga PDF-filer massregistreras inte av den här inställningen."
 }
