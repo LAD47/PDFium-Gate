@@ -21,6 +21,8 @@ const PLUGIN_FEATURE_CONTRACTS = Object.freeze({
       "markDocumentRecordLayoutReady",
       "markDocumentRecordMetadataResolved",
       "cancelDocumentRecordIndexWarmup",
+      "ensureDocumentRecordIndexReady",
+      "getMissingDocumentRecordSummary",
       "applyDocumentRecordVisibility",
       "toggleDocumentRecordVisibility",
       "clearDocumentRecordVisibility",
@@ -57,7 +59,9 @@ const PLUGIN_FEATURE_CONTRACTS = Object.freeze({
     ],
     "mutableStateFields": [
       "lifecycle.originalPdfViewType",
-      "lifecycle.overrideInstalled"
+      "lifecycle.overrideInstalled",
+      "lifecycle.missingRecordsDialogTimer",
+      "lifecycle.missingRecordsDialogOpen"
     ]
   },
   "rendererBridge": {
