@@ -560,5 +560,16 @@
   "annotation.copyCategoryFailed": "PDFium {{version}}: kunde inte kopiera kategorimarkering — {{error}}",
   "selectionLinks.copiedNotice": "PDFium {{version}}: {{message}}",
   "settings.documentRegister.autoRegisterNewPdfs.name": "Registrera nya PDF-filer automatiskt",
-  "settings.documentRegister.autoRegisterNewPdfs.description": "När detta är aktiverat får en ny PDF som upptäcks medan Obsidian körs automatiskt en minimal metadatapost. Befintliga PDF-filer massregistreras inte av den här inställningen."
+  "settings.documentRegister.autoRegisterNewPdfs.description": "När detta är aktiverat får en ny PDF som upptäcks medan Obsidian körs automatiskt en minimal metadatapost. Befintliga PDF-filer massregistreras inte av den här inställningen.",
+  "commands.reviewMissingDocuments": "Granska saknade dokument",
+  "missingRecords.title": "Saknade dokument",
+  "missingRecords.none": "Inga saknade dokument hittades.",
+  "missingRecords.count": "Saknade dokument: {{count}}",
+  "missingRecords.description": "PDF-filerna saknas, men deras metadata finns fortfarande kvar. En saknad metadatapost kopplas inte till en nyimporterad PDF.",
+  "missingRecords.deleteWarning": "Radera metadata tar bort metadata för alla {{count}} saknade dokument. PDFium Gate kan inte ångra åtgärden.",
+  "missingRecords.close": "Stäng",
+  "missingRecords.deleteMetadata": "Radera metadata",
+  "missingRecords.deleted": "Metadata för {{count}} saknade dokument raderades.",
+  "missingRecords.deleteFailed": "Kunde inte radera metadata för saknade dokument: {{error}}",
+  "missingRecords.openFailed": "Kunde inte öppna granskningen av saknade dokument: {{error}}"
 }
