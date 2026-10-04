@@ -121,6 +121,12 @@ async onload() {
       callback: () => { void this.ports.toggleDocumentRecordVisibility(); }
     });
 
+    this.obsidianPluginRegistrationAdapter.addCommand({
+      id: 'review-missing-documents',
+      name: this.i18n.t('commands.reviewMissingDocuments'),
+      callback: () => { void this.openMissingDocumentRecordsDialog(true); }
+    });
+
 
 
 
@@ -219,21 +225,66 @@ async onload() {
       this.ports.installFocusRetestDiagnostics();
       this.ports.installMainProcessUxBridge();
       const refreshDocumentInfoAfterRecordEvent=(operation,reason)=>{
-        void Promise.resolve(operation).then(()=>this.ports.refreshDocumentInfoViews(reason)).catch(error=>{
+        return Promise.resolve(operation).then(result=>{
+          this.ports.refreshDocumentInfoViews(reason);
+          return result;
+        }).catch(error=>{
           console.warn(`[PDFium Gate ${PLUGIN_VERSION}] metadata record lifecycle event failed`,error);
           this.ports.refreshDocumentInfoViews(`${reason}-error`);
+          return {ok:false,error:error instanceof Error?error.message:String(error)};
         });
       };
       this.obsidianPluginRegistrationAdapter.registerEvent(this.obsidianVaultLifecycleAdapter.onCreate(file => refreshDocumentInfoAfterRecordEvent(this.ports.handleDocumentRecordVaultCreate(file),'record-create')));
       this.obsidianPluginRegistrationAdapter.registerEvent(this.obsidianVaultLifecycleAdapter.onModify(file => refreshDocumentInfoAfterRecordEvent(this.ports.handleDocumentRecordVaultModify(file),'record-modify')));
       this.obsidianPluginRegistrationAdapter.registerEvent(this.obsidianVaultLifecycleAdapter.onRename((file, oldPath) => refreshDocumentInfoAfterRecordEvent(this.ports.handleDocumentRecordVaultRename(file, oldPath),'record-rename')));
-      this.obsidianPluginRegistrationAdapter.registerEvent(this.obsidianVaultLifecycleAdapter.onDelete(file => refreshDocumentInfoAfterRecordEvent(this.ports.handleDocumentRecordVaultDelete(file),'record-delete')));
+      this.obsidianPluginRegistrationAdapter.registerEvent(this.obsidianVaultLifecycleAdapter.onDelete(file => {
+        const tracked=refreshDocumentInfoAfterRecordEvent(this.ports.handleDocumentRecordVaultDelete(file),'record-delete');
+        if(String(file?.extension || '').toLowerCase()==='pdf') {
+          void tracked.then(result=>{
+            if(result?.ok && result?.status==='missing') this.scheduleMissingDocumentRecordsDialog();
+          });
+        }
+      }));
       this.ports.markDocumentRecordLayoutReady();
       void this.ports.reconcileOpenPdfRuntimes('layout-ready');
       const active = this.pdfLeafAdapter?.getActiveLeaf?.();
       void this.ports.syncActivePdfIdentity('layout-ready', active?.ok ? active.leaf : null);
       this.ports.handleDocumentInfoActiveLeafChange(active?.ok ? active.leaf : null);
     });
+  }
+
+  scheduleMissingDocumentRecordsDialog() {
+    const current=this.state.lifecycle.missingRecordsDialogTimer;
+    if(current) {
+      try { window.clearTimeout(current); } catch (_) {}
+    }
+    this.state.lifecycle.missingRecordsDialogTimer=window.setTimeout(()=>{
+      this.state.lifecycle.missingRecordsDialogTimer=null;
+      void this.openMissingDocumentRecordsDialog(false);
+    },200);
+    return true;
+  }
+
+  async openMissingDocumentRecordsDialog(notifyWhenEmpty=false) {
+    try {
+      await this.ports.ensureDocumentRecordIndexReady('missing-record-review');
+      const summary=this.ports.getMissingDocumentRecordSummary();
+      if(!summary?.count) {
+        if(notifyWhenEmpty) new Notice(this.i18n.t('missingRecords.none'),5000);
+        return {ok:true,opened:false,count:0};
+      }
+      if(this.state.lifecycle.missingRecordsDialogOpen) return {ok:true,opened:false,count:summary.count,alreadyOpen:true};
+      this.state.lifecycle.missingRecordsDialogOpen=true;
+      new MissingDocumentRecordsModal(this.app,this,{
+        onClosed:()=>{ this.state.lifecycle.missingRecordsDialogOpen=false; }
+      }).open();
+      return {ok:true,opened:true,count:summary.count};
+    } catch(error) {
+      this.state.lifecycle.missingRecordsDialogOpen=false;
+      const message=error instanceof Error?error.message:String(error);
+      new Notice(this.i18n.t('missingRecords.openFailed',{error:message}),10000);
+      return {ok:false,error:message};
+    }
   }
 
   installPdfOverride() {
@@ -277,6 +328,11 @@ async onload() {
     try { this.ports.disposeDiagnosticsRuntime(); } catch (_) {}
     try { this.ports.clearDocumentRecordVisibility(); } catch (_) {}
     try { this.ports.cancelDocumentRecordIndexWarmup(); } catch (_) {}
+    try {
+      if(this.state.lifecycle.missingRecordsDialogTimer) window.clearTimeout(this.state.lifecycle.missingRecordsDialogTimer);
+      this.state.lifecycle.missingRecordsDialogTimer=null;
+      this.state.lifecycle.missingRecordsDialogOpen=false;
+    } catch (_) {}
 
     if (this.mainProcessTransport?.getCapabilities?.().loaded) {
       try { this.mainProcessTransport.uninstall(); } catch (_) {}
