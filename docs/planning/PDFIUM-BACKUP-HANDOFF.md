@@ -2,9 +2,9 @@
 
 **Created:** 2026-10-04  
 **Target repository:** `LAD47/PDFium-Backup`  
-**Status:** Temporary handoff retained in PDFium Gate until the independent repository exists.
+**Status:** Independent repository created and bootstrapped at `LAD47/PDFium-Backup`; this file remains as PDFium Gate-side provenance/handoff history.
 
-This document captures reusable backup/restore decisions discovered during PDFium Gate development. It is intentionally generic and should become the starting architecture documentation for the independent backup project.
+This document captures reusable backup/restore decisions discovered during PDFium Gate development. The independent project has now been created and its clean documentation baseline lives in `LAD47/PDFium-Backup`. This copy remains as provenance and as the PDFium Gate-side handoff record.
 
 The backup project is not a continuation of the abandoned ordinary-PDF SHA recovery experiment. SHA-256 remains rejected as durable identity for editable PDFs. In this project SHA-256 is used only as file/snapshot integrity data.
 
