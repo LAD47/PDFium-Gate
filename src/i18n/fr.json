@@ -560,5 +560,16 @@
   "annotation.copyCategoryFailed": "PDFium {{version}} : impossible de copier le surlignage de catégorie — {{error}}",
   "selectionLinks.copiedNotice": "PDFium {{version}} : {{message}}",
   "settings.documentRegister.autoRegisterNewPdfs.name": "Enregistrer automatiquement les nouveaux PDF",
-  "settings.documentRegister.autoRegisterNewPdfs.description": "Lorsque cette option est activée, tout nouveau PDF détecté pendant qu’Obsidian est en cours d’exécution reçoit automatiquement un enregistrement minimal de métadonnées. Cette option n’enregistre pas en masse les PDF déjà présents."
+  "settings.documentRegister.autoRegisterNewPdfs.description": "Lorsque cette option est activée, tout nouveau PDF détecté pendant qu’Obsidian est en cours d’exécution reçoit automatiquement un enregistrement minimal de métadonnées. Cette option n’enregistre pas en masse les PDF déjà présents.",
+  "commands.reviewMissingDocuments": "Examiner les documents manquants",
+  "missingRecords.title": "Documents manquants",
+  "missingRecords.none": "Aucun document manquant n’a été trouvé.",
+  "missingRecords.count": "Documents manquants : {{count}}",
+  "missingRecords.description": "Les fichiers PDF sont manquants, mais leurs métadonnées sont encore conservées. Un enregistrement de métadonnées manquant n’est pas reconnecté à un PDF nouvellement importé.",
+  "missingRecords.deleteWarning": "Supprimer les métadonnées retire les métadonnées des {{count}} documents manquants. PDFium Gate ne peut pas annuler cette action.",
+  "missingRecords.close": "Fermer",
+  "missingRecords.deleteMetadata": "Supprimer les métadonnées",
+  "missingRecords.deleted": "Métadonnées supprimées pour {{count}} documents manquants.",
+  "missingRecords.deleteFailed": "Impossible de supprimer les métadonnées des documents manquants : {{error}}",
+  "missingRecords.openFailed": "Impossible d’ouvrir l’examen des documents manquants : {{error}}"
 }
