@@ -560,5 +560,16 @@
   "annotation.copyCategoryFailed": "PDFium {{version}}: Kategoriehervorhebung konnte nicht kopiert werden — {{error}}",
   "selectionLinks.copiedNotice": "PDFium {{version}}: {{message}}",
   "settings.documentRegister.autoRegisterNewPdfs.name": "Neue PDFs automatisch registrieren",
-  "settings.documentRegister.autoRegisterNewPdfs.description": "Wenn diese Option aktiviert ist, erhält eine neue PDF, die während der Ausführung von Obsidian erkannt wird, automatisch einen minimalen Metadatensatz. Bereits vorhandene PDFs werden durch diese Einstellung nicht gesammelt registriert."
+  "settings.documentRegister.autoRegisterNewPdfs.description": "Wenn diese Option aktiviert ist, erhält eine neue PDF, die während der Ausführung von Obsidian erkannt wird, automatisch einen minimalen Metadatensatz. Bereits vorhandene PDFs werden durch diese Einstellung nicht gesammelt registriert.",
+  "commands.reviewMissingDocuments": "Fehlende Dokumente prüfen",
+  "missingRecords.title": "Fehlende Dokumente",
+  "missingRecords.none": "Es wurden keine fehlenden Dokumente gefunden.",
+  "missingRecords.count": "Fehlende Dokumente: {{count}}",
+  "missingRecords.description": "Die PDF-Dateien fehlen, ihre Metadaten werden jedoch noch aufbewahrt. Ein fehlender Metadatensatz wird nicht mit einer neu importierten PDF verknüpft.",
+  "missingRecords.deleteWarning": "Metadaten löschen entfernt die Metadaten für alle {{count}} fehlenden Dokumente. PDFium Gate kann diese Aktion nicht rückgängig machen.",
+  "missingRecords.close": "Schließen",
+  "missingRecords.deleteMetadata": "Metadaten löschen",
+  "missingRecords.deleted": "Metadaten für {{count}} fehlende Dokumente gelöscht.",
+  "missingRecords.deleteFailed": "Metadaten fehlender Dokumente konnten nicht gelöscht werden: {{error}}",
+  "missingRecords.openFailed": "Die Prüfung fehlender Dokumente konnte nicht geöffnet werden: {{error}}"
 }
