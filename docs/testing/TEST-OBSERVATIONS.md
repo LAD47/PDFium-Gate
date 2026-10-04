@@ -20,20 +20,28 @@ This file is a running list of observations found during practical testing that 
    - Metadata field labels are currently shown with English words even when the UI language is set to Norwegian Bokmål.
    - Review localization/presentation so Norwegian Bokmål labels are shown when that language is selected.
 
-3. **PDF Document Register: PDFs without user metadata are not registered**
-   - A PDF dragged into the vault does not appear in **PDF Dokumentregister** until the user first saves a metadata value.
-   - Reconsider the current lazy-first-save model.
-   - Preferred direction to evaluate: automatically create a minimal system record (UUID, file link/path and status) when a PDF is discovered, while leaving all user metadata fields optional/empty.
+3. **PDF Document Register: implement approved minimal-record registration**
+   - Current runtime still waits for first metadata save before creating the record.
+   - Approved direction: newly detected PDFs may receive a minimal system record automatically (fresh UUID, file link/path and active status; user metadata remains optional/empty).
+   - Add a persistent Settings toggle for automatic registration of **newly detected** PDFs; intended default is enabled.
+   - Existing/unregistered PDFs are handled separately: offer a one-time/user-invoked scan/action to register them rather than treating "old files" as a permanent toggle.
+   - Files copied into the vault through ordinary file management while Obsidian is running must follow the same new-PDF event path when Obsidian reports them.
+   - Practical test required: copy PDF into the vault with Windows File Explorer and confirm automatic record creation.
+   - Practical test required: choose not to bulk-register existing PDFs and confirm they remain unregistered across restart until the explicit scan/action is used.
+   - Practical test required: a new PDF appearing at the same path as a retained missing record receives a new UUID and does not reactivate the missing record.
 
 4. **PDF Document Register: current user interface needs redesign**
    - The current Document Register user interface was judged unusable/poor in practical testing.
    - Treat this as a UI/interaction redesign task rather than a small cosmetic fix.
    - Keep the new simple lifecycle visible: active records are usable; missing records are informational/read-only; unregistered PDFs can receive new metadata.
 
-5. **Document deletion: delete document together with associated metadata**
-   - Add an explicit user-facing workflow for deleting a document and its associated PDFium Gate metadata together.
-   - The operation must distinguish deliberate document deletion from the existing unexpected-disappearance lifecycle, where the record becomes `missing`.
-   - Exact trash/permanent-delete behavior, confirmation UX and backup gating for destructive metadata removal must be designed before implementation.
+5. **Document deletion: implement approved delete-document-and-metadata workflow**
+   - Add an explicit user-facing **Delete document and metadata** operation for an active document.
+   - Deliberate PDFium Gate deletion removes/trashes the PDF and its associated active record through one controlled operation.
+   - This remains distinct from unexpected/external disappearance, which continues to retain the record as `missing`.
+   - Prefer Obsidian's configured trash behavior rather than irreversible raw deletion.
+   - Detailed sequencing must fail safely: partial failure should preserve metadata rather than silently lose it.
+   - Cleanup of already-missing historical records remains a separate maintenance operation.
 
 6. **Email Import attachments: better support for non-PDF file types**
    - Improve handling of email attachments that are not PDFs.
