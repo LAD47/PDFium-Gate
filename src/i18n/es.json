@@ -571,5 +571,13 @@
   "missingRecords.deleteMetadata": "Eliminar metadatos",
   "missingRecords.deleted": "Se eliminaron los metadatos de {{count}} documentos que faltan.",
   "missingRecords.deleteFailed": "No se pudieron eliminar los metadatos de los documentos que faltan: {{error}}",
-  "missingRecords.openFailed": "No se pudo abrir la revisión de documentos que faltan: {{error}}"
+  "missingRecords.openFailed": "No se pudo abrir la revisión de documentos que faltan: {{error}}",
+  "settings.documentRegister.registerExisting.name": "Registrar PDF existentes",
+  "settings.documentRegister.registerExisting.description": "Escanea el vault en busca de PDF de usuario existentes que aún no tengan un registro de metadatos activo. Se excluyen las copias técnicas de PDF y los archivos de benchmark.",
+  "settings.documentRegister.registerExisting.button": "Escanear y registrar",
+  "settings.documentRegister.registerExisting.none": "No se encontraron PDF sin registrar. PDF totales: {{total}}. Ya registrados: {{registered}}. Problemas omitidos: {{problems}}.",
+  "settings.documentRegister.registerExisting.confirm": "PDFium Gate encontró {{count}} PDF sin registrar de un total de {{total}} PDF de usuario. Problemas omitidos: {{problems}}. ¿Registrarlos ahora?",
+  "settings.documentRegister.registerExisting.success": "Se registraron {{created}} PDF. Ya registrados: {{registered}}. Problemas omitidos: {{problems}}.",
+  "settings.documentRegister.registerExisting.failedUnknown": "Error de registro desconocido",
+  "settings.documentRegister.registerExisting.failed": "No se pudieron registrar los PDF existentes: {{error}}"
 }
