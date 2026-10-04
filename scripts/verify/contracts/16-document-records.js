@@ -92,12 +92,13 @@ module.exports=async function verifyDocumentRecordsContract(){
   for(const required of ['vaultWriteAdapter.createText','frontmatterAdapter.processFrontMatter','verifyRecordPath']) if(!repositorySource.includes(required)) fail(`metadata record repository persistence contract missing: ${required}`);
   if(!vaultRead.includes('listMarkdownFiles()')||!vaultRead.includes('vault.getMarkdownFiles()')) fail('metadata RAM-index does not enumerate Obsidian-indexed Markdown files');
   if(!feature.includes('parseDocumentRecordFile(file,schema,true)')) fail('cold-start record index does not force canonical disk frontmatter reads');
-  for(const required of ['byPdfPath','byId','metadataUuidV4()','METADATA_RECORD_STATUS_MISSING','updateDocumentRecordForPdfRename','markDocumentRecordMissingForPdfDelete','ambiguousPdfPaths','resolveDocumentRecordPdfPath','obsidianLinkResolutionAdapter?.resolveFirst','ensureMinimalDocumentRecordForPdf','autoRegisterNewPdfs']) if(!feature.includes(required)) fail(`DocumentRecords feature contract missing: ${required}`);
+  for(const required of ['byPdfPath','byId','metadataUuidV4()','METADATA_RECORD_STATUS_MISSING','updateDocumentRecordForPdfRename','markDocumentRecordMissingForPdfDelete','ambiguousPdfPaths','resolveDocumentRecordPdfPath','obsidianLinkResolutionAdapter?.resolveFirst','ensureMinimalDocumentRecordForPdf','autoRegisterNewPdfs','getMissingDocumentRecordSummary','deleteMissingDocumentRecords']) if(!feature.includes(required)) fail(`DocumentRecords feature contract missing: ${required}`);
   if(/recoverMissingDocumentRecordByExactSha|relinkMissingDocumentRecord|metadataMissingRecovery|filemeta_sha256/.test(feature)) fail('DocumentRecords must not expose abandoned SHA/manual relink behavior');
   if(feature.includes('refreshDocumentInfoViews')) fail('DocumentRecords calls back into DocumentInfo and creates a cross-feature cycle');
   if(!lifecycle.includes('onLayoutReady(() =>')||!lifecycle.includes('handleDocumentRecordVaultRename')||!lifecycle.includes('handleDocumentRecordVaultDelete')) fail('metadata record lifecycle listeners missing from layout-ready orchestration');
   if(lifecycle.indexOf('onLayoutReady(() =>')>lifecycle.indexOf('handleDocumentRecordVaultRename')) fail('metadata record vault listeners are registered before layoutReady');
   if(!lifecycle.includes("refreshDocumentInfoAfterRecordEvent")) fail('metadata record lifecycle does not refresh open DocumentInfo views through lifecycle owner');
+  if(!lifecycle.includes("scheduleMissingDocumentRecordsDialog")||!lifecycle.includes("review-missing-documents")) fail('missing-record review dialog is not connected to lifecycle/Command Palette');
   if(!lifecycle.includes("obsidianMetadataCacheAdapter.onResolved")||!lifecycle.includes("markDocumentRecordMetadataResolved()")) fail('metadata-resolved startup gate is not registered early by lifecycle owner');
   if(!lifecycle.includes("markDocumentRecordLayoutReady()")) fail('layout-ready startup gate is not signaled by lifecycle owner');
   if(!lifecycle.includes("autoRegisterNewPdfs:persistedSettings.autoRegisterNewPdfs !== false")) fail('automatic new-PDF registration setting is not default-on');
@@ -195,6 +196,13 @@ module.exports=async function verifyDocumentRecordsContract(){
     return {ok:true,file:direct};
   }};
   owner.obsidianMetadataCacheAdapter={getFrontmatter:()=>null};
+  owner.obsidianVaultWriteAdapter={
+    async deleteFile(file){
+      if(!file?.path) throw new Error('test delete mangler fil');
+      files.delete(file.path);
+      return true;
+    }
+  };
   owner.metadataRecordRepository=fakeRepository;
   owner.metadataRecordIndexCache={
     async load(){return {ok:true,usable:true,reason:'test-empty',entries:new Map()}},
@@ -291,10 +299,18 @@ module.exports=async function verifyDocumentRecordsContract(){
   lookup=owner.getDocumentMetadataRecordState('Archive/a.pdf');
   if(!lookup.registered||lookup.id!==createResult.id) fail('new PDF at a missing record path was not indexed as the active record');
   const stillMissing=files.get(firstRecordPath)?.record;
-  if(!stillMissing||stillMissing.status!==recordApi.METADATA_RECORD_STATUS_MISSING||stillMissing.id!==firstId) fail('historical missing record was modified/rebound when a later PDF appeared at the same path');
+  if(!stillMissing||stillMissing.status!==recordApi.METADATA_RECORD_STATUS_MISSING||stillMissing.id!==firstId) fail('missing safety record was modified/rebound when a later PDF appeared at the same path');
 
-  // Missing records remain historical metadata only. There is deliberately no
-  // automatic or manual transition back to active.
+  const missingSummary=owner.getMissingDocumentRecordSummary();
+  if(missingSummary.count!==1||missingSummary.items[0]?.id!==firstId) fail('missing record summary did not report the retained missing metadata');
+  const missingDelete=await owner.deleteMissingDocumentRecords();
+  if(!missingDelete?.ok||missingDelete.deletedCount!==1||missingDelete.remainingCount!==0) fail('missing metadata delete operation did not remove exactly the missing record');
+  if(files.has(firstRecordPath)) fail('missing metadata file remained after explicit delete');
+  lookup=owner.getDocumentMetadataRecordState('Archive/a.pdf');
+  if(!lookup.registered||lookup.id!==createResult.id) fail('deleting missing metadata removed or disturbed the active replacement record');
+
+  // Missing is a temporary safety state awaiting user action. There is deliberately no
+  // automatic or manual transition from a missing record back to active.
   if(typeof owner.relinkMissingDocumentRecord!=='undefined'||typeof owner.recoverMissingDocumentRecordByExactSha!=='undefined') fail('missing record recovery/relink operation must not exist');
 
   const benchmarkResult=await owner.runDocumentRecordIndexBenchmark();
@@ -347,6 +363,9 @@ module.exports=async function verifyDocumentRecordsContract(){
     behavioralLazyCreate:false,
     behavioralAutomaticMinimalCreate:true,
     missingPathNewPdfGetsFreshIdentity:true,
+    missingRecordReviewSummary:true,
+    explicitMissingMetadataDelete:true,
+    missingMetadataDeletePreservesActiveReplacement:true,
     behavioralRenamePreservesId:true,
     coldStartRenameReadsCanonicalDisk:true,
     wikilinkRepresentationResolvesToCanonicalTFilePath:true,
