@@ -571,5 +571,13 @@
   "missingRecords.deleteMetadata": "Metadaten löschen",
   "missingRecords.deleted": "Metadaten für {{count}} fehlende Dokumente gelöscht.",
   "missingRecords.deleteFailed": "Metadaten fehlender Dokumente konnten nicht gelöscht werden: {{error}}",
-  "missingRecords.openFailed": "Die Prüfung fehlender Dokumente konnte nicht geöffnet werden: {{error}}"
+  "missingRecords.openFailed": "Die Prüfung fehlender Dokumente konnte nicht geöffnet werden: {{error}}",
+  "settings.documentRegister.registerExisting.name": "Vorhandene PDFs registrieren",
+  "settings.documentRegister.registerExisting.description": "Durchsucht den Vault nach vorhandenen Benutzer-PDFs ohne aktiven Metadatensatz. Technische PDF-Sicherungen und Benchmark-Dateien werden ausgeschlossen.",
+  "settings.documentRegister.registerExisting.button": "Scannen und registrieren",
+  "settings.documentRegister.registerExisting.none": "Keine unregistrierten PDFs gefunden. PDFs insgesamt: {{total}}. Bereits registriert: {{registered}}. Übersprungene Probleme: {{problems}}.",
+  "settings.documentRegister.registerExisting.confirm": "PDFium Gate hat {{count}} unregistrierte PDFs unter insgesamt {{total}} Benutzer-PDFs gefunden. Übersprungene Probleme: {{problems}}. Jetzt registrieren?",
+  "settings.documentRegister.registerExisting.success": "{{created}} PDFs registriert. Bereits registriert: {{registered}}. Übersprungene Probleme: {{problems}}.",
+  "settings.documentRegister.registerExisting.failedUnknown": "Unbekannter Registrierungsfehler",
+  "settings.documentRegister.registerExisting.failed": "Vorhandene PDFs konnten nicht registriert werden: {{error}}"
 }
