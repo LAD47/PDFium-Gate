@@ -165,6 +165,45 @@ class PdfiumGateSettingsTab extends PluginSettingTab {
         }));
 
     new Setting(containerEl)
+      .setName(t('settings.documentRegister.registerExisting.name'))
+      .setDesc(t('settings.documentRegister.registerExisting.description'))
+      .addButton(button => button
+        .setButtonText(t('settings.documentRegister.registerExisting.button'))
+        .onClick(async () => {
+          button.setDisabled(true);
+          try {
+            const summary=await this.plugin.ports.getExistingPdfRegistrationSummary();
+            if(!summary?.ok) throw new Error(summary?.error || t('settings.documentRegister.registerExisting.failedUnknown'));
+            if(summary.unregisteredCount===0) {
+              new Notice(t('settings.documentRegister.registerExisting.none',{
+                total:summary.totalPdfCount,
+                registered:summary.registeredCount,
+                problems:summary.problemCount
+              }),8000);
+              return;
+            }
+            const confirmed=window.confirm(t('settings.documentRegister.registerExisting.confirm',{
+              count:summary.unregisteredCount,
+              total:summary.totalPdfCount,
+              problems:summary.problemCount
+            }));
+            if(!confirmed) return;
+            const result=await this.plugin.ports.registerExistingPdfRecords();
+            if(!result?.ok) throw new Error(result?.error || t('settings.documentRegister.registerExisting.failedUnknown'));
+            new Notice(t('settings.documentRegister.registerExisting.success',{
+              created:result.createdCount,
+              registered:result.alreadyRegisteredCount,
+              problems:result.problemCount
+            }),10000);
+          } catch(error) {
+            const message=error instanceof Error ? error.message : String(error);
+            new Notice(t('settings.documentRegister.registerExisting.failed',{error:message}),10000);
+          } finally {
+            button.setDisabled(false);
+          }
+        }));
+
+    new Setting(containerEl)
       .setName(t('settings.documentRegister.rememberFilters.name'))
       .setDesc(t('settings.documentRegister.rememberFilters.description'))
       .addToggle(toggle => toggle
