@@ -583,6 +583,48 @@ class DocumentRecordsFeature {
     return {ok:true,id,status:record.status,pdfPath:record.pdfPath};
   }
 
+  getMissingDocumentRecordSummary() {
+    const items=[];
+    for(const entry of this.state.documentRecords.byId.values()) {
+      if(entry?.status!==METADATA_RECORD_STATUS_MISSING) continue;
+      if(this.state.documentRecords.ambiguousIds.has(entry.id)) continue;
+      items.push({
+        id:String(entry.id || ''),
+        recordPath:metadataRecordNormalizeVaultPath(entry.recordPath),
+        pdfPath:metadataRecordNormalizeVaultPath(entry.pdfPath)
+      });
+    }
+    items.sort((a,b)=>String(a.pdfPath).localeCompare(String(b.pdfPath)));
+    return {count:items.length,items};
+  }
+
+  async deleteMissingDocumentRecords() {
+    await this.ensureDocumentRecordIndexReady('missing-record-delete');
+    return await this.runDocumentRecordOperation(async()=>{
+      const summary=this.getMissingDocumentRecordSummary();
+      let deletedCount=0;
+      for(const item of summary.items) {
+        if(this.state.documentRecords.ambiguousIds.has(item.id)) {
+          return {ok:false,error:'Tvetydig metadata-record-ID; sletting avbrytes fail closed',deletedCount};
+        }
+        const entry=this.state.documentRecords.byId.get(item.id);
+        if(!entry || entry.status!==METADATA_RECORD_STATUS_MISSING) continue;
+        if(!entry.file) return {ok:false,error:'Metadata-record-filen kunne ikke identifiseres',deletedCount};
+        await this.obsidianVaultWriteAdapter.deleteFile(entry.file,false);
+        this.removeDocumentRecordEntryByPath(entry.recordPath);
+        deletedCount++;
+      }
+      return {
+        ok:true,
+        deletedCount,
+        remainingCount:this.getMissingDocumentRecordSummary().count
+      };
+    }).catch(error=>({
+      ok:false,
+      error:error instanceof Error?error.message:String(error)
+    }));
+  }
+
   async markDocumentRecordMissingForPdfDelete(pdfPath) {
     const path=metadataRecordNormalizeVaultPath(pdfPath);
     if(!path || !/\.pdf$/i.test(path)) return {ok:true,ignored:true};
