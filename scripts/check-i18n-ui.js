@@ -13,6 +13,7 @@ function read(rel){ return fs.readFileSync(path.join(ROOT,rel),'utf8').replace(/
 const PROTECTED_FILES=[
   'src/main/category-modals.js',
   'src/main/diagnostic-modals.js',
+  'src/main/missing-document-records-modal.js',
   'src/main/pdfium-gate-view.js',
   'src/main/metadata-schema-modal.js',
   'src/main/pdf-document-register-bases-view.js',
