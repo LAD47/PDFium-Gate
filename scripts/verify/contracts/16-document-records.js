@@ -91,8 +91,9 @@ module.exports=async function verifyDocumentRecordsContract(){
   if(cacheState.usable||cacheState.reason!=='schema-mismatch') fail('metadata record index cache did not invalidate on schema change');
   for(const required of ['vaultWriteAdapter.createText','frontmatterAdapter.processFrontMatter','verifyRecordPath']) if(!repositorySource.includes(required)) fail(`metadata record repository persistence contract missing: ${required}`);
   if(!vaultRead.includes('listMarkdownFiles()')||!vaultRead.includes('vault.getMarkdownFiles()')) fail('metadata RAM-index does not enumerate Obsidian-indexed Markdown files');
+  if(!vaultRead.includes('listFiles()')||!vaultRead.includes('vault.getFiles()')) fail('existing-PDF registration cannot enumerate vault files');
   if(!feature.includes('parseDocumentRecordFile(file,schema,true)')) fail('cold-start record index does not force canonical disk frontmatter reads');
-  for(const required of ['byPdfPath','byId','metadataUuidV4()','METADATA_RECORD_STATUS_MISSING','updateDocumentRecordForPdfRename','markDocumentRecordMissingForPdfDelete','ambiguousPdfPaths','resolveDocumentRecordPdfPath','obsidianLinkResolutionAdapter?.resolveFirst','ensureMinimalDocumentRecordForPdf','autoRegisterNewPdfs','getMissingDocumentRecordSummary','deleteMissingDocumentRecords']) if(!feature.includes(required)) fail(`DocumentRecords feature contract missing: ${required}`);
+  for(const required of ['byPdfPath','byId','metadataUuidV4()','METADATA_RECORD_STATUS_MISSING','updateDocumentRecordForPdfRename','markDocumentRecordMissingForPdfDelete','ambiguousPdfPaths','resolveDocumentRecordPdfPath','obsidianLinkResolutionAdapter?.resolveFirst','ensureMinimalDocumentRecordForPdf','autoRegisterNewPdfs','getMissingDocumentRecordSummary','deleteMissingDocumentRecords','getExistingPdfRegistrationSummary','registerExistingPdfRecords','isDocumentRegistrationPdfPath']) if(!feature.includes(required)) fail(`DocumentRecords feature contract missing: ${required}`);
   if(/recoverMissingDocumentRecordByExactSha|relinkMissingDocumentRecord|metadataMissingRecovery|filemeta_sha256/.test(feature)) fail('DocumentRecords must not expose abandoned SHA/manual relink behavior');
   if(feature.includes('refreshDocumentInfoViews')) fail('DocumentRecords calls back into DocumentInfo and creates a cross-feature cycle');
   if(!lifecycle.includes('onLayoutReady(() =>')||!lifecycle.includes('handleDocumentRecordVaultRename')||!lifecycle.includes('handleDocumentRecordVaultDelete')) fail('metadata record lifecycle listeners missing from layout-ready orchestration');
@@ -103,6 +104,7 @@ module.exports=async function verifyDocumentRecordsContract(){
   if(!lifecycle.includes("markDocumentRecordLayoutReady()")) fail('layout-ready startup gate is not signaled by lifecycle owner');
   if(!lifecycle.includes("autoRegisterNewPdfs:persistedSettings.autoRegisterNewPdfs !== false")) fail('automatic new-PDF registration setting is not default-on');
   if(!settingsSource.includes("settings.documentRegister.autoRegisterNewPdfs.name")||!settingsSource.includes("saveSetting('autoRegisterNewPdfs'")) fail('automatic new-PDF registration setting is missing from Settings UI');
+  if(!settingsSource.includes("settings.documentRegister.registerExisting.name")||!settingsSource.includes("getExistingPdfRegistrationSummary")||!settingsSource.includes("registerExistingPdfRecords")) fail('explicit existing-PDF registration action is missing from Settings UI');
   if(lifecycle.includes("this.ports.scheduleDocumentRecordIndexWarmup()")) fail('lifecycle owner bypasses DocumentRecords two-signal startup gate');
   if(lifecycle.includes("void this.ports.ensureDocumentRecordIndexReady().catch")) fail('layout-ready still starts DocumentRecords synchronously');
   for(const required of ["markDocumentRecordLayoutReady()","markDocumentRecordMetadataResolved()","warmupLayoutReady","warmupMetadataResolved","idle-after-layout-ready+metadata-resolved","readyPromise","cold-start-idle"]) if(!feature.includes(required)) fail(`DocumentRecords resolved/layout/idle readiness contract missing: ${required}`);
@@ -187,6 +189,7 @@ module.exports=async function verifyDocumentRecordsContract(){
   ]);
   owner.obsidianVaultReadAdapter={
     listMarkdownFiles:()=>[...files.values()].map(item=>item.file),
+    listFiles:()=>[...pdfFiles.values()],
     getAbstractFileByPath:path=>pdfFiles.get(String(path||'')) || null
   };
   owner.obsidianLinkResolutionAdapter={resolveFirst:(linkpath)=>{
@@ -313,6 +316,47 @@ module.exports=async function verifyDocumentRecordsContract(){
   // automatic or manual transition from a missing record back to active.
   if(typeof owner.relinkMissingDocumentRecord!=='undefined'||typeof owner.recoverMissingDocumentRecordByExactSha!=='undefined') fail('missing record recovery/relink operation must not exist');
 
+  // Explicit registration of PDFs that already exist in the vault is user-invoked.
+  // Technical annotation backups and benchmark PDFs must not be treated as user documents.
+  files.clear();
+  pdfFiles.clear();
+  const existingActiveId='523e4567-e89b-42d3-a456-426614174000';
+  const existingActivePath=recordApi.metadataRecordPathFromId(existingActiveId);
+  const existingActiveFile={path:existingActivePath,extension:'md'};
+  files.set(existingActivePath,{file:existingActiveFile,record:{
+    id:existingActiveId,pdfPath:'Existing/already.pdf',status:recordApi.METADATA_RECORD_STATUS_ACTIVE,values:{}
+  }});
+  const historicalMissingId='623e4567-e89b-42d3-a456-426614174000';
+  const historicalMissingPath=recordApi.metadataRecordPathFromId(historicalMissingId);
+  const historicalMissingFile={path:historicalMissingPath,extension:'md'};
+  files.set(historicalMissingPath,{file:historicalMissingFile,record:{
+    id:historicalMissingId,pdfPath:'Legacy/missing-again.pdf',status:recordApi.METADATA_RECORD_STATUS_MISSING,values:{sender:'Historical'}
+  }});
+  pdfFiles.set('Existing/already.pdf',{path:'Existing/already.pdf',extension:'pdf'});
+  pdfFiles.set('Legacy/one.pdf',{path:'Legacy/one.pdf',extension:'pdf'});
+  pdfFiles.set('Legacy/missing-again.pdf',{path:'Legacy/missing-again.pdf',extension:'pdf'});
+  pdfFiles.set('Existing/.pdfium-backup/already.pdf',{path:'Existing/.pdfium-backup/already.pdf',extension:'pdf'});
+  const benchmarkPdfPath=benchmarkApi.metadataBenchmarkPdfPath(1);
+  pdfFiles.set(benchmarkPdfPath,{path:benchmarkPdfPath,extension:'pdf'});
+  owner.state.documentRecords=makeState();
+  owner.obsidianMetadataCacheAdapter={getFrontmatter:()=>null};
+  await owner.ensureDocumentRecordIndexReady();
+  const existingSummary=await owner.getExistingPdfRegistrationSummary();
+  if(!existingSummary?.ok||existingSummary.totalPdfCount!==3||existingSummary.registeredCount!==1||existingSummary.unregisteredCount!==2||existingSummary.problemCount!==0) {
+    fail(`existing-PDF scan summary drifted: ${JSON.stringify(existingSummary)}`);
+  }
+  const existingRegistration=await owner.registerExistingPdfRecords();
+  if(!existingRegistration?.ok||existingRegistration.createdCount!==2||existingRegistration.alreadyRegisteredCount!==1||existingRegistration.problemCount!==0) {
+    fail(`existing-PDF registration failed: ${JSON.stringify(existingRegistration)}`);
+  }
+  const postExistingSummary=await owner.getExistingPdfRegistrationSummary();
+  if(postExistingSummary.unregisteredCount!==0||postExistingSummary.registeredCount!==3) fail('existing-PDF registration was not idempotent');
+  const recreatedMissing=owner.getDocumentMetadataRecordState('Legacy/missing-again.pdf');
+  if(!recreatedMissing.registered||recreatedMissing.id===historicalMissingId) fail('existing-PDF registration reused a historical missing identity');
+  const retainedHistoricalMissing=files.get(historicalMissingPath)?.record;
+  if(!retainedHistoricalMissing||retainedHistoricalMissing.status!==recordApi.METADATA_RECORD_STATUS_MISSING) fail('existing-PDF registration modified historical missing metadata');
+  if([...files.values()].some(item=>item.record?.pdfPath==='Existing/.pdfium-backup/already.pdf'||item.record?.pdfPath===benchmarkPdfPath)) fail('existing-PDF registration included technical PDF paths');
+
   const benchmarkResult=await owner.runDocumentRecordIndexBenchmark();
   if(!benchmarkResult?.ok || benchmarkResult?.forcedBuild?.reason!=='benchmark-forced' || typeof benchmarkResult?.lookup?.rawAverageUs!=='number') fail('document record benchmark instrumentation failed');
 
@@ -347,6 +391,9 @@ module.exports=async function verifyDocumentRecordsContract(){
     lazyFirstSave:false,
     automaticMinimalRecordOnPdfCreate:true,
     autoRegisterNewPdfsSetting:true,
+    explicitExistingPdfRegistration:true,
+    existingPdfRegistrationExcludesTechnicalPdfs:true,
+    existingPdfRegistrationIsIdempotent:true,
     systemProperties:[...recordApi.METADATA_RECORD_SYSTEM_PROPERTIES],
     markdownYamlSourceOfTruth:true,
     ramIndex:{byPdfPath:true,byId:true},
