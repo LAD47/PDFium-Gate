@@ -66,6 +66,7 @@ module.exports=async function verifyDocumentRecordsContract(){
   const cacheSource=read('src/metadata/record-index-cache.js');
   const feature=read('src/plugin/features/16-document-records.js');
   const lifecycle=read('src/plugin/features/01-lifecycle.js');
+  const settingsSource=read('src/main/settings.js');
   const vaultRead=read('src/platform/obsidian-vault-read.js');
   if(repositoryApi.METADATA_RECORD_REPOSITORY_CONTRACT_VERSION!=='0.2') fail('metadata record repository contract version drifted');
   if(cacheApi.METADATA_RECORD_INDEX_CACHE_CONTRACT_VERSION!=='0.2') fail('metadata record index cache contract version drifted');
@@ -99,6 +100,8 @@ module.exports=async function verifyDocumentRecordsContract(){
   if(!lifecycle.includes("refreshDocumentInfoAfterRecordEvent")) fail('metadata record lifecycle does not refresh open DocumentInfo views through lifecycle owner');
   if(!lifecycle.includes("obsidianMetadataCacheAdapter.onResolved")||!lifecycle.includes("markDocumentRecordMetadataResolved()")) fail('metadata-resolved startup gate is not registered early by lifecycle owner');
   if(!lifecycle.includes("markDocumentRecordLayoutReady()")) fail('layout-ready startup gate is not signaled by lifecycle owner');
+  if(!lifecycle.includes("autoRegisterNewPdfs:persistedSettings.autoRegisterNewPdfs !== false")) fail('automatic new-PDF registration setting is not default-on');
+  if(!settingsSource.includes("settings.documentRegister.autoRegisterNewPdfs.name")||!settingsSource.includes("saveSetting('autoRegisterNewPdfs'")) fail('automatic new-PDF registration setting is missing from Settings UI');
   if(lifecycle.includes("this.ports.scheduleDocumentRecordIndexWarmup()")) fail('lifecycle owner bypasses DocumentRecords two-signal startup gate');
   if(lifecycle.includes("void this.ports.ensureDocumentRecordIndexReady().catch")) fail('layout-ready still starts DocumentRecords synchronously');
   for(const required of ["markDocumentRecordLayoutReady()","markDocumentRecordMetadataResolved()","warmupLayoutReady","warmupMetadataResolved","idle-after-layout-ready+metadata-resolved","readyPromise","cold-start-idle"]) if(!feature.includes(required)) fail(`DocumentRecords resolved/layout/idle readiness contract missing: ${required}`);
