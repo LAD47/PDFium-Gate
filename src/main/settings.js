@@ -156,6 +156,15 @@ class PdfiumGateSettingsTab extends PluginSettingTab {
     containerEl.createEl('h3', { text: t('settings.documentRegister.section') });
 
     new Setting(containerEl)
+      .setName(t('settings.documentRegister.autoRegisterNewPdfs.name'))
+      .setDesc(t('settings.documentRegister.autoRegisterNewPdfs.description'))
+      .addToggle(toggle => toggle
+        .setValue(this.plugin.settings?.autoRegisterNewPdfs !== false)
+        .onChange(async value => {
+          await this.saveSetting('autoRegisterNewPdfs', !!value);
+        }));
+
+    new Setting(containerEl)
       .setName(t('settings.documentRegister.rememberFilters.name'))
       .setDesc(t('settings.documentRegister.rememberFilters.description'))
       .addToggle(toggle => toggle
