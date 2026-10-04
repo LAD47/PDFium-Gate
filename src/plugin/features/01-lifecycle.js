@@ -17,6 +17,7 @@ async onload() {
       backupOriginalPdf:persistedSettings.backupOriginalPdf !== false,
       hideDocumentMetadataFilesInExplorer:persistedSettings.hideDocumentMetadataFilesInExplorer !== false,
       rememberDocumentRegisterFilters:persistedSettings.rememberDocumentRegisterFilters === true,
+      autoRegisterNewPdfs:persistedSettings.autoRegisterNewPdfs !== false,
       emailDragDropAutomaticImport:persistedSettings.emailDragDropAutomaticImport !== false,
       emailDragDropExtractAttachments:persistedSettings.emailDragDropExtractAttachments !== false
     };
