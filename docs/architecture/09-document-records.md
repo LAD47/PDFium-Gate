@@ -81,14 +81,18 @@ Loss of reliable file continuity must fail closed. If a registered PDF disappear
 
 Move/rename inside the vault is different: Obsidian's rename event supplies the old and new path for the same file lifecycle event, so the existing record may be updated automatically while preserving `filemeta_id`.
 
-A missing record is historical metadata. It must not be reactivated merely because a PDF later appears at the same path or with the same filename. Ordinary PDF records do not use content-hash recovery and PDFium Gate does not offer a manual PDF picker/relink operation. A PDF without an active record is treated as unregistered and may receive a new record through the normal metadata create/save workflow.
+A missing record is a temporary safety record, not a recovery identity. It must not be reactivated merely because a PDF later appears at the same path or with the same filename. Ordinary PDF records do not use content-hash recovery and PDFium Gate does not offer a manual PDF picker/relink operation. A later PDF is a new document identity and receives a new record/UUID when registered.
 
 The deliberate product rule is therefore simple:
 
 - `active` — the registered PDF has reliable current continuity;
-- `missing` — the PDF can no longer be located with reliable continuity.
+- `missing` — PDFium Gate has observed that the PDF disappeared and retains the metadata only as a temporary safety state awaiting an explicit user decision.
 
-There is no ordinary-document `trashed` state. Permanent removal of retained missing metadata belongs to the planned backup-backed maintenance workflow, not to PDF disappearance handling. See [Document metadata backup and maintenance plan](../planning/DOCUMENT-METADATA-BACKUP-AND-MAINTENANCE.md).
+There is no ordinary-document `trashed` state.
+
+When a PDF disappearance is observed while Obsidian/PDFium Gate is running, PDFium Gate changes the active record to `missing` and opens a review dialog that shows the total number of missing documents. The current pre-backup dialog offers explicit deletion of the retained metadata (plus Close). Deleting missing metadata removes only records whose status is `missing`; it must not disturb a later active record even if that new PDF uses the same textual path. Once the independent backup solution is integrated, the intended second resolution path is restore from backup rather than relinking the missing record to a newly imported PDF.
+
+A Command Palette action also opens the missing-document review manually. Detection of PDFs that disappear while Obsidian is not running is a separate reconciliation requirement and remains pending; the current first slice is event-driven for disappearances observed by the live vault lifecycle.
 
 ## Disposable document-record index cache
 
