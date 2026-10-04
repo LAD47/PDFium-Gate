@@ -17,7 +17,7 @@ Vault lifecycle listeners are installed only after workspace layout readiness. P
 ## Approved minimal-record registration direction
 
 **Decision date:** 2026-10-04  
-**Implementation status:** Automatic new-PDF minimal records and explicit Settings-based registration of existing/unregistered PDFs are both implemented and practically confirmed. The remaining registration-specific practical check is fresh identity when a current PDF shares a path with retained `missing` metadata.
+**Implementation status:** Automatic new-PDF minimal records and explicit Settings-based registration of existing/unregistered PDFs are implemented and practically confirmed, including the same-path case where a current PDF receives a fresh UUID while retained `missing` metadata keeps its historical UUID.
 
 The target model is that a PDF managed by PDFium Gate can have a minimal active record even when the user has never entered user metadata. The minimal record contains the canonical system identity/state only (including UUID, file link and `active` status); schema-defined user metadata fields may remain empty.
 
