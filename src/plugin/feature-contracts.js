@@ -482,6 +482,8 @@ const PLUGIN_STATE_FIELD_OWNERS = Object.freeze({
   "http.tokenMap": "annotatorHost",
   "lifecycle.originalPdfViewType": "lifecycle",
   "lifecycle.overrideInstalled": "lifecycle",
+  "lifecycle.missingRecordsDialogTimer": "lifecycle",
+  "lifecycle.missingRecordsDialogOpen": "lifecycle",
   "lifecycle.pdfRuntimeRegistration": "mainBridgeRouting",
   "navigation.activePdfIdentity": "mainBridgeRouting",
   "navigation.lastContextNavigationState": "contextMenu",
