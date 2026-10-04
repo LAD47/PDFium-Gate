@@ -523,6 +523,103 @@ class DocumentRecordsFeature {
     return {ok:true,id,readBack};
   }
 
+  isDocumentRegistrationPdfPath(pdfPath) {
+    const path=metadataRecordNormalizeVaultPath(pdfPath);
+    if(!path || !/\.pdf$/i.test(path)) return false;
+    const segments=path.split('/').map(part=>String(part||'').toLowerCase());
+    if(segments.includes('.pdfium-backup')) return false;
+    if(metadataBenchmarkIsPdfPath(path)) return false;
+    return true;
+  }
+
+  listDocumentRegistrationPdfFiles() {
+    const files=this.obsidianVaultReadAdapter?.listFiles?.();
+    if(!Array.isArray(files)) throw new Error('Vault-filene kunne ikke listes');
+    return files
+      .filter(file=>this.isDocumentRegistrationPdfPath(file?.path))
+      .slice()
+      .sort((a,b)=>metadataRecordNormalizeVaultPath(a?.path).localeCompare(metadataRecordNormalizeVaultPath(b?.path),undefined,{numeric:true,sensitivity:'base'}));
+  }
+
+  async getExistingPdfRegistrationSummary() {
+    await this.ensureDocumentRecordIndexReady('existing-pdf-scan');
+    return await this.runDocumentRecordOperation(async()=>{
+      const files=this.listDocumentRegistrationPdfFiles();
+      let registeredCount=0;
+      let unregisteredCount=0;
+      const problemPaths=[];
+      for(const file of files) {
+        const path=metadataRecordNormalizeVaultPath(file?.path);
+        const state=this.getDocumentMetadataRecordState(path);
+        if(!state.ok) {
+          problemPaths.push(path);
+          continue;
+        }
+        if(state.registered) registeredCount++;
+        else unregisteredCount++;
+      }
+      return {
+        ok:true,
+        totalPdfCount:files.length,
+        registeredCount,
+        unregisteredCount,
+        problemCount:problemPaths.length,
+        problemPaths
+      };
+    }).catch(error=>({
+      ok:false,
+      error:error instanceof Error?error.message:String(error)
+    }));
+  }
+
+  async registerExistingPdfRecords() {
+    await this.ensureDocumentRecordIndexReady('existing-pdf-register');
+    return await this.runDocumentRecordOperation(async()=>{
+      const files=this.listDocumentRegistrationPdfFiles();
+      let createdCount=0;
+      let alreadyRegisteredCount=0;
+      const problemPaths=[];
+      for(const file of files) {
+        const path=metadataRecordNormalizeVaultPath(file?.path);
+        const state=this.getDocumentMetadataRecordState(path);
+        if(!state.ok) {
+          problemPaths.push(path);
+          continue;
+        }
+        if(state.registered) {
+          alreadyRegisteredCount++;
+          continue;
+        }
+        try {
+          const created=await this.createDocumentMetadataRecord(path,{});
+          if(!created?.ok) {
+            problemPaths.push(path);
+            continue;
+          }
+          this.replaceDocumentRecordEntry(created.readBack);
+          createdCount++;
+        } catch(error) {
+          problemPaths.push(path);
+          console.warn(`[PDFium Gate ${PLUGIN_VERSION}] Could not register existing PDF ${path}`,error);
+        }
+      }
+      this.state.documentRecords.lastError=problemPaths.length
+        ? `${problemPaths.length} existing PDF(s) could not be registered`
+        : null;
+      return {
+        ok:true,
+        totalPdfCount:files.length,
+        createdCount,
+        alreadyRegisteredCount,
+        problemCount:problemPaths.length,
+        problemPaths
+      };
+    }).catch(error=>({
+      ok:false,
+      error:error instanceof Error?error.message:String(error)
+    }));
+  }
+
   async ensureMinimalDocumentRecordForPdf(pdfPath) {
     const path=metadataRecordNormalizeVaultPath(pdfPath);
     if(!path || !/\.pdf$/i.test(path)) return {ok:true,ignored:true,reason:'not-pdf'};
