@@ -37,13 +37,17 @@ This file is a running list of observations found during practical testing that 
    - Treat this as a UI/interaction redesign task rather than a small cosmetic fix.
    - Keep the new simple lifecycle visible: active records are usable; missing records are informational/read-only; unregistered PDFs can receive new metadata.
 
-5. **Missing documents: complete review dialog and offline reconciliation**
-   - New first slice: when a live vault delete event changes a document record to `missing`, show a dialog with the total number of missing documents.
-   - The dialog currently offers **Delete metadata** and **Close**. Delete metadata removes only `missing` records.
+5. **Missing documents: live-delete review flow confirmed; offline reconciliation still pending**
+   - Practical testing on 2026-10-04 confirmed the complete live-delete flow:
+     - deleting a registered PDF while Obsidian is running changes its record to `missing`;
+     - the **Missing documents** dialog opens automatically and shows the correct count;
+     - **Close** leaves the missing metadata record intact;
+     - the Command Palette action reopens the same review;
+     - **Delete metadata** removes the missing metadata record;
+     - a subsequent review reports no remaining missing documents.
    - Missing is a temporary safety state awaiting user choice, not a relink/recovery identity.
    - Future backup integration should add **Restore from backup** as the alternative resolution path.
    - Still pending: detect PDFs that disappeared while Obsidian/PDFium Gate was not running and bring those records into the same missing-document review flow.
-   - Practical testing required before this item is considered confirmed.
 
 6. **Document deletion: implement approved delete-document-and-metadata workflow**
    - Add an explicit user-facing **Delete document and metadata** operation for an active document.
