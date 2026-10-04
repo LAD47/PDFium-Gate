@@ -558,5 +558,7 @@
   "mainBridge.listenerMany": "listeners",
   "mainBridge.installFailed": "PDFium {{version}}: main-process UX bridge could not be installed: {{error}}",
   "annotation.copyCategoryFailed": "PDFium {{version}}: could not copy category highlight — {{error}}",
-  "selectionLinks.copiedNotice": "PDFium {{version}}: {{message}}"
+  "selectionLinks.copiedNotice": "PDFium {{version}}: {{message}}",
+  "settings.documentRegister.autoRegisterNewPdfs.name": "Automatically register new PDFs",
+  "settings.documentRegister.autoRegisterNewPdfs.description": "When enabled, a new PDF detected while Obsidian is running gets a minimal metadata record automatically. Existing PDFs are not bulk-registered by this setting."
 }
