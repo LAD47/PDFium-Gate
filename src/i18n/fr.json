@@ -558,5 +558,7 @@
   "mainBridge.listenerMany": "listeners",
   "mainBridge.installFailed": "PDFium {{version}} : Main-process UX bridge n’a pas pu être installé : {{error}}",
   "annotation.copyCategoryFailed": "PDFium {{version}} : impossible de copier le surlignage de catégorie — {{error}}",
-  "selectionLinks.copiedNotice": "PDFium {{version}} : {{message}}"
+  "selectionLinks.copiedNotice": "PDFium {{version}} : {{message}}",
+  "settings.documentRegister.autoRegisterNewPdfs.name": "Enregistrer automatiquement les nouveaux PDF",
+  "settings.documentRegister.autoRegisterNewPdfs.description": "Lorsque cette option est activée, tout nouveau PDF détecté pendant qu’Obsidian est en cours d’exécution reçoit automatiquement un enregistrement minimal de métadonnées. Cette option n’enregistre pas en masse les PDF déjà présents."
 }
