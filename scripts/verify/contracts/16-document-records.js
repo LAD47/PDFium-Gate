@@ -91,7 +91,7 @@ module.exports=async function verifyDocumentRecordsContract(){
   for(const required of ['vaultWriteAdapter.createText','frontmatterAdapter.processFrontMatter','verifyRecordPath']) if(!repositorySource.includes(required)) fail(`metadata record repository persistence contract missing: ${required}`);
   if(!vaultRead.includes('listMarkdownFiles()')||!vaultRead.includes('vault.getMarkdownFiles()')) fail('metadata RAM-index does not enumerate Obsidian-indexed Markdown files');
   if(!feature.includes('parseDocumentRecordFile(file,schema,true)')) fail('cold-start record index does not force canonical disk frontmatter reads');
-  for(const required of ['byPdfPath','byId','metadataUuidV4()','METADATA_RECORD_STATUS_MISSING','updateDocumentRecordForPdfRename','markDocumentRecordMissingForPdfDelete','ambiguousPdfPaths','resolveDocumentRecordPdfPath','obsidianLinkResolutionAdapter?.resolveFirst']) if(!feature.includes(required)) fail(`DocumentRecords feature contract missing: ${required}`);
+  for(const required of ['byPdfPath','byId','metadataUuidV4()','METADATA_RECORD_STATUS_MISSING','updateDocumentRecordForPdfRename','markDocumentRecordMissingForPdfDelete','ambiguousPdfPaths','resolveDocumentRecordPdfPath','obsidianLinkResolutionAdapter?.resolveFirst','ensureMinimalDocumentRecordForPdf','autoRegisterNewPdfs']) if(!feature.includes(required)) fail(`DocumentRecords feature contract missing: ${required}`);
   if(/recoverMissingDocumentRecordByExactSha|relinkMissingDocumentRecord|metadataMissingRecovery|filemeta_sha256/.test(feature)) fail('DocumentRecords must not expose abandoned SHA/manual relink behavior');
   if(feature.includes('refreshDocumentInfoViews')) fail('DocumentRecords calls back into DocumentInfo and creates a cross-feature cycle');
   if(!lifecycle.includes('onLayoutReady(() =>')||!lifecycle.includes('handleDocumentRecordVaultRename')||!lifecycle.includes('handleDocumentRecordVaultDelete')) fail('metadata record lifecycle listeners missing from layout-ready orchestration');
@@ -130,7 +130,7 @@ module.exports=async function verifyDocumentRecordsContract(){
   lifecycleAdapter.cancelIdle(idleHandle);
   if(cancelledIdleId!==77) fail('idle scheduler cancellation did not use cancelIdleCallback');
 
-  // Behavioral integration of the owner: lazy create -> indexed lookup -> PDF rename -> unexpected disappearance/missing -> no automatic rebind -> ambiguity fail-closed.
+  // Behavioral integration of the owner: automatic minimal create -> metadata update -> PDF rename -> unexpected disappearance/missing -> fresh identity on a later PDF at the same path -> ambiguity fail-closed.
   const globalKeys=[
     'METADATA_RECORD_CONTRACT_VERSION','METADATA_RECORD_FORMAT_VERSION','METADATA_RECORD_TYPE','METADATA_RECORDS_ROOT',
     'METADATA_RECORD_STATUS_ACTIVE','METADATA_RECORD_STATUS_MISSING','METADATA_RECORD_SYSTEM_PROPERTIES',
@@ -172,6 +172,7 @@ module.exports=async function verifyDocumentRecordsContract(){
   };
   const owner=new DocumentRecordsFeature();
   owner.state={documentRecords:makeState()};
+  owner.settings={autoRegisterNewPdfs:true};
   owner.ports={getMetadataSchemaSnapshot:()=>schema};
   const pdfFiles=new Map([
     ['Docs/a.pdf',{path:'Docs/a.pdf',extension:'pdf'}],
@@ -214,11 +215,25 @@ module.exports=async function verifyDocumentRecordsContract(){
   if(ownerIdleCancelled!==1) fail('on-demand readiness did not cancel pending idle warmup');
   if(!owner.state.documentRecords.lastBuildMetrics || owner.state.documentRecords.lastBuildMetrics.reason!=='cold-start-demand') fail('document record on-demand cold-start metrics were not captured');
   if(owner.state.documentRecords.lastBuildMetrics.startupScheduleMode!=='on-demand-before-idle') fail('on-demand startup scheduling mode not captured');
-  let persisted=await owner.saveDocumentMetadataRecordValues('Docs/a.pdf',{sender:'Oslo kommune',document_date:'2016-03-17'});
-  if(!persisted.ok) fail(`document record lazy create failed: ${persisted.error || 'unknown'}`);
-  const firstId=persisted.id, firstRecordPath=persisted.recordPath;
+  owner.settings.autoRegisterNewPdfs=false;
+  let disabledCreate=await owner.handleDocumentRecordVaultCreate({path:'Recovered/a.pdf',extension:'pdf'});
+  if(!disabledCreate?.ignored||disabledCreate.reason!=='auto-registration-disabled') fail('disabled automatic PDF registration did not ignore PDF create');
+  if(owner.getDocumentMetadataRecordState('Recovered/a.pdf').registered) fail('disabled automatic PDF registration created a record');
+  owner.settings.autoRegisterNewPdfs=true;
+
+  let autoCreated=await owner.handleDocumentRecordVaultCreate({path:'Docs/a.pdf',extension:'pdf'});
+  if(!autoCreated?.ok||!autoCreated.created) fail(`automatic minimal record create failed: ${autoCreated?.error || 'unknown'}`);
+  const firstId=autoCreated.id, firstRecordPath=autoCreated.recordPath;
   let lookup=owner.getDocumentMetadataRecordState('Docs/a.pdf');
-  if(!lookup.registered||lookup.id!==firstId||lookup.values.sender!=='Oslo kommune') fail('document record lazy create was not indexed');
+  if(!lookup.registered||lookup.id!==firstId||Object.keys(lookup.values||{}).length!==0) fail('automatic minimal record was not indexed as an empty active record');
+
+  let duplicateCreate=await owner.handleDocumentRecordVaultCreate({path:'Docs/a.pdf',extension:'pdf'});
+  if(!duplicateCreate?.ok||duplicateCreate.created!==false||duplicateCreate.id!==firstId) fail('repeat PDF create was not idempotent for an existing active record');
+
+  let persisted=await owner.saveDocumentMetadataRecordValues('Docs/a.pdf',{sender:'Oslo kommune',document_date:'2016-03-17'});
+  if(!persisted.ok||persisted.id!==firstId) fail(`metadata update did not preserve minimal-record identity: ${persisted.error || 'unknown'}`);
+  lookup=owner.getDocumentMetadataRecordState('Docs/a.pdf');
+  if(!lookup.registered||lookup.id!==firstId||lookup.values.sender!=='Oslo kommune') fail('metadata update after automatic minimal create was not indexed');
   let lifecycleResult=await owner.handleDocumentRecordVaultRename({path:'Archive/a.pdf',extension:'pdf'},'Docs/a.pdf');
   if(!lifecycleResult?.ok||owner.getDocumentMetadataRecordState('Docs/a.pdf').registered) fail('PDF rename did not remove old path binding');
   lookup=owner.getDocumentMetadataRecordState('Archive/a.pdf');
@@ -265,11 +280,15 @@ module.exports=async function verifyDocumentRecordsContract(){
   const retained=files.get(firstRecordPath)?.record;
   if(!retained||retained.status!==recordApi.METADATA_RECORD_STATUS_MISSING||retained.pdfPath!=='Archive/a.pdf') fail('PDF disappearance did not retain the record as missing');
 
-  // Reappearance at the same path must not auto-bind a missing record. Path alone is not identity.
+  // A later PDF at the same path is a new document identity. The missing record remains historical.
   pdfFiles.set('Archive/a.pdf',{path:'Archive/a.pdf',extension:'pdf'});
-  const createResult=owner.handleDocumentRecordVaultCreate({path:'Archive/a.pdf',extension:'pdf'});
-  if(createResult!==undefined) fail('PDF create unexpectedly entered document-record create handler');
-  if(owner.getDocumentMetadataRecordState('Archive/a.pdf').registered) fail('missing record auto-rebound when a PDF merely reappeared at the same path');
+  const createResult=await owner.handleDocumentRecordVaultCreate({path:'Archive/a.pdf',extension:'pdf'});
+  if(!createResult?.ok||!createResult.created) fail('new PDF at a missing record path did not receive a fresh minimal record');
+  if(createResult.id===firstId) fail('new PDF at a missing record path reused the missing record identity');
+  lookup=owner.getDocumentMetadataRecordState('Archive/a.pdf');
+  if(!lookup.registered||lookup.id!==createResult.id) fail('new PDF at a missing record path was not indexed as the active record');
+  const stillMissing=files.get(firstRecordPath)?.record;
+  if(!stillMissing||stillMissing.status!==recordApi.METADATA_RECORD_STATUS_MISSING||stillMissing.id!==firstId) fail('historical missing record was modified/rebound when a later PDF appeared at the same path');
 
   // Missing records remain historical metadata only. There is deliberately no
   // automatic or manual transition back to active.
@@ -306,7 +325,9 @@ module.exports=async function verifyDocumentRecordsContract(){
     recordRoot:recordApi.METADATA_RECORDS_ROOT,
     visibleIndexedRoot:true,
     uuidSharded:true,
-    lazyFirstSave:true,
+    lazyFirstSave:false,
+    automaticMinimalRecordOnPdfCreate:true,
+    autoRegisterNewPdfsSetting:true,
     systemProperties:[...recordApi.METADATA_RECORD_SYSTEM_PROPERTIES],
     markdownYamlSourceOfTruth:true,
     ramIndex:{byPdfPath:true,byId:true},
@@ -320,7 +341,9 @@ module.exports=async function verifyDocumentRecordsContract(){
     startupGateOrderCaptured:true,
     singleFlightReadinessPromise:true,
     fixedStartupDelay:false,
-    behavioralLazyCreate:true,
+    behavioralLazyCreate:false,
+    behavioralAutomaticMinimalCreate:true,
+    missingPathNewPdfGetsFreshIdentity:true,
     behavioralRenamePreservesId:true,
     coldStartRenameReadsCanonicalDisk:true,
     wikilinkRepresentationResolvesToCanonicalTFilePath:true,
