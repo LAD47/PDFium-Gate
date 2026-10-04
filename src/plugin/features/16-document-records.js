@@ -490,14 +490,52 @@ class DocumentRecordsFeature {
           values
         },schema);
       } else {
-        const id=metadataUuidV4();
         const values={};
         for(const [property,value] of Object.entries(patch)) values[property]=metadataRecordClone(value);
-        readBack=await repository.createRecord({id,pdfPath:path,status:METADATA_RECORD_STATUS_ACTIVE,values},schema);
+        const created=await this.createDocumentMetadataRecord(path,values,schema,repository);
+        if(!created.ok) return created;
+        readBack=created.readBack;
       }
       const entry=this.replaceDocumentRecordEntry(readBack);
       this.state.documentRecords.lastError=null;
       return {ok:true,id:entry.id,recordPath:entry.recordPath,values:metadataRecordClone(entry.values)};
+    }).catch(error=>{
+      this.state.documentRecords.lastError=error instanceof Error?error.message:String(error);
+      return {ok:false,error:this.state.documentRecords.lastError};
+    });
+  }
+
+  async createDocumentMetadataRecord(pdfPath,values={},schema=null,repository=null) {
+    const path=metadataRecordNormalizeVaultPath(pdfPath);
+    if(!path || !/\.pdf$/i.test(path)) return {ok:false,error:'PDF-filsti mangler eller er ugyldig'};
+    const effectiveSchema=schema || this.ports.getMetadataSchemaSnapshot();
+    if(!effectiveSchema) return {ok:false,error:'Metadata-skjema er ikke tilgjengelig'};
+    const effectiveRepository=repository || this.getDocumentRecordRepository();
+    const id=metadataUuidV4();
+    const normalizedValues=metadataRecordClone(values && typeof values==='object' && !Array.isArray(values) ? values : {});
+    const readBack=await effectiveRepository.createRecord({
+      id,
+      pdfPath:path,
+      status:METADATA_RECORD_STATUS_ACTIVE,
+      values:normalizedValues
+    },effectiveSchema);
+    if(!readBack?.ok) return {ok:false,error:readBack?.error || 'Metadata-record kunne ikke opprettes'};
+    return {ok:true,id,readBack};
+  }
+
+  async ensureMinimalDocumentRecordForPdf(pdfPath) {
+    const path=metadataRecordNormalizeVaultPath(pdfPath);
+    if(!path || !/\.pdf$/i.test(path)) return {ok:true,ignored:true,reason:'not-pdf'};
+    await this.ensureDocumentRecordIndexReady();
+    return await this.runDocumentRecordOperation(async()=>{
+      const state=this.getDocumentMetadataRecordState(path);
+      if(!state.ok) return {ok:false,error:state.error || state.reason || 'metadata-record kan ikke identifiseres sikkert'};
+      if(state.registered) return {ok:true,created:false,id:state.id,recordPath:state.recordPath};
+      const created=await this.createDocumentMetadataRecord(path,{});
+      if(!created.ok) return created;
+      const entry=this.replaceDocumentRecordEntry(created.readBack);
+      this.state.documentRecords.lastError=null;
+      return {ok:true,created:true,id:entry.id,recordPath:entry.recordPath,values:{}};
     }).catch(error=>{
       this.state.documentRecords.lastError=error instanceof Error?error.message:String(error);
       return {ok:false,error:this.state.documentRecords.lastError};
@@ -566,7 +604,12 @@ class DocumentRecordsFeature {
 
   handleDocumentRecordVaultCreate(file) {
     if(this.state.documentRecords.benchmarkEventSuppression && (metadataBenchmarkIsRecordPath(file?.path) || metadataBenchmarkIsPdfPath(file?.path))) return Promise.resolve({ok:true,ignored:true,benchmarkSuppressed:true});
-    if(!metadataRecordIsPath(file?.path) || String(file?.extension || '').toLowerCase()!=='md') return;
+    const extension=String(file?.extension || '').toLowerCase();
+    if(extension==='pdf') {
+      if(this.settings?.autoRegisterNewPdfs === false) return Promise.resolve({ok:true,ignored:true,reason:'auto-registration-disabled'});
+      return this.ensureMinimalDocumentRecordForPdf(file?.path);
+    }
+    if(!metadataRecordIsPath(file?.path) || extension!=='md') return;
     return this.ensureDocumentRecordIndexReady().then(()=>this.runDocumentRecordOperation(()=>this.refreshDocumentRecordFile(file))).catch(error=>({ok:false,error:error instanceof Error?error.message:String(error)}));
   }
 
