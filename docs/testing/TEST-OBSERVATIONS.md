@@ -20,11 +20,10 @@ This file is a running list of observations found during practical testing that 
    - Metadata field labels are currently shown with English words even when the UI language is set to Norwegian Bokmål.
    - Review localization/presentation so Norwegian Bokmål labels are shown when that language is selected.
 
-3. **PDF Document Register: implement approved minimal-record registration**
-   - Current runtime still waits for first metadata save before creating the record.
-   - Approved direction: newly detected PDFs may receive a minimal system record automatically (fresh UUID, file link/path and active status; user metadata remains optional/empty).
-   - Add a persistent Settings toggle for automatic registration of **newly detected** PDFs; intended default is enabled.
-   - Existing/unregistered PDFs are handled separately: offer a one-time/user-invoked scan/action to register them rather than treating "old files" as a permanent toggle.
+3. **PDF Document Register: complete and practically test minimal-record registration**
+   - First implementation slice now auto-creates a minimal system record for newly detected PDFs (fresh UUID, file link/path and active status; user metadata remains optional/empty).
+   - A persistent Settings toggle for automatic registration of **newly detected** PDFs is implemented and defaults to enabled.
+   - Existing/unregistered PDFs are still pending: add a one-time/user-invoked scan/action to register them rather than treating "old files" as a permanent toggle.
    - Files copied into the vault through ordinary file management while Obsidian is running must follow the same new-PDF event path when Obsidian reports them.
    - Practical test required: copy PDF into the vault with Windows File Explorer and confirm automatic record creation.
    - Practical test required: choose not to bulk-register existing PDFs and confirm they remain unregistered across restart until the explicit scan/action is used.
