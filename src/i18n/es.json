@@ -560,5 +560,16 @@
   "annotation.copyCategoryFailed": "PDFium {{version}}: no se pudo copiar el resaltado de categoría — {{error}}",
   "selectionLinks.copiedNotice": "PDFium {{version}}: {{message}}",
   "settings.documentRegister.autoRegisterNewPdfs.name": "Registrar automáticamente los PDF nuevos",
-  "settings.documentRegister.autoRegisterNewPdfs.description": "Cuando está activado, un PDF nuevo detectado mientras Obsidian está en ejecución recibe automáticamente un registro mínimo de metadatos. Esta opción no registra en bloque los PDF ya existentes."
+  "settings.documentRegister.autoRegisterNewPdfs.description": "Cuando está activado, un PDF nuevo detectado mientras Obsidian está en ejecución recibe automáticamente un registro mínimo de metadatos. Esta opción no registra en bloque los PDF ya existentes.",
+  "commands.reviewMissingDocuments": "Revisar documentos que faltan",
+  "missingRecords.title": "Documentos que faltan",
+  "missingRecords.none": "No se encontraron documentos que falten.",
+  "missingRecords.count": "Documentos que faltan: {{count}}",
+  "missingRecords.description": "Faltan los archivos PDF, pero sus metadatos aún se conservan. Un registro de metadatos ausente no se vuelve a vincular a un PDF recién importado.",
+  "missingRecords.deleteWarning": "Eliminar metadatos elimina los metadatos de los {{count}} documentos que faltan. PDFium Gate no puede deshacer esta acción.",
+  "missingRecords.close": "Cerrar",
+  "missingRecords.deleteMetadata": "Eliminar metadatos",
+  "missingRecords.deleted": "Se eliminaron los metadatos de {{count}} documentos que faltan.",
+  "missingRecords.deleteFailed": "No se pudieron eliminar los metadatos de los documentos que faltan: {{error}}",
+  "missingRecords.openFailed": "No se pudo abrir la revisión de documentos que faltan: {{error}}"
 }
