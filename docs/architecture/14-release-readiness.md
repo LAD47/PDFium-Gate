@@ -17,11 +17,21 @@ Internal `0.1.x` builds remain development history. The planned public sequence 
 
 Before public/live release, any change to persisted formats, file layouts, configuration structures, IDs, or other user-data representations requires an explicit migration/backward-compatibility review. Pre-release test data may be destructively changed only while that test-phase policy remains explicitly in force.
 
-## Backup/restore readiness before public release
+## Backup/rollback readiness before destructive public use
 
-Before the first public beta, the durable document-metadata backup/restore contract must be implemented and practically tested. At minimum, destructive document-register maintenance must be gated by a validated current backup, full snapshot restore must create a pre-restore safety backup, and disposable indexes/caches must be rebuilt after restore.
+The generic backup engine is planned as an independent Obsidian project rather than a large subsystem inside PDFium Gate. PDFium Gate core development may continue with test data before that project is implemented.
 
-The approved direction and implementation checklist are tracked in [Document metadata backup and maintenance plan](../planning/DOCUMENT-METADATA-BACKUP-AND-MAINTENANCE.md).
+Before PDFium Gate exposes permanent/destructive maintenance of durable user metadata for public/live use, an adequate backup/rollback path must be implemented and practically tested. At minimum:
+
+- destructive document-register maintenance must be gated by a validated current safety snapshot;
+- a restore operation must validate its selected snapshot before mutation;
+- restore must create and validate a pre-restore safety snapshot;
+- interrupted/failed restore must have a defined fail-closed rollback path;
+- disposable indexes/caches must be invalidated or rebuilt after successful restore.
+
+The backup engine may be provided by the planned independent `LAD47/PDFium-Backup` project, but PDFium Gate must not silently acquire an unconditional runtime dependency on another plugin. Any integration contract must be reviewed separately.
+
+The PDFium Gate-specific protected-data and maintenance requirements are tracked in [Document metadata backup and maintenance plan](../planning/DOCUMENT-METADATA-BACKUP-AND-MAINTENANCE.md).
 
 ## Distribution direction
 
