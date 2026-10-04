@@ -560,5 +560,16 @@
   "annotation.copyCategoryFailed": "PDFium {{version}}: could not copy category highlight — {{error}}",
   "selectionLinks.copiedNotice": "PDFium {{version}}: {{message}}",
   "settings.documentRegister.autoRegisterNewPdfs.name": "Automatically register new PDFs",
-  "settings.documentRegister.autoRegisterNewPdfs.description": "When enabled, a new PDF detected while Obsidian is running gets a minimal metadata record automatically. Existing PDFs are not bulk-registered by this setting."
+  "settings.documentRegister.autoRegisterNewPdfs.description": "When enabled, a new PDF detected while Obsidian is running gets a minimal metadata record automatically. Existing PDFs are not bulk-registered by this setting.",
+  "commands.reviewMissingDocuments": "Review missing documents",
+  "missingRecords.title": "Missing documents",
+  "missingRecords.none": "No missing documents were found.",
+  "missingRecords.count": "Missing documents: {{count}}",
+  "missingRecords.description": "The PDF files are missing, but their metadata is still retained. A missing metadata record is not reconnected to a newly imported PDF.",
+  "missingRecords.deleteWarning": "Delete metadata removes the retained metadata for all {{count}} missing documents. PDFium Gate cannot undo this action.",
+  "missingRecords.close": "Close",
+  "missingRecords.deleteMetadata": "Delete metadata",
+  "missingRecords.deleted": "Deleted metadata for {{count}} missing documents.",
+  "missingRecords.deleteFailed": "Could not delete missing-document metadata: {{error}}",
+  "missingRecords.openFailed": "Could not open missing-document review: {{error}}"
 }
