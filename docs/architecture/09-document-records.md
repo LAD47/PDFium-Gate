@@ -10,21 +10,21 @@ Permanent records are ordinary Markdown notes under `File Metadata/<first-two-UU
 
 Each record has stable UUID v4 identity and canonical system properties `filemeta_type`, `filemeta_profile`, `filemeta_version`, `filemeta_id`, `filemeta_file`, and `filemeta_status`. Ordinary PDF document records have only two supported lifecycle states: `active` and `missing`. `filemeta_file` is an Obsidian wikilink to the PDF. User metadata values use the schema properties directly. Markdown/YAML is source of truth; `state.documentRecords` is cache/index only.
 
-The index has two canonical lookup directions: active unambiguous `byPdfPath` and unique `byId`. Duplicate active PDF-path bindings fail closed. The current runtime still creates records lazily on first valid DocumentInfo save, but that behavior is now an implementation gap: the approved next direction is automatic minimal system records for PDFs according to the registration policy below. Existing frontmatter updates use the `FileManager.processFrontMatter` platform adapter and are read back/validated before the index is replaced.
+The index has two canonical lookup directions: active unambiguous `byPdfPath` and unique `byId`. Duplicate active PDF-path bindings fail closed. Newly detected PDFs can receive minimal system records automatically, while already-existing/unregistered PDFs are handled only through the explicit Settings action described below. Existing frontmatter updates use the `FileManager.processFrontMatter` platform adapter and are read back/validated before the index is replaced.
 
 Vault lifecycle listeners are installed only after workspace layout readiness. PDF rename/move updates the existing record's `filemeta_file`. PDF deletion retains the metadata note and changes status to `missing`; it is not automatically rebound if a different PDF later appears at the same path. Manual record create/modify/rename/delete updates only the affected index entries.
 
 ## Approved minimal-record registration direction
 
 **Decision date:** 2026-10-04  
-**Implementation status:** Automatic new-PDF minimal records are implemented and practically confirmed; bulk registration of existing PDFs remains pending.
+**Implementation status:** Automatic new-PDF minimal records are implemented and practically confirmed. Explicit Settings-based registration of existing/unregistered PDFs is implemented; practical confirmation is pending.
 
 The target model is that a PDF managed by PDFium Gate can have a minimal active record even when the user has never entered user metadata. The minimal record contains the canonical system identity/state only (including UUID, file link and `active` status); schema-defined user metadata fields may remain empty.
 
 Registration behavior is intentionally split into two different user choices:
 
 1. **New PDFs** — a persistent setting controls whether newly detected PDFs receive a minimal record automatically. The intended default is enabled. A PDF added while Obsidian/PDFium Gate is running should use the same lifecycle path regardless of whether it was created through Obsidian or copied into the vault with ordinary file management, once Obsidian reports the vault `create` event.
-2. **PDFs that already existed before PDFium Gate/this feature** — bulk registration is an explicit user action, not a persistent "old files" toggle. On first relevant onboarding, PDFium Gate may count unregistered existing PDFs and ask whether the user wants to register them. The same action remains available later from Settings so the user can defer the choice and run it manually.
+2. **PDFs that already existed before PDFium Gate/this feature** — bulk registration is an explicit user action, not a persistent "old files" toggle. The Settings action **Register existing PDFs** scans the current vault, reports how many user PDFs are unregistered, asks for confirmation, and then creates minimal active records only for those unregistered PDFs. Already-active documents remain unchanged. A retained `missing` record does not become the identity of a current PDF at the same path; explicit registration creates a fresh UUID. Technical annotation backups under any `.pdfium-backup` path and generated benchmark PDFs under `PDFium Benchmark/PDF` are excluded from the scan. Onboarding may later invoke the same scan/decision flow, but there is no automatic startup bulk registration.
 
 The lifecycle listener remains registered only after workspace layout readiness. This deliberately avoids treating Obsidian's startup `create` notifications for every already-loaded vault file as genuine new-file events.
 
