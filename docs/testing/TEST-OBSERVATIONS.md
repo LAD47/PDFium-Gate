@@ -30,6 +30,17 @@ This file is a running list of observations found during practical testing that 
    - Treat this as a UI/interaction redesign task rather than a small cosmetic fix.
    - Keep the new simple lifecycle visible: active records are usable; missing records are informational/read-only; unregistered PDFs can receive new metadata.
 
+5. **Document deletion: delete document together with associated metadata**
+   - Add an explicit user-facing workflow for deleting a document and its associated PDFium Gate metadata together.
+   - The operation must distinguish deliberate document deletion from the existing unexpected-disappearance lifecycle, where the record becomes `missing`.
+   - Exact trash/permanent-delete behavior, confirmation UX and backup gating for destructive metadata removal must be designed before implementation.
+
+6. **Email Import attachments: better support for non-PDF file types**
+   - Improve handling of email attachments that are not PDFs.
+   - ZIP archives are an explicit practical example that should be supported more clearly.
+   - Review how such attachments are retained, represented, opened/exported and linked from the imported email without assuming that every attachment is directly viewable in the PDF-oriented UI.
+   - This must not weaken Email Import's existing exact-byte SHA-256 use for retained immutable source/integrity handling.
+
 ## Completed items
 
 - **Missing PDF lifecycle and recovery experiment**
