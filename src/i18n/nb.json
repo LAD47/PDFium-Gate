@@ -579,5 +579,9 @@
   "settings.documentRegister.registerExisting.confirm": "PDFium Gate fant {{count}} uregistrerte PDF-er av totalt {{total}} bruker-PDF-er. Problemer hoppet over: {{problems}}. Vil du registrere de uregistrerte PDF-ene nå?",
   "settings.documentRegister.registerExisting.success": "Registrerte {{created}} PDF-er. Allerede registrert: {{registered}}. Problemer hoppet over: {{problems}}.",
   "settings.documentRegister.registerExisting.failedUnknown": "Ukjent registreringsfeil",
-  "settings.documentRegister.registerExisting.failed": "Kunne ikke registrere eksisterende PDF-er: {{error}}"
+  "settings.documentRegister.registerExisting.failed": "Kunne ikke registrere eksisterende PDF-er: {{error}}",
+  "documentInfo.archive.title": "Vedlegg fra ZIP",
+  "documentInfo.archive.source": "Kildearkiv",
+  "documentInfo.archive.related": "Filer i samme arkiv",
+  "documentInfo.archive.none": "Ingen andre filer i dette arkivet."
 }
