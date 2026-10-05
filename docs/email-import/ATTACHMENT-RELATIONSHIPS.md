@@ -32,11 +32,15 @@ Expanded ZIP members are placed below a dedicated ZIP-named subfolder. They are 
 
 PDF files found inside the ZIP become normal PDFium Gate documents through Archive Import. They receive generic PDF records plus Archive Relationship links to the source ZIP and the other members of the same archive. They are not represented as direct email attachments and therefore do not receive direct `email_import_attachment_*` provenance merely because they were nested inside a ZIP.
 
-The relationship chain is intentionally explicit:
+The stored relationship chain is intentionally explicit:
 
 ```text
 email PDF -> original ZIP -> extracted archive members
 ```
+
+The source ZIP remains the durable provenance target in the parent email metadata relationship. The user-facing click behavior is different: when the attachment link inside the generated email PDF resolves to a ZIP that Archive Import has expanded, PDFium Gate resolves the extracted PDF members through Archive Relationship data. If there is exactly one extracted PDF it opens directly; if there are multiple extracted PDFs the user chooses which one to open. If no extracted PDF can be resolved, the original ZIP remains the fallback target.
+
+This keeps source provenance and reading/navigation semantics separate: the ZIP is the documented source container, while the extracted PDF is the normal reading target.
 
 For PDFs, Archive Relationship data is presented in DocumentInfo so users do not need to inspect the technical File Metadata Markdown record.
 
