@@ -2,128 +2,206 @@
 
 ## Purpose
 
-This document records the current architecture and practical findings for relationships between an imported email PDF and attachments extracted from the retained email source.
+This document records the current relationship model between an imported email PDF and its user-facing attachments.
 
-The goal is to use Obsidian's native link system wherever possible instead of building a parallel path-tracking database in PDFium Gate.
+The design uses ordinary vault files and Obsidian links wherever possible. EML, MSG and ZIP are treated as import/transport sources rather than normal documents users must manage after a successful import.
 
-## Current practical behavior
+## Current attachment layout
 
-Automatic drag-and-drop email import is practically verified for the current prototype:
-
-- a dropped EML/MSG staging file is processed automatically when the setting is enabled;
-- the exact original source is retained in hidden SHA-addressed storage;
-- the email PDF is created in the chosen folder;
-- ordinary real attachments are extracted to the same folder when attachment extraction is enabled;
-- inline/CID resources are not exported as ordinary visible attachments;
-- verified PDF attachments become normal registered PDFium Gate documents;
-- ordinary non-PDF attachments such as JPG and DOCX remain normal vault files and do not receive their own PDFium Gate document record;
-- multiple dropped emails are processed sequentially without a modal;
-- exact duplicate drag/drop opens the existing email PDF and does not export duplicate attachment copies.
-
-Practical test 1-11 for this automatic flow was reported OK on 2026-09-29.
-
-## ZIP attachment relationship rule
-
-A ZIP source attachment remains a single source-level attachment in the immutable email PDF and in the parent metadata relationship block. Email Import exports and links the original ZIP only.
-
-ZIP inspection, user policy, extraction, PDF registration and archive-member relationships are owned by the generic Archive Import module. Email Import does not unpack ZIP files itself.
-
-Expanded ZIP members are placed below a dedicated ZIP-named subfolder. They are not appended to the parent email's source-attachment link block, because doing so would destroy the one-to-one correspondence between the source email attachment list and the live relationship block.
-
-PDF files found inside the ZIP become normal PDFium Gate documents through Archive Import. They receive generic PDF records plus Archive Relationship links to the source ZIP and the other members of the same archive. They are not represented as direct email attachments and therefore do not receive direct `email_import_attachment_*` provenance merely because they were nested inside a ZIP.
-
-The stored relationship chain is intentionally explicit:
+A generated email PDF and its attachment folder share the same base name:
 
 ```text
-email PDF -> original ZIP -> extracted archive members
+Cases/2026-10-05 - Subject.pdf
+Cases/2026-10-05 - Subject/
 ```
 
-The source ZIP remains the durable provenance target in the parent email metadata relationship. The user-facing click behavior is different: when the attachment link inside the generated email PDF resolves to a ZIP that Archive Import has expanded, PDFium Gate resolves the extracted PDF members through Archive Relationship data. If there is exactly one extracted PDF it opens directly; if there are multiple extracted PDFs the user chooses which one to open. If no extracted PDF can be resolved, the original ZIP remains the fallback target.
+All ordinary user-facing attachments belong below that one folder.
 
-This keeps source provenance and reading/navigation semantics separate: the ZIP is the documented source container, while the extracted PDF is the normal reading target.
+Direct attachments are placed there directly. Members of every ZIP attachment in the same email are also placed below that same folder while preserving the ZIP's internal relative structure where possible.
 
-For PDFs, Archive Relationship data is presented in DocumentInfo so users do not need to inspect the technical File Metadata Markdown record.
+One collision allocator covers the complete attachment plan. It prevents silent overwrite across direct attachments and across multiple ZIPs.
 
-Nested ZIP files are still non-recursive in this first implementation.
+Example:
 
-## Native Obsidian relationship prototype
+```text
+2026-10-05 - Subject.pdf
+2026-10-05 - Subject/
+├── cover.pdf
+├── rapport.pdf
+├── vedtak.pdf
+└── Vedlegg/
+    ├── notat.txt
+    └── notat (2).txt
+```
 
-The prototype at branch commit `bb7eea33235127754ec393d1f1f4ebe328e4f51c` writes a plugin-managed block into the existing Markdown File Metadata record for the parent email PDF:
+## Email PDF attachment presentation
+
+The generated email PDF is rendered from the same preflight attachment plan that drives durable attachment creation.
+
+Therefore the PDF shows the complete user-facing attachment list, not merely the original transport containers.
+
+A ZIP filename may be shown as a group heading:
+
+```text
+Attachments
+
+cover.pdf
+
+From Dokumenter.zip:
+    rapport.pdf
+    notat.txt
+
+From Saksvedlegg.zip:
+    vedtak.pdf
+    notat (2).txt
+```
+
+The clickable targets are the actual imported files. New imports do not require the user to click a ZIP and then choose a member.
+
+Inline/CID resources used by message rendering are not repeated as ordinary attachments.
+
+## Parent email relationship block
+
+After attachment creation succeeds, the parent email PDF's existing File Metadata Markdown record receives the plugin-managed email attachment block.
+
+It contains the actual imported attachment paths in the same stable order used by the email-PDF attachment manifest:
 
 ```markdown
 <!-- pdfium-gate:email-attachments:start -->
-- [[Cases/Email/rapport.pdf]]
-- [[Cases/Email/bilde.jpg]]
-- [[Cases/Email/brev.docx]]
+- [[Cases/2026-10-05 - Subject/cover.pdf]]
+- [[Cases/2026-10-05 - Subject/rapport.pdf]]
+- [[Cases/2026-10-05 - Subject/Vedlegg/notat.txt]]
+- [[Cases/2026-10-05 - Subject/vedtak.pdf]]
+- [[Cases/2026-10-05 - Subject/Vedlegg/notat (2).txt]]
 <!-- pdfium-gate:email-attachments:end -->
 ```
 
-The block is deliberately stored in the Markdown body rather than in the user metadata schema or a new database.
+The block remains technical storage. Users work through the email PDF and DocumentInfo rather than editing the relationship block.
 
-Reasons:
+Obsidian remains the live path resolver for normal attachment moves/renames. PDFium Gate does not maintain a parallel path database.
 
-- the links are genuine Obsidian wikilinks;
-- Obsidian can resolve and maintain the relationship;
-- PDFium Gate does not need a separate attachment-path database;
-- technical attachment relationships stay separate from user-editable metadata fields;
-- the existing File Metadata record remains the parent email PDF's technical relationship document.
+## ZIP provenance without a retained ZIP file
 
-The block is bounded by stable HTML comments so PDFium Gate can replace only its own generated relationship block without rewriting unrelated Markdown content.
+A ZIP is a transport source. New email imports do not create the ZIP as a visible vault attachment file.
 
-## Practical evidence
+For a PDF originating inside a ZIP, PDFium Gate stores archive provenance in that PDF's technical metadata/relationship state:
 
-The first practical test confirmed that when an extracted attachment is renamed inside Obsidian, the link in the parent email PDF's metadata record is updated automatically.
+- parent email document;
+- original archive filename;
+- archive SHA-256;
+- original archive-member path;
+- other imported members originating from the same source archive.
 
-This is strong evidence that Obsidian can own the rename relationship and that PDFium Gate does not need its own rename synchronization for ordinary attachment links.
+The Archive Relationship block can represent both the new source-identity model and the older live-ZIP-path model for backwards compatibility.
 
-## Important finding: Obsidian may shorten the textual link
+For a new email import, the conceptual relationship is:
 
-The prototype already writes the full vault-relative target path when it creates the relationship block.
-
-However, after Obsidian maintained a renamed link, the user observed links such as:
-
-```markdown
-- [[Ekte Rått Ungt 1.docx]]
-- [[Howard Moskowitz3.jpg]]
+```text
+email PDF
+   |
+   +--> actual imported attachment
+   |
+   +--> archive member PDF
+          provenance:
+          - original ZIP filename
+          - original ZIP SHA-256
+          - parent email
+          - sibling archive members
 ```
 
-instead of a visible full path.
+The ZIP itself is not a required link target.
 
-Therefore the next problem is not simply to make PDFium Gate write a full path initially. PDFium Gate already does that. Obsidian's own automatic link maintenance may rewrite the textual representation according to its link-format rules and reduce an unambiguous target to a basename.
+## DocumentInfo presentation
 
-A short wikilink may still resolve correctly after a move, but it is less transparent to a user inspecting the relationship record. The project now prefers a representation where the user can tell which physical vault document is intended without ambiguity.
+For a PDF extracted from an email ZIP, DocumentInfo identifies the parent email as the clickable source and shows the original ZIP filename as provenance.
 
-## Next design goal
+Related files imported from the same archive remain directly clickable.
 
-Preserve the advantages of native Obsidian links while making the relationship visibly unambiguous.
+For a manually imported ZIP, there is no parent email. DocumentInfo shows the original archive name as provenance and related extracted files as links.
 
-The next prototype should investigate a narrow solution with these constraints:
+This preserves the preferred UX boundary: users work with relationships in DocumentInfo; File Metadata Markdown remains an implementation detail.
 
-1. Obsidian remains the authoritative link resolver and should continue to update relationships on rename/move.
-2. PDFium Gate must not introduce a parallel path database merely to mirror the link target.
-3. The user should be able to inspect the relationship and identify the intended attachment unambiguously, preferably with a full vault-relative path.
-4. Duplicate filenames in different folders must not create silent ambiguity.
-5. The solution must not change global Obsidian link-format settings without explicit user action.
-6. Any PDFium Gate rewrite performed after rename/move must be narrowly scoped to the plugin-managed attachment block and must not interfere with unrelated user links.
+## Transport-source policy
 
-Before implementing a custom rewrite hook, test whether an Obsidian-supported link representation or API can preserve an explicit full-path target while retaining automatic link maintenance.
+### EML/MSG
 
-## Move and delete tests still required
+The normal successful workflow does not require permanent source retention.
 
-Rename has been practically confirmed.
+The exact EML/MSG SHA-256, original filename, source format and relevant message identity remain technical provenance on the generated email PDF.
 
-The following still require explicit practical verification after the full-path/visibility question is resolved:
+Exact source retention is an advanced opt-in setting and defaults to off. When enabled, the existing hidden SHA-addressed source storage remains available and byte-verified.
 
-- moving DOCX/JPG/PDF attachments between folders inside Obsidian;
-- clicking the relationship after a move and confirming it resolves to the intended file;
-- duplicate filename behavior across two folders;
-- the exact Obsidian warning/UX when a linked attachment is deleted;
-- backlink visibility for non-PDF binary attachments when `Show all file types` is enabled.
+For automatic vault staging, the EML/MSG staging file is removed only after the import has completed successfully and its current bytes still equal the imported bytes.
 
-## Source-of-truth boundary
+A failed or cancelled import keeps the source.
 
-The retained `.eml`/`.msg` remains the authoritative immutable source for original attachment bytes, original filename, MIME metadata and attachment SHA-256.
+### ZIP
 
-The native Obsidian wikilink relationship answers a different question: where is the exported attachment in the vault now?
+For a successful manual Archive Import, the ZIP is deleted only after extraction, read-back verification, PDF registration and relationship persistence succeed.
 
-PDF attachments additionally keep their existing PDFium Gate child-record provenance. Ordinary non-PDF attachments remain normal vault files unless a later separate document-type decision changes that policy.
+If the archive cannot pass preflight, extraction does not begin.
+
+If a failure happens after output creation begins, all files/folders and fresh PDF metadata records created by that attempt are rolled back.
+
+The failed ZIP remains and the user is explicitly asked whether to keep or delete it. Keeping is the safe/default choice because Obsidian may hide ZIP files from the normal file explorer.
+
+## External filesystem ZIP arrival
+
+Manual ZIP import is not limited to drag/drop inside Obsidian.
+
+Archive Import scans for eligible ZIP files:
+
+- on plugin/startup reconciliation;
+- when the Obsidian window regains focus.
+
+This covers common Windows Explorer copy/move workflows without continuous polling.
+
+A failed ZIP that the user chooses to keep is deferred for the rest of the current plugin session so focus changes do not repeatedly show the same failure dialog.
+
+## Atomic attachment behavior
+
+Email attachment output is transactional for the files created by that attachment phase.
+
+The sequence is:
+
+1. preflight all direct and ZIP attachments;
+2. create all planned files;
+3. read back and byte-verify all created files;
+4. register PDFs;
+5. persist Archive Relationships;
+6. persist parent email attachment links.
+
+If a downstream step fails, newly registered attachment metadata and newly created attachment files/folders are removed.
+
+This prevents partially imported ZIP contents from remaining as apparently valid documents.
+
+## Legacy compatibility
+
+The earlier practical prototype used a different chain:
+
+```text
+email PDF -> visible original ZIP -> extracted ZIP folder
+```
+
+That prototype was practically verified on 2026-10-05 and was useful for proving ZIP extraction, PDF registration, archive relationships and DocumentInfo navigation.
+
+Subsequent practical UX review rejected the visible-ZIP model. The current transport-source model supersedes it for new imports.
+
+Legacy generated email PDFs and metadata records that still reference a live ZIP path remain readable through the backwards-compatible archive relationship parser and legacy ZIP-link resolver.
+
+## Remaining practical verification
+
+The new model has complete automated regression coverage, including:
+
+- multiple ZIP attachments in one email;
+- one sibling attachment folder;
+- cross-ZIP path collision suffixes;
+- no persisted email ZIP transport files;
+- direct and nested PDF registration;
+- archive-name/SHA/parent-email provenance;
+- full attachment rollback on downstream failure;
+- manual ZIP source deletion after success;
+- manual ZIP rollback and keep/delete source policy;
+- external ZIP reconciliation.
+
+Practical Obsidian verification of this replacement model is still required before release.
