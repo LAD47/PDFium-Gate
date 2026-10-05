@@ -84,6 +84,11 @@ function createPluginState() {
       panelOpen: false,
       editingPdfPath: null
     },
+    archiveImport: {
+      suppressedPaths:new Set(),
+      inFlight:new Set(),
+      lastResult:null
+    },
     documentRecords: {
       initialized: false,
       readyPromise: null,
