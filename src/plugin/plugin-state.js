@@ -87,6 +87,8 @@ function createPluginState() {
     archiveImport: {
       suppressedPaths:new Set(),
       inFlight:new Set(),
+      deferredPaths:new Set(),
+      reconcileInFlight:false,
       lastResult:null
     },
     documentRecords: {
