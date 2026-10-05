@@ -5,7 +5,7 @@
   "scripts": {
     "build": "node build.js",
     "verify": "node scripts/verify-build.js",
-    "check": "npm run build && npm run test:core:integrity && npm run test:metadata:record-repository && npm run test:archive-import && npm run test:email-import:zip-attachments && npm run check:i18n && npm run check:i18n-ui && npm run check:architecture-docs && npm run check:examples && npm run check:filemeta && npm run check:identity && npm run verify",
+    "check": "npm run build && npm run test:core:integrity && npm run test:platform:vault-write && npm run test:metadata:record-repository && npm run test:archive-import && npm run test:email-import:zip-attachments && npm run check:i18n && npm run check:i18n-ui && npm run check:architecture-docs && npm run check:examples && npm run check:filemeta && npm run check:identity && npm run verify",
     "check:i18n": "node scripts/check-i18n.js",
     "check:i18n-ui": "node scripts/check-i18n-ui.js",
     "check:architecture-docs": "node scripts/check-architecture-docs.js",
@@ -36,7 +36,8 @@
     "test:email-import:zip-attachments": "node scripts/test-email-import-zip-attachments.js",
     "create:email-import:zip-fixtures": "node scripts/create-email-import-zip-test-fixtures.js",
     "test:archive-import": "node scripts/test-archive-import.js",
-    "test:metadata:record-repository": "node scripts/test-metadata-record-repository.js"
+    "test:metadata:record-repository": "node scripts/test-metadata-record-repository.js",
+    "test:platform:vault-write": "node scripts/test-obsidian-vault-write.js"
   },
   "dependencies": {
     "@kenjiuno/msgreader": "1.28.0",
