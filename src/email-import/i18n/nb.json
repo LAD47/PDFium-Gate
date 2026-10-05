@@ -47,8 +47,16 @@
   "settings.emailImport.dragDrop.name": "Importer e-post automatisk ved drag-and-drop",
   "settings.emailImport.dragDrop.description": "Når en .eml- eller .msg-fil legges i vaulten, importeres den automatisk til samme mappe uten en ekstra dialog.",
   "settings.emailImport.attachments.name": "Trekk ut e-postvedlegg automatisk",
-  "settings.emailImport.attachments.description": "Ved automatisk drag-and-drop-import legges ordinære vedlegg ved siden av e-post-PDF-en. Inline/CID-ressurser forblir en del av e-postvisningen.",
+  "settings.emailImport.attachments.description": "Ved automatisk drag-and-drop-import legges ordinære vedlegg ved siden av e-post-PDF-en. For ZIP-vedlegg beholdes original ZIP, mens støttet innhold pakkes ut i en egen undermappe. Inline/CID-ressurser forblir en del av e-postvisningen.",
   "emailImport.notice.dragDropExisting": "Denne e-posten er allerede importert. Åpnet eksisterende PDF: {{path}}.",
   "emailImport.notice.dragDropImported": "E-post importert automatisk til {{path}}. Vedlegg hentet ut: {{count}}.",
-  "emailImport.notice.dragDropImportedWithAttachmentErrors": "E-post importert automatisk til {{path}}. Vedlegg hentet ut: {{count}}; feil: {{failed}}."
+  "emailImport.notice.dragDropImportedWithAttachmentErrors": "E-post importert automatisk til {{path}}. Vedlegg hentet ut: {{count}}; feil: {{failed}}.",
+  "emailImport.zipModal.title": "ZIP-vedlegget inneholder filtyper som ikke støttes direkte",
+  "emailImport.zipModal.intro": "ZIP-vedlegget inneholder {{count}} fil(er) med formater PDFium Gate ikke behandler direkte.",
+  "emailImport.zipModal.supportedInfo": "PDF-filer importeres gjennom vanlig PDF-flyt. Støttede tekst-, bilde- og mediefiler kopieres automatisk til ZIP-undermappen.",
+  "emailImport.zipModal.archive": "{{filename}} — {{count}} ikke-støttet fil(er)",
+  "emailImport.zipModal.more": "…og {{count}} fil(er) til.",
+  "emailImport.zipModal.cancelArchives": "Ikke pakk ut ZIP",
+  "emailImport.zipModal.skipUnsupported": "Hopp over ikke-støttede filer",
+  "emailImport.zipModal.keepUnsupported": "Overfør dem likevel"
 }
