@@ -297,14 +297,40 @@ class EmailImportFeature {
   async startEmailImport() {
     const t=(key,params)=>this.i18n.t(key,params);
     const transport=this.mainProcessTransport;
-    return await this.runEmailImportFlow({
+    const result=await this.runEmailImportFlow({
       chooseSource:()=>transport.chooseEmailImportSource({
         title:t('emailImport.modal.title'),
         emailFilterName:t('commands.importEmail')
       }),
       readSourceBytes:sourcePath=>nodeFsModule.readFileSync(sourcePath),
-      chooseReview:model=>new EmailImportReviewModal(this.app,this,model).openForDecision()
+      chooseReview:model=>new EmailImportReviewModal(this.app,this,model).openForDecision(),
+      notifySuccess:false
     });
+
+    let attachmentResult=null;
+    if(result?.ok && !result.openedExisting && result.pdfPath && this.settings?.emailDragDropExtractAttachments!==false) {
+      attachmentResult=await this.exportPlannedEmailAttachments(result.pdfPath,result.attachmentPlan);
+      this.lastEmailAttachmentExportDiagnostic={
+        at:new Date().toISOString(),
+        parentPdfPath:result.pdfPath,
+        result:deepClone(attachmentResult)
+      };
+    }
+
+    if(result?.ok && result.openedExisting) {
+      new Notice(t('emailImport.notice.existingOpened'),5000);
+    } else if(result?.ok && result.pdfPath) {
+      if(attachmentResult?.ok===false) {
+        new Notice(t('emailImport.notice.dragDropImportedWithAttachmentErrors',{
+          path:result.pdfPath,
+          count:Number(attachmentResult?.exportedCount||0),
+          failed:1
+        }),9000);
+      } else {
+        new Notice(t('emailImport.notice.imported',{path:result.pdfPath}),7000);
+      }
+    }
+    return {...result,attachmentResult};
   }
 
   async emailImportExistingRetainedSourceMatches(pdfPath,sourceBytes) {
