@@ -24,13 +24,23 @@ Practical test 1-11 for this automatic flow was reported OK on 2026-09-29.
 
 ## ZIP attachment relationship rule
 
-A ZIP source attachment remains a single source-level attachment in the immutable email PDF and in the parent metadata relationship block. PDFium Gate therefore keeps the exported original ZIP file as that one-to-one link target.
+A ZIP source attachment remains a single source-level attachment in the immutable email PDF and in the parent metadata relationship block. Email Import exports and links the original ZIP only.
 
-Expanded ZIP members are placed below a dedicated ZIP-named subfolder. They are not appended to the parent's source-attachment link block, because doing so would destroy the existing ordinal correspondence between the attachment list rendered into the archival email PDF and the live relationship block.
+ZIP inspection, user policy, extraction, PDF registration and archive-member relationships are owned by the generic Archive Import module. Email Import does not unpack ZIP files itself.
 
-PDF files found inside the ZIP are still normal PDFium Gate documents. They receive their own document records and parent-email provenance just like directly attached PDFs. The dedicated folder provides visible grouping for all expanded members while the original ZIP preserves the exact source-attachment relationship.
+Expanded ZIP members are placed below a dedicated ZIP-named subfolder. They are not appended to the parent email's source-attachment link block, because doing so would destroy the one-to-one correspondence between the source email attachment list and the live relationship block.
 
-This rule is intentionally non-recursive for nested ZIP files in the first implementation.
+PDF files found inside the ZIP become normal PDFium Gate documents through Archive Import. They receive generic PDF records plus Archive Relationship links to the source ZIP and the other members of the same archive. They are not represented as direct email attachments and therefore do not receive direct `email_import_attachment_*` provenance merely because they were nested inside a ZIP.
+
+The relationship chain is intentionally explicit:
+
+```text
+email PDF -> original ZIP -> extracted archive members
+```
+
+For PDFs, Archive Relationship data is presented in DocumentInfo so users do not need to inspect the technical File Metadata Markdown record.
+
+Nested ZIP files are still non-recursive in this first implementation.
 
 ## Native Obsidian relationship prototype
 
