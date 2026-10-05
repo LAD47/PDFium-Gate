@@ -89,7 +89,6 @@ class ArchiveImportFeature {
           const targetPath=this.normalizeArchiveImportVaultPath(`${targetFolder}/${entry.safePath}`);
           const slash=targetPath.lastIndexOf('/');
           if(slash>=0) await this.ensureArchiveImportFolderChain(targetPath.slice(0,slash));
-          this.suppressArchiveImportPathOnce(targetPath);
           await this.obsidianVaultWriteAdapter.createBinary(targetPath,entry.bytes);
           created.push(targetPath);
         }
