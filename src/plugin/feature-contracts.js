@@ -19,6 +19,7 @@ const PLUGIN_FEATURE_CONTRACTS = Object.freeze({
       "registerMetadataBenchmarkCommands",
       "registerEmailImportCommand",
       "handleArchiveImportVaultCreate",
+      "reconcileArchiveImportVaultFiles",
       "markDocumentRecordLayoutReady",
       "markDocumentRecordMetadataResolved",
       "cancelDocumentRecordIndexWarmup",
@@ -446,6 +447,8 @@ const PLUGIN_FEATURE_CONTRACTS = Object.freeze({
     "mutableStateFields": [
       "archiveImport.suppressedPaths",
       "archiveImport.inFlight",
+      "archiveImport.deferredPaths",
+      "archiveImport.reconcileInFlight",
       "archiveImport.lastResult"
     ]
   }
@@ -557,6 +560,8 @@ const PLUGIN_STATE_FIELD_OWNERS = Object.freeze({
   "documentRecords.benchmarkEventSuppression": "documentRecords",
   "archiveImport.suppressedPaths": "archiveImport",
   "archiveImport.inFlight": "archiveImport",
+  "archiveImport.deferredPaths": "archiveImport",
+  "archiveImport.reconcileInFlight": "archiveImport",
   "archiveImport.lastResult": "archiveImport"
 });
 
