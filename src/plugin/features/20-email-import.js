@@ -340,11 +340,11 @@ class EmailImportFeature {
       deleteFile:adapter.deleteFile,
       saveDocumentMetadataRecordValues:adapter.saveDocumentMetadataRecordValues,
       updateParentAttachmentLinks:model=>this.updateEmailAttachmentLinks(model),
-      chooseUnsupportedArchiveFiles:model=>new EmailZipUnsupportedFilesModal(this.app,this,model).openForDecision(),
       beforeCreateAttachment:targetPath=>{
         this.emailImportVaultTrigger?.suppressPathOnce?.(targetPath);
-        if(/\.zip$/i.test(String(targetPath || ''))) this.ports.suppressArchiveImportPathOnce(targetPath);
+        this.ports.suppressArchiveImportPathOnce(targetPath);
       },
+      routeCreatedAttachments:files=>this.ports.handleArchiveImportVaultFiles(files,{claimSuppressed:true}),
       onRollbackError:(error,targetPath)=>console.warn('[PDFium Gate] Automatic email attachment rollback failed',targetPath,error)
     });
   }
