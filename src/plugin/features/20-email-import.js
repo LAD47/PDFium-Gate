@@ -503,7 +503,12 @@ class EmailImportFeature {
 
     const attachmentsRequired=this.settings?.emailDragDropExtractAttachments!==false;
     const attachmentPhaseOk=!attachmentsRequired || attachmentResult?.ok===true;
-    const importTransactionComplete=Boolean(result?.ok && !result.openedExisting && result.pdfPath && attachmentPhaseOk);
+    const importTransactionComplete=Boolean(
+      result?.ok && result.pdfPath && (
+        (!result.openedExisting && attachmentPhaseOk)
+        || (result.openedExisting && result.duplicate===true)
+      )
+    );
 
     let stagingRemoved=false;
     if(importTransactionComplete && importedSourceBytes) {
