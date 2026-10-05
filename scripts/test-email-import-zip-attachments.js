@@ -235,8 +235,8 @@ function multipartEml({zipOne,zipTwo,directPdf}){
   assert.equal(failed.rolledBack,true);
   assert.equal(failedCreated.size,0);
   assert.equal(failedRegistered.size,0);
-  assert.equal(failedAutoRegistered.size,1,'third PDF was created but never reached metadata processing before the synthetic failure');
-  assert.equal(rollbackRecords.length,2,'both PDF records reached before failure are rolled back, including auto-registered minimal records');
+  assert.equal(failedAutoRegistered.size,0,'all auto-registered PDF records created by the failed transaction are rolled back');
+  assert.equal(rollbackRecords.length,3,'rollback owns every PDF path created by the transaction, including PDFs not yet metadata-processed');
   assert.equal(failedLinksCalled,false);
 
   console.log('Email Import multi-ZIP attachment model OK: complete preflight plan, one sibling attachment folder, multiple ZIP contents merged safely with collision suffixes, no ZIP transport files persisted, PDFs registered, parent links ordered to match the email PDF, and archive provenance retained on nested PDFs.');
