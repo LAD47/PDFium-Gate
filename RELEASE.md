@@ -167,7 +167,7 @@ C:\GitHub\Obsidian-PDFium-Gate-Test
 It must be a normal Git clone of:
 
 ```text
-https://github.com/LAD47/Obsidian-PDFium-Gate-Test.git
+https://github.com/LAD47/PDFium-Gate.git
 ```
 
 Before applying a new project ZIP, verify that the working copy is on `main`, up to date, and clean:
@@ -211,7 +211,7 @@ Get-ChildItem -Force |
     Where-Object { $_.Name -ne '.git' } |
     Remove-Item -Recurse -Force
 
-Expand-Archive -Path "C:\path\to\obsidian-pdfium-gate-test-<version>.zip" -DestinationPath . -Force
+Expand-Archive -Path "C:\path\to\pdfium-gate-<version>.zip" -DestinationPath . -Force
 
 git status
 ```
