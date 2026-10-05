@@ -586,7 +586,7 @@
   "documentInfo.archive.none": "Inga andra filer i detta arkiv.",
   "archiveImport.unsupported.title": "ZIP innehåller filer som PDFium Gate inte hanterar direkt",
   "archiveImport.unsupported.intro": "Valda ZIP-arkiv innehåller {{count}} fil(er) med format som inte hanteras direkt.",
-  "archiveImport.unsupported.supportedInfo": "PDFium Gate kan ändå behålla filerna oförändrade eller hoppa över dem och extrahera de filer som stöds.",
+  "archiveImport.unsupported.supportedInfo": "PDFium Gate kan behålla dessa filer oförändrade eller hoppa över dem. Om du hoppar över dem importeras de inte, och käll-ZIP-filen raderas när resten av importen har slutförts.",
   "archiveImport.unsupported.archive": "{{filename}} — {{count}} fil(er) som inte stöds",
   "archiveImport.unsupported.more": "… och {{count}} till",
   "archiveImport.unsupported.cancelArchives": "Packa inte upp ZIP",
@@ -599,5 +599,7 @@
   "archiveImport.failure.intro": "PDFium Gate kunde inte importera {{name}}. Filer som skapades under försöket har återställts.",
   "archiveImport.failure.question": "ZIP-filen kan vara dold av Obsidians standardinställningar. Vill du behålla den för senare kontroll eller radera den nu?",
   "archiveImport.failure.keep": "Behåll ZIP",
-  "archiveImport.failure.delete": "Radera ZIP"
+  "archiveImport.failure.delete": "Radera ZIP",
+  "archiveImport.notice.success": "ZIP importerad till {{folder}} ({{count}} filer).",
+  "archiveImport.notice.deleteFailed": "Den misslyckade ZIP-filen kunde inte raderas: {{error}}"
 }
