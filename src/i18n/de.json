@@ -591,5 +591,8 @@
   "archiveImport.unsupported.more": "… und {{count}} weitere",
   "archiveImport.unsupported.cancelArchives": "ZIP nicht entpacken",
   "archiveImport.unsupported.skipUnsupported": "Nicht unterstützte Dateien überspringen",
-  "archiveImport.unsupported.keepUnsupported": "Trotzdem behalten"
+  "archiveImport.unsupported.keepUnsupported": "Trotzdem behalten",
+  "archiveImport.openPdf.title": "PDF aus ZIP auswählen",
+  "archiveImport.openPdf.intro": "Dieser E-Mail-Anhang ist ein ZIP-Archiv. Wählen Sie die extrahierte PDF aus, die geöffnet werden soll.",
+  "archiveImport.openPdf.open": "PDF öffnen"
 }
