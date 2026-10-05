@@ -40,6 +40,53 @@ async function parseFixture(filename) {
   assert.doesNotMatch(inlineOutput, /application\/pdf/, 'attachment MIME type is not shown to users');
   assert.doesNotMatch(inlineOutput, /\d+ bytes/, 'attachment byte size is not shown to users');
 
+  const sourceSha=inlineDocument.source.sha256;
+  const attachmentSha=inlineDocument.attachments.find(item=>item.filename==='test-attachment-2.pdf').sha256;
+  const manifestOutput=renderEmailDocumentToHtml(inlineDocument,{
+    attachmentManifest:{
+      folderPath:'Cases/Mail',
+      groups:[
+        {
+          type:'direct',
+          label:'cover.pdf',
+          entries:[{
+            relationIndex:0,
+            relativePath:'cover.pdf',
+            displayName:'cover.pdf',
+            sourceAttachmentSha256:attachmentSha
+          }]
+        },
+        {
+          type:'archive',
+          label:'Dokumenter.zip',
+          entries:[
+            {
+              relationIndex:1,
+              relativePath:'rapport.pdf',
+              displayName:'rapport.pdf',
+              sourceAttachmentSha256:attachmentSha
+            },
+            {
+              relationIndex:2,
+              relativePath:'Vedlegg/vedtak.pdf',
+              displayName:'vedtak.pdf',
+              sourceAttachmentSha256:attachmentSha
+            }
+          ]
+        }
+      ]
+    }
+  });
+  assert.match(manifestOutput, /<strong>cover\.pdf<\/strong>/,'direct attachment appears in planned list');
+  assert.match(manifestOutput, /<strong>Dokumenter\.zip<\/strong><ul>/,'ZIP is shown only as a group heading');
+  assert.match(manifestOutput, /<strong>rapport\.pdf<\/strong>/,'ZIP member appears directly in email PDF');
+  assert.match(manifestOutput, /<strong>vedtak\.pdf<\/strong>/,'nested ZIP member appears directly in email PDF');
+  assert.match(
+    manifestOutput,
+    new RegExp(`obsidian:\\/\\/pdfium-gate-email-attachment\\?source=${sourceSha}&amp;attachment=${attachmentSha}&amp;index=2`),
+    'planned ZIP member receives direct stable attachment link'
+  );
+
   const maliciousDocument = {
     schemaVersion: 1,
     source: { format: 'eml', originalFilename: 'malicious.eml', byteSize: 1, sha256: '0'.repeat(64), retained: false, retainedPath: null },
@@ -76,7 +123,7 @@ async function parseFixture(filename) {
   const plainOutput = renderEmailDocumentToHtml(plainDocument);
   assert.match(plainOutput, /&lt;script&gt;alert\(1\)&lt;\/script&gt;/, 'plain text is HTML-escaped');
 
-  console.log('Email Import safe HTML renderer OK: controlled shell, sanitized message HTML, blocked remote images, CID embedding, stable Obsidian attachment protocol links, escaped plain text and deterministic output verified.');
+  console.log('Email Import safe HTML renderer OK: controlled shell, sanitized message HTML, blocked remote images, CID embedding, complete planned attachment lists including ZIP members, stable direct attachment links, escaped plain text and deterministic output verified.');
 })().catch(error => {
   console.error('Email Import safe HTML renderer check failed.');
   console.error(error && error.stack ? error.stack : error);
