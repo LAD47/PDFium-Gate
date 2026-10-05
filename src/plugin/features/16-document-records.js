@@ -505,6 +505,28 @@ class DocumentRecordsFeature {
     });
   }
 
+  async deleteDocumentMetadataRecordForPdf(pdfPath) {
+    const path=metadataRecordNormalizeVaultPath(pdfPath);
+    if(!path || !/\.pdf$/i.test(path)) return {ok:false,error:'PDF path is missing or invalid'};
+    await this.ensureDocumentRecordIndexReady();
+    return await this.runDocumentRecordOperation(async()=>{
+      const state=this.getDocumentMetadataRecordState(path);
+      if(!state?.ok) return {ok:false,error:state?.error || state?.reason || 'Document metadata state is unsafe'};
+      if(!state.registered) return {ok:true,deleted:false,reason:'not-registered'};
+      const entry=this.state.documentRecords.byId.get(state.id);
+      if(!entry?.file) return {ok:false,error:'Metadata record file could not be resolved'};
+      const recordPath=metadataRecordNormalizeVaultPath(entry.recordPath);
+      await this.obsidianVaultWriteAdapter.deleteFile(entry.file,true);
+      this.removeDocumentRecordEntryByPath(recordPath);
+      this.state.documentRecords.lastError=null;
+      return {ok:true,deleted:true,id:state.id,recordPath};
+    }).catch(error=>{
+      const message=error instanceof Error?error.message:String(error);
+      this.state.documentRecords.lastError=message;
+      return {ok:false,error:message};
+    });
+  }
+
   async createDocumentMetadataRecord(pdfPath,values={},schema=null,repository=null) {
     const path=metadataRecordNormalizeVaultPath(pdfPath);
     if(!path || !/\.pdf$/i.test(path)) return {ok:false,error:'PDF-filsti mangler eller er ugyldig'};
