@@ -17,7 +17,7 @@ function validateGeneratedPdf(pdfBytes) {
   return pdf;
 }
 
-async function generateEmailPdf({ document, printHtmlToPdf }) {
+async function generateEmailPdf({ document, attachmentManifest = null, printHtmlToPdf }) {
   if (typeof printHtmlToPdf !== 'function') {
     throw new TypeError('printHtmlToPdf must be a function.');
   }
@@ -25,7 +25,7 @@ async function generateEmailPdf({ document, printHtmlToPdf }) {
   // The printer never receives source email HTML directly. It receives only the
   // controlled document emitted by the safe renderer. Retained-source provenance
   // stays in plugin metadata and is deliberately not rendered into the user PDF.
-  const html = renderEmailDocumentToHtml(document);
+  const html = renderEmailDocumentToHtml(document,{attachmentManifest});
   const pdfBytes = await printHtmlToPdf({ html });
   return validateGeneratedPdf(pdfBytes);
 }
