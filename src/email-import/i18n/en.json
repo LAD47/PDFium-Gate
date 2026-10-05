@@ -47,8 +47,16 @@
   "settings.emailImport.dragDrop.name": "Automatically import dropped email files",
   "settings.emailImport.dragDrop.description": "When an .eml or .msg file is added to the vault, import it automatically into the same folder without an additional review dialog.",
   "settings.emailImport.attachments.name": "Automatically extract email attachments",
-  "settings.emailImport.attachments.description": "For automatic drag-and-drop imports, extract ordinary attachments next to the email PDF. Inline/CID resources stay embedded in the email rendering.",
+  "settings.emailImport.attachments.description": "For automatic drag-and-drop imports, extract ordinary attachments next to the email PDF. ZIP attachments keep the original ZIP and extract supported contents into a dedicated subfolder. Inline/CID resources stay embedded in the email rendering.",
   "emailImport.notice.dragDropExisting": "This email was already imported. Opened the existing PDF: {{path}}.",
   "emailImport.notice.dragDropImported": "Email imported automatically to {{path}}. Extracted attachments: {{count}}.",
-  "emailImport.notice.dragDropImportedWithAttachmentErrors": "Email imported automatically to {{path}}. Extracted attachments: {{count}}; failed: {{failed}}."
+  "emailImport.notice.dragDropImportedWithAttachmentErrors": "Email imported automatically to {{path}}. Extracted attachments: {{count}}; failed: {{failed}}.",
+  "emailImport.zipModal.title": "ZIP attachment contains file types not handled directly",
+  "emailImport.zipModal.intro": "The ZIP attachment contains {{count}} file(s) whose formats PDFium Gate does not handle directly.",
+  "emailImport.zipModal.supportedInfo": "PDF files are imported through the normal PDF workflow. Supported text, image and media files are copied into the ZIP subfolder automatically.",
+  "emailImport.zipModal.archive": "{{filename}} — {{count}} unsupported file(s)",
+  "emailImport.zipModal.more": "…and {{count}} more file(s).",
+  "emailImport.zipModal.cancelArchives": "Do not extract ZIP",
+  "emailImport.zipModal.skipUnsupported": "Skip unsupported files",
+  "emailImport.zipModal.keepUnsupported": "Copy them anyway"
 }
