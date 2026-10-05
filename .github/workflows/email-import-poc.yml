@@ -6,6 +6,7 @@ on:
     paths:
       - 'src/email-import/**'
       - 'src/archive-import/**'
+      - 'src/metadata/**'
       - 'src/core/integrity/**'
       - 'src/main/email-import-modal.js'
       - 'src/plugin/**'
@@ -15,6 +16,7 @@ on:
       - 'scripts/test-core-integrity.js'
       - 'scripts/test-email-import-*.js'
       - 'scripts/test-archive-import.js'
+      - 'scripts/test-metadata-record-repository.js'
       - 'scripts/check-email-import-runtime-integration.js'
       - 'scripts/check-i18n*.js'
       - 'scripts/verify/**'
