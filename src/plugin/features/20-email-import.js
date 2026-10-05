@@ -82,6 +82,7 @@ class EmailImportFeature {
   async openEmailAttachmentFromProtocol(params) {
     const sourceSha256=String(params?.source || '').trim().toLowerCase();
     const attachmentSha256=String(params?.attachment || '').trim().toLowerCase();
+    const parentPdfPath=EMAIL_IMPORT_RUNTIME.normalizeVaultPath(params?.parentPdfPath || '');
     const parsedIndex=Number.parseInt(String(params?.index ?? ''),10);
     const preferredIndex=Number.isInteger(parsedIndex) && parsedIndex>=0 ? parsedIndex : -1;
 
@@ -106,6 +107,8 @@ class EmailImportFeature {
       const resolvedPaths=new Set();
 
       for(const parent of parents) {
+        const candidateParentPdfPath=EMAIL_IMPORT_RUNTIME.normalizeVaultPath(parent?.pdfPath || '');
+        if(parentPdfPath && candidateParentPdfPath!==parentPdfPath) continue;
         const recordPath=EMAIL_IMPORT_RUNTIME.normalizeVaultPath(parent?.recordPath);
         if(!recordPath) continue;
         const recordFile=this.obsidianVaultReadAdapter.getAbstractFileByPath(recordPath);
