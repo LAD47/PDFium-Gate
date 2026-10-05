@@ -101,6 +101,17 @@ This file is a running list of observations found during practical testing that 
 
 ## Completed items
 
+- **Archive Import: manual ZIP extraction baseline**
+  - Practical test confirmed on 2026-10-05 with a ZIP copied manually into `C:\Obsidian\Vault\05 test`.
+  - Test points 1-5 all passed:
+    - ZIP was detected automatically;
+    - original ZIP remained in the vault;
+    - a dedicated subfolder named from the ZIP was created;
+    - all four synthetic files were extracted;
+    - nested directory structure was preserved.
+  - This confirms Archive Import can own ZIP detection/extraction independently of Email Import.
+  - PDF registration of extracted PDFs remains the next separate practical test.
+
 - **Missing PDF lifecycle and recovery experiment**
   - Practical test confirmed: active record -> unexpected PDF disappearance -> `missing`.
   - Reappearance at the same path did not auto-bind.
