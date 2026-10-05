@@ -421,7 +421,7 @@ class EmailImportFeature {
       chooseReview:async model=>{
         const duplicates=Array.isArray(model?.duplicates)?model.duplicates:[];
         if(duplicates.length) {
-          return await new EmailImportReviewModal(this.app,this,{...model,retentionLocked:true}).openForDecision();
+          return await new EmailImportReviewModal(this.app,this,{...model,retentionLocked:false}).openForDecision();
         }
         return {
           action:'import',
