@@ -23,6 +23,7 @@ const PLUGIN_FEATURE_CONTRACTS = Object.freeze({
       "cancelDocumentRecordIndexWarmup",
       "ensureDocumentRecordIndexReady",
       "getMissingDocumentRecordSummary",
+      "reconcileMissingDocumentRecords",
       "applyDocumentRecordVisibility",
       "toggleDocumentRecordVisibility",
       "clearDocumentRecordVisibility",
@@ -61,7 +62,11 @@ const PLUGIN_FEATURE_CONTRACTS = Object.freeze({
       "lifecycle.originalPdfViewType",
       "lifecycle.overrideInstalled",
       "lifecycle.missingRecordsDialogTimer",
-      "lifecycle.missingRecordsDialogOpen"
+      "lifecycle.missingRecordsDialogOpen",
+      "lifecycle.missingReconciliationLayoutReady",
+      "lifecycle.missingReconciliationMetadataResolved",
+      "lifecycle.missingReconciliationIdleHandle",
+      "lifecycle.missingReconciliationCompleted"
     ]
   },
   "rendererBridge": {
@@ -484,6 +489,10 @@ const PLUGIN_STATE_FIELD_OWNERS = Object.freeze({
   "lifecycle.overrideInstalled": "lifecycle",
   "lifecycle.missingRecordsDialogTimer": "lifecycle",
   "lifecycle.missingRecordsDialogOpen": "lifecycle",
+  "lifecycle.missingReconciliationLayoutReady": "lifecycle",
+  "lifecycle.missingReconciliationMetadataResolved": "lifecycle",
+  "lifecycle.missingReconciliationIdleHandle": "lifecycle",
+  "lifecycle.missingReconciliationCompleted": "lifecycle",
   "lifecycle.pdfRuntimeRegistration": "mainBridgeRouting",
   "navigation.activePdfIdentity": "mainBridgeRouting",
   "navigation.lastContextNavigationState": "contextMenu",
