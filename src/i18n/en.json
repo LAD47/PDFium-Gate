@@ -591,5 +591,8 @@
   "archiveImport.unsupported.more": "… and {{count}} more",
   "archiveImport.unsupported.cancelArchives": "Do not extract ZIP",
   "archiveImport.unsupported.skipUnsupported": "Skip unsupported files",
-  "archiveImport.unsupported.keepUnsupported": "Keep them anyway"
+  "archiveImport.unsupported.keepUnsupported": "Keep them anyway",
+  "archiveImport.openPdf.title": "Choose PDF from ZIP",
+  "archiveImport.openPdf.intro": "This email attachment is a ZIP archive. Choose which extracted PDF to open.",
+  "archiveImport.openPdf.open": "Open PDF"
 }
