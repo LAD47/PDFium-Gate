@@ -101,16 +101,23 @@ This file is a running list of observations found during practical testing that 
 
 ## Completed items
 
-- **Archive Import: manual ZIP extraction baseline**
-  - Practical test confirmed on 2026-10-05 with a ZIP copied manually into `C:\Obsidian\Vault\05 test`.
-  - Test points 1-5 all passed:
+- **Archive Import: manual ZIP extraction and PDF handoff practically confirmed**
+  - Practical tests confirmed on 2026-10-05 by dragging ZIP files into the Obsidian vault.
+  - Important trigger condition: Archive Import currently reacts to the Obsidian-side vault create event. Dragging the ZIP into Obsidian triggers the flow; moving/copying the ZIP directly into the vault with Windows File Explorer did not trigger Archive Import in the practical test environment.
+  - Baseline extraction test points 1-5 all passed:
     - ZIP was detected automatically;
     - original ZIP remained in the vault;
     - a dedicated subfolder named from the ZIP was created;
     - all four synthetic files were extracted;
     - nested directory structure was preserved.
-  - This confirms Archive Import can own ZIP detection/extraction independently of Email Import.
-  - PDF registration of extracted PDFs remains the next separate practical test.
+  - PDF handoff test points 1-7 all passed with a second ZIP containing two PDFs:
+    - ZIP was extracted successfully;
+    - both PDFs appeared in the expected preserved folder structure;
+    - both PDFs received normal PDFium Gate metadata records;
+    - both records had `filemeta_status: active`;
+    - each PDF received its own UUID.
+  - This practically confirms the modular chain: ZIP -> Archive Import -> extracted files -> existing automatic PDF registration.
+  - External filesystem arrival detection for ZIP files is not yet implemented/confirmed and should be treated separately from the current Obsidian drag/drop trigger.
 
 - **Missing PDF lifecycle and recovery experiment**
   - Practical test confirmed: active record -> unexpected PDF disappearance -> `missing`.
