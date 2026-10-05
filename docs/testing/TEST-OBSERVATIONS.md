@@ -80,13 +80,21 @@ This file is a running list of observations found during practical testing that 
    - This deliberately avoids silently deleting metadata together with the PDF and leaves room for a future **Restore from backup** action in the same review flow.
    - Revisit a one-step delete command only if practical use later shows a clear need.
 
-7. **Email/ZIP transport-source redesign: implemented; practical verification pending**
+7. **Email/ZIP transport-source redesign: practical core flow confirmed; localized folder naming pending**
    - **Current replacement model (implemented after the practical UX review on 2026-10-05):** EML/MSG and ZIP are transport sources. A generated email PDF and one sibling attachment folder share the same base name. Direct attachments and members from every ZIP in the email are planned together before durable writes; the email PDF lists the actual imported files, ZIP names are group/provenance labels rather than live link targets, and source ZIP files are not persisted for successful email imports.
    - Exact EML/MSG retention is now advanced opt-in and defaults to off. Automatic staging EML/MSG is deleted only after verified success; failed/cancelled imports keep the source.
    - Manual Archive Import is now transactional: complete preflight before extraction, byte read-back verification, PDF registration and relationship persistence, then source ZIP deletion. Partial failures roll back created output and fresh PDF metadata; the user is warned and chooses **Keep ZIP** or **Delete ZIP**.
    - Archive Import now reconciles externally copied ZIP files on startup and when Obsidian regains focus, covering the Windows File Explorer path without continuous polling.
    - Automated regression is green for multiple ZIPs in one email, one common attachment folder, collision suffixing, direct links in the email PDF, no persisted email ZIP transport files, archive provenance without a live ZIP path, rollback, successful source deletion, failed-source keep/delete, and external ZIP reconciliation.
-   - **Practical verification of this replacement model is still pending.**
+   - Practical verification of the replacement model passed on 2026-10-05 with a synthetic email containing one direct PDF and two ZIP attachments:
+     - automatic EML import succeeded and the staging EML was removed after verified success;
+     - one attachment folder was created for the email;
+     - direct attachment plus members from both ZIPs were present in that one folder;
+     - neither source ZIP remained in the vault;
+     - the generated email PDF showed the complete attachment list, with ZIP filenames acting only as group/provenance labels;
+     - direct links to the direct PDF and PDFs from both ZIPs opened the actual imported PDFs without a ZIP chooser;
+     - DocumentInfo on PDFs from the ZIPs showed the parent-email relationship and original ZIP provenance.
+   - User-facing naming refinement requested after that successful practical test: the attachment folder should have a localized suffix rather than exactly matching the email PDF base name. Norwegian Bokmål uses ` Vedlegg` (for example `2026-10-05 - Subject Vedlegg/`); equivalent localized suffixes are implemented for all supported UI locales. Automated regression covers the naming/collision rule; practical verification of the localized folder name remains pending.
    - Historical prototype notes below are retained as evidence of the path that led to the redesign; they are superseded for new imports.
    - The first Email Import-specific ZIP implementation was abandoned after practical testing exposed the architectural duplication.
    - Email Import now owns only the source email relationship: it exports the original ZIP beside the generated email PDF and links that ZIP as the source attachment.
