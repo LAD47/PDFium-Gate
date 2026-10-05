@@ -47,7 +47,7 @@
   "settings.emailImport.dragDrop.name": "Importer automatiquement les e-mails déposés",
   "settings.emailImport.dragDrop.description": "Lorsqu’un fichier .eml ou .msg est ajouté au coffre, il est importé automatiquement dans le même dossier sans boîte de dialogue supplémentaire.",
   "settings.emailImport.attachments.name": "Extraire automatiquement les pièces jointes",
-  "settings.emailImport.attachments.description": "Lors des imports automatiques par glisser-déposer, les pièces jointes ordinaires sont extraites à côté du PDF de l'e-mail. Pour les ZIP, l'archive d'origine est conservée et le contenu pris en charge est extrait dans un sous-dossier dédié. Les ressources inline/CID restent intégrées au rendu de l'e-mail.",
+  "settings.emailImport.attachments.description": "Les pièces jointes ordinaires sont placées dans un dossier portant le même nom de base que le PDF du courriel. Les ZIP sont traités comme des conteneurs de transport : leur contenu est vérifié avant import puis extrait dans le même dossier, et le ZIP lui-même n'est pas conservé après un import réussi.",
   "emailImport.notice.dragDropExisting": "Cet e-mail avait déjà été importé. Le PDF existant a été ouvert : {{path}}.",
   "emailImport.notice.dragDropImported": "E-mail importé automatiquement vers {{path}}. Pièces jointes extraites : {{count}}.",
   "emailImport.notice.dragDropImportedWithAttachmentErrors": "E-mail importé automatiquement vers {{path}}. Pièces jointes extraites : {{count}} ; échecs : {{failed}}.",
@@ -58,5 +58,7 @@
   "emailImport.zipModal.more": "…et {{count}} fichier(s) supplémentaire(s).",
   "emailImport.zipModal.cancelArchives": "Ne pas extraire le ZIP",
   "emailImport.zipModal.skipUnsupported": "Ignorer les fichiers non pris en charge",
-  "emailImport.zipModal.keepUnsupported": "Les copier quand même"
+  "emailImport.zipModal.keepUnsupported": "Les copier quand même",
+  "settings.emailImport.retainSource.name": "Conserver l'EML/MSG original après un import réussi",
+  "settings.emailImport.retainSource.description": "Option avancée. Désactivée par défaut. Lorsqu'elle est activée, la source EML/MSG originale exacte est conservée dans le stockage masqué du plugin après un import vérifié."
 }
