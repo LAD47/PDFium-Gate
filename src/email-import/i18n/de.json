@@ -60,5 +60,6 @@
   "emailImport.zipModal.skipUnsupported": "Nicht unterstützte Dateien überspringen",
   "emailImport.zipModal.keepUnsupported": "Trotzdem kopieren",
   "settings.emailImport.retainSource.name": "Originale EML/MSG nach erfolgreichem Import behalten",
-  "settings.emailImport.retainSource.description": "Erweiterte Option. Standardmäßig deaktiviert. Wenn aktiviert, wird die exakte ursprüngliche EML/MSG-Quelle nach einem erfolgreichen, verifizierten Import im versteckten Plugin-Speicher behalten."
+  "settings.emailImport.retainSource.description": "Erweiterte Option. Standardmäßig deaktiviert. Wenn aktiviert, wird die exakte ursprüngliche EML/MSG-Quelle nach einem erfolgreichen, verifizierten Import im versteckten Plugin-Speicher behalten.",
+  "emailImport.attachments.folderNameSuffix": "Anhänge"
 }
