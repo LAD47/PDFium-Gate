@@ -47,8 +47,16 @@
   "settings.emailImport.dragDrop.name": "Importer automatiquement les e-mails déposés",
   "settings.emailImport.dragDrop.description": "Lorsqu’un fichier .eml ou .msg est ajouté au coffre, il est importé automatiquement dans le même dossier sans boîte de dialogue supplémentaire.",
   "settings.emailImport.attachments.name": "Extraire automatiquement les pièces jointes",
-  "settings.emailImport.attachments.description": "Pour les imports automatiques par glisser-déposer, les pièces jointes ordinaires sont placées à côté du PDF de l’e-mail. Les ressources inline/CID restent intégrées au rendu de l’e-mail.",
+  "settings.emailImport.attachments.description": "Lors des imports automatiques par glisser-déposer, les pièces jointes ordinaires sont extraites à côté du PDF de l'e-mail. Pour les ZIP, l'archive d'origine est conservée et le contenu pris en charge est extrait dans un sous-dossier dédié. Les ressources inline/CID restent intégrées au rendu de l'e-mail.",
   "emailImport.notice.dragDropExisting": "Cet e-mail avait déjà été importé. Le PDF existant a été ouvert : {{path}}.",
   "emailImport.notice.dragDropImported": "E-mail importé automatiquement vers {{path}}. Pièces jointes extraites : {{count}}.",
-  "emailImport.notice.dragDropImportedWithAttachmentErrors": "E-mail importé automatiquement vers {{path}}. Pièces jointes extraites : {{count}} ; échecs : {{failed}}."
+  "emailImport.notice.dragDropImportedWithAttachmentErrors": "E-mail importé automatiquement vers {{path}}. Pièces jointes extraites : {{count}} ; échecs : {{failed}}.",
+  "emailImport.zipModal.title": "La pièce jointe ZIP contient des types de fichiers non pris en charge directement",
+  "emailImport.zipModal.intro": "La pièce jointe ZIP contient {{count}} fichier(s) dont PDFium Gate ne traite pas directement le format.",
+  "emailImport.zipModal.supportedInfo": "Les PDF sont importés via le flux PDF normal. Les fichiers texte, image et média pris en charge sont copiés automatiquement dans le sous-dossier ZIP.",
+  "emailImport.zipModal.archive": "{{filename}} — {{count}} fichier(s) non pris en charge",
+  "emailImport.zipModal.more": "…et {{count}} fichier(s) supplémentaire(s).",
+  "emailImport.zipModal.cancelArchives": "Ne pas extraire le ZIP",
+  "emailImport.zipModal.skipUnsupported": "Ignorer les fichiers non pris en charge",
+  "emailImport.zipModal.keepUnsupported": "Les copier quand même"
 }
