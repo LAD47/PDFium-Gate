@@ -56,7 +56,7 @@ class DocumentInfoFeature {
       const markdown=String(await this.obsidianVaultReadAdapter.readText(recordFile));
       const relation=ARCHIVE_IMPORT_RUNTIME.extractArchiveRelationship(markdown);
       if(!host.isConnected || documentInfoFilePath(view)!==path) return null;
-      if(!relation?.sourceZipPath) {
+      if(!relation?.sourceZipPath && !relation?.sourceArchiveName && !relation?.parentDocumentPath) {
         host.remove();
         return null;
       }
@@ -68,7 +68,14 @@ class DocumentInfoFeature {
       const sourceRow=host.createDiv({cls:'pdfium-document-info-relation-row'});
       sourceRow.createDiv({cls:'pdfium-document-info-label',text:t('documentInfo.archive.source')});
       const sourceValue=sourceRow.createDiv({cls:'pdfium-document-info-relation-value'});
-      this.documentInfoArchiveLink(sourceValue,relation.sourceZipPath,path);
+      if(relation.parentDocumentPath) {
+        this.documentInfoArchiveLink(sourceValue,relation.parentDocumentPath,path);
+        if(relation.sourceArchiveName) sourceValue.createEl('span',{text:` · ${relation.sourceArchiveName}`});
+      } else if(relation.sourceZipPath) {
+        this.documentInfoArchiveLink(sourceValue,relation.sourceZipPath,path);
+      } else {
+        sourceValue.createEl('span',{text:String(relation.sourceArchiveName || '')});
+      }
 
       const relatedRow=host.createDiv({cls:'pdfium-document-info-relation-row'});
       relatedRow.createDiv({cls:'pdfium-document-info-label',text:t('documentInfo.archive.related')});
