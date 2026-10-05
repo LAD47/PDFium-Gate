@@ -244,10 +244,14 @@ class ArchiveImportFeature {
       }
 
       const createdPaths=createdEntries.map(item=>item.path);
+      for(const createdEntry of createdEntries) {
+        if(createdEntry.support==='pdf' && !registeredPdfPaths.includes(createdEntry.path)) {
+          registeredPdfPaths.push(createdEntry.path);
+        }
+      }
       const relationshipResults=[];
       for(const createdEntry of createdEntries) {
         if(createdEntry.support!=='pdf') continue;
-        if(!registeredPdfPaths.includes(createdEntry.path)) registeredPdfPaths.push(createdEntry.path);
         const relationship=await this.writeArchiveRelationshipsForPdf(
           createdEntry.path,
           {sourceArchiveName,sourceArchiveSha256,parentDocumentPath},
