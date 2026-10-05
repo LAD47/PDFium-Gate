@@ -19,7 +19,7 @@ The suffix is localized. In Norwegian Bokmål the folder ends in ` Vedlegg`; in 
 
 All ordinary user-facing attachments belong below that one folder.
 
-Direct attachments are placed there directly. Members of every ZIP attachment in the same email are also placed below that same folder while preserving the ZIP's internal relative structure where possible.
+Direct attachments are placed there directly. Members of every ZIP attachment in the same email are flattened into that same folder. ZIP-internal directories are not reproduced in the user-facing email attachment layout; the original member path is retained as provenance.
 
 One collision allocator covers the complete attachment plan. It prevents silent overwrite across direct attachments and across multiple ZIPs.
 
@@ -31,9 +31,8 @@ Example:
 ├── cover.pdf
 ├── rapport.pdf
 ├── vedtak.pdf
-└── Vedlegg/
-    ├── notat.txt
-    └── notat (2).txt
+├── notat.txt
+└── notat (2).txt
 ```
 
 ## Email PDF attachment presentation
@@ -72,9 +71,9 @@ It contains the actual imported attachment paths in the same stable order used b
 <!-- pdfium-gate:email-attachments:start -->
 - [[Cases/2026-10-05 - Subject Vedlegg/cover.pdf]]
 - [[Cases/2026-10-05 - Subject Vedlegg/rapport.pdf]]
-- [[Cases/2026-10-05 - Subject Vedlegg/Vedlegg/notat.txt]]
+- [[Cases/2026-10-05 - Subject Vedlegg/notat.txt]]
 - [[Cases/2026-10-05 - Subject Vedlegg/vedtak.pdf]]
-- [[Cases/2026-10-05 - Subject Vedlegg/Vedlegg/notat (2).txt]]
+- [[Cases/2026-10-05 - Subject Vedlegg/notat (2).txt]]
 <!-- pdfium-gate:email-attachments:end -->
 ```
 
