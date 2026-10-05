@@ -579,5 +579,9 @@
   "settings.documentRegister.registerExisting.confirm": "PDFium Gate fandt {{count}} uregistrerede PDF-filer ud af i alt {{total}} bruger-PDF-filer. Problemer sprunget over: {{problems}}. Registrer dem nu?",
   "settings.documentRegister.registerExisting.success": "Registrerede {{created}} PDF-filer. Allerede registreret: {{registered}}. Problemer sprunget over: {{problems}}.",
   "settings.documentRegister.registerExisting.failedUnknown": "Ukendt registreringsfejl",
-  "settings.documentRegister.registerExisting.failed": "Kunne ikke registrere eksisterende PDF-filer: {{error}}"
+  "settings.documentRegister.registerExisting.failed": "Kunne ikke registrere eksisterende PDF-filer: {{error}}",
+  "documentInfo.archive.title": "Bilag fra ZIP",
+  "documentInfo.archive.source": "Kildearkiv",
+  "documentInfo.archive.related": "Filer i samme arkiv",
+  "documentInfo.archive.none": "Ingen andre filer i dette arkiv."
 }
