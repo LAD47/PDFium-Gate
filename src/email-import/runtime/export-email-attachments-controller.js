@@ -245,5 +245,156 @@ async function runAutomaticEmailAttachmentExport({
 module.exports = {
   normalizeVaultPath,
   suggestedAttachmentVaultPath,
-  runAutomaticEmailAttachmentExport
+  runAutomaticEmailAttachmentExport,
+  runPlannedEmailAttachmentExport
 };
+
+
+async function runPlannedEmailAttachmentExport({
+  parentPdfPath,
+  plan,
+  ensureDocumentRecordIndexReady,
+  getDocumentMetadataRecordState,
+  getMetadataSchemaSnapshot,
+  ensureTargetFolders,
+  createBinary,
+  readBinary,
+  deleteFile,
+  deleteFolder,
+  deleteDocumentMetadataRecordForPdf,
+  saveDocumentMetadataRecordValues,
+  updateParentAttachmentLinks,
+  onRollbackError,
+  services
+}) {
+  if(!parentPdfPath) return {ok:false,reason:'no-parent-pdf'};
+  if(!plan || !Array.isArray(plan.entries)) return {ok:false,reason:'attachment-plan-missing'};
+
+  const ensureIndex=requireFunction('ensureDocumentRecordIndexReady',ensureDocumentRecordIndexReady);
+  const getRecordState=requireFunction('getDocumentMetadataRecordState',getDocumentMetadataRecordState);
+  const getSchema=requireFunction('getMetadataSchemaSnapshot',getMetadataSchemaSnapshot);
+  const ensureFolders=requireFunction('ensureTargetFolders',ensureTargetFolders);
+  const create=requireFunction('createBinary',createBinary);
+  const read=requireFunction('readBinary',readBinary);
+  const remove=requireFunction('deleteFile',deleteFile);
+  const removeFolder=typeof deleteFolder==='function'?deleteFolder:null;
+  const removeRecord=typeof deleteDocumentMetadataRecordForPdf==='function'?deleteDocumentMetadataRecordForPdf:null;
+  const saveMetadata=requireFunction('saveDocumentMetadataRecordValues',saveDocumentMetadataRecordValues);
+  const updateLinks=requireFunction('updateParentAttachmentLinks',updateParentAttachmentLinks);
+  const runtime=buildServices(services);
+
+  await ensureIndex();
+  const parentState=getRecordState(parentPdfPath);
+  if(!parentState?.ready || !parentState?.ok || !parentState?.registered || !parentState?.values?.email_import_source_sha256) {
+    return {ok:false,reason:'not-email-import'};
+  }
+  const schema=getSchema();
+  if(!schema) throw new Error('Metadata schema is unavailable.');
+
+  const created=[];
+  const registeredPdfPaths=[];
+  const relationPaths=[];
+  let relationWritten=false;
+
+  async function rollback(primaryError) {
+    if(relationWritten) {
+      try { await updateLinks({parentPdfPath,parentRecordPath:parentState.recordPath,attachmentPaths:[]}); }
+      catch(error){ if(typeof onRollbackError==='function') onRollbackError(error,'parent-attachment-links'); }
+    }
+    for(const pdfPath of registeredPdfPaths.slice().reverse()) {
+      if(!removeRecord) continue;
+      try { await removeRecord(pdfPath); }
+      catch(error){ if(typeof onRollbackError==='function') onRollbackError(error,pdfPath); }
+    }
+    for(const item of created.slice().reverse()) {
+      try { await remove(item.file); }
+      catch(error){ if(typeof onRollbackError==='function') onRollbackError(error,item.path); }
+    }
+    if(removeFolder && plan.folderPath) {
+      try { await removeFolder(plan.folderPath); }
+      catch(error){ if(typeof onRollbackError==='function') onRollbackError(error,plan.folderPath); }
+    }
+    return {
+      ok:false,
+      reason:'attachment-transaction-failed',
+      error:primaryError instanceof Error?primaryError.message:String(primaryError),
+      rolledBack:true,
+      parentPdfPath,
+      folderPath:plan.folderPath,
+      exported:[],
+      exportedCount:0,
+      attachmentCount:Number(plan.attachmentCount||0),
+      archiveCount:Number(plan.archiveCount||0)
+    };
+  }
+
+  try {
+    for(const entry of plan.entries) {
+      const targetPath=normalizeVaultPath(`${plan.folderPath}/${entry.relativePath}`);
+      await ensureFolders(targetPath);
+      const file=await create(targetPath,entry.bytes);
+      if(!file) throw new Error(`Attachment write returned no vault file: ${targetPath}`);
+      const readBack=Buffer.from(await read(file));
+      const expected=Buffer.from(entry.bytes||[]);
+      if(!readBack.equals(expected)) throw new Error(`Attachment read-back mismatch: ${targetPath}`);
+      created.push({path:targetPath,file,entry});
+      relationPaths.push(targetPath);
+    }
+
+    for(const item of created) {
+      const entry=item.entry;
+      if(entry.support!=='pdf') continue;
+      const targetState=getRecordState(item.path);
+      if(targetState?.registered) throw new Error(`Attachment target is already registered: ${item.path}`);
+      if(targetState?.ok===false) throw new Error(targetState.error||targetState.reason||`Unsafe metadata state: ${item.path}`);
+
+      const provenance=runtime.buildEmailAttachmentImportRecordValues({
+        schema,
+        parentRecordId:parentState.id,
+        sourceSha256:String(parentState.values.email_import_source_sha256||''),
+        attachment:{
+          id:entry.attachmentId,
+          filename:entry.archiveMemberPath || entry.sourceAttachmentFilename || entry.displayName,
+          contentType:entry.contentType,
+          sha256:entry.sha256,
+          archiveName:entry.archiveName,
+          archiveSha256:entry.archiveSha256,
+          archiveMemberPath:entry.archiveMemberPath
+        }
+      });
+      const saved=await saveMetadata(item.path,provenance.values);
+      if(!saved?.ok) throw new Error(saved?.error||`Attachment metadata registration failed: ${item.path}`);
+      registeredPdfPaths.push(item.path);
+    }
+
+    const relation=await updateLinks({
+      parentPdfPath,
+      parentRecordPath:parentState.recordPath,
+      attachmentPaths:relationPaths
+    });
+    if(relation?.ok===false) throw new Error(relation.error||'Attachment link relation update failed.');
+    relationWritten=true;
+
+    return {
+      ok:true,
+      parentPdfPath,
+      folderPath:plan.folderPath,
+      attachmentCount:Number(plan.attachmentCount||0),
+      archiveCount:Number(plan.archiveCount||0),
+      exportedCount:created.length,
+      linkedCount:Number.isInteger(relation?.linkedCount)?relation.linkedCount:relationPaths.length,
+      exported:created.map(item=>({
+        path:item.path,
+        filename:item.entry.displayName,
+        sha256:item.entry.sha256,
+        pdfRegistered:item.entry.support==='pdf',
+        archiveName:item.entry.archiveName||null,
+        archiveMemberPath:item.entry.archiveMemberPath||null
+      })),
+      failures:[],
+      relationError:null
+    };
+  } catch(error) {
+    return await rollback(error);
+  }
+}
