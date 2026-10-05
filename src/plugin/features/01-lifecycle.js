@@ -54,6 +54,8 @@ async onload() {
     this.obsidianMetadataCacheAdapter = createObsidianMetadataCacheAdapter({ metadataCache:this.app.metadataCache });
     this.obsidianPluginRegistrationAdapter.registerEvent(this.obsidianMetadataCacheAdapter.onResolved(() => {
       this.ports.markDocumentRecordMetadataResolved();
+      this.state.lifecycle.missingReconciliationMetadataResolved=true;
+      this.scheduleOfflineMissingReconciliation();
     }));
     this.obsidianFrontmatterAdapter = createObsidianFrontmatterAdapter({ fileManager:this.app.fileManager });
     this.obsidianVaultReadAdapter = createObsidianVaultReadAdapter({ vault:this.app.vault, TFolderClass:TFolder });
@@ -246,11 +248,44 @@ async onload() {
         }
       }));
       this.ports.markDocumentRecordLayoutReady();
+      this.state.lifecycle.missingReconciliationLayoutReady=true;
+      this.scheduleOfflineMissingReconciliation();
       void this.ports.reconcileOpenPdfRuntimes('layout-ready');
       const active = this.pdfLeafAdapter?.getActiveLeaf?.();
       void this.ports.syncActivePdfIdentity('layout-ready', active?.ok ? active.leaf : null);
       this.ports.handleDocumentInfoActiveLeafChange(active?.ok ? active.leaf : null);
     });
+  }
+
+  scheduleOfflineMissingReconciliation() {
+    if(this.state.lifecycle.missingReconciliationCompleted) return false;
+    if(!this.state.lifecycle.missingReconciliationLayoutReady || !this.state.lifecycle.missingReconciliationMetadataResolved) return false;
+    if(this.state.lifecycle.missingReconciliationIdleHandle) return false;
+    const scheduler=this.obsidianWorkspaceLifecycleAdapter;
+    if(!scheduler || typeof scheduler.scheduleIdle!=='function') {
+      void this.runOfflineMissingReconciliation();
+      return true;
+    }
+    this.state.lifecycle.missingReconciliationIdleHandle=scheduler.scheduleIdle(()=>{
+      this.state.lifecycle.missingReconciliationIdleHandle=null;
+      void this.runOfflineMissingReconciliation();
+    });
+    return true;
+  }
+
+  async runOfflineMissingReconciliation() {
+    if(this.state.lifecycle.missingReconciliationCompleted) return {ok:true,ignored:true,reason:'already-completed'};
+    this.state.lifecycle.missingReconciliationCompleted=true;
+    try {
+      const result=await this.ports.reconcileMissingDocumentRecords();
+      this.ports.refreshDocumentInfoViews('offline-missing-reconciliation');
+      if(result?.ok && Number(result.totalMissingCount || 0)>0) this.scheduleMissingDocumentRecordsDialog();
+      return result;
+    } catch(error) {
+      const message=error instanceof Error?error.message:String(error);
+      console.warn(`[PDFium Gate ${PLUGIN_VERSION}] offline missing-document reconciliation failed`,error);
+      return {ok:false,error:message};
+    }
   }
 
   scheduleMissingDocumentRecordsDialog() {
@@ -332,6 +367,8 @@ async onload() {
       if(this.state.lifecycle.missingRecordsDialogTimer) window.clearTimeout(this.state.lifecycle.missingRecordsDialogTimer);
       this.state.lifecycle.missingRecordsDialogTimer=null;
       this.state.lifecycle.missingRecordsDialogOpen=false;
+      if(this.state.lifecycle.missingReconciliationIdleHandle) this.obsidianWorkspaceLifecycleAdapter?.cancelIdle?.(this.state.lifecycle.missingReconciliationIdleHandle);
+      this.state.lifecycle.missingReconciliationIdleHandle=null;
     } catch (_) {}
 
     if (this.mainProcessTransport?.getCapabilities?.().loaded) {
