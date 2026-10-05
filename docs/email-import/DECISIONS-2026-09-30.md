@@ -1,3 +1,7 @@
+> [!IMPORTANT]
+> **Historical document — partially superseded.**
+> This file preserves the 2026-09-30 attachment-link experiment and practical evidence. The physical click / owned-protocol architecture remains relevant, but current resolution is scoped to the clicked parent email PDF and does not rehash mutable exported attachments before opening. New email imports link directly to actual imported ZIP members rather than a visible source ZIP. See `ATTACHMENT-PDF-LINKS.md` and `RUNTIME-INTEGRATION.md` for the current contract.
+
 # Email Import decisions - 2026-09-30
 
 This note records the attachment-PDF-link decisions reached through practical Obsidian testing on 2026-09-30.
