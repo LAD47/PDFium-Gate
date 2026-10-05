@@ -259,7 +259,7 @@ async onload() {
 
   scheduleOfflineMissingReconciliation() {
     if(this.state.lifecycle.missingReconciliationCompleted) return false;
-    if(!this.state.lifecycle.missingReconciliationLayoutReady || !this.state.lifecycle.missingReconciliationMetadataResolved) return false;
+    if(!this.state.lifecycle.missingReconciliationLayoutReady) return false;
     if(this.state.lifecycle.missingReconciliationIdleHandle) return false;
     const scheduler=this.obsidianWorkspaceLifecycleAdapter;
     if(!scheduler || typeof scheduler.scheduleIdle!=='function') {
