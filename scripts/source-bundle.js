@@ -146,7 +146,8 @@ const PLUGIN_FEATURE_ORDER = Object.freeze([
   '17-document-record-visibility.js',
   '18-document-register-bases.js',
   '19-metadata-benchmark.js',
-  '20-email-import.js'
+  '20-email-import.js',
+  '21-archive-import.js'
 ]);
 
 function read(root, rel) {
@@ -235,6 +236,33 @@ function buildMetadataSource(root) {
   return METADATA_SOURCE_ORDER.map(file => moduleBody(root, `src/metadata/${file}`)).join('\n');
 }
 
+function buildArchiveImportSource(root) {
+  const result = esbuild.buildSync({
+    entryPoints:[path.join(root, 'src/archive-import/runtime-entry.js')],
+    bundle:true,
+    platform:'node',
+    format:'cjs',
+    target:['node20'],
+    write:false,
+    sourcemap:false,
+    minify:false,
+    logLevel:'silent'
+  });
+  const output = result.outputFiles?.[0]?.text;
+  if (!output) throw new Error('Archive Import runtime bundle produced no output');
+  return [
+    '// BEGIN GENERATED ARCHIVE IMPORT RUNTIME',
+    'const ARCHIVE_IMPORT_RUNTIME = (() => {',
+    '  const module = { exports:{} };',
+    '  const exports = module.exports;',
+    output,
+    '  return module.exports;',
+    '})();',
+    '// END GENERATED ARCHIVE IMPORT RUNTIME',
+    ''
+  ].join('\n');
+}
+
 function buildEmailImportSource(root) {
   const result = esbuild.buildSync({
     entryPoints:[path.join(root, 'src/email-import/runtime-entry.js')],
@@ -314,6 +342,7 @@ module.exports = {
   buildRendererPlatformSource,
   buildRendererFoundationSource,
   buildMetadataSource,
+  buildArchiveImportSource,
   buildEmailImportSource,
   buildRendererPostNormalizationCoreSource,
   buildNormalizationSource,
