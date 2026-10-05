@@ -368,7 +368,7 @@ The generated email PDF is rendered from the same preflight plan. Its attachment
 
 Multiple ZIP attachments in one email are not expanded into separate top-level ZIP-named folders.
 
-Their members are merged into the one sibling attachment folder belonging to the email PDF while each ZIP's internal directory structure is preserved where possible. A single global collision allocator prevents silent overwrites across direct attachments and all ZIP members.
+Their members are flattened into the one sibling attachment folder belonging to the email PDF. ZIP-internal directory structure is not exposed as user-facing subfolders for email attachments. The original archive-member path is retained as technical provenance. A single global collision allocator prevents silent overwrites across direct attachments and all ZIP members.
 
 Nested PDF records retain source provenance through the parent email document plus the original archive filename, archive SHA-256 and member path. The source ZIP itself does not need to remain in the vault.
 
