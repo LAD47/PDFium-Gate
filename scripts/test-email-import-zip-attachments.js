@@ -98,9 +98,9 @@ function multipartEml({zipOne,zipTwo,directPdf}){
   assert.deepEqual(plan.entries.map(entry=>entry.relativePath),[
     'cover.pdf',
     'rapport.pdf',
-    'Vedlegg/notat.txt',
+    'notat.txt',
     'vedtak.pdf',
-    'Vedlegg/notat (2).txt'
+    'notat (2).txt'
   ]);
   assert.deepEqual(plan.groups.map(group=>[group.type,group.label,group.entries.length]),[
     ['direct','cover.pdf',1],
@@ -240,7 +240,7 @@ function multipartEml({zipOne,zipTwo,directPdf}){
   assert.equal(rollbackRecords.length,3,'rollback owns every PDF path created by the transaction, including PDFs not yet metadata-processed');
   assert.equal(failedLinksCalled,false);
 
-  console.log('Email Import multi-ZIP attachment model OK: complete preflight plan, one localized sibling attachment folder, multiple ZIP contents merged safely with collision suffixes, no ZIP transport files persisted, PDFs registered, parent links ordered to match the email PDF, and archive provenance retained on nested PDFs.');
+  console.log('Email Import multi-ZIP attachment model OK: complete preflight plan, one localized flat sibling attachment folder, multiple ZIP contents merged safely with collision suffixes, no ZIP transport files persisted, PDFs registered, parent links ordered to match the email PDF, and archive provenance retained on nested PDFs.');
 })().catch(error=>{
   console.error('Email Import multi-ZIP attachment model check failed.');
   console.error(error && error.stack ? error.stack : error);
