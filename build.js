@@ -2,7 +2,7 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
-const { moduleBody, buildAnnotatorSource, buildI18nSource, buildSharedBridgeSource, buildRendererPlatformSource, buildRendererFoundationSource, buildRendererPostNormalizationCoreSource, buildNormalizationSource, buildMetadataSource, buildEmailImportSource, buildMainBridgeSource, buildPluginSource } = require('./scripts/source-bundle');
+const { moduleBody, buildAnnotatorSource, buildI18nSource, buildSharedBridgeSource, buildRendererPlatformSource, buildRendererFoundationSource, buildRendererPostNormalizationCoreSource, buildNormalizationSource, buildMetadataSource, buildArchiveImportSource, buildEmailImportSource, buildMainBridgeSource, buildPluginSource } = require('./scripts/source-bundle');
 
 const ROOT = __dirname;
 function read(p){ return fs.readFileSync(path.join(ROOT,p),'utf8').replace(/\r\n?/g,'\n'); }
@@ -13,6 +13,7 @@ const platformSource = buildRendererPlatformSource(ROOT);
 const rendererFoundation = buildRendererFoundationSource(ROOT);
 const rendererCore = buildRendererPostNormalizationCoreSource(ROOT);
 const metadataSource = buildMetadataSource(ROOT);
+const archiveImportSource = buildArchiveImportSource(ROOT);
 const emailImportSource = buildEmailImportSource(ROOT);
 const normalization = buildNormalizationSource(ROOT);
 const bridge = buildMainBridgeSource(ROOT);
@@ -27,6 +28,7 @@ const fragments = [
   normalization,
   rendererCore,
   metadataSource,
+  archiveImportSource,
   emailImportSource,
   '__PDFIUM_GATE_EMBEDDED_MAIN_BRIDGE__',
   read('src/main/category-modals.js'),
