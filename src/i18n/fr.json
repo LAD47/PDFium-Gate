@@ -579,5 +579,9 @@
   "settings.documentRegister.registerExisting.confirm": "PDFium Gate a trouvé {{count}} PDF non enregistrés sur {{total}} PDF utilisateur. Problèmes ignorés : {{problems}}. Les enregistrer maintenant ?",
   "settings.documentRegister.registerExisting.success": "{{created}} PDF enregistrés. Déjà enregistrés : {{registered}}. Problèmes ignorés : {{problems}}.",
   "settings.documentRegister.registerExisting.failedUnknown": "Erreur d’enregistrement inconnue",
-  "settings.documentRegister.registerExisting.failed": "Impossible d’enregistrer les PDF existants : {{error}}"
+  "settings.documentRegister.registerExisting.failed": "Impossible d’enregistrer les PDF existants : {{error}}",
+  "documentInfo.archive.title": "Pièces jointes du ZIP",
+  "documentInfo.archive.source": "Archive source",
+  "documentInfo.archive.related": "Fichiers de la même archive",
+  "documentInfo.archive.none": "Aucun autre fichier dans cette archive."
 }
