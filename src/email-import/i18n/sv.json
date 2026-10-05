@@ -60,5 +60,6 @@
   "emailImport.zipModal.skipUnsupported": "Hoppa över filer som inte stöds",
   "emailImport.zipModal.keepUnsupported": "Kopiera dem ändå",
   "settings.emailImport.retainSource.name": "Behåll original EML/MSG efter lyckad import",
-  "settings.emailImport.retainSource.description": "Avancerat val. Av som standard. När det är aktiverat behålls den exakta ursprungliga EML/MSG-källan i dold pluginlagring efter en lyckad och verifierad import."
+  "settings.emailImport.retainSource.description": "Avancerat val. Av som standard. När det är aktiverat behålls den exakta ursprungliga EML/MSG-källan i dold pluginlagring efter en lyckad och verifierad import.",
+  "emailImport.attachments.folderNameSuffix": "Bilagor"
 }
