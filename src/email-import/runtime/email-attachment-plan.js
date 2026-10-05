@@ -123,7 +123,10 @@ function buildEmailAttachmentPlan({document,parentPdfPath,folderLabel=''}){
       const extracted=extractZipAttachment(attachment,inspection,{includeUnsupported:true});
       const group={type:'archive',label:sourceFilename,entries:[]};
       for(const member of extracted){
-        const relativePath=uniqueRelativePath(member.safePath,used);
+        // Email attachments use one flat, user-facing attachment folder.
+        // Preserve the original archive member path separately as provenance.
+        const flatName=path.posix.basename(String(member.safePath || member.originalPath || 'attachment'));
+        const relativePath=uniqueRelativePath(flatName,used);
         const entry=outputEntry({
           relationIndex:relationIndex++,
           relativePath,
