@@ -27,6 +27,7 @@
 12. [Internationalization](docs/architecture/12-i18n.md) — UI translation vs canonical persistent data.
 13. [Testing and verification](docs/architecture/13-testing-and-verification.md) — verify gates, architecture completion and benchmarks.
 14. [Release readiness](docs/architecture/14-release-readiness.md) — public versioning, migration review and distribution direction.
+15. [Email Import / Archive Import](docs/email-import/README.md) — EML/MSG transport-source import, transactional attachments, ZIP handling, provenance and current/historical decision map.
 
 ## Change rule
 
