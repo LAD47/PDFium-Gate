@@ -64,6 +64,10 @@ function createHost(zipBytes,{existing=[]}={}){
     getAbstractFileByPath(path){ return nodes.get(path)||createdFiles.get(path)||null; },
     getBasePath(){ return 'C:/test-vault'; }
   };
+  host.obsidianMetadataCacheAdapter={
+    getFrontmatter(file){ return file?.frontmatter || null; },
+    resolveLinkPath(linkPath){ return String(linkPath||'').replace(/^\\/+|\\/+$/g,''); }
+  };
   host.obsidianVaultWriteAdapter={
     async ensureFolder(path){
       if(!nodes.has(path)) nodes.set(path,{path,children:[]});
@@ -90,7 +94,17 @@ function createHost(zipBytes,{existing=[]}={}){
       recordSeq++;
       const id=`record-${recordSeq}`;
       const recordPath=`File Metadata/test/${id}.md`;
-      const recordFile={path:recordPath,name:`${id}.md`,extension:'md',text:`---\nfilemeta_id: ${id}\nfilemeta_file: "[[${file.path}]]"\nfilemeta_status: active\n---\n`};
+      const recordFile={
+        path:recordPath,
+        name:`${id}.md`,
+        extension:'md',
+        frontmatter:{
+          filemeta_id:id,
+          filemeta_file:`[[${file.path}]]`,
+          filemeta_status:'active'
+        },
+        text:`---\nfilemeta_id: ${id}\nfilemeta_file: "[[${file.path}]]"\nfilemeta_status: active\n---\n`
+      };
       nodes.set(recordPath,recordFile);
       const state={ready:true,ok:true,registered:true,id,recordPath,status:'active',pdfPath:file.path,values:{}};
       recordsByPdf.set(file.path,state);
@@ -191,6 +205,10 @@ function createHost(zipBytes,{existing=[]}={}){
   assert.ok(rapportRecord.text.includes(`- member: [[${vedtakPath}]]`));
   assert.ok(rapportRecord.text.includes(`- member: [[${readmePath}]]`));
   assert.ok(!rapportRelation.memberPaths.includes(rapportPath));
+
+  const archivePdfMembers=await linked.host.findArchivePdfMembersForSourceZip(linkedFile.path);
+  assert.equal(archivePdfMembers.ok,true);
+  assert.deepEqual(archivePdfMembers.pdfPaths,[rapportPath,vedtakPath].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true,sensitivity:'base'})));
 
   const openedLinks=[];
   const documentInfo=new DocumentInfoFeature();
