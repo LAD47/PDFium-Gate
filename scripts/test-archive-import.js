@@ -11,6 +11,10 @@ global.Notice=class Notice {
   constructor(message){ Notice.messages.push(String(message)); }
 };
 global.Notice.messages=[];
+global.ArchiveImportUnsupportedFilesModal=class ArchiveImportUnsupportedFilesModal {
+  constructor(_app,_plugin,model){ this.model=model; }
+  async openForDecision(){ return {action:'skip'}; }
+};
 
 function zip(files){
   const input={};
@@ -139,10 +143,10 @@ function createHost(zipBytes,{existing=[]}={}){
   const unsupportedBytes=zip({'safe.txt':'ok','office.docx':'placeholder'});
   const unsupported=createHost(unsupportedBytes);
   const unsupportedResult=await unsupported.host.handleArchiveImportVaultCreate(file);
-  assert.equal(unsupportedResult.ok,false);
-  assert.equal(unsupportedResult.reason,'unsupported-files');
-  assert.deepEqual(unsupportedResult.unsupported,['office.docx']);
-  assert.equal(unsupported.createdFiles.size,0);
+  assert.equal(unsupportedResult.ok,true);
+  assert.equal(unsupportedResult.extractedCount,1);
+  assert.ok(unsupported.createdFiles.has('05 test/PDFium-Gate-ZIP-test-01/safe.txt'));
+  assert.equal([...unsupported.createdFiles.keys()].some(path=>path.endsWith('office.docx')),false);
 
   const relationshipBytes=zip({
     'rapport.pdf':'%PDF synthetic report',
