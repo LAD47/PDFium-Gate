@@ -47,7 +47,7 @@
   "settings.emailImport.dragDrop.name": "Importér e-mail automatisk med træk og slip",
   "settings.emailImport.dragDrop.description": "Når en .eml- eller .msg-fil føjes til vaulten, importeres den automatisk til samme mappe uden en ekstra dialog.",
   "settings.emailImport.attachments.name": "Udpak e-mailvedhæftninger automatisk",
-  "settings.emailImport.attachments.description": "Ved automatisk drag-and-drop-import lægges almindelige vedhæftninger ved siden af e-mail-PDF'en. For ZIP-vedhæftninger bevares den oprindelige ZIP, mens understøttet indhold pakkes ud i en særskilt undermappe. Inline/CID-ressourcer forbliver i e-mailvisningen.",
+  "settings.emailImport.attachments.description": "Almindelige vedhæftninger lægges i en mappe med samme basisnavn som e-mail-PDF'en. ZIP-filer behandles som transportbeholdere: indholdet forhåndskontrolleres og importeres til samme vedhæftningsmappe, og selve ZIP-filen beholdes ikke efter vellykket import.",
   "emailImport.notice.dragDropExisting": "Denne e-mail er allerede importeret. Åbnede den eksisterende PDF: {{path}}.",
   "emailImport.notice.dragDropImported": "E-mail importeret automatisk til {{path}}. Udpakkede vedhæftninger: {{count}}.",
   "emailImport.notice.dragDropImportedWithAttachmentErrors": "E-mail importeret automatisk til {{path}}. Udpakkede vedhæftninger: {{count}}; fejl: {{failed}}.",
@@ -58,5 +58,7 @@
   "emailImport.zipModal.more": "…og {{count}} fil(er) mere.",
   "emailImport.zipModal.cancelArchives": "Pak ikke ZIP ud",
   "emailImport.zipModal.skipUnsupported": "Spring ikke-understøttede filer over",
-  "emailImport.zipModal.keepUnsupported": "Kopiér dem alligevel"
+  "emailImport.zipModal.keepUnsupported": "Kopiér dem alligevel",
+  "settings.emailImport.retainSource.name": "Behold original EML/MSG efter vellykket import",
+  "settings.emailImport.retainSource.description": "Avanceret valg. Slået fra som standard. Når det er slået til, beholdes den nøjagtige originale EML/MSG-kilde i skjult pluginlager efter en vellykket og verificeret import."
 }
