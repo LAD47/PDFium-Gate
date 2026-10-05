@@ -62,11 +62,12 @@ function createHost(zipBytes,{existing=[]}={}){
     },
     async readText(file){ return String(file?.text||''); },
     getAbstractFileByPath(path){ return nodes.get(path)||createdFiles.get(path)||null; },
+    listMarkdownFiles(){ return [...nodes.values()].filter(file=>String(file?.extension||'').toLowerCase()==='md'); },
     getBasePath(){ return 'C:/test-vault'; }
   };
   host.obsidianMetadataCacheAdapter={
     getFrontmatter(file){ return file?.frontmatter || null; },
-    resolveLinkPath(linkPath){ return String(linkPath||'').replace(/^\\/+|\\/+$/g,''); }
+    resolveLinkPath(linkPath){ return String(linkPath||'').replace(/^\/+|\/+$/g,''); }
   };
   host.obsidianVaultWriteAdapter={
     async ensureFolder(path){
@@ -173,6 +174,7 @@ function createHost(zipBytes,{existing=[]}={}){
   });
   const linked=createHost(relationshipBytes);
   const linkedFile={path:'05 test/PDFium-Gate-ZIP-test-02-PDF.zip',name:'PDFium-Gate-ZIP-test-02-PDF.zip',extension:'zip'};
+  linked.nodes.set(linkedFile.path,linkedFile);
   const linkedResult=await linked.host.handleArchiveImportVaultCreate(linkedFile);
   assert.equal(linkedResult.ok,true);
   assert.equal(linkedResult.extractedCount,3);
