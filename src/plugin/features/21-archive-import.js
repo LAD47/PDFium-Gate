@@ -17,7 +17,7 @@ class ArchiveImportFeature {
 
   suppressArchiveImportPathOnce(value) {
     const vaultPath=this.normalizeArchiveImportVaultPath(value);
-    if(vaultPath) this.state.archiveImport.suppressedPaths.add(vaultPath);
+    if(vaultPath && /\.zip$/i.test(vaultPath)) this.state.archiveImport.suppressedPaths.add(vaultPath);
   }
 
   archiveImportSuggestedFolderPath(zipPath) {
@@ -81,107 +81,233 @@ class ArchiveImportFeature {
     return {ok:true,pdfPath,linked:true,recordPath,linkedCount:expectedMembers.length+1};
   }
 
-  async handleArchiveImportVaultCreate(file) {
-    if(!this.isArchiveImportZipFile(file)) return {ok:true,handled:false,reason:'not-zip'};
-    const zipPath=this.normalizeArchiveImportVaultPath(file.path);
-    if(this.state.archiveImport.suppressedPaths.delete(zipPath)) {
-      return {ok:true,handled:false,reason:'suppressed',zipPath};
+  archiveImportDecisionModel(plans) {
+    const archives=[];
+    let unsupportedCount=0;
+    for(const plan of Array.isArray(plans)?plans:[]) {
+      const unsupported=(plan?.inspection?.unsupportedEntries || []).map(entry=>({
+        path:entry.originalPath,
+        size:entry.uncompressedSize
+      }));
+      unsupportedCount+=unsupported.length;
+      archives.push({
+        filename:String(plan?.file?.name || plan?.attachment?.filename || 'archive.zip'),
+        totalCount:Number(plan?.inspection?.fileEntries?.length || 0),
+        pdfCount:Number(plan?.inspection?.pdfEntries?.length || 0),
+        nativeCount:Number(plan?.inspection?.nativeEntries?.length || 0),
+        unsupportedCount:unsupported.length,
+        blockedCount:Number(plan?.inspection?.blockedEntries?.length || 0),
+        unsupported
+      });
     }
-    if(this.state.archiveImport.inFlight.has(zipPath)) {
-      return {ok:true,handled:false,reason:'already-in-flight',zipPath};
-    }
+    return {archives,unsupportedCount};
+  }
 
-    this.state.archiveImport.inFlight.add(zipPath);
-    try {
-      const bytes=await this.obsidianVaultReadAdapter.readBinary(file);
-      const attachment={
-        id:`vault-zip:${zipPath}`,
-        filename:file.name || zipPath.split('/').pop() || 'archive.zip',
-        contentType:'application/zip',
-        content:Buffer.from(bytes),
-        size:Number(bytes?.byteLength ?? bytes?.length ?? 0)
-      };
-      const inspection=ARCHIVE_IMPORT_RUNTIME.inspectZipAttachment(attachment);
-      if(inspection.blockedEntries.length) {
-        throw new Error(`ZIP contains ${inspection.blockedEntries.length} blocked/unsafe entr${inspection.blockedEntries.length===1?'y':'ies'}.`);
-      }
-      if(inspection.unsupportedEntries.length) {
-        return {
-          ok:false,
-          handled:true,
-          reason:'unsupported-files',
-          zipPath,
-          unsupported:inspection.unsupportedEntries.map(entry=>entry.originalPath)
-        };
-      }
-
-      const targetFolder=this.archiveImportSuggestedFolderPath(zipPath);
-      const extracted=ARCHIVE_IMPORT_RUNTIME.extractZipAttachment(attachment,inspection,{includeUnsupported:false});
-      await this.ensureArchiveImportFolderChain(targetFolder);
-
-      const created=[];
-      const createdEntries=[];
-      try {
-        for(const entry of extracted) {
-          const targetPath=this.normalizeArchiveImportVaultPath(`${targetFolder}/${entry.safePath}`);
-          const slash=targetPath.lastIndexOf('/');
-          if(slash>=0) await this.ensureArchiveImportFolderChain(targetPath.slice(0,slash));
-          const createdFile=await this.obsidianVaultWriteAdapter.createBinary(targetPath,entry.bytes);
-          created.push(targetPath);
-          createdEntries.push({path:targetPath,file:createdFile,support:entry.support});
-        }
-      } catch(error) {
-        throw error;
-      }
-
-      const relationshipResults=[];
-      for(const createdEntry of createdEntries) {
-        if(createdEntry.support!=='pdf') continue;
-        try {
-          relationshipResults.push(await this.writeArchiveRelationshipsForPdf(
-            createdEntry.path,
-            zipPath,
-            created,
-            createdEntry.file
-          ));
-        } catch(error) {
-          relationshipResults.push({
-            ok:false,
-            pdfPath:createdEntry.path,
-            error:error instanceof Error?error.message:String(error)
-          });
-        }
-      }
-      const relationshipFailures=relationshipResults.filter(item=>item?.ok===false);
-      const linkedPdfCount=relationshipResults.filter(item=>item?.linked===true).length;
-
-      const result={
-        ok:true,
-        handled:true,
-        zipPath,
-        targetFolder,
-        extractedCount:created.length,
-        extractedPaths:created,
-        linkedPdfCount,
-        relationshipFailures
-      };
-      this.state.archiveImport.lastResult=result;
-      new Notice(`PDFium Gate: ZIP pakket ut til ${targetFolder} (${created.length} filer).`,7000);
-      return result;
-    } catch(error) {
-      const result={
+  async prepareArchiveImportFile(file) {
+    const zipPath=this.normalizeArchiveImportVaultPath(file?.path);
+    if(!this.isArchiveImportZipFile(file)) return {ok:false,handled:false,reason:'not-zip',file,zipPath};
+    const bytes=await this.obsidianVaultReadAdapter.readBinary(file);
+    const attachment={
+      id:`vault-zip:${zipPath}`,
+      filename:file.name || zipPath.split('/').pop() || 'archive.zip',
+      contentType:'application/zip',
+      content:Buffer.from(bytes),
+      size:Number(bytes?.byteLength ?? bytes?.length ?? 0)
+    };
+    const inspection=ARCHIVE_IMPORT_RUNTIME.inspectZipAttachment(attachment);
+    if(inspection.blockedEntries.length) {
+      return {
         ok:false,
         handled:true,
+        reason:'blocked-files',
+        file,
         zipPath,
-        error:error instanceof Error ? error.message : String(error)
+        attachment,
+        inspection,
+        error:`ZIP contains ${inspection.blockedEntries.length} blocked/unsafe entr${inspection.blockedEntries.length===1?'y':'ies'}.`
       };
-      this.state.archiveImport.lastResult=result;
-      console.warn('[PDFium Gate] Archive Import failed',result);
-      new Notice(`PDFium Gate: Kunne ikke pakke ut ZIP: ${result.error}`,10000);
-      return result;
-    } finally {
-      this.state.archiveImport.inFlight.delete(zipPath);
     }
+    return {ok:true,handled:true,file,zipPath,attachment,inspection};
+  }
+
+  async extractPreparedArchiveImport(plan,{includeUnsupported=false}={}) {
+    const {file,zipPath,attachment,inspection}=plan;
+    const targetFolder=this.archiveImportSuggestedFolderPath(zipPath);
+    const extracted=ARCHIVE_IMPORT_RUNTIME.extractZipAttachment(attachment,inspection,{includeUnsupported});
+    await this.ensureArchiveImportFolderChain(targetFolder);
+
+    const created=[];
+    const createdEntries=[];
+    for(const entry of extracted) {
+      const targetPath=this.normalizeArchiveImportVaultPath(`${targetFolder}/${entry.safePath}`);
+      const slash=targetPath.lastIndexOf('/');
+      if(slash>=0) await this.ensureArchiveImportFolderChain(targetPath.slice(0,slash));
+      const createdFile=await this.obsidianVaultWriteAdapter.createBinary(targetPath,entry.bytes);
+      created.push(targetPath);
+      createdEntries.push({path:targetPath,file:createdFile,support:entry.support});
+    }
+
+    const relationshipResults=[];
+    for(const createdEntry of createdEntries) {
+      if(createdEntry.support!=='pdf') continue;
+      try {
+        relationshipResults.push(await this.writeArchiveRelationshipsForPdf(
+          createdEntry.path,
+          zipPath,
+          created,
+          createdEntry.file
+        ));
+      } catch(error) {
+        relationshipResults.push({
+          ok:false,
+          pdfPath:createdEntry.path,
+          error:error instanceof Error?error.message:String(error)
+        });
+      }
+    }
+    const relationshipFailures=relationshipResults.filter(item=>item?.ok===false);
+    const linkedPdfCount=relationshipResults.filter(item=>item?.linked===true).length;
+
+    const result={
+      ok:true,
+      handled:true,
+      zipPath,
+      targetFolder,
+      extractedCount:created.length,
+      extractedPaths:created,
+      linkedPdfCount,
+      relationshipFailures
+    };
+    new Notice(`PDFium Gate: ZIP pakket ut til ${targetFolder} (${created.length} filer).`,7000);
+    return result;
+  }
+
+  async handleArchiveImportVaultFiles(files,options={}) {
+    const list=[];
+    const seen=new Set();
+    for(const file of Array.isArray(files)?files:[]) {
+      if(!this.isArchiveImportZipFile(file)) continue;
+      const zipPath=this.normalizeArchiveImportVaultPath(file?.path);
+      if(!zipPath || seen.has(zipPath)) continue;
+      seen.add(zipPath);
+      list.push(file);
+    }
+    if(!list.length) return {ok:true,handled:false,reason:'no-zip-files',results:[]};
+
+    const claimSuppressed=options?.claimSuppressed===true;
+    const claimed=[];
+    const immediateResults=[];
+    for(const file of list) {
+      const zipPath=this.normalizeArchiveImportVaultPath(file.path);
+      if(claimSuppressed) {
+        this.state.archiveImport.suppressedPaths.delete(zipPath);
+      } else if(this.state.archiveImport.suppressedPaths.delete(zipPath)) {
+        immediateResults.push({ok:true,handled:false,reason:'suppressed',zipPath});
+        continue;
+      }
+      if(this.state.archiveImport.inFlight.has(zipPath)) {
+        immediateResults.push({ok:true,handled:false,reason:'already-in-flight',zipPath});
+        continue;
+      }
+      this.state.archiveImport.inFlight.add(zipPath);
+      claimed.push({file,zipPath});
+    }
+
+    const prepared=[];
+    const results=[...immediateResults];
+    try {
+      for(const item of claimed) {
+        try {
+          const plan=await this.prepareArchiveImportFile(item.file);
+          if(plan.ok) prepared.push(plan);
+          else {
+            results.push(plan);
+            if(plan.error) {
+              console.warn('[PDFium Gate] Archive Import inspection failed',plan);
+              new Notice(`PDFium Gate: Kunne ikke pakke ut ZIP: ${plan.error}`,10000);
+            }
+          }
+        } catch(error) {
+          const result={
+            ok:false,
+            handled:true,
+            zipPath:item.zipPath,
+            error:error instanceof Error?error.message:String(error)
+          };
+          results.push(result);
+          console.warn('[PDFium Gate] Archive Import inspection failed',result);
+          new Notice(`PDFium Gate: Kunne ikke pakke ut ZIP: ${result.error}`,10000);
+        }
+      }
+
+      const decisionModel=this.archiveImportDecisionModel(prepared);
+      let archiveMode='supported-only';
+      if(decisionModel.unsupportedCount>0) {
+        const chooser=typeof options?.chooseUnsupported==='function'
+          ? options.chooseUnsupported
+          : model=>new ArchiveImportUnsupportedFilesModal(this.app,this,model).openForDecision();
+        const decision=await chooser(decisionModel);
+        if(decision?.action==='keep') archiveMode='all';
+        else if(decision?.action==='cancel-archives') archiveMode='none';
+        else archiveMode='supported-only';
+      }
+
+      for(const plan of prepared) {
+        if(archiveMode==='none') {
+          results.push({
+            ok:true,
+            handled:true,
+            reason:'archive-extraction-cancelled',
+            zipPath:plan.zipPath,
+            extractedCount:0,
+            extractedPaths:[],
+            linkedPdfCount:0,
+            relationshipFailures:[]
+          });
+          continue;
+        }
+        try {
+          results.push(await this.extractPreparedArchiveImport(plan,{
+            includeUnsupported:archiveMode==='all'
+          }));
+        } catch(error) {
+          const result={
+            ok:false,
+            handled:true,
+            zipPath:plan.zipPath,
+            error:error instanceof Error?error.message:String(error)
+          };
+          results.push(result);
+          console.warn('[PDFium Gate] Archive Import failed',result);
+          new Notice(`PDFium Gate: Kunne ikke pakke ut ZIP: ${result.error}`,10000);
+        }
+      }
+
+      const aggregate={
+        ok:results.every(result=>result?.ok!==false),
+        handled:true,
+        archiveCount:list.length,
+        extractedArchiveCount:results.filter(result=>Number(result?.extractedCount||0)>0).length,
+        unsupportedCount:decisionModel.unsupportedCount,
+        archiveMode,
+        results
+      };
+      this.state.archiveImport.lastResult=aggregate;
+      return aggregate;
+    } finally {
+      for(const item of claimed) this.state.archiveImport.inFlight.delete(item.zipPath);
+    }
+  }
+
+  async handleArchiveImportVaultCreate(file,options={}) {
+    if(!this.isArchiveImportZipFile(file)) return {ok:true,handled:false,reason:'not-zip'};
+    const aggregate=await this.handleArchiveImportVaultFiles([file],options);
+    if(Array.isArray(aggregate?.results) && aggregate.results.length===1) {
+      const single=aggregate.results[0];
+      this.state.archiveImport.lastResult=single;
+      return single;
+    }
+    return aggregate;
   }
 }
 
