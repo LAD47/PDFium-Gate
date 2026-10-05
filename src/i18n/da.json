@@ -583,5 +583,13 @@
   "documentInfo.archive.title": "Bilag fra ZIP",
   "documentInfo.archive.source": "Kildearkiv",
   "documentInfo.archive.related": "Filer i samme arkiv",
-  "documentInfo.archive.none": "Ingen andre filer i dette arkiv."
+  "documentInfo.archive.none": "Ingen andre filer i dette arkiv.",
+  "archiveImport.unsupported.title": "ZIP indeholder filer, som PDFium Gate ikke håndterer direkte",
+  "archiveImport.unsupported.intro": "De valgte ZIP-arkiver indeholder {{count}} fil(er) med formater, der ikke håndteres direkte.",
+  "archiveImport.unsupported.supportedInfo": "PDFium Gate kan stadig beholde filerne uændret eller springe dem over og pakke de understøttede filer ud.",
+  "archiveImport.unsupported.archive": "{{filename}} — {{count}} ikke-understøttet(e) fil(er)",
+  "archiveImport.unsupported.more": "… og {{count}} mere",
+  "archiveImport.unsupported.cancelArchives": "Pak ikke ZIP ud",
+  "archiveImport.unsupported.skipUnsupported": "Spring ikke-understøttede filer over",
+  "archiveImport.unsupported.keepUnsupported": "Behold dem alligevel"
 }
