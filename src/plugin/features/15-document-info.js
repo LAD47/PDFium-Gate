@@ -16,6 +16,67 @@ function documentInfoCurrentValue(values, field, useDefault = false) {
 }
 
 class DocumentInfoFeature {
+  documentInfoArchiveLink(host,path) {
+    const vaultPath=String(path || '').trim();
+    if(!vaultPath) return null;
+    const name=vaultPath.split('/').pop() || vaultPath;
+    const link=host.createEl('a',{cls:'internal-link pdfium-document-info-relation-link',text:name});
+    link.setAttribute('href',vaultPath);
+    link.setAttribute('data-href',vaultPath);
+    link.setAttribute('title',vaultPath);
+    return link;
+  }
+
+  async renderDocumentInfoArchiveRelations(host,view,path,recordState) {
+    if(!host) return null;
+    try {
+      const recordPath=String(recordState?.recordPath || '').trim();
+      if(!recordState?.registered || !recordPath) {
+        host.remove();
+        return null;
+      }
+      const recordFile=this.obsidianVaultReadAdapter.getAbstractFileByPath(recordPath);
+      if(!recordFile || String(recordFile.extension || '').toLowerCase()!=='md') {
+        host.remove();
+        return null;
+      }
+      const markdown=String(await this.obsidianVaultReadAdapter.readText(recordFile));
+      const relation=ARCHIVE_IMPORT_RUNTIME.extractArchiveRelationship(markdown);
+      if(!host.isConnected || documentInfoFilePath(view)!==path) return null;
+      if(!relation?.sourceZipPath) {
+        host.remove();
+        return null;
+      }
+
+      const t=(key,params)=>this.i18n?.t?.(key,params) || key;
+      host.empty();
+      host.createEl('h4',{text:t('documentInfo.archive.title')});
+
+      const sourceRow=host.createDiv({cls:'pdfium-document-info-relation-row'});
+      sourceRow.createDiv({cls:'pdfium-document-info-label',text:t('documentInfo.archive.source')});
+      const sourceValue=sourceRow.createDiv({cls:'pdfium-document-info-relation-value'});
+      this.documentInfoArchiveLink(sourceValue,relation.sourceZipPath);
+
+      const relatedRow=host.createDiv({cls:'pdfium-document-info-relation-row'});
+      relatedRow.createDiv({cls:'pdfium-document-info-label',text:t('documentInfo.archive.related')});
+      const members=Array.isArray(relation.memberPaths) ? relation.memberPaths : [];
+      if(!members.length) {
+        relatedRow.createDiv({cls:'pdfium-document-info-value',text:t('documentInfo.archive.none')});
+      } else {
+        const list=relatedRow.createEl('ul',{cls:'pdfium-document-info-relation-list'});
+        for(const memberPath of members) {
+          const item=list.createEl('li');
+          this.documentInfoArchiveLink(item,memberPath);
+        }
+      }
+      return relation;
+    } catch(error) {
+      if(host?.isConnected) host.remove();
+      console.warn(`[PDFium Gate ${PLUGIN_VERSION}] DocumentInfo archive relationships could not be loaded`,error);
+      return null;
+    }
+  }
+
   getDocumentInfoValuesSnapshot(filePath) {
     const path=String(filePath || '').trim();
     if(!path) return null;
@@ -210,6 +271,12 @@ class DocumentInfoFeature {
       const actions=body.createDiv({cls:'pdfium-document-info-actions'});
       const edit=actions.createEl('button',{cls:'mod-cta',text:t('documentInfo.edit')});
       edit.addEventListener('click',event=>{event.preventDefault();this.beginDocumentInfoEdit(view);});
+    }
+
+    if(recordState?.ready && recordState?.ok && recordState?.registered && recordState?.recordPath) {
+      const archiveRelationsHost=body.createDiv({cls:'pdfium-document-info-archive-relations'});
+      archiveRelationsHost.setAttribute('aria-label',t('documentInfo.archive.title'));
+      void this.renderDocumentInfoArchiveRelations(archiveRelationsHost,view,path,recordState);
     }
 
     panel.onkeydown=event=>{
