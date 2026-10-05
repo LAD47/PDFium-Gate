@@ -279,7 +279,7 @@ class ArchiveImportFeature {
         linkedPdfCount:relationshipResults.filter(item=>item?.linked===true).length,
         relationshipFailures:[]
       };
-      new Notice(`PDFium Gate: ZIP imported to ${targetFolder} (${createdEntries.length} files).`,7000);
+      new Notice(this.i18n.t('archiveImport.notice.success',{folder:targetFolder,count:createdEntries.length}),7000);
       return result;
     } catch(error) {
       const rollback=await this.rollbackArchiveImport({targetFolder,createdEntries,registeredPdfPaths});
@@ -322,7 +322,7 @@ class ArchiveImportFeature {
         return {...result,sourceDeleted:true,failureDecision:'delete'};
       } catch(error) {
         this.state.archiveImport.deferredPaths.add(zipPath);
-        new Notice(`PDFium Gate: Could not delete failed ZIP: ${error instanceof Error?error.message:String(error)}`,10000);
+        new Notice(this.i18n.t('archiveImport.notice.deleteFailed',{error:error instanceof Error?error.message:String(error)}),10000);
         return {...result,sourceDeleted:false,failureDecision:'delete-failed',deleteError:error instanceof Error?error.message:String(error)};
       }
     }
