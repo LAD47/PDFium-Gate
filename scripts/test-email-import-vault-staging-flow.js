@@ -37,7 +37,8 @@ function createFeature({ result, reads, existingMatches = false, duplicateDecisi
 
   feature.settings = {
     emailDragDropAutomaticImport:true,
-    emailDragDropExtractAttachments:false
+    emailDragDropExtractAttachments:false,
+    emailImportRetainSourceAfterSuccess:false
   };
   feature.i18n = { t:key=>key };
   feature.obsidianVaultReadAdapter = {
@@ -62,7 +63,7 @@ function createFeature({ result, reads, existingMatches = false, duplicateDecisi
     );
 
     const normalDecision = await options.chooseReview({suggestedPdfPath:'Cases/mail.pdf',duplicates:[]});
-    assert.deepEqual(normalDecision,{action:'import',retainSource:true,pdfPath:'Cases/mail.pdf'});
+    assert.deepEqual(normalDecision,{action:'import',retainSource:false,pdfPath:'Cases/mail.pdf'});
 
     const duplicateModel={
       suggestedPdfPath:'Cases/mail (2).pdf',
@@ -74,7 +75,7 @@ function createFeature({ result, reads, existingMatches = false, duplicateDecisi
     assert.equal(duplicateChoice.action,duplicateDecisionFactory(duplicateModel).action);
     if(duplicateChoice.action==='open-existing') assert.equal(duplicateChoice.match.pdfPath,'Cases/existing.pdf');
     if(duplicateChoice.action==='import') {
-      assert.equal(duplicateChoice.retainSource,true);
+      assert.equal(typeof duplicateChoice.retainSource,'boolean');
       assert.equal(duplicateChoice.pdfPath,'Cases/mail (2).pdf');
     }
     return result;
@@ -87,7 +88,7 @@ function createFeature({ result, reads, existingMatches = false, duplicateDecisi
 async function run() {
   {
     const { feature, file, deleted, getReadCount } = createFeature({
-      result:{ ok:true, pdfPath:'Cases/mail.pdf', sourceRetained:true, retainedPath:'.pdf-metadata/email-sources/aa/hash.eml' },
+      result:{ ok:true, pdfPath:'Cases/mail.pdf', sourceRetained:false, retainedPath:null },
       reads:['original-bytes','original-bytes']
     });
     const result = await feature.startEmailImportFromVaultFile(file);
@@ -99,7 +100,7 @@ async function run() {
 
   {
     const { feature, file, deleted } = createFeature({
-      result:{ ok:true, pdfPath:'Cases/mail.pdf', sourceRetained:true, retainedPath:'.pdf-metadata/email-sources/aa/hash.eml' },
+      result:{ ok:true, pdfPath:'Cases/mail.pdf', sourceRetained:false, retainedPath:null },
       reads:['original-bytes','changed-after-import']
     });
     const result=await feature.startEmailImportFromVaultFile(file);
@@ -119,7 +120,7 @@ async function run() {
 
   {
     const { feature, file, deleted, duplicateModels } = createFeature({
-      result:{ ok:true, openedExisting:true, pdfPath:'Cases/existing.pdf' },
+      result:{ ok:true, openedExisting:true, duplicate:true, pdfPath:'Cases/existing.pdf' },
       reads:['original-bytes','original-bytes'],
       existingMatches:true,
       duplicateDecision:model=>({action:'open-existing',match:model.duplicates[0]})
@@ -158,7 +159,7 @@ async function run() {
 
   {
     const { feature, file, deleted } = createFeature({
-      result:{ ok:true, openedExisting:true, pdfPath:'Cases/existing.pdf' },
+      result:{ ok:true, openedExisting:true, duplicate:false, pdfPath:'Cases/existing.pdf' },
       reads:['original-bytes'],
       existingMatches:false
     });
@@ -169,7 +170,7 @@ async function run() {
 
   {
     const { feature, file, deleted } = createFeature({
-      result:{ok:true,pdfPath:'Cases/mail.pdf',sourceRetained:true,retainedPath:'x'},
+      result:{ok:true,pdfPath:'Cases/mail.pdf',sourceRetained:false,retainedPath:null},
       reads:['original-bytes']
     });
     feature.settings.emailDragDropAutomaticImport=false;
@@ -178,7 +179,7 @@ async function run() {
     assert.deepEqual(deleted,[]);
   }
 
-  console.log('Email Import vault staging flow OK: same-folder import, explicit duplicate decision UX, re-import, cancel preservation, exact-byte cleanup, duplicate retained-source verification, changed-file safety and disable setting verified.');
+  console.log('Email Import vault staging flow OK: same-folder import, source-retention off by default, exact-byte staging cleanup after verified success, exact-duplicate cleanup, changed-file safety, cancel preservation and disable setting verified.');
 }
 
 run().catch(error => {
