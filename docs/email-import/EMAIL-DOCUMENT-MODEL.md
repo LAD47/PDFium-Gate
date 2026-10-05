@@ -1,6 +1,6 @@
 # Canonical Email Document v1
 
-Status: **accepted initial contract for implementation**
+Status: **accepted Canonical Email Document v1 contract; implemented for EML and MSG**
 
 This document defines the first canonical internal email model for PDFium Gate Email Import.
 
@@ -111,7 +111,7 @@ Example:
 Svar fra kommunen.eml
 ```
 
-The filename is documentary metadata and may later be shown in the PDF when the original source is retained.
+The filename is documentary provenance independent of whether the original source bytes are retained after successful import.
 
 ### `source.byteSize`
 
@@ -416,11 +416,9 @@ Required visible content remains:
 - Message body
 - Attachment list
 
-When the original source is retained, the renderer also receives enough canonical source information to include:
+The renderer receives enough canonical source information to include documentary source facts when required by the presentation policy, including the original source filename and SHA-256 source hash.
 
-- original source filename;
-- link/reference to the retained source;
-- SHA-256 source hash.
+When the advanced source-retention option is enabled, the retained vault-relative path may also be available as technical/documentary provenance. A clickable retained-source link is not a requirement of the current renderer.
 
 No parser-native object is allowed as a renderer dependency.
 
@@ -432,21 +430,17 @@ Compatible implementation refinements may clarify behavior without changing the 
 
 A change that makes existing v1 producers/consumers structurally incompatible must create a new schema version and document the migration/compatibility rule rather than silently changing the contract.
 
-## 15. First implementation target
+## 15. Current implementation status
 
-The first parser milestone only needs to implement the EML producer for this model.
+Both EML and MSG producers implement this canonical model.
 
-The initial proof must demonstrate that a synthetic EML message can produce a valid Canonical Email Document v1 with at least:
+Automated coverage verifies the common contract, including:
 
-- source hash and size;
-- subject;
-- from;
-- to;
-- cc;
-- date/time;
-- Message-ID when present;
+- exact source hash and size;
+- subject/from/to/cc/date-time;
+- Message-ID and thread identifiers when present;
 - text and/or HTML body;
-- attachment descriptors;
-- attachment SHA-256 when payload bytes are available.
+- attachment descriptors and decoded attachment SHA-256;
+- parser-specific normalization into one common v1 shape.
 
-MSG is deliberately postponed until the EML path, canonical model, and tests are stable.
+The current integrated import builds its complete attachment plan directly from this in-memory canonical document before durable attachment writes. Permanent EML/MSG retention is therefore optional rather than a prerequisite for attachment processing.
