@@ -594,5 +594,10 @@
   "archiveImport.unsupported.keepUnsupported": "Conservarlos de todos modos",
   "archiveImport.openPdf.title": "Elegir PDF del ZIP",
   "archiveImport.openPdf.intro": "Este adjunto de correo es un archivo ZIP. Elige qué PDF extraído quieres abrir.",
-  "archiveImport.openPdf.open": "Abrir PDF"
+  "archiveImport.openPdf.open": "Abrir PDF",
+  "archiveImport.failure.title": "Error al importar ZIP",
+  "archiveImport.failure.intro": "PDFium Gate no pudo importar {{name}}. Los archivos creados durante este intento se han revertido.",
+  "archiveImport.failure.question": "El ZIP puede estar oculto por la configuración predeterminada del explorador de Obsidian. ¿Quieres conservarlo para revisarlo después o eliminarlo ahora?",
+  "archiveImport.failure.keep": "Conservar ZIP",
+  "archiveImport.failure.delete": "Eliminar ZIP"
 }
