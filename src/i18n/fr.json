@@ -591,5 +591,8 @@
   "archiveImport.unsupported.more": "… et {{count}} de plus",
   "archiveImport.unsupported.cancelArchives": "Ne pas extraire le ZIP",
   "archiveImport.unsupported.skipUnsupported": "Ignorer les fichiers non pris en charge",
-  "archiveImport.unsupported.keepUnsupported": "Les conserver quand même"
+  "archiveImport.unsupported.keepUnsupported": "Les conserver quand même",
+  "archiveImport.openPdf.title": "Choisir un PDF du ZIP",
+  "archiveImport.openPdf.intro": "Cette pièce jointe est une archive ZIP. Choisissez le PDF extrait à ouvrir.",
+  "archiveImport.openPdf.open": "Ouvrir le PDF"
 }
