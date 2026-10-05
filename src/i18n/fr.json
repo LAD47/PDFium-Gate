@@ -583,5 +583,13 @@
   "documentInfo.archive.title": "Pièces jointes du ZIP",
   "documentInfo.archive.source": "Archive source",
   "documentInfo.archive.related": "Fichiers de la même archive",
-  "documentInfo.archive.none": "Aucun autre fichier dans cette archive."
+  "documentInfo.archive.none": "Aucun autre fichier dans cette archive.",
+  "archiveImport.unsupported.title": "Le ZIP contient des fichiers que PDFium Gate ne gère pas directement",
+  "archiveImport.unsupported.intro": "Les archives ZIP sélectionnées contiennent {{count}} fichier(s) dans des formats non gérés directement.",
+  "archiveImport.unsupported.supportedInfo": "PDFium Gate peut tout de même conserver ces fichiers inchangés, ou les ignorer et extraire les fichiers pris en charge.",
+  "archiveImport.unsupported.archive": "{{filename}} — {{count}} fichier(s) non pris en charge",
+  "archiveImport.unsupported.more": "… et {{count}} de plus",
+  "archiveImport.unsupported.cancelArchives": "Ne pas extraire le ZIP",
+  "archiveImport.unsupported.skipUnsupported": "Ignorer les fichiers non pris en charge",
+  "archiveImport.unsupported.keepUnsupported": "Les conserver quand même"
 }
