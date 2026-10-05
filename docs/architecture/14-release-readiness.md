@@ -35,4 +35,6 @@ The PDFium Gate-specific protected-data and maintenance requirements are tracked
 
 ## Distribution direction
 
-GitHub Releases are the intended test/public artifact channel. During private beta, BRAT may be used for test installation/update workflows. Final plugin name, plugin ID, author metadata, license and Community Plugins submission details must be frozen before the first public beta.
+GitHub Releases are the intended test/public artifact channel. During private beta, BRAT may be used for test installation/update workflows.
+
+The public product name and plugin ID were frozen in 0.1.224 as **PDFium Gate** / `pdfium-gate`, and the active GitHub repository is `LAD47/PDFium-Gate`. Author metadata and final Community Plugins submission/release details still require an explicit release decision before the first public beta.
