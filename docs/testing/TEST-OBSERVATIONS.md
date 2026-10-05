@@ -80,7 +80,7 @@ This file is a running list of observations found during practical testing that 
    - This deliberately avoids silently deleting metadata together with the PDF and leaves room for a future **Restore from backup** action in the same review flow.
    - Revisit a one-step delete command only if practical use later shows a clear need.
 
-7. **Email Import ZIP attachments: implemented; practical test pending**
+7. **Email Import ZIP attachments: implemented; practical test in progress**
    - ZIP attachments are now inspected as containers while the original ZIP remains the ordinary source-attachment link target.
    - Each ZIP expands into its own dedicated subfolder and preserves internal directory structure.
    - PDFs inside ZIP are routed through normal PDF attachment registration/provenance and become ordinary PDFium Gate documents.
@@ -88,7 +88,10 @@ This file is a running list of observations found during practical testing that 
    - Other formats trigger one aggregate decision: copy anyway, skip unsupported entries, or do not extract ZIP contents.
    - Archive path traversal and bounded entry-count/size/compression checks fail closed.
    - Synthetic EML/ZIP fixture generation is included for practical testing, including PDF-only, mixed supported, unsupported-format, and 35-file cases.
-   - Practical Obsidian verification is still required.
+   - First practical PDF-only ZIP test on 2026-10-05: email import and preservation of the original ZIP succeeded, but the dedicated ZIP subfolder and extracted PDF were not created (test points 3-4 failed).
+   - Installed `main.js` SHA-256 matched the freshly built repository `main.js`, and the generated runtime contains the ZIP extraction code, ruling out a stale deployed plugin.
+   - Follow-up regression coverage now passes the synthetic ZIP through the real EML parser before ZIP inspection/extraction, and runtime item failures are logged explicitly for the next practical diagnosis.
+   - Practical Obsidian verification remains open until the extraction failure is resolved.
 
 8. **PDF annotation backup: reassess `.pdfium-backup` after the independent backup solution exists**
    - Keep the current `backupOriginalPdf` safety function for now: it stores one original PDF copy before PDFium Gate first modifies the file and never overwrites an existing copy.
