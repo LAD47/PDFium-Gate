@@ -2,7 +2,7 @@ name: Email Import verification
 
 on:
   push:
-    branches: [feature/email-import]
+    branches: [feature/email-import, feature/missing-sha256-recovery]
     paths:
       - 'src/email-import/**'
       - 'src/core/integrity/**'
