@@ -157,9 +157,71 @@ async function verifyMutableLiveAttachmentResolution() {
   assert.equal(liveAttachmentReadAttempted,false,'Resolver must not hash/read the mutable exported attachment before opening it.');
 }
 
+async function verifyDuplicateSourceParentDisambiguation() {
+  const sourceSha256='c'.repeat(64);
+  const attachmentSha256='d'.repeat(64);
+  const recordOne='File Metadata/aa/one.md';
+  const recordTwo='File Metadata/bb/two.md';
+  const parentOne='Cases/mail.pdf';
+  const parentTwo='Cases/mail (2).pdf';
+  const attachmentOne='Cases/mail/report.pdf';
+  const attachmentTwo='Cases/mail (2)/report.pdf';
+  const files=new Map([
+    [recordOne,{path:recordOne,extension:'md'}],
+    [recordTwo,{path:recordTwo,extension:'md'}],
+    [attachmentOne,{path:attachmentOne,extension:'pdf'}],
+    [attachmentTwo,{path:attachmentTwo,extension:'pdf'}]
+  ]);
+  const markdownByRecord=new Map([
+    [recordOne,renderEmailAttachmentLinkBlock([attachmentOne])],
+    [recordTwo,renderEmailAttachmentLinkBlock([attachmentTwo])]
+  ]);
+  const opened=[];
+
+  const { EmailImportFeature } = require('../src/plugin/features/20-email-import');
+  const feature=new EmailImportFeature();
+  feature.i18n={t:key=>key};
+  feature.obsidianVaultReadAdapter={
+    getAbstractFileByPath:path=>files.get(path)||null,
+    async readText(file){ return markdownByRecord.get(file.path)||''; }
+  };
+  feature.obsidianMetadataCacheAdapter={resolveLinkPath:path=>path};
+  feature.emailImportAdapter=()=>({
+    findDuplicatesBySha256:async sha=>{
+      assert.equal(sha,sourceSha256);
+      return [
+        {recordPath:recordOne,pdfPath:parentOne},
+        {recordPath:recordTwo,pdfPath:parentTwo}
+      ];
+    },
+    openVaultFile:async path=>{ opened.push(path); return true; }
+  });
+
+  const selected=await feature.openEmailAttachmentFromProtocol({
+    source:sourceSha256,
+    attachment:attachmentSha256,
+    index:0,
+    parentPdfPath:parentTwo
+  });
+  assert.equal(selected.ok,true);
+  assert.equal(selected.path,attachmentTwo);
+  assert.deepEqual(opened,[attachmentTwo]);
+
+  opened.length=0;
+  const ambiguous=await feature.openEmailAttachmentFromProtocol({
+    source:sourceSha256,
+    attachment:attachmentSha256,
+    index:0
+  });
+  assert.equal(ambiguous.ok,false);
+  assert.equal(ambiguous.reason,'attachment-target-ambiguous');
+  assert.deepEqual(opened,[]);
+}
+
 verifyMutableLiveAttachmentResolution()
+  .then(()=>verifyDuplicateSourceParentDisambiguation())
   .then(()=>{
-    console.log('Email Import attachment wikilink block OK: native links remain deterministic, plugin-owned links normalize to resolver-confirmed paths, and mutable/annotated exported attachments remain openable without import-time SHA revalidation.');
+    console.log('Email Import attachment wikilink block OK: native links remain deterministic, mutable exported attachments open without SHA revalidation, and duplicate source imports resolve against the exact clicked parent PDF.');
   })
   .catch(error=>{
     console.error(error);
