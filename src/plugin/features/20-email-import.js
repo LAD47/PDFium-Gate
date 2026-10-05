@@ -352,6 +352,29 @@ class EmailImportFeature {
     return {ok:true,recordPath,linkedCount:actual.length,attachmentPaths:actual};
   }
 
+  async exportPlannedEmailAttachments(parentPdfPath,plan) {
+    const adapter=this.emailImportAdapter();
+    return await EMAIL_IMPORT_RUNTIME.runPlannedEmailAttachmentExport({
+      parentPdfPath,
+      plan,
+      ensureDocumentRecordIndexReady:adapter.ensureDocumentRecordIndexReady,
+      getDocumentMetadataRecordState:adapter.getDocumentMetadataRecordState,
+      getMetadataSchemaSnapshot:adapter.getMetadataSchemaSnapshot,
+      ensureTargetFolders:adapter.ensureTargetFolders,
+      createBinary:adapter.createBinary,
+      readBinary:file=>this.obsidianVaultReadAdapter.readBinary(file),
+      deleteFile:adapter.deleteFile,
+      deleteFolder:async folderPath=>{
+        const folder=this.obsidianVaultReadAdapter.getAbstractFileByPath(folderPath);
+        if(folder) await this.obsidianVaultWriteAdapter.deleteFile(folder,true);
+      },
+      deleteDocumentMetadataRecordForPdf:pdfPath=>this.ports.deleteDocumentMetadataRecordForPdf(pdfPath),
+      saveDocumentMetadataRecordValues:adapter.saveDocumentMetadataRecordValues,
+      updateParentAttachmentLinks:model=>this.updateEmailAttachmentLinks(model),
+      onRollbackError:(error,targetPath)=>console.warn('[PDFium Gate] Planned email attachment rollback failed',targetPath,error)
+    });
+  }
+
   async exportAutomaticEmailAttachments(parentPdfPath) {
     const adapter=this.emailImportAdapter();
     return await EMAIL_IMPORT_RUNTIME.runAutomaticEmailAttachmentExport({
@@ -400,7 +423,11 @@ class EmailImportFeature {
         if(duplicates.length) {
           return await new EmailImportReviewModal(this.app,this,{...model,retentionLocked:true}).openForDecision();
         }
-        return {action:'import',retainSource:true,pdfPath:model.suggestedPdfPath};
+        return {
+          action:'import',
+          retainSource:this.settings?.emailImportRetainSourceAfterSuccess===true,
+          pdfPath:model.suggestedPdfPath
+        };
       },
       services:{
         suggestedEmailPdfPath:(document,pathExists)=>EMAIL_IMPORT_RUNTIME.suggestedEmailPdfPathInFolder(document,folder,pathExists)
@@ -411,7 +438,7 @@ class EmailImportFeature {
     let attachmentResult=null;
     if(result?.ok && !result.openedExisting && result.pdfPath && this.settings?.emailDragDropExtractAttachments!==false) {
       try {
-        attachmentResult=await this.exportAutomaticEmailAttachments(result.pdfPath);
+        attachmentResult=await this.exportPlannedEmailAttachments(result.pdfPath,result.attachmentPlan);
         this.lastEmailAttachmentExportDiagnostic={
           at:new Date().toISOString(),
           parentPdfPath:result.pdfPath,
@@ -442,15 +469,12 @@ class EmailImportFeature {
       }
     }
 
-    let retainedVerified=false;
-    if(result?.ok && !result.openedExisting && result.pdfPath && result.sourceRetained===true && result.retainedPath && importedSourceBytes) {
-      retainedVerified=true;
-    } else if(result?.ok && result.openedExisting && result.pdfPath && importedSourceBytes) {
-      retainedVerified=await this.emailImportExistingRetainedSourceMatches(result.pdfPath,importedSourceBytes);
-    }
+    const attachmentsRequired=this.settings?.emailDragDropExtractAttachments!==false;
+    const attachmentPhaseOk=!attachmentsRequired || attachmentResult?.ok===true;
+    const importTransactionComplete=Boolean(result?.ok && !result.openedExisting && result.pdfPath && attachmentPhaseOk);
 
     let stagingRemoved=false;
-    if(retainedVerified && importedSourceBytes) {
+    if(importTransactionComplete && importedSourceBytes) {
       const current=this.obsidianVaultReadAdapter.getAbstractFileByPath(vaultPath);
       if(current) {
         try {
