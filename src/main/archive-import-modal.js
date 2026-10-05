@@ -119,3 +119,52 @@ class ArchiveImportPdfChoiceModal extends Modal {
     new Setting(contentEl).addButton(button=>button.setButtonText(t('common.cancel')).onClick(()=>this.finish({action:'cancel'})));
   }
 }
+
+
+class ArchiveImportFailureModal extends Modal {
+  constructor(app,plugin,model){
+    super(app);
+    this.plugin=plugin;
+    this.model=model||{};
+    this.settled=false;
+    this.resolveDecision=null;
+  }
+  openForDecision(){
+    return new Promise(resolve=>{ this.resolveDecision=resolve; this.open(); });
+  }
+  finish(decision){
+    if(this.settled) return;
+    this.settled=true;
+    const resolve=this.resolveDecision;
+    this.resolveDecision=null;
+    try{ this.close(); }catch(_){}
+    if(typeof resolve==='function') resolve(decision);
+  }
+  onClose(){
+    this.contentEl.empty();
+    if(!this.settled){
+      this.settled=true;
+      const resolve=this.resolveDecision;
+      this.resolveDecision=null;
+      if(typeof resolve==='function') resolve({action:'keep'});
+    }
+  }
+  onOpen(){
+    const t=(key,params)=>this.plugin?.i18n?.t?.(key,params)||key;
+    const {contentEl}=this;
+    contentEl.empty();
+    contentEl.createEl('h2',{text:t('archiveImport.failure.title')});
+    contentEl.createEl('p',{text:t('archiveImport.failure.intro',{name:String(this.model.name||this.model.path||'ZIP')})});
+    if(this.model.error) contentEl.createEl('p',{text:String(this.model.error)});
+    contentEl.createEl('p',{text:t('archiveImport.failure.question')});
+    const actions=new Setting(contentEl);
+    actions.addButton(button=>button
+      .setCta()
+      .setButtonText(t('archiveImport.failure.keep'))
+      .onClick(()=>this.finish({action:'keep'})));
+    actions.addButton(button=>button
+      .setWarning()
+      .setButtonText(t('archiveImport.failure.delete'))
+      .onClick(()=>this.finish({action:'delete'})));
+  }
+}
