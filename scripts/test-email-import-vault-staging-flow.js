@@ -53,6 +53,13 @@ function createFeature({ result, reads, existingMatches = false, duplicateDecisi
     deleteFile: async (target, force) => deleted.push({ path:target.path, force })
   };
   feature.emailImportExistingRetainedSourceMatches = async () => existingMatches;
+  feature.exportPlannedEmailAttachments = async (_pdfPath,_plan) => ({
+    ok:true,
+    exportedCount:0,
+    failureCount:0,
+    failures:[],
+    relationError:null
+  });
   feature.runEmailImportFlow = async options => {
     const bytes = Buffer.from(await options.readSourceBytes(file.path));
     assert.equal(bytes.toString('utf8'), String(reads[0]));
@@ -179,7 +186,7 @@ async function run() {
     assert.deepEqual(deleted,[]);
   }
 
-  console.log('Email Import vault staging flow OK: same-folder import, source-retention off by default, exact-byte staging cleanup after verified success, exact-duplicate cleanup, changed-file safety, cancel preservation and disable setting verified.');
+  console.log('Email Import vault staging flow OK: same-folder import, mandatory attachment transaction, source-retention off by default, exact-byte staging cleanup after verified success, exact-duplicate cleanup, changed-file safety, cancel preservation and disable setting verified.');
 }
 
 run().catch(error => {
