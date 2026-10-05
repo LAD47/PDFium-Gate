@@ -31,7 +31,8 @@ const PLUGIN_FEATURE_CLASSES = Object.freeze({
   documentRecordVisibility: DocumentRecordVisibilityFeature,
   documentRegisterBases: DocumentRegisterBasesFeature,
   metadataBenchmark: MetadataBenchmarkFeature,
-  emailImport: EmailImportFeature
+  emailImport: EmailImportFeature,
+  archiveImport: ArchiveImportFeature
 });
 
 function createBoundPluginPorts(host) {
