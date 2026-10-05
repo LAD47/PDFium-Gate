@@ -150,8 +150,8 @@ name to **PDFium Gate**, and the internal active view type to
 
 This transition deliberately does **not** rename `.pdf-metadata/`, `File
 Metadata/`, `filemeta_*`, metadata field/category UUIDs, or other durable
-document data. The GitHub repository itself may retain its existing repository
-name until a separate repository-rename step is performed and verified.
+document data. The GitHub repository rename has since been completed and the active repository is
+`LAD47/PDFium-Gate`.
 
 See `docs/testing/IDENTITY-TRANSITION-0.1.224.md` for the one-time installation
 and regression test procedure.
