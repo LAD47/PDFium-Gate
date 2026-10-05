@@ -1,5 +1,7 @@
 'use strict';
 
+const { sha256Hex } = require('../core/integrity/sha256');
+
 const {
   BLOCK_START: ARCHIVE_RELATIONSHIP_BLOCK_START,
   BLOCK_END: ARCHIVE_RELATIONSHIP_BLOCK_END,
@@ -25,6 +27,7 @@ const {
 } = require('./zip-archive');
 
 module.exports = {
+  sha256Hex,
   ZIP_LIMITS,
   NATIVE_VAULT_EXTENSIONS,
   zipEvidence,
