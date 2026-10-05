@@ -434,7 +434,11 @@ const PLUGIN_FEATURE_CONTRACTS = Object.freeze({
     "stateDomains": [
       "archiveImport"
     ],
-    "ports": [],
+    "ports": [
+      "handleDocumentRecordVaultCreate",
+      "ensureDocumentRecordIndexReady",
+      "getDocumentMetadataRecordState"
+    ],
     "mutableStateFields": [
       "archiveImport.suppressedPaths",
       "archiveImport.inFlight",
