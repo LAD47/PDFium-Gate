@@ -22,6 +22,16 @@ Automatic drag-and-drop email import is practically verified for the current pro
 
 Practical test 1-11 for this automatic flow was reported OK on 2026-09-29.
 
+## ZIP attachment relationship rule
+
+A ZIP source attachment remains a single source-level attachment in the immutable email PDF and in the parent metadata relationship block. PDFium Gate therefore keeps the exported original ZIP file as that one-to-one link target.
+
+Expanded ZIP members are placed below a dedicated ZIP-named subfolder. They are not appended to the parent's source-attachment link block, because doing so would destroy the existing ordinal correspondence between the attachment list rendered into the archival email PDF and the live relationship block.
+
+PDF files found inside the ZIP are still normal PDFium Gate documents. They receive their own document records and parent-email provenance just like directly attached PDFs. The dedicated folder provides visible grouping for all expanded members while the original ZIP preserves the exact source-attachment relationship.
+
+This rule is intentionally non-recursive for nested ZIP files in the first implementation.
+
 ## Native Obsidian relationship prototype
 
 The prototype at branch commit `bb7eea33235127754ec393d1f1f4ebe328e4f51c` writes a plugin-managed block into the existing Markdown File Metadata record for the parent email PDF:
