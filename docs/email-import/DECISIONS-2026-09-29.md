@@ -1,3 +1,7 @@
+> [!IMPORTANT]
+> **Historical document — superseded for current implementation.**
+> This file preserves decisions and test evidence from 2026-09-29. The current source of truth is `DECISIONS.md`, `ARCHITECTURE.md`, `RUNTIME-INTEGRATION.md`, `ATTACHMENT-RELATIONSHIPS.md` and the current source/tests. In particular, the current model does **not** require permanent retained EML/MSG, does **not** expose a persisted email ZIP as the normal user target, and treats user-facing attachment output as a mandatory atomic part of successful Email Import.
+
 # Email Import - decisions addendum 2026-09-29
 
 This file extends `DECISIONS.md` with decisions reached after the modular refactor and practical drag-and-drop work. It does not rewrite earlier decision history.
