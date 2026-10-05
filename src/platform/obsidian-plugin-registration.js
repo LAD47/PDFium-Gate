@@ -39,6 +39,13 @@ function createObsidianPluginRegistrationAdapter({ plugin }) {
     return plugin.registerBasesView(viewType, registration);
   }
 
+  function registerDomEvent(target, eventName, callback, options) {
+    if (!plugin || typeof plugin.registerDomEvent !== 'function') throw new Error('plugin.registerDomEvent er ikke tilgjengelig');
+    if (!target || typeof target.addEventListener !== 'function') throw new Error('registerDomEvent target mangler');
+    if (typeof callback !== 'function') throw new Error('registerDomEvent callback mangler');
+    return plugin.registerDomEvent(target, eventName, callback, options);
+  }
+
   function registerObsidianProtocolHandler(action, handler) {
     if (!plugin || typeof plugin.registerObsidianProtocolHandler !== 'function') throw new Error('plugin.registerObsidianProtocolHandler er ikke tilgjengelig');
     if (!String(action || '').trim()) throw new Error('registerObsidianProtocolHandler action mangler');
@@ -54,6 +61,7 @@ function createObsidianPluginRegistrationAdapter({ plugin }) {
     addCommand,
     registerExtensions,
     registerBasesView,
+    registerDomEvent,
     registerObsidianProtocolHandler
   });
 }
