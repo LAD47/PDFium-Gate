@@ -346,8 +346,12 @@ async function runPlannedEmailAttachmentExport({
       const entry=item.entry;
       if(entry.support!=='pdf') continue;
       const targetState=getRecordState(item.path);
-      if(targetState?.registered) throw new Error(`Attachment target is already registered: ${item.path}`);
       if(targetState?.ok===false) throw new Error(targetState.error||targetState.reason||`Unsafe metadata state: ${item.path}`);
+
+      // The file path was fresh when this transaction started. If PDF auto-registration
+      // has already created a minimal record in response to createBinary(), that record
+      // belongs to this transaction and must be upgraded rather than treated as a collision.
+      if(!registeredPdfPaths.includes(item.path)) registeredPdfPaths.push(item.path);
 
       const provenance=runtime.buildEmailAttachmentImportRecordValues({
         schema,
@@ -365,7 +369,6 @@ async function runPlannedEmailAttachmentExport({
       });
       const saved=await saveMetadata(item.path,provenance.values);
       if(!saved?.ok) throw new Error(saved?.error||`Attachment metadata registration failed: ${item.path}`);
-      registeredPdfPaths.push(item.path);
     }
 
     if(typeof writeArchiveRelationshipForPdf==='function') {
