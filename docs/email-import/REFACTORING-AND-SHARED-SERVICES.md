@@ -1,3 +1,7 @@
+> [!NOTE]
+> **Architectural-history document.**
+> The modular/shared-service direction in this file drove the implemented refactor (including shared integrity/SHA primitives and bounded controllers). Some workflow examples below still describe the earlier retained-source/explicit-attachment model and are not current product behavior. For current runtime behavior use `ARCHITECTURE.md`, `DECISIONS.md` and `RUNTIME-INTEGRATION.md`.
+
 # Email Import — Refactoring and Shared Services Direction
 
 ## Status
