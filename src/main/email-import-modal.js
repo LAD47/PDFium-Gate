@@ -7,7 +7,7 @@ class EmailImportReviewModal extends Modal {
     this.model=model || {};
     this.targetPath=String(this.model.suggestedPdfPath || '');
     this.retentionLocked=this.model.retentionLocked===true;
-    this.retentionChoice=this.retentionLocked?'keep':'';
+    this.retentionChoice=this.plugin?.settings?.emailImportRetainSourceAfterSuccess===true?'keep':'discard';
     this.selectedDuplicateIndex=0;
     this.settled=false;
     this.resolveDecision=null;
@@ -43,7 +43,7 @@ class EmailImportReviewModal extends Modal {
   }
 
   updateImportEnabled() {
-    try { this.importButton?.setDisabled?.(!this.retentionChoice); } catch(_) {}
+    try { this.importButton?.setDisabled?.(false); } catch(_) {}
   }
 
   render() {
@@ -130,9 +130,8 @@ class EmailImportReviewModal extends Modal {
       button
         .setCta()
         .setButtonText(t('emailImport.modal.import'))
-        .setDisabled(!this.retentionChoice)
+        .setDisabled(false)
         .onClick(()=>{
-          if(!this.retentionChoice) return;
           this.finish({
             action:'import',
             retainSource:this.retentionChoice==='keep',
