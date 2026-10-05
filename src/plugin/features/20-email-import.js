@@ -256,6 +256,7 @@ class EmailImportFeature {
         openPdf:adapter.openPdf,
         onPdfRollbackError:rollbackError=>console.warn('[PDFium Gate] Email Import PDF rollback failed',rollbackError),
         onRetainedRollbackError:rollbackError=>console.warn('[PDFium Gate] Email Import retained-source rollback failed',rollbackError),
+        attachmentFolderLabel:t('emailImport.attachments.folderNameSuffix'),
         services
       });
 
@@ -460,7 +461,12 @@ class EmailImportFeature {
         };
       },
       services:{
-        suggestedEmailPdfPath:(document,pathExists)=>EMAIL_IMPORT_RUNTIME.suggestedEmailPdfPathInFolder(document,folder,pathExists)
+        suggestedEmailPdfPath:(document,pathExists,attachmentFolderLabel)=>EMAIL_IMPORT_RUNTIME.suggestedEmailPdfPathInFolder(
+          document,
+          folder,
+          pathExists,
+          attachmentFolderLabel
+        )
       },
       notifySuccess:false
     });
