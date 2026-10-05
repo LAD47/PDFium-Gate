@@ -583,5 +583,13 @@
   "documentInfo.archive.title": "Anhänge aus ZIP",
   "documentInfo.archive.source": "Quellarchiv",
   "documentInfo.archive.related": "Dateien im selben Archiv",
-  "documentInfo.archive.none": "Keine weiteren Dateien in diesem Archiv."
+  "documentInfo.archive.none": "Keine weiteren Dateien in diesem Archiv.",
+  "archiveImport.unsupported.title": "ZIP enthält Dateien, die PDFium Gate nicht direkt verarbeitet",
+  "archiveImport.unsupported.intro": "Die ausgewählten ZIP-Archive enthalten {{count}} Datei(en) mit nicht direkt unterstützten Formaten.",
+  "archiveImport.unsupported.supportedInfo": "PDFium Gate kann diese Dateien unverändert behalten oder sie überspringen und die unterstützten Dateien extrahieren.",
+  "archiveImport.unsupported.archive": "{{filename}} — {{count}} nicht unterstützte Datei(en)",
+  "archiveImport.unsupported.more": "… und {{count}} weitere",
+  "archiveImport.unsupported.cancelArchives": "ZIP nicht entpacken",
+  "archiveImport.unsupported.skipUnsupported": "Nicht unterstützte Dateien überspringen",
+  "archiveImport.unsupported.keepUnsupported": "Trotzdem behalten"
 }
