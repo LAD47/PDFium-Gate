@@ -43,7 +43,10 @@ async function handleEmailAttachmentPdfMouseActivation(plugin, eventRecord) {
     });
     if (!resolved?.handled) return { ...resolved, pointResult };
 
-    const opened = await plugin.ports.openEmailAttachmentFromProtocol(resolved.params);
+    const opened = await plugin.ports.openEmailAttachmentFromProtocol({
+      ...resolved.params,
+      parentPdfPath:String(file.path || '')
+    });
     return {
       ok:opened?.ok === true,
       handled:true,
