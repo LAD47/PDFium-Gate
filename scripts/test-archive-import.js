@@ -56,9 +56,13 @@ function createHost(zipBytes,{existing=[]}={}){
   const host=new ArchiveImportFeature();
   host.state={archiveImport:{suppressedPaths:new Set(),inFlight:new Set(),lastResult:null}};
   host.obsidianVaultReadAdapter={
-    async readBinary(){ return zipBytes; },
+    async readBinary(file){
+      if(file?.bytes) return file.bytes;
+      return zipBytes;
+    },
     async readText(file){ return String(file?.text||''); },
-    getAbstractFileByPath(path){ return nodes.get(path)||createdFiles.get(path)||null; }
+    getAbstractFileByPath(path){ return nodes.get(path)||createdFiles.get(path)||null; },
+    getBasePath(){ return 'C:/test-vault'; }
   };
   host.obsidianVaultWriteAdapter={
     async ensureFolder(path){
@@ -159,6 +163,7 @@ function createHost(zipBytes,{existing=[]}={}){
   assert.equal(linkedResult.ok,true);
   assert.equal(linkedResult.extractedCount,3);
   assert.equal(linkedResult.linkedPdfCount,2);
+  assert.equal(linkedResult.vaultRootPath,'C:/test-vault');
   assert.deepEqual(linkedResult.relationshipFailures,[]);
 
   const rapportPath='05 test/PDFium-Gate-ZIP-test-02-PDF/rapport.pdf';
