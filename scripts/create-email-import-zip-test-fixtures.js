@@ -6,6 +6,7 @@ const path=require('path');
 const {zipSync,strToU8}=require('fflate');
 
 const target=path.resolve(process.argv[2] || 'C:\\Obsidian\\Vault\\05 test');
+const selector=String(process.argv[3] || '').trim().toLowerCase();
 
 function wrapBase64(buffer) {
   return Buffer.from(buffer).toString('base64').match(/.{1,76}/g).join('\r\n');
@@ -122,12 +123,20 @@ const fixtures=[
   }
 ];
 
+const selected=selector
+  ? fixtures.filter(fixture=>fixture.file.toLowerCase().includes(selector) || fixture.subject.toLowerCase().includes(selector))
+  : fixtures;
+if(!selected.length) {
+  console.error(`No ZIP fixture matched selector: ${selector}`);
+  process.exit(2);
+}
+
 fs.mkdirSync(target,{recursive:true});
-for(const fixture of fixtures){
+for(const fixture of selected){
   const zipBytes=zip(fixture.files);
   const source=eml({...fixture,zipBytes});
   const out=path.join(target,fixture.file);
   fs.writeFileSync(out,source,'utf8');
   console.log(out);
 }
-console.log(`Created ${fixtures.length} synthetic Email Import ZIP fixtures in ${target}`);
+console.log(`Created ${selected.length} synthetic Email Import ZIP fixture(s) in ${target}`);
