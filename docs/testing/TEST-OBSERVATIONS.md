@@ -80,18 +80,15 @@ This file is a running list of observations found during practical testing that 
    - This deliberately avoids silently deleting metadata together with the PDF and leaves room for a future **Restore from backup** action in the same review flow.
    - Revisit a one-step delete command only if practical use later shows a clear need.
 
-7. **Email Import ZIP attachments: implemented; practical test in progress**
-   - ZIP attachments are now inspected as containers while the original ZIP remains the ordinary source-attachment link target.
-   - Each ZIP expands into its own dedicated subfolder and preserves internal directory structure.
-   - PDFs inside ZIP are routed through normal PDF attachment registration/provenance and become ordinary PDFium Gate documents.
-   - Common text/image/media formats are copied as ordinary vault files.
-   - Other formats trigger one aggregate decision: copy anyway, skip unsupported entries, or do not extract ZIP contents.
-   - Archive path traversal and bounded entry-count/size/compression checks fail closed.
-   - Synthetic EML/ZIP fixture generation is included for practical testing, including PDF-only, mixed supported, unsupported-format, and 35-file cases.
-   - First practical PDF-only ZIP test on 2026-10-05: email import and preservation of the original ZIP succeeded, but the dedicated ZIP subfolder and extracted PDF were not created (test points 3-4 failed).
-   - Installed `main.js` SHA-256 matched the freshly built repository `main.js`, and the generated runtime contains the ZIP extraction code, ruling out a stale deployed plugin.
-   - Follow-up regression coverage now passes the synthetic ZIP through the real EML parser before ZIP inspection/extraction, and runtime item failures are logged explicitly for the next practical diagnosis.
-   - Practical Obsidian verification remains open until the extraction failure is resolved.
+7. **Email Import -> Archive Import ZIP handoff: implemented; practical email test pending**
+   - The first Email Import-specific ZIP implementation was abandoned after practical testing exposed the architectural duplication.
+   - Email Import now owns only the source email relationship: it exports the original ZIP beside the generated email PDF and links that ZIP as the source attachment.
+   - The created ZIP is then routed to the generic Archive Import module, which owns inspection, aggregate unsupported-file choice, safe extraction, folder preservation, PDF registration and Archive Relationship creation.
+   - PDFs nested inside ZIP are no longer treated as direct email attachments. Their relationship is `email PDF -> original ZIP -> archive member`.
+   - Direct PDF email attachments still retain their existing `email_import_attachment_*` provenance.
+   - Archive Import's manual ZIP path is already practically confirmed, including PDF registration, DocumentInfo relationship presentation and clickable PDF/file relations.
+   - Automated regression now verifies that Email Import creates only the original ZIP and hands the created file to Archive Import; it must not create archive members itself.
+   - A fresh practical Thunderbird/Obsidian ZIP-email test is still required for the combined handoff.
 
 8. **PDF annotation backup: reassess `.pdfium-backup` after the independent backup solution exists**
    - Keep the current `backupOriginalPdf` safety function for now: it stores one original PDF copy before PDFium Gate first modifies the file and never overwrites an existing copy.
