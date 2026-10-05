@@ -4,6 +4,7 @@ const assert = require('assert/strict');
 const {
   normalizeVaultPath,
   safeFilenamePart,
+  pairedEmailAttachmentFolderPath,
   suggestedEmailPdfPath,
   suggestedEmailPdfPathInFolder,
   suggestedAttachmentPdfPath,
@@ -21,6 +22,8 @@ assert.equal(normalizeVaultPath('/Folder/Mail.pdf/'), 'Folder/Mail.pdf');
 assert.equal(safeFilenamePart('  A:B?C  ', 'email'), 'A B C');
 assert.equal(safeFilenamePart('CON', 'email'), '_CON');
 assert.equal(safeFilenamePart('...', 'fallback'), 'fallback');
+assert.equal(pairedEmailAttachmentFolderPath('Cases/mail.pdf','Vedlegg'),'Cases/mail Vedlegg');
+assert.equal(pairedEmailAttachmentFolderPath('Cases/mail.pdf','Attachments'),'Cases/mail Attachments');
 
 const emailDocument = {
   message: {
@@ -49,8 +52,8 @@ assert.equal(
 );
 assert.equal(
   suggestedEmailPdfPathInFolder(emailDocument, 'Cases/2026', existingSet([
-    'Cases/2026/2026-09-29 - Quarterly report'
-  ])),
+    'Cases/2026/2026-09-29 - Quarterly report Vedlegg'
+  ]),'Vedlegg'),
   'Cases/2026/2026-09-29 - Quarterly report (2).pdf'
 );
 assert.equal(
@@ -77,14 +80,14 @@ assert.equal(
 );
 
 assert.deepEqual(
-  validateTargetPdfPath('Email Imports/new.pdf', existingSet([])),
-  { ok: true, path: 'Email Imports/new.pdf', attachmentFolder:'Email Imports/new' }
+  validateTargetPdfPath('Email Imports/new.pdf', existingSet([]),'Vedlegg'),
+  { ok: true, path: 'Email Imports/new.pdf', attachmentFolder:'Email Imports/new Vedlegg' }
 );
 assert.equal(validateTargetPdfPath('Email Imports/new.txt', existingSet([])).ok, false);
 assert.equal(validateTargetPdfPath('../new.pdf', existingSet([])).ok, false);
 assert.equal(validateTargetPdfPath('.pdf-metadata/new.pdf', existingSet([])).ok, false);
 assert.equal(validateTargetPdfPath('File Metadata/new.pdf', existingSet([])).ok, false);
 assert.equal(validateTargetPdfPath('Email Imports/existing.pdf', existingSet(['Email Imports/existing.pdf'])).ok, false);
-assert.equal(validateTargetPdfPath('Email Imports/new.pdf', existingSet(['Email Imports/new'])).ok, false);
+assert.equal(validateTargetPdfPath('Email Imports/new.pdf', existingSet(['Email Imports/new Vedlegg']),'Vedlegg').ok, false);
 
-console.log('Email Import target-path policy OK: normalization, same-folder drop suggestions, safe filenames, deterministic unique allocation and fail-closed target validation verified.');
+console.log('Email Import target-path policy OK: normalization, localized paired attachment folders, same-folder drop suggestions, safe filenames, deterministic unique allocation and fail-closed target validation verified.');
