@@ -81,6 +81,53 @@ class ArchiveImportFeature {
     return {ok:true,pdfPath,linked:true,recordPath,linkedCount:expectedMembers.length+1};
   }
 
+  archiveImportFilePathFromWikilink(value) {
+    const text=String(value || '').trim();
+    const match=/^\[\[([\s\S]+)\]\]$/.exec(text);
+    const target=match ? String(match[1] || '').split('|',1)[0] : text;
+    return this.normalizeArchiveImportVaultPath(target);
+  }
+
+  async findArchivePdfMembersForSourceZip(sourceZipPath) {
+    const source=this.normalizeArchiveImportVaultPath(sourceZipPath);
+    if(!source || !/\.zip$/i.test(source)) return {ok:true,sourceZipPath:source,pdfPaths:[]};
+    const sourceFile=this.obsidianVaultReadAdapter.getAbstractFileByPath(source);
+    if(!sourceFile || String(sourceFile.extension || '').toLowerCase()!=='zip') {
+      return {ok:true,sourceZipPath:source,pdfPaths:[]};
+    }
+
+    const markdownFiles=this.obsidianVaultReadAdapter.listMarkdownFiles();
+    const pdfPaths=[];
+    const seen=new Set();
+    for(const recordFile of Array.isArray(markdownFiles)?markdownFiles:[]) {
+      const recordPath=this.normalizeArchiveImportVaultPath(recordFile?.path);
+      if(!/^File Metadata\//.test(recordPath) || String(recordFile?.extension || '').toLowerCase()!=='md') continue;
+
+      const frontmatter=this.obsidianMetadataCacheAdapter?.getFrontmatter?.(recordFile) || null;
+      if(!frontmatter || String(frontmatter.filemeta_status || '')!=='active') continue;
+      const linkedPdfPath=this.archiveImportFilePathFromWikilink(frontmatter.filemeta_file);
+      if(!linkedPdfPath) continue;
+      const resolvedPdf=this.normalizeArchiveImportVaultPath(
+        this.obsidianMetadataCacheAdapter?.resolveLinkPath?.(linkedPdfPath,recordPath) || linkedPdfPath
+      );
+      const pdfFile=this.obsidianVaultReadAdapter.getAbstractFileByPath(resolvedPdf);
+      if(!pdfFile || String(pdfFile.extension || '').toLowerCase()!=='pdf') continue;
+
+      const markdown=String(await this.obsidianVaultReadAdapter.readText(recordFile));
+      const relation=ARCHIVE_IMPORT_RUNTIME.extractArchiveRelationship(markdown);
+      if(!relation?.sourceZipPath) continue;
+      const resolvedSource=this.normalizeArchiveImportVaultPath(
+        this.obsidianMetadataCacheAdapter?.resolveLinkPath?.(relation.sourceZipPath,recordPath) || relation.sourceZipPath
+      );
+      if(resolvedSource!==source || seen.has(resolvedPdf)) continue;
+      seen.add(resolvedPdf);
+      pdfPaths.push(resolvedPdf);
+    }
+
+    pdfPaths.sort((a,b)=>a.localeCompare(b,undefined,{numeric:true,sensitivity:'base'}));
+    return {ok:true,sourceZipPath:source,pdfPaths};
+  }
+
   archiveImportDecisionModel(plans) {
     const archives=[];
     let unsupportedCount=0;
