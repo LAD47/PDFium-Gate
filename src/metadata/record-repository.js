@@ -62,9 +62,18 @@ function createMetadataRecordRepository({vaultReadAdapter,vaultWriteAdapter,fron
       frontmatter.filemeta_file=recordApi.metadataRecordFileLink(filePath);
       frontmatter.filemeta_status=record.status;
       const values=record.values && typeof record.values==='object' && !Array.isArray(record.values) ? record.values : {};
-      for(const property of fieldProperties) {
-        if(Object.prototype.hasOwnProperty.call(values,property) && !recordApi.metadataRecordIsEmptyUserValue(values[property])) frontmatter[property]=recordApi.metadataRecordClone(values[property]);
-        else delete frontmatter[property];
+      const valueProperties=new Set(fieldProperties);
+      for(const property of Object.keys(values)) {
+        const key=String(property || '');
+        if(!key || key.startsWith('filemeta_') || key.startsWith(recordApi.METADATA_RECORD_LEGACY_PREFIX)) continue;
+        valueProperties.add(key);
+      }
+      for(const property of valueProperties) {
+        if(Object.prototype.hasOwnProperty.call(values,property) && !recordApi.metadataRecordIsEmptyUserValue(values[property])) {
+          frontmatter[property]=recordApi.metadataRecordClone(values[property]);
+        } else {
+          delete frontmatter[property];
+        }
       }
     });
     return await verifyRecordPath(String(file.path || ''),record.id,schema);
