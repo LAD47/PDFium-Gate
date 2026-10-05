@@ -308,10 +308,12 @@ Every imported email has one deterministic attachment folder paired with the ema
 
 ```text
 Cases/2026-10-05 - Subject.pdf
-Cases/2026-10-05 - Subject/
+Cases/2026-10-05 - Subject Vedlegg/
 ```
 
-Direct PDF and non-PDF attachments are written below this folder. The PDF and folder allocator treats either path as a collision, so a later import receives the same numeric suffix on both concepts rather than accidentally reusing an unrelated folder.
+The folder suffix is localized from the active UI language. Norwegian Bokmål uses `Vedlegg`, English uses `Attachments`, and the other supported locales use their corresponding attachment term.
+
+Direct PDF and non-PDF attachments are written below this folder. The PDF and localized folder allocator treats either path as a collision, so a later import receives the same numeric suffix on both concepts rather than accidentally reusing an unrelated folder.
 
 All attachment writes are read back and byte-compared before the attachment transaction is accepted.
 
