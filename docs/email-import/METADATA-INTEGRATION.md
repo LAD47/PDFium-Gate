@@ -38,7 +38,17 @@ The projection can persist:
 - `email_import_inline_resource_count`
 - `email_import_pdf_candidate_count`
 
-These properties are not `filemeta_*` system identity fields and do not alter the generic document-record contract. The existing record parser already preserves non-system frontmatter values.
+These properties are not `filemeta_*` system identity fields and do not alter the generic document-record contract. The existing record parser preserves non-system frontmatter values.
+
+For PDF attachments originating inside ZIP containers, child PDF provenance can additionally record:
+
+- parent email record/document identity;
+- decoded attachment SHA-256;
+- original ZIP filename;
+- original ZIP SHA-256;
+- original ZIP member path.
+
+The source ZIP does not need to remain as a live vault file for this provenance to survive.
 
 The `email_import_*` namespace is reserved by Email Import policy. If a user metadata schema already uses that namespace, registration fails closed rather than silently overwriting a user field.
 
@@ -82,13 +92,15 @@ It is not silently changed to the UTC wall clock merely because the canonical in
 
 If no usable source wall clock exists, the projection falls back to the canonical ISO instant in UTC.
 
-## Fresh-record rule
+## Fresh-path and auto-registration rule
 
-Email Import expects the generated PDF path to be new and unregistered when provenance is attached.
+Email Import requires a fresh target **file path** before it creates a generated email PDF or attachment PDF. Generated-PDF naming and collision handling are therefore resolved before durable writes.
 
-This is deliberate. If the target PDF path already has a document record, Email Import fails closed rather than attaching source identity to a pre-existing document. Generated-PDF naming and collision handling must therefore be resolved before metadata registration.
+PDFium Gate's normal automatic PDF registration may react immediately to the newly created PDF and create a minimal document record before Email Import saves its richer provenance. A minimal record created for a path that the current import transaction has just created is transaction-owned and is upgraded with Email Import provenance rather than treated as an external collision.
 
-The intended registration port is the existing `saveDocumentMetadataRecordValues` operation. On a fresh PDF it lazily creates the ordinary `pdf/document` Markdown record with both technical provenance and compatible initial user values.
+A genuinely pre-existing PDF path or record that existed before the transaction remains a fail-closed collision.
+
+The registration/update port is the existing `saveDocumentMetadataRecordValues` operation. Rollback also owns any minimal records created by auto-registration for PDF paths created by the failed transaction.
 
 ## DocumentInfo and Bases
 
@@ -110,4 +122,7 @@ A user may later build a custom Base that explicitly queries technical provenanc
 - unrelated custom fields are not guessed;
 - source wall-clock time is preserved when available;
 - `email_import_*` schema collisions fail closed;
-- provenance is not attached automatically to an already-registered PDF.
+- a genuinely pre-existing PDF is not silently rebound to email provenance;
+- a transaction-owned minimal record created by PDF auto-registration is safely upgraded;
+- rollback can remove transaction-owned PDF metadata records after downstream failure;
+- archive-member provenance survives without a live source ZIP path.
