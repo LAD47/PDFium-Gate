@@ -383,6 +383,11 @@ class EmailImportFeature {
     if(result?.ok && !result.openedExisting && result.pdfPath && this.settings?.emailDragDropExtractAttachments!==false) {
       try {
         attachmentResult=await this.exportAutomaticEmailAttachments(result.pdfPath);
+        this.lastEmailAttachmentExportDiagnostic={
+          at:new Date().toISOString(),
+          parentPdfPath:result.pdfPath,
+          result:deepClone(attachmentResult)
+        };
         if(Array.isArray(attachmentResult?.failures) && attachmentResult.failures.length) {
           for(const failure of attachmentResult.failures) {
             console.warn('[PDFium Gate] Automatic email attachment item failed',result.pdfPath,failure);
@@ -399,6 +404,11 @@ class EmailImportFeature {
           exportedCount:0,
           relationError:null,
           failures:[{filename:'',error:error instanceof Error?error.message:String(error)}]
+        };
+        this.lastEmailAttachmentExportDiagnostic={
+          at:new Date().toISOString(),
+          parentPdfPath:result.pdfPath,
+          result:deepClone(attachmentResult)
         };
       }
     }
