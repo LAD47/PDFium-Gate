@@ -108,7 +108,10 @@ This file is a running list of observations found during practical testing that 
      - recursive filesystem listing confirmed `rapport.pdf`, `Vedlegg/vedtak.pdf` and `Vedlegg/notat.txt` exist physically in the expected structure.
    - The runtime diagnostic from the same run independently agrees with the filesystem result: vault root `C:\\Obsidian\\Vault`, one extracted archive, three extracted members, two linked PDFs and no relationship failures.
    - This practically confirms the persistence portion of the combined chain `Email Import -> original ZIP -> Archive Import -> physical extracted files`.
-   - Final user-facing verification still pending: confirm the two extracted PDFs show the expected Archive Relationship section in DocumentInfo and that the links open the intended files.
+   - Final DocumentInfo verification passed: both extracted PDFs show the expected Archive Relationship section, PDF-to-PDF and PDF-to-text links open correctly, and `vedtak.pdf` links back to `rapport.pdf`.
+   - A final UX issue was then found in the generated email PDF: clicking the original ZIP attachment still opened the ZIP container rather than an extracted PDF.
+   - Updated click rule: the parent email relationship continues to point to the original ZIP for provenance, but the generated email PDF's attachment click now resolves Archive Relationship members. One extracted PDF opens directly; multiple extracted PDFs require an explicit chooser; zero resolved PDFs fall back to the original ZIP.
+   - Automated regression covers both one-PDF direct routing and multiple-PDF chooser routing. Practical verification of this final ZIP-click behavior remains open.
 
 8. **PDF annotation backup: reassess `.pdfium-backup` after the independent backup solution exists**
    - Keep the current `backupOriginalPdf` safety function for now: it stores one original PDF copy before PDFium Gate first modifies the file and never overwrites an existing copy.
