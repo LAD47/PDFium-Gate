@@ -75,6 +75,13 @@ async onload() {
     this.electronFocusDiagnosticsAdapter = createElectronFocusDiagnosticsAdapter({ mainModuleLoader:this.electronRemoteRequireAdapter });
     this.mainProcessTransport = createMainProcessTransport({ remoteRequireAdapter:this.electronRemoteRequireAdapter });
     this.ports.registerEmailImportCommand();
+    if(typeof window!=='undefined') {
+      this.obsidianPluginRegistrationAdapter.registerDomEvent(window,'focus',()=>{
+        void this.ports.reconcileArchiveImportVaultFiles().catch(error=>
+          console.warn('[PDFium Gate] Archive Import focus reconciliation failed',error)
+        );
+      });
+    }
 
     this.obsidianPluginRegistrationAdapter.registerView(VIEW_TYPE, leaf => new PdfiumGateView(leaf, this));
     this.obsidianPluginRegistrationAdapter.registerEvent(this.obsidianWorkspaceLifecycleAdapter.onActiveLeafChange(leaf => {
@@ -240,6 +247,9 @@ async onload() {
       this.obsidianPluginRegistrationAdapter.registerEvent(this.obsidianVaultLifecycleAdapter.onCreate(file => {
         void this.ports.handleArchiveImportVaultCreate(file);
       }));
+      void this.ports.reconcileArchiveImportVaultFiles().catch(error=>
+        console.warn('[PDFium Gate] Archive Import startup reconciliation failed',error)
+      );
       this.obsidianPluginRegistrationAdapter.registerEvent(this.obsidianVaultLifecycleAdapter.onModify(file => refreshDocumentInfoAfterRecordEvent(this.ports.handleDocumentRecordVaultModify(file),'record-modify')));
       this.obsidianPluginRegistrationAdapter.registerEvent(this.obsidianVaultLifecycleAdapter.onRename((file, oldPath) => refreshDocumentInfoAfterRecordEvent(this.ports.handleDocumentRecordVaultRename(file, oldPath),'record-rename')));
       this.obsidianPluginRegistrationAdapter.registerEvent(this.obsidianVaultLifecycleAdapter.onDelete(file => {
