@@ -72,11 +72,13 @@ Vault PDF + ordinary File Metadata pdf/document record
       v
 Normal PDFium Gate PDF workflow
 
-Optional explicit attachment extraction/import
+Mandatory attachment transaction
       |
-      +--> byte/hash verification
-      +--> safe filename and destination boundary
-      +--> later PDFium Gate import for chosen PDF attachments
+      +--> complete preflight plan while source bytes are in memory
+      +--> one sibling attachment folder for direct files + all ZIP members
+      +--> byte/read-back verification
+      +--> normal PDF registration + provenance/relationships
+      +--> rollback all transaction-owned outputs on failure
 ```
 
 ## 3. Module boundaries
