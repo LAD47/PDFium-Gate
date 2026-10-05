@@ -198,7 +198,9 @@ The generated email PDF lists ordinary user attachments separately. Inline resou
 
 PDF attachments are identified as candidates for later independent PDFium Gate import when PDF evidence exists in the MIME type, decoded payload signature, or filename. This classification does **not** automatically import, flatten, or create separate vault documents.
 
-Attachment extraction is explicit rather than automatic. Before an attachment is written, its available decoded payload bytes are checked against canonical size and SHA-256. The destination filename is sanitized for cross-platform filesystem safety and cannot escape the caller-provided destination root.
+Attachment extraction is explicit rather than automatic. Before an attachment is written, its available decoded payload bytes are checked against canonical size and SHA-256.
+
+**Superseded for the current integrated workflow by D-031 through D-033:** Email Import now treats ordinary user-facing attachment output as a mandatory part of successful import. The byte/hash and safe-path requirements from this decision remain authoritative. The destination filename is sanitized for cross-platform filesystem safety and cannot escape the caller-provided destination root.
 
 Extraction never silently overwrites a different existing file. If the target already contains exactly the same bytes, it may be reused. If the target contains different bytes, extraction fails closed so the future UI/import controller can ask the user what to do.
 
@@ -323,7 +325,7 @@ The principle is reuse without premature abstraction: promote mechanisms when th
 
 The previous D-031 placeholder is resolved by the October 5 practical design review.
 
-Ordinary user-facing attachments are imported automatically when attachment extraction is enabled. PDFium Gate creates one sibling attachment folder whose vault path is the generated email PDF path without the final `.pdf` extension.
+Ordinary user-facing attachments are a required part of a successful Email Import. PDFium Gate creates one sibling attachment folder whose vault path is the generated email PDF path without the final `.pdf` extension. The former attachment-extraction on/off setting is removed because disabling attachment export while also discarding the EML/MSG transport source could lose attachment content.
 
 For example:
 
