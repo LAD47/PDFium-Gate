@@ -47,7 +47,7 @@
   "settings.emailImport.dragDrop.name": "Automatically import dropped email files",
   "settings.emailImport.dragDrop.description": "When an .eml or .msg file is added to the vault, import it automatically into the same folder without an additional review dialog.",
   "settings.emailImport.attachments.name": "Automatically extract email attachments",
-  "settings.emailImport.attachments.description": "For automatic drag-and-drop imports, extract ordinary attachments next to the email PDF. ZIP attachments keep the original ZIP and extract supported contents into a dedicated subfolder. Inline/CID resources stay embedded in the email rendering.",
+  "settings.emailImport.attachments.description": "Extract ordinary attachments into a folder with the same base name as the email PDF. ZIP files are treated as transport containers: their contents are preflighted and imported into the same attachment folder, and the ZIP itself is not kept after a successful import.",
   "emailImport.notice.dragDropExisting": "This email was already imported. Opened the existing PDF: {{path}}.",
   "emailImport.notice.dragDropImported": "Email imported automatically to {{path}}. Extracted attachments: {{count}}.",
   "emailImport.notice.dragDropImportedWithAttachmentErrors": "Email imported automatically to {{path}}. Extracted attachments: {{count}}; failed: {{failed}}.",
@@ -58,5 +58,7 @@
   "emailImport.zipModal.more": "…and {{count}} more file(s).",
   "emailImport.zipModal.cancelArchives": "Do not extract ZIP",
   "emailImport.zipModal.skipUnsupported": "Skip unsupported files",
-  "emailImport.zipModal.keepUnsupported": "Copy them anyway"
+  "emailImport.zipModal.keepUnsupported": "Copy them anyway",
+  "settings.emailImport.retainSource.name": "Keep original EML/MSG after successful import",
+  "settings.emailImport.retainSource.description": "Advanced option. Off by default. When enabled, the exact original EML/MSG source is retained in hidden plugin storage after a successful, verified import."
 }
