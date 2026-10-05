@@ -15,6 +15,14 @@ function safeFilenamePart(value, fallback = 'email') {
   return text.slice(0, 120).trim() || fallback;
 }
 
+function pairedEmailAttachmentFolderPath(parentPdfPath,folderLabel='') {
+  const parent=normalizeVaultPath(parentPdfPath);
+  if(!/\.pdf$/i.test(parent)) throw new Error('Parent email PDF path must end in .pdf.');
+  const rawLabel=String(folderLabel||'').replace(/[<>:"/\\|?*\x00-\x1f]/g,' ').replace(/\s+/g,' ').trim();
+  const suffix=rawLabel ? ` ${rawLabel}` : '';
+  return parent.replace(/\.pdf$/i,'')+suffix;
+}
+
 function requirePathExistsProbe(pathExists) {
   if (typeof pathExists !== 'function') {
     throw new TypeError('pathExists must be a function.');
@@ -22,7 +30,7 @@ function requirePathExistsProbe(pathExists) {
   return pathExists;
 }
 
-function suggestedEmailPdfPathInFolder(document, folderPath, pathExists) {
+function suggestedEmailPdfPathInFolder(document, folderPath, pathExists, attachmentFolderLabel = '') {
   const exists = requirePathExistsProbe(pathExists);
   const subject = safeFilenamePart(document?.message?.subject, 'email');
   const iso = String(document?.message?.dateTime?.iso || '');
@@ -34,15 +42,15 @@ function suggestedEmailPdfPathInFolder(document, folderPath, pathExists) {
     const suffix = index === 1 ? '' : ` (${index})`;
     const name = `${base}${suffix}.pdf`;
     const candidate = folder ? `${folder}/${name}` : name;
-    const attachmentFolder = candidate.replace(/\.pdf$/i, '');
+    const attachmentFolder = pairedEmailAttachmentFolderPath(candidate,attachmentFolderLabel);
     if (!exists(candidate) && !exists(attachmentFolder)) return candidate;
   }
 
   throw new Error('Could not allocate a unique Email Import PDF path.');
 }
 
-function suggestedEmailPdfPath(document, pathExists) {
-  return suggestedEmailPdfPathInFolder(document, 'Email Imports', pathExists);
+function suggestedEmailPdfPath(document, pathExists, attachmentFolderLabel = '') {
+  return suggestedEmailPdfPathInFolder(document, 'Email Imports', pathExists, attachmentFolderLabel);
 }
 
 function suggestedAttachmentPdfPath(parentPdfPath, attachment, pathExists) {
@@ -64,7 +72,7 @@ function suggestedAttachmentPdfPath(parentPdfPath, attachment, pathExists) {
   throw new Error('Could not allocate a unique attachment PDF path.');
 }
 
-function validateTargetPdfPath(value, pathExists) {
+function validateTargetPdfPath(value, pathExists, attachmentFolderLabel = '') {
   const exists = requirePathExistsProbe(pathExists);
   const target = normalizeVaultPath(value);
   if (!target || !/\.pdf$/i.test(target)) {
@@ -85,7 +93,7 @@ function validateTargetPdfPath(value, pathExists) {
   }
 
   if (exists(target)) return { ok: false, error: 'Target path already exists.' };
-  const attachmentFolder=target.replace(/\.pdf$/i,'');
+  const attachmentFolder=pairedEmailAttachmentFolderPath(target,attachmentFolderLabel);
   if (exists(attachmentFolder)) return { ok:false, error:'The matching email attachment folder already exists.' };
   return { ok: true, path: target, attachmentFolder };
 }
@@ -93,6 +101,7 @@ function validateTargetPdfPath(value, pathExists) {
 module.exports = {
   normalizeVaultPath,
   safeFilenamePart,
+  pairedEmailAttachmentFolderPath,
   suggestedEmailPdfPath,
   suggestedEmailPdfPathInFolder,
   suggestedAttachmentPdfPath,
