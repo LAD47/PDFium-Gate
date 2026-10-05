@@ -264,6 +264,7 @@ async function runPlannedEmailAttachmentExport({
   deleteDocumentMetadataRecordForPdf,
   saveDocumentMetadataRecordValues,
   updateParentAttachmentLinks,
+  writeArchiveRelationshipForPdf,
   onRollbackError,
   services
 }) {
@@ -365,6 +366,26 @@ async function runPlannedEmailAttachmentExport({
       const saved=await saveMetadata(item.path,provenance.values);
       if(!saved?.ok) throw new Error(saved?.error||`Attachment metadata registration failed: ${item.path}`);
       registeredPdfPaths.push(item.path);
+    }
+
+    if(typeof writeArchiveRelationshipForPdf==='function') {
+      for(const item of created) {
+        const entry=item.entry;
+        if(entry.support!=='pdf' || !entry.archiveName) continue;
+        const siblingPaths=created
+          .filter(candidate=>candidate.entry.sourceAttachmentIndex===entry.sourceAttachmentIndex)
+          .map(candidate=>candidate.path);
+        const relationship=await writeArchiveRelationshipForPdf({
+          pdfPath:item.path,
+          provenance:{
+            sourceArchiveName:entry.archiveName,
+            sourceArchiveSha256:entry.archiveSha256,
+            parentDocumentPath:parentPdfPath
+          },
+          memberPaths:siblingPaths
+        });
+        if(relationship?.ok===false) throw new Error(relationship.error||`Archive relationship failed: ${item.path}`);
+      }
     }
 
     const relation=await updateLinks({
