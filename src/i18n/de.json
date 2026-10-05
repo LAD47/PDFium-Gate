@@ -594,5 +594,10 @@
   "archiveImport.unsupported.keepUnsupported": "Trotzdem behalten",
   "archiveImport.openPdf.title": "PDF aus ZIP auswählen",
   "archiveImport.openPdf.intro": "Dieser E-Mail-Anhang ist ein ZIP-Archiv. Wählen Sie die extrahierte PDF aus, die geöffnet werden soll.",
-  "archiveImport.openPdf.open": "PDF öffnen"
+  "archiveImport.openPdf.open": "PDF öffnen",
+  "archiveImport.failure.title": "ZIP-Import fehlgeschlagen",
+  "archiveImport.failure.intro": "PDFium Gate konnte {{name}} nicht importieren. Alle bei diesem Versuch erstellten Dateien wurden zurückgerollt.",
+  "archiveImport.failure.question": "Die ZIP-Datei kann durch die Standarddateiansicht von Obsidian verborgen sein. Soll sie zur späteren Prüfung behalten oder jetzt gelöscht werden?",
+  "archiveImport.failure.keep": "ZIP behalten",
+  "archiveImport.failure.delete": "ZIP löschen"
 }
