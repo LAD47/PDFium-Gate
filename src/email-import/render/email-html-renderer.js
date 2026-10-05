@@ -127,7 +127,27 @@ function emailAttachmentProtocolUri(document, attachment, index) {
   return `obsidian://${EMAIL_ATTACHMENT_PROTOCOL_ACTION}?source=${encodeURIComponent(sourceSha256)}&attachment=${encodeURIComponent(attachmentSha256)}&index=${ordinal}`;
 }
 
-function renderAttachmentList(document) {
+function renderManifestEntry(document, entry) {
+  const attachment={sha256:entry?.sourceAttachmentSha256};
+  const uri=emailAttachmentProtocolUri(document,attachment,Number(entry?.relationIndex));
+  const label=`<strong>${escapeHtml(entry?.displayName || entry?.relativePath || '(unnamed attachment)')}</strong>`;
+  return `<li>${uri ? `<a href="${escapeHtml(uri)}">${label}</a>` : label}</li>`;
+}
+
+function renderAttachmentManifest(document, manifest) {
+  const groups=Array.isArray(manifest?.groups)?manifest.groups:[];
+  if(!groups.length) return '<p class="email-no-attachments">Ingen vedlegg</p>';
+  return `<ul class="email-attachments">${groups.map(group=>{
+    const entries=Array.isArray(group?.entries)?group.entries:[];
+    if(group?.type==='archive') {
+      return `<li><strong>${escapeHtml(group.label || 'ZIP')}</strong><ul>${entries.map(entry=>renderManifestEntry(document,entry)).join('')}</ul></li>`;
+    }
+    return entries.map(entry=>renderManifestEntry(document,entry)).join('');
+  }).join('')}</ul>`;
+}
+
+function renderAttachmentList(document, attachmentManifest = null) {
+  if(attachmentManifest) return renderAttachmentManifest(document,attachmentManifest);
   const analysis = analyzeEmailAttachments(document);
   const list = analysis.attachments;
 
@@ -146,7 +166,7 @@ function renderHeaderRow(label, value) {
   return `<tr><th>${escapeHtml(label)}</th><td>${escapeHtml(value)}</td></tr>`;
 }
 
-function renderEmailDocumentToHtml(document) {
+function renderEmailDocumentToHtml(document, options = {}) {
   if (!document || typeof document !== 'object') {
     throw new TypeError('Canonical Email Document must be an object.');
   }
@@ -189,7 +209,7 @@ function renderEmailDocumentToHtml(document) {
 <h1>${escapeHtml(subject)}</h1>
 <table class="email-header"><tbody>${rows}</tbody></table>
 <section class="email-body">${renderBody(document)}</section>
-<section class="attachments"><h2>Vedlegg</h2>${renderAttachmentList(document)}</section>
+<section class="attachments"><h2>Vedlegg</h2>${renderAttachmentList(document,options.attachmentManifest || null)}</section>
 </main>
 </body>
 </html>
@@ -203,6 +223,7 @@ module.exports = {
   sanitizeMessageHtml,
   renderEmailDocumentToHtml,
   renderAttachmentList,
+  renderAttachmentManifest,
   emailAttachmentProtocolUri,
   attachmentDataUrlForCid,
   formatAddress,
