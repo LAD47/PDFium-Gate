@@ -327,19 +327,36 @@ The PDF-attachment import flow is user-verified.
 
 ### ZIP/container attachment policy
 
-ZIP attachment handling is now implemented as a container-routing layer and awaits practical Obsidian verification.
+ZIP handling is now a shared Archive Import capability rather than an Email Import submodule.
 
-- the original ZIP attachment is still exported as the ordinary one-to-one email attachment, preserving the existing immutable-email-PDF attachment link model;
-- ZIP contents are extracted into a dedicated subfolder named from the exported ZIP file; if that folder name already exists, a numeric suffix is allocated;
-- internal ZIP directory structure is preserved after cross-platform filename sanitization;
-- a PDF inside the ZIP follows the same PDF attachment registration/provenance path as a directly attached PDF and receives its own ordinary PDFium Gate document record;
-- common vault-readable text, image, audio and video formats are copied as ordinary files;
-- other formats are reported in one aggregate decision UI. The user may copy them anyway, skip those entries, or leave all ZIP contents unextracted while retaining the original ZIP attachment;
-- extracted archive members are deliberately not inserted into the parent email's one-to-one attachment-link block. The original ZIP remains that source attachment's link target; expanded members live below its dedicated folder and PDF members keep parent-email provenance in their own records;
-- nested ZIP files are not recursively expanded in this first implementation;
-- unsafe archive paths, excessive entry counts/sizes/compression ratios, and unsupported compression methods fail closed for the affected archive/entry.
+Email Import has only two ZIP-specific responsibilities:
 
-The ZIP layer uses the same retained immutable email source as the source of attachment bytes; it does not weaken the existing SHA-256 source-integrity boundary.
+- export the original ZIP attachment unchanged beside the generated email PDF;
+- keep the original ZIP as the parent email's one-to-one attachment-link target.
+
+After creation, the ZIP file is handed to Archive Import. Archive Import owns:
+
+- ZIP inspection and safety limits;
+- one aggregate unsupported-file decision for a routed batch;
+- dedicated extraction-folder allocation;
+- internal directory preservation and filename sanitization;
+- extraction of supported files and optional preservation of unsupported files;
+- normal PDF registration for extracted PDFs;
+- Archive Relationship creation and DocumentInfo presentation.
+
+A PDF nested inside a ZIP is not modeled as a direct email attachment. The relationship chain is:
+
+```text
+email PDF -> original ZIP -> extracted archive member
+```
+
+Therefore nested PDFs receive normal PDF records plus Archive Relationship links, not direct `email_import_attachment_*` provenance. Direct PDF email attachments continue to use the existing Email Import attachment-provenance path.
+
+Expanded ZIP members are deliberately not inserted into the parent email's attachment-link block. The original ZIP remains the source attachment's live target.
+
+Nested ZIP files are not recursively expanded in this first implementation. Unsafe archive paths, excessive entry counts/sizes/compression ratios, and unsupported compression methods fail closed.
+
+This separation keeps Email Import responsible for email semantics and Archive Import responsible for archive semantics while preserving the immutable retained email source and SHA-256 integrity boundary.
 
 ## 12. Metadata and document-register boundary
 
