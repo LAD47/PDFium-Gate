@@ -70,15 +70,6 @@ class PdfiumGateSettingsTab extends PluginSettingTab {
         }));
 
     new Setting(containerEl)
-      .setName(t('settings.emailImport.attachments.name'))
-      .setDesc(t('settings.emailImport.attachments.description'))
-      .addToggle(toggle => toggle
-        .setValue(this.plugin.settings?.emailDragDropExtractAttachments !== false)
-        .onChange(async value => {
-          await this.saveSetting('emailDragDropExtractAttachments', !!value);
-        }));
-
-    new Setting(containerEl)
       .setName(t('settings.emailImport.retainSource.name'))
       .setDesc(t('settings.emailImport.retainSource.description'))
       .addToggle(toggle => toggle
