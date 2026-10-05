@@ -586,7 +586,7 @@
   "documentInfo.archive.none": "Ingen andre filer i dette arkiv.",
   "archiveImport.unsupported.title": "ZIP indeholder filer, som PDFium Gate ikke håndterer direkte",
   "archiveImport.unsupported.intro": "De valgte ZIP-arkiver indeholder {{count}} fil(er) med formater, der ikke håndteres direkte.",
-  "archiveImport.unsupported.supportedInfo": "PDFium Gate kan stadig beholde filerne uændret eller springe dem over og pakke de understøttede filer ud.",
+  "archiveImport.unsupported.supportedInfo": "PDFium Gate kan beholde disse filer uændret eller springe dem over. Hvis du springer dem over, importeres de ikke, og kilde-ZIP-filen slettes, når resten af importen er gennemført.",
   "archiveImport.unsupported.archive": "{{filename}} — {{count}} ikke-understøttet(e) fil(er)",
   "archiveImport.unsupported.more": "… og {{count}} mere",
   "archiveImport.unsupported.cancelArchives": "Pak ikke ZIP ud",
@@ -599,5 +599,7 @@
   "archiveImport.failure.intro": "PDFium Gate kunne ikke importere {{name}}. Filer oprettet under forsøget er rullet tilbage.",
   "archiveImport.failure.question": "ZIP-filen kan være skjult af Obsidians standardindstillinger. Vil du beholde den til senere kontrol eller slette den nu?",
   "archiveImport.failure.keep": "Behold ZIP",
-  "archiveImport.failure.delete": "Slet ZIP"
+  "archiveImport.failure.delete": "Slet ZIP",
+  "archiveImport.notice.success": "ZIP importeret til {{folder}} ({{count}} filer).",
+  "archiveImport.notice.deleteFailed": "Den mislykkede ZIP-fil kunne ikke slettes: {{error}}"
 }
