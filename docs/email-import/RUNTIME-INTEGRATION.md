@@ -1,167 +1,178 @@
-# Email Import — Runtime Integration
+# Email Import — runtime integration
 
-This document records the first user-facing Obsidian runtime integration for Email Import.
+## Status
 
-## Entry point
+This document describes the **current** integrated Email Import runtime.
 
-The initial integration is deliberately command-based rather than drag-and-drop based.
+Earlier flows that reread a permanently retained EML/MSG source after PDF creation, exported a visible ZIP and then delegated that ZIP to Archive Import are superseded for new imports.
 
-PDFium Gate registers one explicit command:
-
-```text
-Import email (.eml/.msg)
-```
-
-The command opens an Electron main-process file picker restricted to `.eml` and `.msg` sources. Drag-and-drop and batch import remain later UX work and are not required to validate the core import workflow.
-
-## Runtime flow
-
-The integrated flow is:
+## Main runtime flow
 
 ```text
-Choose .eml/.msg source
+EML / MSG source bytes
         |
         v
-Read exact source bytes
+exact SHA-256 + exact-source duplicate lookup
         |
         v
-SHA-256 exact-duplicate lookup
+parse Canonical Email Document v1
         |
         v
-Parse to Canonical Email Document v1
+allocate email PDF + localized sibling attachment folder
         |
         v
-Review / decision modal
+preflight complete attachment plan
         |
-        +--> Cancel
+        +--> direct user-facing attachments
         |
-        +--> Open existing PDF when one exact match is available
+        +--> every ZIP attachment
+               - inspect safety before durable attachment writes
+               - reject blocked/unsafe entries
+               - reject nested ZIP in current implementation
+               - flatten member basenames for email attachment UX
+               - preserve original member path as provenance
         |
-        +--> Import
-               |
-               +--> explicit keep/discard source choice
-               +--> editable target PDF path
-               |
-               v
-Optional exact-byte retained source
-               |
-               v
-Controlled HTML -> main-process Chromium PDF
-               |
-               v
-Create PDF in vault
-               |
-               v
-Create ordinary File Metadata pdf/document record
-               |
-               v
-Open generated PDF through normal PDFium Gate workflow
+        v
+render generated email PDF from the same attachment manifest
+        |
+        v
+create/register email PDF
+        |
+        v
+atomic attachment transaction
+        |
+        +--> write every planned file
+        +--> read back and byte-verify
+        +--> register every PDF
+        +--> persist parent/archive provenance and relationships
+        +--> persist ordered parent attachment links
+        |
+        v
+success boundary
+        |
+        +--> automatic vault-staging EML/MSG may be deleted
+        |    only when its current bytes still match imported bytes
+        |
+        +--> optional exact source retention only when advanced
+             source-retention setting is enabled
 ```
 
-Exact duplicate detection happens before parsing and before durable writes.
+Attachment output is a required part of a successful new Email Import. The old user setting that could disable attachment extraction was removed because combining disabled attachment output with source retention off could lose attachment content.
 
-## User confirmation boundary
+## Target naming
 
-The review modal shows documentary source/message information before anything durable is written:
+The email PDF uses the normal date/subject suggestion and collision allocator.
 
-- source filename;
-- subject;
-- sender;
-- date;
-- exact-source duplicate matches;
-- proposed vault-relative PDF path;
-- original-source retention choice.
+The paired attachment folder is the PDF path without `.pdf`, plus a localized attachment suffix.
 
-The initial integration intentionally has no default retention choice. The user must explicitly choose either to retain or not retain the original `.eml` / `.msg` bytes for each import.
-
-This preserves the existing open product question about whether a later configurable default should exist.
-
-## PDF naming and location
-
-The initial runtime suggests a path under:
+Norwegian Bokmål example:
 
 ```text
-Email Imports/
+Cases/2026-10-05 - Subject.pdf
+Cases/2026-10-05 - Subject Vedlegg/
 ```
 
-The suggested filename uses the message date when available plus a filesystem-safe subject. Existing-path collisions receive a numeric suffix.
+English uses `Attachments`; the other supported UI locales use their corresponding translation.
 
-The target path is editable in the review modal. The initial suggestion is therefore an implementation default, not a frozen long-term naming policy.
+The allocator treats both the candidate PDF path and paired localized folder path as reserved targets.
 
-The target must remain a vault-relative `.pdf` path and cannot be placed inside `.pdf-metadata/` or `File Metadata/`.
+## Attachment layout
 
-## Bundled dependencies
+Direct attachments and ZIP members from all ZIP attachments are placed in the same email attachment folder.
 
-Email Import uses mature parsing and sanitization dependencies, but PDFium Gate releases do not ship a separate `node_modules` tree.
-
-The build therefore bundles the Email Import core and its required JavaScript dependencies into the generated root `main.js` at build time. The initial build-time bundler is esbuild.
-
-The installed runtime remains self-contained:
-
-- no runtime `require('mailparser')`;
-- no runtime `require('sanitize-html')`;
-- no runtime `require('@kenjiuno/msgreader')`;
-- no separate dependency installation by the user.
-
-A dedicated build verification gate checks this boundary.
-
-## Main-process boundary
-
-Filesystem/source parsing and orchestration remain in the renderer/plugin-side Email Import controller where appropriate.
-
-Operations that require Electron main-process capabilities cross the existing MainProcessTransport boundary:
-
-- native source-file selection;
-- controlled HTML to PDF printing.
-
-The main-process implementation uses a dedicated Email Import adapter rather than giving the Email Import feature direct access to Electron globals. The PDF print window retains the security constraints established earlier: JavaScript disabled, Node integration disabled, context isolation enabled, sandbox enabled, web security enabled, insecure content disabled, navigation restricted, and new-window creation denied.
-
-## Metadata integration
-
-The generated PDF is not registered as a special email document type.
-
-After the PDF is created, Email Import calls the existing document-record operation and creates a normal:
+Email ZIP members are flattened to their basename:
 
 ```text
-filemeta_type: pdf
-filemeta_profile: document
+ZIP member: Intern/Dokumenter/rapport.pdf
+Vault file: 2026-10-05 - Subject Vedlegg/rapport.pdf
 ```
 
-record under `File Metadata/`.
+The original member path remains technical provenance.
 
-Technical `email_import_*` provenance and compatible initial user-field suggestions follow the metadata projection rules in `METADATA-INTEGRATION.md`.
+A single allocator resolves filename collisions across direct attachments and all ZIPs:
 
-## Rollback boundary
+```text
+notat.txt
+notat (2).txt
+notat (3).txt
+```
 
-The first integrated workflow uses ownership-aware best-effort rollback for writes owned by the current import operation.
+Manual Archive Import intentionally keeps the archive's internal directory structure and is not governed by this email-specific flattening rule.
 
-If a failure occurs after a new PDF has been created but before the import completes, the controller attempts to remove that newly created PDF.
+## Duplicate behavior
 
-If source retention created a new SHA-addressed source file during the current operation, rollback removes it only after verifying that its path and bytes still match the exact imported source.
+Exact duplicate identity is the SHA-256 of the exact EML/MSG source bytes.
 
-If the retained source already existed and was merely reused, the current import does not own it and rollback does not remove it.
+When the same source is intentionally imported more than once, attachment-link activation is scoped to the **clicked parent email PDF**. This prevents two email PDFs with the same source SHA from making their attachment targets ambiguous.
 
-The existing document-record API is reused rather than replaced by an Email Import-specific metadata store. Practical testing must therefore include failure/retry behavior around metadata registration before stronger transactional guarantees are claimed.
+An exact duplicate can open the already imported email PDF without regenerating outputs. Automatic staging cleanup is allowed only after the duplicate resolution is positively identified and the staging bytes still match the imported source bytes.
 
-## Localization
+## Source retention
 
-The command, review modal, notices, and native source-picker labels participate in PDFium Gate's existing UI-language system.
+Permanent EML/MSG retention is **not required** by the normal runtime.
 
-Email Import owns modular locale overlays for the seven currently supported UI languages. Build-time i18n verification merges these overlays with the core dictionaries, rejects key collisions, and preserves 100% key/placeholder parity.
+Default:
 
-## Verification boundary
+```text
+Keep original EML/MSG after successful import = OFF
+```
 
-The runtime-integration CI gate now permits `main.js` and `main-bridge.js` to change because those changes are the intended product integration.
+When enabled, the exact source is stored in the existing hidden SHA-addressed source area and verified byte-for-byte.
 
-Instead of the former "runtime must not change" rule, CI now requires all of the following:
+When disabled, documentary provenance remains in technical metadata, including exact source SHA-256, source format, original filename and message identity where available.
 
-- existing PDFium Gate build and architecture checks remain green;
-- Email Import parser/integrity/render/storage/attachment/metadata tests remain green;
-- real Electron/Chromium PDF generation remains green;
-- Email Import dependencies are actually bundled into `main.js`;
-- no runtime package requires for the bundled dependencies remain;
-- main-process source picker and secure printer are present;
-- generated runtime differences are limited to `main.js` and `main-bridge.js` after the deterministic build;
-- the generated plugin runtime is uploaded as an artifact for practical Obsidian testing.
+## PDF auto-registration race
 
-Automated checks do not replace the final practical Obsidian regression test.
+PDFium Gate may auto-register a newly created PDF immediately in response to the vault create event.
+
+For PDFs created by the current attachment transaction, a minimal record created by this auto-registration belongs to the same transaction. Email Import therefore **upgrades** that record with attachment provenance rather than treating it as an external collision.
+
+Rollback owns every PDF path created by the transaction, including minimal records created by auto-registration before attachment metadata processing reaches that PDF.
+
+A genuinely pre-existing target path/record is still a fail-closed collision.
+
+## Transaction and rollback
+
+For a new email attachment transaction:
+
+1. preflight is completed before durable attachment writes;
+2. all output files are created;
+3. every output is read back and byte-compared;
+4. PDFs receive ordinary document records/provenance;
+5. archive/member relationships are persisted;
+6. the parent email attachment-link block is persisted.
+
+If a downstream step fails, all transaction-owned attachment files/folders and fresh PDF metadata records are removed.
+
+The staging EML/MSG is not considered successfully consumed when the mandatory attachment transaction fails.
+
+## Manual Archive Import integration
+
+Manual ZIP import uses the generic Archive Import feature rather than Email Import.
+
+It performs preflight, extraction, read-back verification, PDF registration and relationship persistence, then deletes the source ZIP only after the complete transaction succeeds.
+
+If a failure occurs after writes begin, Archive Import rolls back its outputs and asks whether the failed ZIP should be kept or deleted. Keep is the safe/default action.
+
+ZIP files copied with Windows File Explorer are detected through startup/focus reconciliation rather than continuous polling.
+
+## Link activation inside generated email PDF
+
+The generated email PDF contains stable plugin-owned link annotations for user-facing attachments. The current resolver:
+
+1. identifies the clicked parent email PDF;
+2. resolves that parent's managed attachment-link block;
+3. selects the attachment by stable manifest ordinal;
+4. opens the current vault file through normal Obsidian handling.
+
+The normal path does **not** require reopening retained EML/MSG bytes and does not require a visible source ZIP.
+
+Legacy ZIP-link resolution remains only for PDFs produced by the earlier visible-ZIP prototype.
+
+## Practical status
+
+The complete email path through multiple ZIPs, generated PDF attachment list, direct PDF opening and DocumentInfo provenance has been practically verified.
+
+The latest localized folder suffix is practically verified. The final flat-layout refinement that removes ZIP-derived subfolders still requires one explicit practical confirmation before release.
+
+Manual Archive Import's new transient-source/reconciliation failure UX remains a separate release-gate practical test.
