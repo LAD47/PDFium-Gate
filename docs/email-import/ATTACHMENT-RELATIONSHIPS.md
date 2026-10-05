@@ -12,8 +12,10 @@ A generated email PDF and its attachment folder share the same base name:
 
 ```text
 Cases/2026-10-05 - Subject.pdf
-Cases/2026-10-05 - Subject/
+Cases/2026-10-05 - Subject Vedlegg/
 ```
+
+The suffix is localized. In Norwegian Bokmål the folder ends in ` Vedlegg`; in English it ends in ` Attachments`, with equivalent labels in the remaining supported UI languages.
 
 All ordinary user-facing attachments belong below that one folder.
 
@@ -25,7 +27,7 @@ Example:
 
 ```text
 2026-10-05 - Subject.pdf
-2026-10-05 - Subject/
+2026-10-05 - Subject Vedlegg/
 ├── cover.pdf
 ├── rapport.pdf
 ├── vedtak.pdf
@@ -68,11 +70,11 @@ It contains the actual imported attachment paths in the same stable order used b
 
 ```markdown
 <!-- pdfium-gate:email-attachments:start -->
-- [[Cases/2026-10-05 - Subject/cover.pdf]]
-- [[Cases/2026-10-05 - Subject/rapport.pdf]]
-- [[Cases/2026-10-05 - Subject/Vedlegg/notat.txt]]
-- [[Cases/2026-10-05 - Subject/vedtak.pdf]]
-- [[Cases/2026-10-05 - Subject/Vedlegg/notat (2).txt]]
+- [[Cases/2026-10-05 - Subject Vedlegg/cover.pdf]]
+- [[Cases/2026-10-05 - Subject Vedlegg/rapport.pdf]]
+- [[Cases/2026-10-05 - Subject Vedlegg/Vedlegg/notat.txt]]
+- [[Cases/2026-10-05 - Subject Vedlegg/vedtak.pdf]]
+- [[Cases/2026-10-05 - Subject Vedlegg/Vedlegg/notat (2).txt]]
 <!-- pdfium-gate:email-attachments:end -->
 ```
 
