@@ -7,11 +7,6 @@ class EmailImportFeature {
       name:this.i18n.t('commands.importEmail'),
       callback:()=>{ void this.startEmailImport(); }
     });
-    this.obsidianPluginRegistrationAdapter.addCommand({
-      id:'import-email-pdf-attachment',
-      name:this.i18n.t('commands.importEmailPdfAttachment'),
-      callback:()=>{ void this.startEmailPdfAttachmentImport(); }
-    });
     this.obsidianPluginRegistrationAdapter.registerObsidianProtocolHandler(
       EMAIL_IMPORT_RUNTIME.EMAIL_ATTACHMENT_PROTOCOL_ACTION,
       params=>{ void this.openEmailAttachmentFromProtocol(params); }
