@@ -586,7 +586,7 @@
   "documentInfo.archive.none": "No hay otros archivos en este archivo.",
   "archiveImport.unsupported.title": "El ZIP contiene archivos que PDFium Gate no gestiona directamente",
   "archiveImport.unsupported.intro": "Los ZIP seleccionados contienen {{count}} archivo(s) con formatos que no se gestionan directamente.",
-  "archiveImport.unsupported.supportedInfo": "PDFium Gate puede conservarlos sin cambios o ignorarlos y extraer los archivos compatibles.",
+  "archiveImport.unsupported.supportedInfo": "PDFium Gate puede conservar estos archivos sin cambios u omitirlos. Si los omites, no se importarán y el ZIP de origen se eliminará cuando el resto de la importación finalice correctamente.",
   "archiveImport.unsupported.archive": "{{filename}} — {{count}} archivo(s) no compatible(s)",
   "archiveImport.unsupported.more": "… y {{count}} más",
   "archiveImport.unsupported.cancelArchives": "No extraer el ZIP",
@@ -599,5 +599,7 @@
   "archiveImport.failure.intro": "PDFium Gate no pudo importar {{name}}. Los archivos creados durante este intento se han revertido.",
   "archiveImport.failure.question": "El ZIP puede estar oculto por la configuración predeterminada del explorador de Obsidian. ¿Quieres conservarlo para revisarlo después o eliminarlo ahora?",
   "archiveImport.failure.keep": "Conservar ZIP",
-  "archiveImport.failure.delete": "Eliminar ZIP"
+  "archiveImport.failure.delete": "Eliminar ZIP",
+  "archiveImport.notice.success": "ZIP importado en {{folder}} ({{count}} archivos).",
+  "archiveImport.notice.deleteFailed": "No se pudo eliminar el ZIP que falló: {{error}}"
 }
