@@ -80,11 +80,15 @@ This file is a running list of observations found during practical testing that 
    - This deliberately avoids silently deleting metadata together with the PDF and leaves room for a future **Restore from backup** action in the same review flow.
    - Revisit a one-step delete command only if practical use later shows a clear need.
 
-7. **Email Import attachments: better support for non-PDF file types**
-   - Improve handling of email attachments that are not PDFs.
-   - ZIP archives are an explicit practical example that should be supported more clearly.
-   - Review how such attachments are retained, represented, opened/exported and linked from the imported email without assuming that every attachment is directly viewable in the PDF-oriented UI.
-   - This must not weaken Email Import's existing exact-byte SHA-256 use for retained immutable source/integrity handling.
+7. **Email Import ZIP attachments: implemented; practical test pending**
+   - ZIP attachments are now inspected as containers while the original ZIP remains the ordinary source-attachment link target.
+   - Each ZIP expands into its own dedicated subfolder and preserves internal directory structure.
+   - PDFs inside ZIP are routed through normal PDF attachment registration/provenance and become ordinary PDFium Gate documents.
+   - Common text/image/media formats are copied as ordinary vault files.
+   - Other formats trigger one aggregate decision: copy anyway, skip unsupported entries, or do not extract ZIP contents.
+   - Archive path traversal and bounded entry-count/size/compression checks fail closed.
+   - Synthetic EML/ZIP fixture generation is included for practical testing, including PDF-only, mixed supported, unsupported-format, and 35-file cases.
+   - Practical Obsidian verification is still required.
 
 8. **PDF annotation backup: reassess `.pdfium-backup` after the independent backup solution exists**
    - Keep the current `backupOriginalPdf` safety function for now: it stores one original PDF copy before PDFium Gate first modifies the file and never overwrites an existing copy.
