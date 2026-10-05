@@ -88,7 +88,9 @@ This file is a running list of observations found during practical testing that 
    - Direct PDF email attachments still retain their existing `email_import_attachment_*` provenance.
    - Archive Import's manual ZIP path is already practically confirmed, including PDF registration, DocumentInfo relationship presentation and clickable PDF/file relations.
    - Automated regression now verifies that Email Import creates only the original ZIP and hands the created file to Archive Import; it must not create archive members itself.
-   - A fresh practical Thunderbird/Obsidian ZIP-email test is still required for the combined handoff.
+   - First practical combined handoff test on 2026-10-05: the EML imported successfully, but the original ZIP attachment and its extraction folder were not created. The setting **Trekk ut e-postvedlegg automatisk** was confirmed enabled, so the failure is before Archive Import receives a ZIP and is currently scoped to the Email Import attachment-export boundary.
+   - The next diagnostic is the built-in `lastEmailAttachmentExport` snapshot from the same import, to distinguish a skipped export from a controller failure.
+   - Practical combined handoff verification therefore remains open.
 
 8. **PDF annotation backup: reassess `.pdfium-backup` after the independent backup solution exists**
    - Keep the current `backupOriginalPdf` safety function for now: it stores one original PDF copy before PDFium Gate first modifies the file and never overwrites an existing copy.
