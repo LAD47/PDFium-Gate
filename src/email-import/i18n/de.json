@@ -47,7 +47,7 @@
   "settings.emailImport.dragDrop.name": "E-Mails per Drag & Drop automatisch importieren",
   "settings.emailImport.dragDrop.description": "Wenn eine .eml- oder .msg-Datei zum Vault hinzugefügt wird, wird sie ohne zusätzlichen Dialog automatisch in denselben Ordner importiert.",
   "settings.emailImport.attachments.name": "E-Mail-Anhänge automatisch extrahieren",
-  "settings.emailImport.attachments.description": "Bei automatischen Drag-and-drop-Importen werden normale Anhänge neben der E-Mail-PDF abgelegt. Bei ZIP-Anhängen bleibt die ursprüngliche ZIP-Datei erhalten, unterstützte Inhalte werden in einen eigenen Unterordner entpackt. Inline/CID-Ressourcen bleiben in der E-Mail-Darstellung.",
+  "settings.emailImport.attachments.description": "Gewöhnliche Anhänge werden in einen Ordner mit demselben Basisnamen wie die E-Mail-PDF importiert. ZIP-Dateien sind Transportcontainer: Ihr Inhalt wird vorab geprüft und in denselben Anhangsordner importiert; die ZIP-Datei selbst wird nach erfolgreichem Import nicht behalten.",
   "emailImport.notice.dragDropExisting": "Diese E-Mail wurde bereits importiert. Vorhandene PDF geöffnet: {{path}}.",
   "emailImport.notice.dragDropImported": "E-Mail automatisch nach {{path}} importiert. Extrahierte Anhänge: {{count}}.",
   "emailImport.notice.dragDropImportedWithAttachmentErrors": "E-Mail automatisch nach {{path}} importiert. Extrahierte Anhänge: {{count}}; Fehler: {{failed}}.",
@@ -58,5 +58,7 @@
   "emailImport.zipModal.more": "…und {{count}} weitere Datei(en).",
   "emailImport.zipModal.cancelArchives": "ZIP nicht entpacken",
   "emailImport.zipModal.skipUnsupported": "Nicht unterstützte Dateien überspringen",
-  "emailImport.zipModal.keepUnsupported": "Trotzdem kopieren"
+  "emailImport.zipModal.keepUnsupported": "Trotzdem kopieren",
+  "settings.emailImport.retainSource.name": "Originale EML/MSG nach erfolgreichem Import behalten",
+  "settings.emailImport.retainSource.description": "Erweiterte Option. Standardmäßig deaktiviert. Wenn aktiviert, wird die exakte ursprüngliche EML/MSG-Quelle nach einem erfolgreichen, verifizierten Import im versteckten Plugin-Speicher behalten."
 }
