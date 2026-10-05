@@ -579,5 +579,9 @@
   "settings.documentRegister.registerExisting.confirm": "PDFium Gate encontró {{count}} PDF sin registrar de un total de {{total}} PDF de usuario. Problemas omitidos: {{problems}}. ¿Registrarlos ahora?",
   "settings.documentRegister.registerExisting.success": "Se registraron {{created}} PDF. Ya registrados: {{registered}}. Problemas omitidos: {{problems}}.",
   "settings.documentRegister.registerExisting.failedUnknown": "Error de registro desconocido",
-  "settings.documentRegister.registerExisting.failed": "No se pudieron registrar los PDF existentes: {{error}}"
+  "settings.documentRegister.registerExisting.failed": "No se pudieron registrar los PDF existentes: {{error}}",
+  "documentInfo.archive.title": "Adjuntos del ZIP",
+  "documentInfo.archive.source": "Archivo de origen",
+  "documentInfo.archive.related": "Archivos del mismo archivo",
+  "documentInfo.archive.none": "No hay otros archivos en este archivo."
 }
