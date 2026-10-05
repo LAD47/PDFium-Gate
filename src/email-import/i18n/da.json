@@ -60,5 +60,6 @@
   "emailImport.zipModal.skipUnsupported": "Spring ikke-understøttede filer over",
   "emailImport.zipModal.keepUnsupported": "Kopiér dem alligevel",
   "settings.emailImport.retainSource.name": "Behold original EML/MSG efter vellykket import",
-  "settings.emailImport.retainSource.description": "Avanceret valg. Slået fra som standard. Når det er slået til, beholdes den nøjagtige originale EML/MSG-kilde i skjult pluginlager efter en vellykket og verificeret import."
+  "settings.emailImport.retainSource.description": "Avanceret valg. Slået fra som standard. Når det er slået til, beholdes den nøjagtige originale EML/MSG-kilde i skjult pluginlager efter en vellykket og verificeret import.",
+  "emailImport.attachments.folderNameSuffix": "Vedhæftninger"
 }
