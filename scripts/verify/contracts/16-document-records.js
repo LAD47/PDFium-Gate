@@ -93,13 +93,15 @@ module.exports=async function verifyDocumentRecordsContract(){
   if(!vaultRead.includes('listMarkdownFiles()')||!vaultRead.includes('vault.getMarkdownFiles()')) fail('metadata RAM-index does not enumerate Obsidian-indexed Markdown files');
   if(!vaultRead.includes('listFiles()')||!vaultRead.includes('vault.getFiles()')) fail('existing-PDF registration cannot enumerate vault files');
   if(!feature.includes('parseDocumentRecordFile(file,schema,true)')) fail('cold-start record index does not force canonical disk frontmatter reads');
-  for(const required of ['byPdfPath','byId','metadataUuidV4()','METADATA_RECORD_STATUS_MISSING','updateDocumentRecordForPdfRename','markDocumentRecordMissingForPdfDelete','ambiguousPdfPaths','resolveDocumentRecordPdfPath','obsidianLinkResolutionAdapter?.resolveFirst','ensureMinimalDocumentRecordForPdf','autoRegisterNewPdfs','getMissingDocumentRecordSummary','deleteMissingDocumentRecords','getExistingPdfRegistrationSummary','registerExistingPdfRecords','isDocumentRegistrationPdfPath']) if(!feature.includes(required)) fail(`DocumentRecords feature contract missing: ${required}`);
+  for(const required of ['byPdfPath','byId','metadataUuidV4()','METADATA_RECORD_STATUS_MISSING','updateDocumentRecordForPdfRename','markDocumentRecordMissingForPdfDelete','ambiguousPdfPaths','resolveDocumentRecordPdfPath','obsidianLinkResolutionAdapter?.resolveFirst','ensureMinimalDocumentRecordForPdf','autoRegisterNewPdfs','getMissingDocumentRecordSummary','deleteMissingDocumentRecords','getExistingPdfRegistrationSummary','registerExistingPdfRecords','isDocumentRegistrationPdfPath','resolveDocumentRecordPdfPresence','reconcileMissingDocumentRecords']) if(!feature.includes(required)) fail(`DocumentRecords feature contract missing: ${required}`);
   if(/recoverMissingDocumentRecordByExactSha|relinkMissingDocumentRecord|metadataMissingRecovery|filemeta_sha256/.test(feature)) fail('DocumentRecords must not expose abandoned SHA/manual relink behavior');
   if(feature.includes('refreshDocumentInfoViews')) fail('DocumentRecords calls back into DocumentInfo and creates a cross-feature cycle');
   if(!lifecycle.includes('onLayoutReady(() =>')||!lifecycle.includes('handleDocumentRecordVaultRename')||!lifecycle.includes('handleDocumentRecordVaultDelete')) fail('metadata record lifecycle listeners missing from layout-ready orchestration');
   if(lifecycle.indexOf('onLayoutReady(() =>')>lifecycle.indexOf('handleDocumentRecordVaultRename')) fail('metadata record vault listeners are registered before layoutReady');
   if(!lifecycle.includes("refreshDocumentInfoAfterRecordEvent")) fail('metadata record lifecycle does not refresh open DocumentInfo views through lifecycle owner');
   if(!lifecycle.includes("scheduleMissingDocumentRecordsDialog")||!lifecycle.includes("review-missing-documents")) fail('missing-record review dialog is not connected to lifecycle/Command Palette');
+  for(const required of ["scheduleOfflineMissingReconciliation","runOfflineMissingReconciliation","missingReconciliationLayoutReady","missingReconciliationMetadataResolved","reconcileMissingDocumentRecords"]) if(!lifecycle.includes(required)) fail(`offline missing reconciliation lifecycle contract missing: ${required}`);
+  if(!lifecycle.includes("scheduler.scheduleIdle")) fail('offline missing reconciliation is not deferred through idle scheduling');
   if(!lifecycle.includes("obsidianMetadataCacheAdapter.onResolved")||!lifecycle.includes("markDocumentRecordMetadataResolved()")) fail('metadata-resolved startup gate is not registered early by lifecycle owner');
   if(!lifecycle.includes("markDocumentRecordLayoutReady()")) fail('layout-ready startup gate is not signaled by lifecycle owner');
   if(!lifecycle.includes("autoRegisterNewPdfs:persistedSettings.autoRegisterNewPdfs !== false")) fail('automatic new-PDF registration setting is not default-on');
@@ -360,6 +362,61 @@ module.exports=async function verifyDocumentRecordsContract(){
   if(!retainedHistoricalMissing||retainedHistoricalMissing.status!==recordApi.METADATA_RECORD_STATUS_MISSING) fail('existing-PDF registration modified historical missing metadata');
   if([...files.values()].some(item=>item.record?.pdfPath==='Existing/.pdfium-backup/already.pdf'||item.record?.pdfPath===benchmarkPdfPath)) fail('existing-PDF registration included technical PDF paths');
 
+  // Offline reconciliation: an active record whose PDF disappeared while Obsidian
+  // was closed becomes missing after the startup index is ready. Present files stay active.
+  files.clear();
+  pdfFiles.clear();
+  const offlinePresentId='723e4567-e89b-42d3-a456-426614174000';
+  const offlineGoneId='823e4567-e89b-42d3-a456-426614174000';
+  const offlineAlreadyMissingId='923e4567-e89b-42d3-a456-426614174000';
+  const offlineBenchmarkId='a23e4567-e89b-42d3-a456-426614174000';
+  const putRecord=(id,pdfPath,status,values={})=>{
+    const recordPath=recordApi.metadataRecordPathFromId(id);
+    const file={path:recordPath,extension:'md'};
+    files.set(recordPath,{file,record:{id,pdfPath,status,values}});
+    return recordPath;
+  };
+  const offlinePresentRecordPath=putRecord(offlinePresentId,'Offline/present.pdf',recordApi.METADATA_RECORD_STATUS_ACTIVE);
+  const offlineGoneRecordPath=putRecord(offlineGoneId,'Offline/gone.pdf',recordApi.METADATA_RECORD_STATUS_ACTIVE,{sender:'Offline sender'});
+  const offlineAlreadyMissingRecordPath=putRecord(offlineAlreadyMissingId,'Offline/already-missing.pdf',recordApi.METADATA_RECORD_STATUS_MISSING,{sender:'Existing missing'});
+  const offlineBenchmarkPath=benchmarkApi.metadataBenchmarkPdfPath(2);
+  const offlineBenchmarkRecordPath=putRecord(offlineBenchmarkId,offlineBenchmarkPath,recordApi.METADATA_RECORD_STATUS_ACTIVE);
+  pdfFiles.set('Offline/present.pdf',{path:'Offline/present.pdf',extension:'pdf'});
+  owner.state.documentRecords=makeState();
+  owner.obsidianMetadataCacheAdapter={getFrontmatter:()=>null};
+  await owner.ensureDocumentRecordIndexReady('cold-start-idle');
+  if(!owner.getDocumentMetadataRecordState('Offline/gone.pdf').registered) fail('offline-gone record was not active before reconciliation test');
+  const offlineReconcile=await owner.reconcileMissingDocumentRecords();
+  if(!offlineReconcile?.ok||offlineReconcile.changedCount!==1||offlineReconcile.totalMissingCount!==2) {
+    fail(`offline missing reconciliation counts drifted: ${JSON.stringify(offlineReconcile)}`);
+  }
+  if(files.get(offlineGoneRecordPath)?.record?.status!==recordApi.METADATA_RECORD_STATUS_MISSING) fail('offline-disappeared PDF did not transition active -> missing');
+  if(files.get(offlinePresentRecordPath)?.record?.status!==recordApi.METADATA_RECORD_STATUS_ACTIVE) fail('present PDF was incorrectly marked missing during offline reconciliation');
+  if(files.get(offlineAlreadyMissingRecordPath)?.record?.status!==recordApi.METADATA_RECORD_STATUS_MISSING) fail('existing missing record changed during offline reconciliation');
+  if(files.get(offlineBenchmarkRecordPath)?.record?.status!==recordApi.METADATA_RECORD_STATUS_ACTIVE) fail('benchmark PDF record was mutated by offline reconciliation');
+  if(owner.getDocumentMetadataRecordState('Offline/gone.pdf').registered) fail('offline-disappeared PDF retained an active path binding after reconciliation');
+
+  // Resolver/infrastructure uncertainty must fail closed: do not mark active as missing
+  // merely because link resolution is unavailable.
+  files.clear();
+  pdfFiles.clear();
+  const uncertainId='b23e4567-e89b-42d3-a456-426614174000';
+  const uncertainRecordPath=putRecord(uncertainId,'Offline/uncertain.pdf',recordApi.METADATA_RECORD_STATUS_ACTIVE);
+  owner.state.documentRecords=makeState();
+  owner.obsidianLinkResolutionAdapter={resolveFirst:()=>({ok:false,file:null,reason:'resolver-unavailable',error:'test unavailable'})};
+  await owner.ensureDocumentRecordIndexReady('cold-start-idle');
+  const uncertainReconcile=await owner.reconcileMissingDocumentRecords();
+  if(!uncertainReconcile?.ok||uncertainReconcile.changedCount!==0||uncertainReconcile.problemCount!==1) fail('offline reconciliation did not fail closed on resolver uncertainty');
+  if(files.get(uncertainRecordPath)?.record?.status!==recordApi.METADATA_RECORD_STATUS_ACTIVE) fail('resolver uncertainty incorrectly changed active record to missing');
+
+  // Restore normal fake link resolver for the remaining benchmark checks.
+  owner.obsidianLinkResolutionAdapter={resolveFirst:(linkpath)=>{
+    const target=String(linkpath||'');
+    if(target==='h-2514-b-veileder-for-beregning-av-selvkost_xxx.pdf') return {ok:true,file:pdfFiles.get('10_Kilder/PDF/h-2514-b-veileder-for-beregning-av-selvkost_xxx.pdf'),reason:'resolved-first-linkpath-destination'};
+    const direct=pdfFiles.get(target) || null;
+    return {ok:true,file:direct,reason:direct?'resolved-first-linkpath-destination':'not-found'};
+  }};
+
   const benchmarkResult=await owner.runDocumentRecordIndexBenchmark();
   if(!benchmarkResult?.ok || benchmarkResult?.forcedBuild?.reason!=='benchmark-forced' || typeof benchmarkResult?.lookup?.rawAverageUs!=='number') fail('document record benchmark instrumentation failed');
 
@@ -397,6 +454,10 @@ module.exports=async function verifyDocumentRecordsContract(){
     explicitExistingPdfRegistration:true,
     existingPdfRegistrationExcludesTechnicalPdfs:true,
     liveRegistrationExcludesTechnicalPdfs:true,
+    offlineMissingReconciliation:true,
+    offlineReconciliationPreservesPresentPdf:true,
+    offlineReconciliationFailsClosedOnResolverUncertainty:true,
+    offlineReconciliationUsesIdleLifecycleGate:true,
     existingPdfRegistrationIsIdempotent:true,
     systemProperties:[...recordApi.METADATA_RECORD_SYSTEM_PROPERTIES],
     markdownYamlSourceOfTruth:true,
