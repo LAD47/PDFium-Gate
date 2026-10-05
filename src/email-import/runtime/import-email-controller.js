@@ -8,6 +8,7 @@ const { retainOriginalSource, removeRetainedSourceIfExact } = require('../storag
 const { suggestedEmailPdfPath, validateTargetPdfPath } = require('./target-path-policy');
 const { generateEmailPdf } = require('../render/email-pdf-generator');
 const { buildEmailImportRegistrationPlan } = require('../metadata/email-metadata-projection');
+const { buildEmailAttachmentPlan, finalizeEmailAttachmentPlan } = require('./email-attachment-plan');
 
 function requireFunction(name, value) {
   if (typeof value !== 'function') throw new TypeError(`${name} must be a function.`);
@@ -42,6 +43,8 @@ function buildServices(overrides) {
     validateTargetPdfPath,
     generateEmailPdf,
     buildEmailImportRegistrationPlan,
+    buildEmailAttachmentPlan,
+    finalizeEmailAttachmentPlan,
     ...(overrides || {})
   };
 }
@@ -128,6 +131,11 @@ async function runEmailImport({
   const target = runtime.validateTargetPdfPath(decision.pdfPath, exists);
   if (!target.ok) return { ok: false, reason: 'invalid-target', error: target.error };
 
+  const attachmentPlan=runtime.finalizeEmailAttachmentPlan(runtime.buildEmailAttachmentPlan({
+    document,
+    parentPdfPath:target.path
+  }));
+
   const schema = getSchema();
   if (!schema) throw new Error('Metadata schema is unavailable.');
   await ensureIndex();
@@ -158,6 +166,7 @@ async function runEmailImport({
 
     const pdfBytes = await runtime.generateEmailPdf({
       document: retainedDocument,
+      attachmentManifest:attachmentPlan.manifest,
       printHtmlToPdf: print
     });
 
@@ -200,6 +209,8 @@ async function runEmailImport({
     duplicate: duplicateFacts.exactDuplicate,
     sourceRetained: retained?.document?.source?.retained === true,
     retainedPath: retained?.retainedPath || null,
+    attachmentPlan,
+    sourceDocument:retained?.document || document,
     openError
   };
 }
