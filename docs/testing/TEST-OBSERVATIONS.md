@@ -80,7 +80,14 @@ This file is a running list of observations found during practical testing that 
    - This deliberately avoids silently deleting metadata together with the PDF and leaves room for a future **Restore from backup** action in the same review flow.
    - Revisit a one-step delete command only if practical use later shows a clear need.
 
-7. **Email Import -> Archive Import ZIP handoff: practically confirmed**
+7. **Email/ZIP transport-source redesign: implemented; practical verification pending**
+   - **Current replacement model (implemented after the practical UX review on 2026-10-05):** EML/MSG and ZIP are transport sources. A generated email PDF and one sibling attachment folder share the same base name. Direct attachments and members from every ZIP in the email are planned together before durable writes; the email PDF lists the actual imported files, ZIP names are group/provenance labels rather than live link targets, and source ZIP files are not persisted for successful email imports.
+   - Exact EML/MSG retention is now advanced opt-in and defaults to off. Automatic staging EML/MSG is deleted only after verified success; failed/cancelled imports keep the source.
+   - Manual Archive Import is now transactional: complete preflight before extraction, byte read-back verification, PDF registration and relationship persistence, then source ZIP deletion. Partial failures roll back created output and fresh PDF metadata; the user is warned and chooses **Keep ZIP** or **Delete ZIP**.
+   - Archive Import now reconciles externally copied ZIP files on startup and when Obsidian regains focus, covering the Windows File Explorer path without continuous polling.
+   - Automated regression is green for multiple ZIPs in one email, one common attachment folder, collision suffixing, direct links in the email PDF, no persisted email ZIP transport files, archive provenance without a live ZIP path, rollback, successful source deletion, failed-source keep/delete, and external ZIP reconciliation.
+   - **Practical verification of this replacement model is still pending.**
+   - Historical prototype notes below are retained as evidence of the path that led to the redesign; they are superseded for new imports.
    - The first Email Import-specific ZIP implementation was abandoned after practical testing exposed the architectural duplication.
    - Email Import now owns only the source email relationship: it exports the original ZIP beside the generated email PDF and links that ZIP as the source attachment.
    - The created ZIP is then routed to the generic Archive Import module, which owns inspection, aggregate unsupported-file choice, safe extraction, folder preservation, PDF registration and Archive Relationship creation.
@@ -127,7 +134,8 @@ This file is a running list of observations found during practical testing that 
 
 ## Completed items
 
-- **Archive Import: manual ZIP extraction and PDF handoff practically confirmed**
+- **Archive Import legacy visible-ZIP prototype: practically confirmed, now superseded**
+  - The following practical tests were completed on 2026-10-05 against the earlier visible-source-ZIP design. They remain useful regression/history evidence, but the replacement transport-source model now deletes successful ZIP sources and requires a new practical verification pass.
   - Practical tests confirmed on 2026-10-05 by dragging ZIP files into the Obsidian vault.
   - Important trigger condition: Archive Import currently reacts to the Obsidian-side vault create event. Dragging the ZIP into Obsidian triggers the flow; moving/copying the ZIP directly into the vault with Windows File Explorer did not trigger Archive Import in the practical test environment.
   - Baseline extraction test points 1-5 all passed:
@@ -150,7 +158,7 @@ This file is a running list of observations found during practical testing that 
     - practical click tests 1-4 passed: PDF-to-PDF and PDF-to-ordinary-file links open the intended vault file;
     - the explicit DocumentInfo link activation routes through Obsidian `workspace.openLinkText`, preserving normal Obsidian link handling.
   - This confirms the preferred UX boundary: users work with archive relationships through DocumentInfo; the File Metadata Markdown relationship block remains an implementation/storage detail.
-  - External filesystem arrival detection for ZIP files is not yet implemented/confirmed and should be treated separately from the current Obsidian drag/drop trigger.
+  - Historical note: external filesystem arrival detection was not implemented in this prototype. The replacement model now implements startup/focus reconciliation; practical confirmation is pending.
 
 - **Missing PDF lifecycle and recovery experiment**
   - Practical test confirmed: active record -> unexpected PDF disappearance -> `missing`.
