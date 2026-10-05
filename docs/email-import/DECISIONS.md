@@ -331,8 +331,10 @@ For example:
 
 ```text
 Cases/2026-10-05 - Subject.pdf
-Cases/2026-10-05 - Subject/
+Cases/2026-10-05 - Subject Vedlegg/
 ```
+
+The attachment-folder suffix is localized from the active PDFium Gate UI language. For Norwegian Bokmål the suffix is `Vedlegg`, producing e.g. `2026-10-05 - Subject Vedlegg/`; English uses `Attachments`, with equivalent labels for the other supported UI languages.
 
 Direct PDF and non-PDF attachments are placed in that folder. Non-PDF attachments remain ordinary vault files; PDFs enter the normal PDFium Gate document-registration flow.
 
