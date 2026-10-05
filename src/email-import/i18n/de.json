@@ -47,8 +47,16 @@
   "settings.emailImport.dragDrop.name": "E-Mails per Drag & Drop automatisch importieren",
   "settings.emailImport.dragDrop.description": "Wenn eine .eml- oder .msg-Datei zum Vault hinzugefügt wird, wird sie ohne zusätzlichen Dialog automatisch in denselben Ordner importiert.",
   "settings.emailImport.attachments.name": "E-Mail-Anhänge automatisch extrahieren",
-  "settings.emailImport.attachments.description": "Bei automatischen Drag-&-Drop-Importen werden normale Anhänge neben der E-Mail-PDF abgelegt. Inline-/CID-Ressourcen bleiben Teil der E-Mail-Darstellung.",
+  "settings.emailImport.attachments.description": "Bei automatischen Drag-and-drop-Importen werden normale Anhänge neben der E-Mail-PDF abgelegt. Bei ZIP-Anhängen bleibt die ursprüngliche ZIP-Datei erhalten, unterstützte Inhalte werden in einen eigenen Unterordner entpackt. Inline/CID-Ressourcen bleiben in der E-Mail-Darstellung.",
   "emailImport.notice.dragDropExisting": "Diese E-Mail wurde bereits importiert. Vorhandene PDF geöffnet: {{path}}.",
   "emailImport.notice.dragDropImported": "E-Mail automatisch nach {{path}} importiert. Extrahierte Anhänge: {{count}}.",
-  "emailImport.notice.dragDropImportedWithAttachmentErrors": "E-Mail automatisch nach {{path}} importiert. Extrahierte Anhänge: {{count}}; Fehler: {{failed}}."
+  "emailImport.notice.dragDropImportedWithAttachmentErrors": "E-Mail automatisch nach {{path}} importiert. Extrahierte Anhänge: {{count}}; Fehler: {{failed}}.",
+  "emailImport.zipModal.title": "ZIP-Anhang enthält nicht direkt unterstützte Dateitypen",
+  "emailImport.zipModal.intro": "Der ZIP-Anhang enthält {{count}} Datei(en), deren Formate PDFium Gate nicht direkt verarbeitet.",
+  "emailImport.zipModal.supportedInfo": "PDF-Dateien werden über den normalen PDF-Ablauf importiert. Unterstützte Text-, Bild- und Mediendateien werden automatisch in den ZIP-Unterordner kopiert.",
+  "emailImport.zipModal.archive": "{{filename}} — {{count}} nicht unterstützte Datei(en)",
+  "emailImport.zipModal.more": "…und {{count}} weitere Datei(en).",
+  "emailImport.zipModal.cancelArchives": "ZIP nicht entpacken",
+  "emailImport.zipModal.skipUnsupported": "Nicht unterstützte Dateien überspringen",
+  "emailImport.zipModal.keepUnsupported": "Trotzdem kopieren"
 }
