@@ -47,8 +47,16 @@
   "settings.emailImport.dragDrop.name": "Importera e-post automatiskt med dra och släpp",
   "settings.emailImport.dragDrop.description": "När en .eml- eller .msg-fil läggs till i valvet importeras den automatiskt till samma mapp utan en extra dialogruta.",
   "settings.emailImport.attachments.name": "Extrahera e-postbilagor automatiskt",
-  "settings.emailImport.attachments.description": "Vid automatisk dra-och-släpp-import sparas vanliga bilagor bredvid e-post-PDF-filen. Inline/CID-resurser förblir en del av e-postvisningen.",
+  "settings.emailImport.attachments.description": "Vid automatisk drag-and-drop-import läggs vanliga bilagor bredvid e-post-PDF:en. För ZIP-bilagor behålls original-ZIP-filen och innehåll som stöds packas upp i en egen undermapp. Inline/CID-resurser stannar i e-postvisningen.",
   "emailImport.notice.dragDropExisting": "Det här e-postmeddelandet har redan importerats. Den befintliga PDF-filen öppnades: {{path}}.",
   "emailImport.notice.dragDropImported": "E-post importerades automatiskt till {{path}}. Extraherade bilagor: {{count}}.",
-  "emailImport.notice.dragDropImportedWithAttachmentErrors": "E-post importerades automatiskt till {{path}}. Extraherade bilagor: {{count}}; fel: {{failed}}."
+  "emailImport.notice.dragDropImportedWithAttachmentErrors": "E-post importerades automatiskt till {{path}}. Extraherade bilagor: {{count}}; fel: {{failed}}.",
+  "emailImport.zipModal.title": "ZIP-bilagan innehåller filtyper som inte stöds direkt",
+  "emailImport.zipModal.intro": "ZIP-bilagan innehåller {{count}} fil(er) med format som PDFium Gate inte hanterar direkt.",
+  "emailImport.zipModal.supportedInfo": "PDF-filer importeras via det vanliga PDF-flödet. Stödda text-, bild- och mediefiler kopieras automatiskt till ZIP-undermappen.",
+  "emailImport.zipModal.archive": "{{filename}} — {{count}} fil(er) som inte stöds",
+  "emailImport.zipModal.more": "…och {{count}} fil(er) till.",
+  "emailImport.zipModal.cancelArchives": "Packa inte upp ZIP",
+  "emailImport.zipModal.skipUnsupported": "Hoppa över filer som inte stöds",
+  "emailImport.zipModal.keepUnsupported": "Kopiera dem ändå"
 }
