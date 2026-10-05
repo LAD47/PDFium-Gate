@@ -60,5 +60,6 @@
   "emailImport.zipModal.skipUnsupported": "Ignorer les fichiers non pris en charge",
   "emailImport.zipModal.keepUnsupported": "Les copier quand même",
   "settings.emailImport.retainSource.name": "Conserver l'EML/MSG original après un import réussi",
-  "settings.emailImport.retainSource.description": "Option avancée. Désactivée par défaut. Lorsqu'elle est activée, la source EML/MSG originale exacte est conservée dans le stockage masqué du plugin après un import vérifié."
+  "settings.emailImport.retainSource.description": "Option avancée. Désactivée par défaut. Lorsqu'elle est activée, la source EML/MSG originale exacte est conservée dans le stockage masqué du plugin après un import vérifié.",
+  "emailImport.attachments.folderNameSuffix": "Pièces jointes"
 }
