@@ -140,8 +140,34 @@ class EmailImportFeature {
       const selected=preferred.length===1 ? preferred[0] : (preferred.length===0 && all.length===1 ? all[0] : null);
       if(!selected) return fail(all.length || preferred.length ? 'attachment-target-ambiguous' : 'attachment-target-not-found');
 
-      await adapter.openVaultFile(selected.path);
-      return {ok:true,path:selected.path,recordPath:selected.recordPath,index:selected.index};
+      let openPath=selected.path;
+      const selectedFile=this.obsidianVaultReadAdapter.getAbstractFileByPath(selected.path);
+      if(String(selectedFile?.extension || '').toLowerCase()==='zip') {
+        const archiveMembers=await this.ports.findArchivePdfMembersForSourceZip(selected.path);
+        const pdfPaths=Array.isArray(archiveMembers?.pdfPaths)?archiveMembers.pdfPaths:[];
+        if(pdfPaths.length===1) {
+          openPath=pdfPaths[0];
+        } else if(pdfPaths.length>1) {
+          const decision=await new ArchiveImportPdfChoiceModal(this.app,this,{
+            sourceZipPath:selected.path,
+            pdfPaths
+          }).openForDecision();
+          if(decision?.action!=='open' || !decision.path) {
+            return {ok:true,canceled:true,path:null,sourceZipPath:selected.path,recordPath:selected.recordPath,index:selected.index};
+          }
+          openPath=String(decision.path);
+        }
+      }
+
+      await adapter.openVaultFile(openPath);
+      return {
+        ok:true,
+        path:openPath,
+        sourceAttachmentPath:selected.path,
+        redirectedFromArchive:openPath!==selected.path,
+        recordPath:selected.recordPath,
+        index:selected.index
+      };
     } catch(error) {
       return fail('attachment-open-failed',error);
     }
