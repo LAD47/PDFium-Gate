@@ -693,8 +693,16 @@ class DocumentRecordsFeature {
     }
     if(resolution?.ok && resolution.file) {
       const extension=String(resolution.file.extension || '').toLowerCase();
-      if(extension==='pdf') return {ok:true,present:true,path:metadataRecordNormalizeVaultPath(resolution.file.path),reason:'resolved-link'};
-      return {ok:false,present:false,reason:'resolved-non-pdf'};
+      if(extension!=='pdf') return {ok:false,present:false,reason:'resolved-non-pdf'};
+      const resolvedPath=metadataRecordNormalizeVaultPath(resolution.file.path);
+      try {
+        const resolvedDirect=this.obsidianVaultReadAdapter?.getAbstractFileByPath?.(resolvedPath) || null;
+        if(resolvedDirect && String(resolvedDirect.extension || '').toLowerCase()==='pdf') {
+          return {ok:true,present:true,path:metadataRecordNormalizeVaultPath(resolvedDirect.path),reason:'resolved-link-confirmed'};
+        }
+      } catch(error) {
+        return {ok:false,present:false,reason:'resolved-direct-lookup-failed',error:error instanceof Error?error.message:String(error)};
+      }
     }
 
     let direct=null;
