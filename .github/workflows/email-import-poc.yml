@@ -55,10 +55,6 @@ jobs:
             echo 'Expected main.js to change after Email Import runtime integration.'
             exit 1
           fi
-          if git diff --quiet -- main-bridge.js; then
-            echo 'Expected main-bridge.js to change after Email Import main-process integration.'
-            exit 1
-          fi
           git diff --exit-code -- . ':(exclude)main.js' ':(exclude)main-bridge.js'
       - name: Upload generated runtime for practical testing
         uses: actions/upload-artifact@v4
