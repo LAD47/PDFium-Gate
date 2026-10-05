@@ -41,7 +41,7 @@ function createHarness(overrides = {}) {
     },
     generateEmailPdf: async ({ document: input, attachmentManifest, printHtmlToPdf }) => {
       assert.equal(input, document);
-      assert.deepEqual(attachmentManifest,{folderPath:'Email Imports/2026-09-29 - Test subject',groups:[]});
+      assert.deepEqual(attachmentManifest,{folderPath:'Email Imports/2026-09-29 - Test subject Vedlegg',groups:[]});
       await printHtmlToPdf({ html: '<html>controlled</html>' });
       return Buffer.from('%PDF-test');
     }
@@ -92,6 +92,7 @@ function createHarness(overrides = {}) {
     openPdf: async path => { calls.push(`open:${path}`); },
     onPdfRollbackError: error => { calls.push(`pdf-rollback-error:${error.message}`); },
     onRetainedRollbackError: error => { calls.push(`retained-rollback-error:${error.message}`); },
+    attachmentFolderLabel:'Vedlegg',
     services: defaultServices,
     ...overrides
   };
