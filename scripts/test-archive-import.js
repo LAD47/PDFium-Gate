@@ -20,10 +20,13 @@ function zip(files){
 function createHost(zipBytes,{existing=[]}={}){
   const nodes=new Map(existing.map(path=>[path,{path,children:[]}]));
   const createdFiles=new Map();
+  const recordsByPdf=new Map();
+  let recordSeq=0;
   const host=new ArchiveImportFeature();
   host.state={archiveImport:{suppressedPaths:new Set(),inFlight:new Set(),lastResult:null}};
   host.obsidianVaultReadAdapter={
     async readBinary(){ return zipBytes; },
+    async readText(file){ return String(file?.text||''); },
     getAbstractFileByPath(path){ return nodes.get(path)||createdFiles.get(path)||null; }
   };
   host.obsidianVaultWriteAdapter={
@@ -36,9 +39,34 @@ function createHost(zipBytes,{existing=[]}={}){
       const file={path,name:path.split('/').pop(),extension:(path.split('.').pop()||'').toLowerCase(),bytes:Buffer.from(bytes)};
       createdFiles.set(path,file);
       return file;
+    },
+    async modifyText(file,data){
+      file.text=String(data);
+      return file;
     }
   };
-  return {host,nodes,createdFiles};
+  host.ports={
+    async handleDocumentRecordVaultCreate(file){
+      if(String(file?.extension||'').toLowerCase()!=='pdf') return {ok:true,ignored:true};
+      if(recordsByPdf.has(file.path)){
+        const existingRecord=recordsByPdf.get(file.path);
+        return {ok:true,created:false,id:existingRecord.id,recordPath:existingRecord.recordPath};
+      }
+      recordSeq++;
+      const id=`record-${recordSeq}`;
+      const recordPath=`File Metadata/test/${id}.md`;
+      const recordFile={path:recordPath,name:`${id}.md`,extension:'md',text:`---\nfilemeta_id: ${id}\nfilemeta_file: "[[${file.path}]]"\nfilemeta_status: active\n---\n`};
+      nodes.set(recordPath,recordFile);
+      const state={ready:true,ok:true,registered:true,id,recordPath,status:'active',pdfPath:file.path,values:{}};
+      recordsByPdf.set(file.path,state);
+      return {ok:true,created:true,id,recordPath};
+    },
+    async ensureDocumentRecordIndexReady(){ return {ok:true}; },
+    getDocumentMetadataRecordState(pdfPath){
+      return recordsByPdf.get(pdfPath)||{ready:true,ok:true,registered:false,values:{}};
+    }
+  };
+  return {host,nodes,createdFiles,recordsByPdf};
 }
 
 (async()=>{
@@ -59,6 +87,7 @@ function createHost(zipBytes,{existing=[]}={}){
   assert.equal(result.handled,true);
   assert.equal(result.targetFolder,'05 test/PDFium-Gate-ZIP-test-01');
   assert.equal(result.extractedCount,4);
+  assert.equal(result.linkedPdfCount,0);
   assert.ok(nodes.has('05 test/PDFium-Gate-ZIP-test-01'));
   assert.ok(nodes.has('05 test/PDFium-Gate-ZIP-test-01/Dokumenter'));
   assert.ok(nodes.has('05 test/PDFium-Gate-ZIP-test-01/Dokumenter/Underkatalog'));
@@ -88,7 +117,46 @@ function createHost(zipBytes,{existing=[]}={}){
   assert.deepEqual(unsupportedResult.unsupported,['office.docx']);
   assert.equal(unsupported.createdFiles.size,0);
 
-  console.log('Archive Import manual ZIP checks OK: vault-create detection, dedicated folder, nested paths, collision suffix, suppression, and unsupported-file fail-closed behavior.');
+  const relationshipBytes=zip({
+    'rapport.pdf':'%PDF synthetic report',
+    'Underkatalog/vedtak.pdf':'%PDF synthetic decision',
+    'README.txt':'archive notes'
+  });
+  const linked=createHost(relationshipBytes);
+  const linkedFile={path:'05 test/PDFium-Gate-ZIP-test-02-PDF.zip',name:'PDFium-Gate-ZIP-test-02-PDF.zip',extension:'zip'};
+  const linkedResult=await linked.host.handleArchiveImportVaultCreate(linkedFile);
+  assert.equal(linkedResult.ok,true);
+  assert.equal(linkedResult.extractedCount,3);
+  assert.equal(linkedResult.linkedPdfCount,2);
+  assert.deepEqual(linkedResult.relationshipFailures,[]);
+
+  const rapportPath='05 test/PDFium-Gate-ZIP-test-02-PDF/rapport.pdf';
+  const vedtakPath='05 test/PDFium-Gate-ZIP-test-02-PDF/Underkatalog/vedtak.pdf';
+  const readmePath='05 test/PDFium-Gate-ZIP-test-02-PDF/README.txt';
+  const rapportState=linked.recordsByPdf.get(rapportPath);
+  const vedtakState=linked.recordsByPdf.get(vedtakPath);
+  assert.ok(rapportState);
+  assert.ok(vedtakState);
+
+  const rapportRecord=linked.nodes.get(rapportState.recordPath);
+  const vedtakRecord=linked.nodes.get(vedtakState.recordPath);
+  const rapportRelation=archiveRuntime.extractArchiveRelationship(rapportRecord.text);
+  const vedtakRelation=archiveRuntime.extractArchiveRelationship(vedtakRecord.text);
+
+  assert.deepEqual(rapportRelation,{
+    sourceZipPath:linkedFile.path,
+    memberPaths:[vedtakPath,readmePath]
+  });
+  assert.deepEqual(vedtakRelation,{
+    sourceZipPath:linkedFile.path,
+    memberPaths:[rapportPath,readmePath]
+  });
+  assert.ok(rapportRecord.text.includes(`- archive: [[${linkedFile.path}]]`));
+  assert.ok(rapportRecord.text.includes(`- member: [[${vedtakPath}]]`));
+  assert.ok(rapportRecord.text.includes(`- member: [[${readmePath}]]`));
+  assert.ok(!rapportRelation.memberPaths.includes(rapportPath));
+
+  console.log('Archive Import manual ZIP checks OK: vault-create detection, dedicated folder, nested paths, collision suffix, suppression, unsupported-file fail-closed behavior, PDF registration handoff, and archive-member wikilinks.');
 })().catch(error=>{
   console.error('Archive Import manual ZIP check failed.');
   console.error(error && error.stack ? error.stack : error);
