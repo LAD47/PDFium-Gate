@@ -48,7 +48,7 @@ This file is a running list of observations found during practical testing that 
    - Treat this as a UI/interaction redesign task rather than a small cosmetic fix.
    - Keep the new simple lifecycle visible: active records are usable; missing records are informational/read-only; unregistered PDFs can receive new metadata.
 
-5. **Missing documents: live-delete review flow confirmed; offline reconciliation still pending**
+5. **Missing documents: live-delete flow confirmed; offline reconciliation implemented, practical test pending**
    - Practical testing on 2026-10-04 confirmed the complete live-delete flow:
      - deleting a registered PDF while Obsidian is running changes its record to `missing`;
      - the **Missing documents** dialog opens automatically and shows the correct count;
@@ -56,9 +56,19 @@ This file is a running list of observations found during practical testing that 
      - the Command Palette action reopens the same review;
      - **Delete metadata** removes the missing metadata record;
      - a subsequent review reports no remaining missing documents.
+   - Offline startup reconciliation is now implemented:
+     - it waits for both layout readiness and metadata-cache resolution;
+     - it runs through idle scheduling rather than moving the record scan onto the critical startup path;
+     - an unambiguous `active` record whose PDF is absent from the live vault changes to `missing`;
+     - present PDFs remain `active`;
+     - existing `missing` records are unchanged;
+     - benchmark records are excluded;
+     - resolver/infrastructure uncertainty fails closed without changing status;
+     - remaining missing records open the same review dialog.
+   - Practical test still required: close Obsidian, delete a registered PDF externally, restart Obsidian, and confirm automatic `active → missing` plus the review dialog.
+   - Known non-goal: if a different PDF replaces the original at the exact same path while Obsidian is closed, path-only reconciliation cannot distinguish that replacement from the original file.
    - Missing is a temporary safety state awaiting user choice, not a relink/recovery identity.
    - Future backup integration should add **Restore from backup** as the alternative resolution path.
-   - Still pending: detect PDFs that disappeared while Obsidian/PDFium Gate was not running and bring those records into the same missing-document review flow.
 
 6. **Document deletion: implement approved delete-document-and-metadata workflow**
    - Add an explicit user-facing **Delete document and metadata** operation for an active document.
