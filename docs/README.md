@@ -7,6 +7,7 @@ This directory contains active architecture documentation, focused test notes, c
 - [`../ARCHITECTURE.md`](../ARCHITECTURE.md) — stable architecture entry point.
 - [`architecture/`](architecture/) — detailed architecture contracts by domain.
 - [`../TRANSLATING.md`](../TRANSLATING.md) — translation contribution guide and locale policy.
+- [`email-import/README.md`](email-import/README.md) — current Email Import / Archive Import documentation index, transport-source model, transaction boundaries and historical-decision map.
 
 ## Active planning
 
