@@ -117,6 +117,8 @@ This file is a running list of observations found during practical testing that 
     - both records had `filemeta_status: active`;
     - each PDF received its own UUID.
   - This practically confirms the modular chain: ZIP -> Archive Import -> extracted files -> existing automatic PDF registration.
+  - Next relationship rule implemented after this practical baseline: each extracted PDF gets a plugin-managed Archive Relationship block in its existing File Metadata Markdown record. The block links back to the source ZIP and to every other extracted member from the same archive, while excluding the PDF itself. This reuses native Obsidian wikilinks rather than introducing a parallel relationship database.
+  - Practical verification of the new Archive Relationship links is still required.
   - External filesystem arrival detection for ZIP files is not yet implemented/confirmed and should be treated separately from the current Obsidian drag/drop trigger.
 
 - **Missing PDF lifecycle and recovery experiment**
