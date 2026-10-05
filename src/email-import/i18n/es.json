@@ -60,5 +60,6 @@
   "emailImport.zipModal.skipUnsupported": "Omitir archivos no compatibles",
   "emailImport.zipModal.keepUnsupported": "Copiarlos de todos modos",
   "settings.emailImport.retainSource.name": "Conservar el EML/MSG original tras una importación correcta",
-  "settings.emailImport.retainSource.description": "Opción avanzada. Desactivada de forma predeterminada. Si se activa, la fuente EML/MSG original exacta se conserva en el almacenamiento oculto del complemento tras una importación verificada."
+  "settings.emailImport.retainSource.description": "Opción avanzada. Desactivada de forma predeterminada. Si se activa, la fuente EML/MSG original exacta se conserva en el almacenamiento oculto del complemento tras una importación verificada.",
+  "emailImport.attachments.folderNameSuffix": "Adjuntos"
 }
