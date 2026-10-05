@@ -34,7 +34,10 @@ const EMAIL_IMPORT_TECHNICAL_PROPERTIES = Object.freeze([
   'email_import_attachment_sha256',
   'email_import_attachment_id',
   'email_import_attachment_original_filename',
-  'email_import_attachment_content_type'
+  'email_import_attachment_content_type',
+  'email_import_attachment_archive_name',
+  'email_import_attachment_archive_sha256',
+  'email_import_attachment_archive_member_path'
 ]);
 
 function nullableString(value) {
@@ -267,6 +270,12 @@ function buildEmailAttachmentImportRecordValues({ schema, parentRecordId, source
   if (filename) values.email_import_attachment_original_filename = filename;
   const contentType = nullableString(attachment?.contentType);
   if (contentType) values.email_import_attachment_content_type = contentType;
+  const archiveName=nullableString(attachment?.archiveName);
+  if(archiveName) values.email_import_attachment_archive_name=archiveName;
+  const archiveSha256=nullableString(attachment?.archiveSha256)?.toLowerCase();
+  if(archiveSha256 && /^[0-9a-f]{64}$/.test(archiveSha256)) values.email_import_attachment_archive_sha256=archiveSha256;
+  const archiveMemberPath=nullableString(attachment?.archiveMemberPath);
+  if(archiveMemberPath) values.email_import_attachment_archive_member_path=archiveMemberPath;
 
   return { values, technicalValues: { ...values }, userFieldSuggestions: {} };
 }
