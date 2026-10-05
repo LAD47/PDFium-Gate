@@ -16,14 +16,27 @@ function documentInfoCurrentValue(values, field, useDefault = false) {
 }
 
 class DocumentInfoFeature {
-  documentInfoArchiveLink(host,path) {
+  documentInfoArchiveLink(host,path,sourcePath='') {
     const vaultPath=String(path || '').trim();
     if(!vaultPath) return null;
+    const source=String(sourcePath || '').trim();
     const name=vaultPath.split('/').pop() || vaultPath;
     const link=host.createEl('a',{cls:'internal-link pdfium-document-info-relation-link',text:name});
     link.setAttribute('href',vaultPath);
     link.setAttribute('data-href',vaultPath);
     link.setAttribute('title',vaultPath);
+    link.addEventListener('click',event=>{
+      event.preventDefault();
+      event.stopPropagation();
+      const workspace=this.app?.workspace;
+      if(!workspace || typeof workspace.openLinkText!=='function') {
+        console.warn(`[PDFium Gate ${PLUGIN_VERSION}] DocumentInfo archive link cannot open; workspace.openLinkText unavailable`,vaultPath);
+        return;
+      }
+      void Promise.resolve(workspace.openLinkText(vaultPath,source,false)).catch(error=>{
+        console.warn(`[PDFium Gate ${PLUGIN_VERSION}] DocumentInfo archive link failed`,vaultPath,error);
+      });
+    });
     return link;
   }
 
@@ -55,7 +68,7 @@ class DocumentInfoFeature {
       const sourceRow=host.createDiv({cls:'pdfium-document-info-relation-row'});
       sourceRow.createDiv({cls:'pdfium-document-info-label',text:t('documentInfo.archive.source')});
       const sourceValue=sourceRow.createDiv({cls:'pdfium-document-info-relation-value'});
-      this.documentInfoArchiveLink(sourceValue,relation.sourceZipPath);
+      this.documentInfoArchiveLink(sourceValue,relation.sourceZipPath,path);
 
       const relatedRow=host.createDiv({cls:'pdfium-document-info-relation-row'});
       relatedRow.createDiv({cls:'pdfium-document-info-label',text:t('documentInfo.archive.related')});
@@ -66,7 +79,7 @@ class DocumentInfoFeature {
         const list=relatedRow.createEl('ul',{cls:'pdfium-document-info-relation-list'});
         for(const memberPath of members) {
           const item=list.createEl('li');
-          this.documentInfoArchiveLink(item,memberPath);
+          this.documentInfoArchiveLink(item,memberPath,path);
         }
       }
       return relation;
