@@ -7,6 +7,7 @@ const {
   verifiedAttachmentBytes,
   verifiedPdfAttachmentBytes
 }=require('../attachments/attachment-extraction');
+const {pairedEmailAttachmentFolderPath}=require('./target-path-policy');
 const {
   isZipAttachment,
   inspectZipAttachment,
@@ -17,10 +18,8 @@ function normalizeVaultPath(value){
   return String(value||'').replace(/\\/g,'/').replace(/^\/+|\/+$/g,'').trim();
 }
 
-function attachmentFolderPath(parentPdfPath){
-  const parent=normalizeVaultPath(parentPdfPath);
-  if(!/\.pdf$/i.test(parent)) throw new Error('Parent email PDF path must end in .pdf.');
-  return parent.replace(/\.pdf$/i,'');
+function attachmentFolderPath(parentPdfPath,folderLabel=''){
+  return pairedEmailAttachmentFolderPath(parentPdfPath,folderLabel);
 }
 
 function uniqueRelativePath(candidate,used){
@@ -88,8 +87,8 @@ function manifestFromPlan(plan){
   };
 }
 
-function buildEmailAttachmentPlan({document,parentPdfPath}){
-  const folderPath=attachmentFolderPath(parentPdfPath);
+function buildEmailAttachmentPlan({document,parentPdfPath,folderLabel=''}){
+  const folderPath=attachmentFolderPath(parentPdfPath,folderLabel);
   const analysis=analyzeEmailAttachments(document);
   const items=(analysis.attachments||[]).filter(item=>item?.extractable===true && item?.attachment);
   const used=new Set();
