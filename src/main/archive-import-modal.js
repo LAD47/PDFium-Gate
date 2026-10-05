@@ -76,3 +76,46 @@ class ArchiveImportUnsupportedFilesModal extends Modal {
       .onClick(()=>this.finish({action:'keep'})));
   }
 }
+
+
+class ArchiveImportPdfChoiceModal extends Modal {
+  constructor(app,plugin,model){
+    super(app);
+    this.plugin=plugin;
+    this.model=model||{};
+    this.settled=false;
+    this.resolveDecision=null;
+  }
+  openForDecision(){ return new Promise(resolve=>{ this.resolveDecision=resolve; this.open(); }); }
+  finish(decision){
+    if(this.settled) return;
+    this.settled=true;
+    const resolve=this.resolveDecision; this.resolveDecision=null;
+    try{ this.close(); }catch(_){}
+    if(typeof resolve==='function') resolve(decision);
+  }
+  onClose(){
+    this.contentEl.empty();
+    if(!this.settled){
+      this.settled=true;
+      const resolve=this.resolveDecision; this.resolveDecision=null;
+      if(typeof resolve==='function') resolve({action:'cancel'});
+    }
+  }
+  onOpen(){
+    const t=(key,params)=>this.plugin?.i18n?.t?.(key,params)||key;
+    const paths=Array.isArray(this.model.pdfPaths)?this.model.pdfPaths:[];
+    const {contentEl}=this;
+    contentEl.empty();
+    contentEl.createEl('h2',{text:t('archiveImport.openPdf.title')});
+    contentEl.createEl('p',{text:t('archiveImport.openPdf.intro',{zip:String(this.model.sourceZipPath||'')})});
+    for(const path of paths){
+      const name=String(path||'').split('/').pop()||String(path||'');
+      new Setting(contentEl)
+        .setName(name)
+        .setDesc(String(path||''))
+        .addButton(button=>button.setButtonText(t('archiveImport.openPdf.open')).onClick(()=>this.finish({action:'open',path})));
+    }
+    new Setting(contentEl).addButton(button=>button.setButtonText(t('common.cancel')).onClick(()=>this.finish({action:'cancel'})));
+  }
+}
