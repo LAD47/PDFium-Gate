@@ -1,6 +1,17 @@
 'use strict';
 
 const {
+  BLOCK_START: ARCHIVE_RELATIONSHIP_BLOCK_START,
+  BLOCK_END: ARCHIVE_RELATIONSHIP_BLOCK_END,
+  normalizeVaultPath: normalizeArchiveRelationshipVaultPath,
+  archiveWikilink,
+  normalizeUniquePaths: normalizeArchiveRelationshipPaths,
+  renderArchiveRelationshipBlock,
+  upsertArchiveRelationshipBlock,
+  extractArchiveRelationship
+} = require('./archive-relationships');
+
+const {
   ZIP_LIMITS,
   NATIVE_VAULT_EXTENSIONS,
   zipEvidence,
@@ -23,5 +34,13 @@ module.exports = {
   classifyArchiveEntry,
   contentTypeForArchivePath,
   inspectZipAttachment,
-  extractZipAttachment
+  extractZipAttachment,
+  ARCHIVE_RELATIONSHIP_BLOCK_START,
+  ARCHIVE_RELATIONSHIP_BLOCK_END,
+  normalizeArchiveRelationshipVaultPath,
+  archiveWikilink,
+  normalizeArchiveRelationshipPaths,
+  renderArchiveRelationshipBlock,
+  upsertArchiveRelationshipBlock,
+  extractArchiveRelationship
 };
