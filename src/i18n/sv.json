@@ -594,5 +594,10 @@
   "archiveImport.unsupported.keepUnsupported": "Behåll dem ändå",
   "archiveImport.openPdf.title": "Välj PDF från ZIP",
   "archiveImport.openPdf.intro": "Den här e-postbilagan är ett ZIP-arkiv. Välj vilken uppackad PDF som ska öppnas.",
-  "archiveImport.openPdf.open": "Öppna PDF"
+  "archiveImport.openPdf.open": "Öppna PDF",
+  "archiveImport.failure.title": "ZIP-import misslyckades",
+  "archiveImport.failure.intro": "PDFium Gate kunde inte importera {{name}}. Filer som skapades under försöket har återställts.",
+  "archiveImport.failure.question": "ZIP-filen kan vara dold av Obsidians standardinställningar. Vill du behålla den för senare kontroll eller radera den nu?",
+  "archiveImport.failure.keep": "Behåll ZIP",
+  "archiveImport.failure.delete": "Radera ZIP"
 }
