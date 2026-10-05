@@ -80,7 +80,7 @@ This file is a running list of observations found during practical testing that 
    - This deliberately avoids silently deleting metadata together with the PDF and leaves room for a future **Restore from backup** action in the same review flow.
    - Revisit a one-step delete command only if practical use later shows a clear need.
 
-7. **Email Import -> Archive Import ZIP handoff: practical persistence confirmed; final DocumentInfo check pending**
+7. **Email Import -> Archive Import ZIP handoff: practically confirmed**
    - The first Email Import-specific ZIP implementation was abandoned after practical testing exposed the architectural duplication.
    - Email Import now owns only the source email relationship: it exports the original ZIP beside the generated email PDF and links that ZIP as the source attachment.
    - The created ZIP is then routed to the generic Archive Import module, which owns inspection, aggregate unsupported-file choice, safe extraction, folder preservation, PDF registration and Archive Relationship creation.
@@ -111,7 +111,13 @@ This file is a running list of observations found during practical testing that 
    - Final DocumentInfo verification passed: both extracted PDFs show the expected Archive Relationship section, PDF-to-PDF and PDF-to-text links open correctly, and `vedtak.pdf` links back to `rapport.pdf`.
    - A final UX issue was then found in the generated email PDF: clicking the original ZIP attachment still opened the ZIP container rather than an extracted PDF.
    - Updated click rule: the parent email relationship continues to point to the original ZIP for provenance, but the generated email PDF's attachment click now resolves Archive Relationship members. One extracted PDF opens directly; multiple extracted PDFs require an explicit chooser; zero resolved PDFs fall back to the original ZIP.
-   - Automated regression covers both one-PDF direct routing and multiple-PDF chooser routing. Practical verification of this final ZIP-click behavior remains open.
+   - Automated regression covers both one-PDF direct routing and multiple-PDF chooser routing.
+   - Final practical ZIP-click verification passed on 2026-10-05:
+     - clicking the ZIP attachment in the existing generated email PDF opened **Velg PDF fra ZIP**;
+     - both `rapport.pdf` and `vedtak.pdf` were offered as choices;
+     - choosing `rapport.pdf` opened the extracted report PDF rather than the ZIP;
+     - choosing `vedtak.pdf` opened the extracted decision PDF rather than the ZIP.
+   - The complete practical chain is therefore confirmed: `EML -> generated email PDF -> retained/original ZIP -> Archive Import -> physical extraction -> PDF registration -> Archive Relationship -> DocumentInfo -> user-facing PDF selection/opening`.
 
 8. **PDF annotation backup: reassess `.pdfium-backup` after the independent backup solution exists**
    - Keep the current `backupOriginalPdf` safety function for now: it stores one original PDF copy before PDFium Gate first modifies the file and never overwrites an existing copy.
