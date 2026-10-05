@@ -118,7 +118,13 @@ async function runEmailImport({
   if (decision.action === 'open-existing') {
     try {
       await open(decision.match?.pdfPath);
-      return { ok: true, openedExisting: true, pdfPath: decision.match?.pdfPath };
+      return {
+        ok:true,
+        openedExisting:true,
+        duplicate:true,
+        sourceSha256:duplicateFacts.sha256,
+        pdfPath:decision.match?.pdfPath
+      };
     } catch (error) {
       return {
         ok: false,
