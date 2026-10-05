@@ -680,6 +680,114 @@ class DocumentRecordsFeature {
     return {ok:true,id,status:record.status,pdfPath:record.pdfPath};
   }
 
+  resolveDocumentRecordPdfPresence(pdfPath, recordPath='') {
+    const path=metadataRecordNormalizeVaultPath(pdfPath);
+    const sourcePath=metadataRecordNormalizeVaultPath(recordPath);
+    if(!path) return {ok:false,present:false,reason:'missing-pdf-path'};
+
+    let resolution=null;
+    try {
+      resolution=this.obsidianLinkResolutionAdapter?.resolveFirst?.(path,sourcePath) || null;
+    } catch(error) {
+      resolution={ok:false,file:null,reason:'resolution-threw',error:error instanceof Error?error.message:String(error)};
+    }
+    if(resolution?.ok && resolution.file) {
+      const extension=String(resolution.file.extension || '').toLowerCase();
+      if(extension==='pdf') return {ok:true,present:true,path:metadataRecordNormalizeVaultPath(resolution.file.path),reason:'resolved-link'};
+      return {ok:false,present:false,reason:'resolved-non-pdf'};
+    }
+
+    let direct=null;
+    try {
+      direct=this.obsidianVaultReadAdapter?.getAbstractFileByPath?.(path) || null;
+    } catch(error) {
+      return {ok:false,present:false,reason:'direct-lookup-failed',error:error instanceof Error?error.message:String(error)};
+    }
+    if(direct) {
+      const extension=String(direct.extension || '').toLowerCase();
+      if(extension==='pdf') return {ok:true,present:true,path:metadataRecordNormalizeVaultPath(direct.path),reason:'direct-path'};
+      return {ok:false,present:false,reason:'direct-non-pdf'};
+    }
+
+    if(resolution && resolution.ok===false && resolution.reason!=='not-found') {
+      return {ok:false,present:false,reason:resolution.reason || 'resolution-unavailable',error:resolution.error || null};
+    }
+    return {ok:true,present:false,path,reason:'not-found'};
+  }
+
+  async reconcileMissingDocumentRecords() {
+    await this.ensureDocumentRecordIndexReady('cold-start-idle');
+    return await this.runDocumentRecordOperation(async()=>{
+      const schema=this.ports.getMetadataSchemaSnapshot();
+      if(!schema) return {ok:false,error:'Metadata schema is unavailable'};
+      const repository=this.getDocumentRecordRepository();
+      let changedCount=0;
+      let presentCount=0;
+      let skippedCount=0;
+      const problemPaths=[];
+
+      const candidates=[...this.state.documentRecords.byId.values()]
+        .filter(entry=>entry?.status===METADATA_RECORD_STATUS_ACTIVE)
+        .slice();
+
+      for(const entry of candidates) {
+        if(!entry?.file || !entry.id || !entry.pdfPath) {
+          skippedCount++;
+          continue;
+        }
+        if(metadataBenchmarkIsPdfPath(entry.pdfPath)) {
+          skippedCount++;
+          continue;
+        }
+        if(this.state.documentRecords.ambiguousIds.has(entry.id) || this.state.documentRecords.ambiguousPdfPaths.has(entry.pdfPath)) {
+          problemPaths.push(entry.pdfPath);
+          continue;
+        }
+
+        const presence=this.resolveDocumentRecordPdfPresence(entry.pdfPath,entry.recordPath);
+        if(!presence.ok) {
+          problemPaths.push(entry.pdfPath);
+          continue;
+        }
+        if(presence.present) {
+          presentCount++;
+          continue;
+        }
+
+        try {
+          const readBack=await repository.updateRecord(entry.file,{
+            id:entry.id,
+            pdfPath:entry.pdfPath,
+            status:METADATA_RECORD_STATUS_MISSING,
+            values:metadataRecordClone(entry.values || {})
+          },schema);
+          this.replaceDocumentRecordEntry(readBack);
+          changedCount++;
+        } catch(error) {
+          problemPaths.push(entry.pdfPath);
+          console.warn(`[PDFium Gate ${PLUGIN_VERSION}] Could not mark offline-missing PDF ${entry.pdfPath}`,error);
+        }
+      }
+
+      const missingSummary=this.getMissingDocumentRecordSummary();
+      this.state.documentRecords.lastError=problemPaths.length
+        ? `${problemPaths.length} document record(s) could not be reconciled`
+        : null;
+      return {
+        ok:true,
+        changedCount,
+        presentCount,
+        skippedCount,
+        problemCount:problemPaths.length,
+        problemPaths,
+        totalMissingCount:missingSummary.count
+      };
+    }).catch(error=>({
+      ok:false,
+      error:error instanceof Error?error.message:String(error)
+    }));
+  }
+
   getMissingDocumentRecordSummary() {
     const items=[];
     for(const entry of this.state.documentRecords.byId.values()) {
