@@ -594,5 +594,10 @@
   "archiveImport.unsupported.keepUnsupported": "Keep them anyway",
   "archiveImport.openPdf.title": "Choose PDF from ZIP",
   "archiveImport.openPdf.intro": "This email attachment is a ZIP archive. Choose which extracted PDF to open.",
-  "archiveImport.openPdf.open": "Open PDF"
+  "archiveImport.openPdf.open": "Open PDF",
+  "archiveImport.failure.title": "ZIP import failed",
+  "archiveImport.failure.intro": "PDFium Gate could not import {{name}}. Any files created by this attempt have been rolled back.",
+  "archiveImport.failure.question": "The ZIP file may be hidden by Obsidian's default file explorer settings. Keep the failed ZIP in the vault for later inspection, or delete it now?",
+  "archiveImport.failure.keep": "Keep ZIP",
+  "archiveImport.failure.delete": "Delete ZIP"
 }
