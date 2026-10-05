@@ -34,7 +34,8 @@ function suggestedEmailPdfPathInFolder(document, folderPath, pathExists) {
     const suffix = index === 1 ? '' : ` (${index})`;
     const name = `${base}${suffix}.pdf`;
     const candidate = folder ? `${folder}/${name}` : name;
-    if (!exists(candidate)) return candidate;
+    const attachmentFolder = candidate.replace(/\.pdf$/i, '');
+    if (!exists(candidate) && !exists(attachmentFolder)) return candidate;
   }
 
   throw new Error('Could not allocate a unique Email Import PDF path.');
@@ -84,7 +85,9 @@ function validateTargetPdfPath(value, pathExists) {
   }
 
   if (exists(target)) return { ok: false, error: 'Target path already exists.' };
-  return { ok: true, path: target };
+  const attachmentFolder=target.replace(/\.pdf$/i,'');
+  if (exists(attachmentFolder)) return { ok:false, error:'The matching email attachment folder already exists.' };
+  return { ok: true, path: target, attachmentFolder };
 }
 
 module.exports = {
