@@ -47,8 +47,16 @@
   "settings.emailImport.dragDrop.name": "Importér e-mail automatisk med træk og slip",
   "settings.emailImport.dragDrop.description": "Når en .eml- eller .msg-fil føjes til vaulten, importeres den automatisk til samme mappe uden en ekstra dialog.",
   "settings.emailImport.attachments.name": "Udpak e-mailvedhæftninger automatisk",
-  "settings.emailImport.attachments.description": "Ved automatisk træk-og-slip-import gemmes almindelige vedhæftninger ved siden af e-mail-PDF'en. Inline/CID-ressourcer forbliver en del af e-mailvisningen.",
+  "settings.emailImport.attachments.description": "Ved automatisk drag-and-drop-import lægges almindelige vedhæftninger ved siden af e-mail-PDF'en. For ZIP-vedhæftninger bevares den oprindelige ZIP, mens understøttet indhold pakkes ud i en særskilt undermappe. Inline/CID-ressourcer forbliver i e-mailvisningen.",
   "emailImport.notice.dragDropExisting": "Denne e-mail er allerede importeret. Åbnede den eksisterende PDF: {{path}}.",
   "emailImport.notice.dragDropImported": "E-mail importeret automatisk til {{path}}. Udpakkede vedhæftninger: {{count}}.",
-  "emailImport.notice.dragDropImportedWithAttachmentErrors": "E-mail importeret automatisk til {{path}}. Udpakkede vedhæftninger: {{count}}; fejl: {{failed}}."
+  "emailImport.notice.dragDropImportedWithAttachmentErrors": "E-mail importeret automatisk til {{path}}. Udpakkede vedhæftninger: {{count}}; fejl: {{failed}}.",
+  "emailImport.zipModal.title": "ZIP-vedhæftningen indeholder filtyper, der ikke understøttes direkte",
+  "emailImport.zipModal.intro": "ZIP-vedhæftningen indeholder {{count}} fil(er) med formater, som PDFium Gate ikke behandler direkte.",
+  "emailImport.zipModal.supportedInfo": "PDF-filer importeres via det normale PDF-flow. Understøttede tekst-, billed- og mediefiler kopieres automatisk til ZIP-undermappen.",
+  "emailImport.zipModal.archive": "{{filename}} — {{count}} ikke-understøttet fil(er)",
+  "emailImport.zipModal.more": "…og {{count}} fil(er) mere.",
+  "emailImport.zipModal.cancelArchives": "Pak ikke ZIP ud",
+  "emailImport.zipModal.skipUnsupported": "Spring ikke-understøttede filer over",
+  "emailImport.zipModal.keepUnsupported": "Kopiér dem alligevel"
 }
