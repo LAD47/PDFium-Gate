@@ -583,5 +583,13 @@
   "documentInfo.archive.title": "Bilagor från ZIP",
   "documentInfo.archive.source": "Källarkiv",
   "documentInfo.archive.related": "Filer i samma arkiv",
-  "documentInfo.archive.none": "Inga andra filer i detta arkiv."
+  "documentInfo.archive.none": "Inga andra filer i detta arkiv.",
+  "archiveImport.unsupported.title": "ZIP innehåller filer som PDFium Gate inte hanterar direkt",
+  "archiveImport.unsupported.intro": "Valda ZIP-arkiv innehåller {{count}} fil(er) med format som inte hanteras direkt.",
+  "archiveImport.unsupported.supportedInfo": "PDFium Gate kan ändå behålla filerna oförändrade eller hoppa över dem och extrahera de filer som stöds.",
+  "archiveImport.unsupported.archive": "{{filename}} — {{count}} fil(er) som inte stöds",
+  "archiveImport.unsupported.more": "… och {{count}} till",
+  "archiveImport.unsupported.cancelArchives": "Packa inte upp ZIP",
+  "archiveImport.unsupported.skipUnsupported": "Hoppa över filer som inte stöds",
+  "archiveImport.unsupported.keepUnsupported": "Behåll dem ändå"
 }
