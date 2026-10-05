@@ -38,21 +38,22 @@ A runtime `create` event for a PDF follows fail-closed rules:
 
 PDFs copied into the vault while Obsidian/PDFium Gate is not running cannot be reliably distinguished from older unregistered PDFs at the next startup without maintaining additional historical inventory state. The first implementation therefore does not invent such state: those files are discovered by the explicit existing/unregistered-PDF registration action. A later reconciliation policy may be considered separately if practical testing shows a need.
 
-## Approved controlled document deletion direction
+## Document deletion policy
 
-**Decision date:** 2026-10-04  
-**Implementation status:** Pending.
+**Decision date:** 2026-10-05  
+**Implementation status:** Current behavior accepted and practically confirmed.
 
-A deliberate **Delete document and metadata** operation is distinct from unexpected file disappearance.
+A separate one-step **Delete document and metadata** command is intentionally not implemented at this stage.
 
-Target semantics:
+The accepted flow is:
 
-- unexpected/ordinary external disappearance of an active PDF: retain the record and change it to `missing`;
-- deliberate PDFium Gate **Delete document and metadata**: remove/trash the PDF and its associated active metadata record as one controlled user action;
-- a retained `missing` record is not removed by this command; historical missing-record cleanup remains a separate maintenance operation;
-- a missing record at the same textual path never becomes the identity of a later new PDF.
+- deleting a registered PDF through ordinary user/file-system actions changes the associated active record to `missing`;
+- PDFium Gate opens the **Missing documents** review;
+- the user may keep the missing metadata by closing the review or explicitly choose **Delete metadata**;
+- future backup integration may add **Restore from backup** as another explicit resolution path;
+- a retained `missing` record never becomes the identity of a later new PDF at the same textual path.
 
-The deletion implementation should prefer Obsidian's normal trash behavior rather than irreversible raw deletion. The detailed sequencing, confirmation UX and failure recovery must be designed so partial failure preserves metadata rather than silently losing it.
+This two-step model is preferred because metadata is not silently destroyed together with the document. A one-step delete command may be reconsidered later only if practical use demonstrates a clear need.
 
 ## Canonical record-link identity
 
