@@ -247,6 +247,7 @@ class ArchiveImportFeature {
       const relationshipResults=[];
       for(const createdEntry of createdEntries) {
         if(createdEntry.support!=='pdf') continue;
+        if(!registeredPdfPaths.includes(createdEntry.path)) registeredPdfPaths.push(createdEntry.path);
         const relationship=await this.writeArchiveRelationshipsForPdf(
           createdEntry.path,
           {sourceArchiveName,sourceArchiveSha256,parentDocumentPath},
@@ -254,7 +255,6 @@ class ArchiveImportFeature {
           createdEntry.file
         );
         relationshipResults.push(relationship);
-        if(relationship?.recordCreated===true) registeredPdfPaths.push(createdEntry.path);
         if(relationship?.ok===false) throw new Error(relationship.error||`Archive relationship failed: ${createdEntry.path}`);
       }
 
