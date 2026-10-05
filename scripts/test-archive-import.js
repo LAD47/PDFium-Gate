@@ -25,6 +25,7 @@ class FakeElement {
     this.text=String(opts.text||'');
     this.children=[];
     this.attributes={};
+    this.listeners={};
     this.isConnected=true;
     this.parent=null;
   }
@@ -32,6 +33,12 @@ class FakeElement {
   createDiv(opts={}){ return this.createEl('div',opts); }
   setAttribute(name,value){ this.attributes[name]=String(value); }
   setText(value){ this.text=String(value); }
+  addEventListener(type,handler){ this.listeners[type]=handler; }
+  async click(){
+    const handler=this.listeners.click;
+    if(!handler) return;
+    await handler({preventDefault(){},stopPropagation(){}});
+  }
   empty(){ this.children=[]; this.text=''; }
   remove(){ this.isConnected=false; if(this.parent) this.parent.children=this.parent.children.filter(child=>child!==this); }
   all(){ return [this,...this.children.flatMap(child=>child.all())]; }
@@ -176,7 +183,11 @@ function createHost(zipBytes,{existing=[]}={}){
   assert.ok(rapportRecord.text.includes(`- member: [[${readmePath}]]`));
   assert.ok(!rapportRelation.memberPaths.includes(rapportPath));
 
+  const openedLinks=[];
   const documentInfo=new DocumentInfoFeature();
+  documentInfo.app={workspace:{async openLinkText(linktext,sourcePath,newLeaf){
+    openedLinks.push({linktext,sourcePath,newLeaf});
+  }}};
   documentInfo.i18n={t:key=>({
     'documentInfo.archive.title':'Vedlegg fra ZIP',
     'documentInfo.archive.source':'Kildearkiv',
@@ -207,8 +218,15 @@ function createHost(zipBytes,{existing=[]}={}){
     'vedtak.pdf',
     'README.txt'
   ]);
+  await anchors[1].click();
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.deepEqual(openedLinks,[{
+    linktext:vedtakPath,
+    sourcePath:rapportPath,
+    newLeaf:false
+  }]);
 
-  console.log('Archive Import manual ZIP checks OK: vault-create detection, dedicated folder, nested paths, collision suffix, suppression, unsupported-file fail-closed behavior, PDF registration handoff, archive-member wikilinks, and DocumentInfo relationship presentation.');
+  console.log('Archive Import manual ZIP checks OK: vault-create detection, dedicated folder, nested paths, collision suffix, suppression, unsupported-file fail-closed behavior, PDF registration handoff, archive-member wikilinks, DocumentInfo relationship presentation, and explicit Obsidian link activation.');
 })().catch(error=>{
   console.error('Archive Import manual ZIP check failed.');
   console.error(error && error.stack ? error.stack : error);
