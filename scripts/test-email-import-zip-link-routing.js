@@ -1,10 +1,16 @@
 'use strict';
 
 const assert=require('assert/strict');
-const emailRuntime=require('../src/email-import/runtime-entry');
+const {
+  normalizeVaultPath,
+  extractEmailAttachmentLinkPaths
+}=require('../src/email-import/metadata/email-attachment-links');
 const {EmailImportFeature}=require('../src/plugin/features/20-email-import');
 
-global.EMAIL_IMPORT_RUNTIME=emailRuntime;
+global.EMAIL_IMPORT_RUNTIME={
+  normalizeVaultPath,
+  extractEmailAttachmentLinkPaths
+};
 global.Notice=class Notice { constructor(){} };
 
 (async()=>{
