@@ -163,6 +163,57 @@ function multipartEml({zipOne,zipTwo,directPdf}){
   ]);
   assert.ok(archiveRelations.every(item=>item.provenance.parentDocumentPath===parentPdfPath));
 
+  const failedCreated=new Map();
+  const failedRegistered=new Set();
+  const rollbackRecords=[];
+  let pdfSaveSeq=0;
+  let failedLinksCalled=false;
+  const failed=await runPlannedEmailAttachmentExport({
+    parentPdfPath,
+    plan,
+    ensureDocumentRecordIndexReady:async()=>({ok:true}),
+    getDocumentMetadataRecordState:path=>path===parentPdfPath
+      ? {
+          ready:true,ok:true,registered:true,id:'parent-id',
+          recordPath:'File Metadata/aa/parent-id.md',
+          values:{email_import_source_sha256:sourceSha}
+        }
+      : {ready:true,ok:true,registered:failedRegistered.has(path),values:{}},
+    getMetadataSchemaSnapshot:()=>({fields:[]}),
+    ensureTargetFolders:async()=>{},
+    createBinary:async(path,bytes)=>{
+      const file={path,extension:(path.split('.').pop()||'').toLowerCase(),bytes:Buffer.from(bytes)};
+      failedCreated.set(path,file);
+      return file;
+    },
+    readBinary:async file=>Buffer.from(file.bytes),
+    deleteFile:async file=>{ failedCreated.delete(file.path); },
+    deleteFolder:async()=>{ failedCreated.clear(); },
+    deleteDocumentMetadataRecordForPdf:async path=>{
+      rollbackRecords.push(path);
+      failedRegistered.delete(path);
+      return {ok:true,deleted:true};
+    },
+    saveDocumentMetadataRecordValues:async path=>{
+      pdfSaveSeq++;
+      if(pdfSaveSeq===2) return {ok:false,error:'synthetic metadata failure'};
+      failedRegistered.add(path);
+      return {ok:true};
+    },
+    updateParentAttachmentLinks:async()=>{
+      failedLinksCalled=true;
+      return {ok:true,linkedCount:0};
+    },
+    writeArchiveRelationshipForPdf:async()=>({ok:true})
+  });
+  assert.equal(failed.ok,false);
+  assert.equal(failed.reason,'attachment-transaction-failed');
+  assert.equal(failed.rolledBack,true);
+  assert.equal(failedCreated.size,0);
+  assert.equal(failedRegistered.size,0);
+  assert.equal(rollbackRecords.length,1);
+  assert.equal(failedLinksCalled,false);
+
   console.log('Email Import multi-ZIP attachment model OK: complete preflight plan, one sibling attachment folder, multiple ZIP contents merged safely with collision suffixes, no ZIP transport files persisted, PDFs registered, parent links ordered to match the email PDF, and archive provenance retained on nested PDFs.');
 })().catch(error=>{
   console.error('Email Import multi-ZIP attachment model check failed.');
