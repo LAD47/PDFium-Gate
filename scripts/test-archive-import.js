@@ -4,6 +4,7 @@ const assert=require('assert/strict');
 const {zipSync,strToU8}=require('fflate');
 const archiveRuntime=require('../src/archive-import/runtime-entry');
 const {ArchiveImportFeature}=require('../src/plugin/features/21-archive-import');
+const {DocumentInfoFeature}=require('../src/plugin/features/15-document-info');
 
 global.ARCHIVE_IMPORT_RUNTIME=archiveRuntime;
 global.Notice=class Notice {
@@ -15,6 +16,25 @@ function zip(files){
   const input={};
   for(const [name,value] of Object.entries(files)) input[name]=value instanceof Uint8Array?value:strToU8(String(value));
   return Buffer.from(zipSync(input,{level:6}));
+}
+
+class FakeElement {
+  constructor(tag='div',opts={}){
+    this.tag=tag;
+    this.cls=String(opts.cls||'');
+    this.text=String(opts.text||'');
+    this.children=[];
+    this.attributes={};
+    this.isConnected=true;
+    this.parent=null;
+  }
+  createEl(tag,opts={}){ const child=new FakeElement(tag,opts); child.parent=this; this.children.push(child); return child; }
+  createDiv(opts={}){ return this.createEl('div',opts); }
+  setAttribute(name,value){ this.attributes[name]=String(value); }
+  setText(value){ this.text=String(value); }
+  empty(){ this.children=[]; this.text=''; }
+  remove(){ this.isConnected=false; if(this.parent) this.parent.children=this.parent.children.filter(child=>child!==this); }
+  all(){ return [this,...this.children.flatMap(child=>child.all())]; }
 }
 
 function createHost(zipBytes,{existing=[]}={}){
@@ -156,7 +176,39 @@ function createHost(zipBytes,{existing=[]}={}){
   assert.ok(rapportRecord.text.includes(`- member: [[${readmePath}]]`));
   assert.ok(!rapportRelation.memberPaths.includes(rapportPath));
 
-  console.log('Archive Import manual ZIP checks OK: vault-create detection, dedicated folder, nested paths, collision suffix, suppression, unsupported-file fail-closed behavior, PDF registration handoff, and archive-member wikilinks.');
+  const documentInfo=new DocumentInfoFeature();
+  documentInfo.i18n={t:key=>({
+    'documentInfo.archive.title':'Vedlegg fra ZIP',
+    'documentInfo.archive.source':'Kildearkiv',
+    'documentInfo.archive.related':'Filer i samme arkiv',
+    'documentInfo.archive.none':'Ingen andre filer i dette arkivet.'
+  })[key]||key};
+  documentInfo.obsidianVaultReadAdapter={
+    getAbstractFileByPath:path=>linked.nodes.get(path)||null,
+    async readText(file){ return String(file?.text||''); }
+  };
+  const relationHost=new FakeElement('div');
+  const relationView={file:{path:rapportPath}};
+  const displayed=await documentInfo.renderDocumentInfoArchiveRelations(
+    relationHost,
+    relationView,
+    rapportPath,
+    rapportState
+  );
+  assert.equal(displayed.sourceZipPath,linkedFile.path);
+  const anchors=relationHost.all().filter(node=>node.tag==='a');
+  assert.deepEqual(anchors.map(node=>node.attributes['data-href']),[
+    linkedFile.path,
+    vedtakPath,
+    readmePath
+  ]);
+  assert.deepEqual(anchors.map(node=>node.text),[
+    'PDFium-Gate-ZIP-test-02-PDF.zip',
+    'vedtak.pdf',
+    'README.txt'
+  ]);
+
+  console.log('Archive Import manual ZIP checks OK: vault-create detection, dedicated folder, nested paths, collision suffix, suppression, unsupported-file fail-closed behavior, PDF registration handoff, archive-member wikilinks, and DocumentInfo relationship presentation.');
 })().catch(error=>{
   console.error('Archive Import manual ZIP check failed.');
   console.error(error && error.stack ? error.stack : error);
