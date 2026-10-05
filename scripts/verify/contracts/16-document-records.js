@@ -100,8 +100,12 @@ module.exports=async function verifyDocumentRecordsContract(){
   if(lifecycle.indexOf('onLayoutReady(() =>')>lifecycle.indexOf('handleDocumentRecordVaultRename')) fail('metadata record vault listeners are registered before layoutReady');
   if(!lifecycle.includes("refreshDocumentInfoAfterRecordEvent")) fail('metadata record lifecycle does not refresh open DocumentInfo views through lifecycle owner');
   if(!lifecycle.includes("scheduleMissingDocumentRecordsDialog")||!lifecycle.includes("review-missing-documents")) fail('missing-record review dialog is not connected to lifecycle/Command Palette');
-  for(const required of ["scheduleOfflineMissingReconciliation","runOfflineMissingReconciliation","missingReconciliationLayoutReady","missingReconciliationMetadataResolved","reconcileMissingDocumentRecords"]) if(!lifecycle.includes(required)) fail(`offline missing reconciliation lifecycle contract missing: ${required}`);
+  for(const required of ["scheduleOfflineMissingReconciliation","runOfflineMissingReconciliation","missingReconciliationLayoutReady","reconcileMissingDocumentRecords"]) if(!lifecycle.includes(required)) fail(`offline missing reconciliation lifecycle contract missing: ${required}`);
   if(!lifecycle.includes("scheduler.scheduleIdle")) fail('offline missing reconciliation is not deferred through idle scheduling');
+  const offlineScheduleStart=lifecycle.indexOf("scheduleOfflineMissingReconciliation() {");
+  const offlineScheduleEnd=lifecycle.indexOf("async runOfflineMissingReconciliation()",offlineScheduleStart);
+  const offlineScheduleSource=lifecycle.slice(offlineScheduleStart,offlineScheduleEnd);
+  if(offlineScheduleSource.includes("!this.state.lifecycle.missingReconciliationMetadataResolved")) fail('offline reconciliation still depends on a cache-resolved event that may have fired before plugin registration');
   if(!lifecycle.includes("obsidianMetadataCacheAdapter.onResolved")||!lifecycle.includes("markDocumentRecordMetadataResolved()")) fail('metadata-resolved startup gate is not registered early by lifecycle owner');
   if(!lifecycle.includes("markDocumentRecordLayoutReady()")) fail('layout-ready startup gate is not signaled by lifecycle owner');
   if(!lifecycle.includes("autoRegisterNewPdfs:persistedSettings.autoRegisterNewPdfs !== false")) fail('automatic new-PDF registration setting is not default-on');
