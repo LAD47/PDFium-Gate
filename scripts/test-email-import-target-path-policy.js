@@ -49,6 +49,12 @@ assert.equal(
 );
 assert.equal(
   suggestedEmailPdfPathInFolder(emailDocument, 'Cases/2026', existingSet([
+    'Cases/2026/2026-09-29 - Quarterly report'
+  ])),
+  'Cases/2026/2026-09-29 - Quarterly report (2).pdf'
+);
+assert.equal(
+  suggestedEmailPdfPathInFolder(emailDocument, 'Cases/2026', existingSet([
     'Cases/2026/2026-09-29 - Quarterly report.pdf'
   ])),
   'Cases/2026/2026-09-29 - Quarterly report (2).pdf'
@@ -72,12 +78,13 @@ assert.equal(
 
 assert.deepEqual(
   validateTargetPdfPath('Email Imports/new.pdf', existingSet([])),
-  { ok: true, path: 'Email Imports/new.pdf' }
+  { ok: true, path: 'Email Imports/new.pdf', attachmentFolder:'Email Imports/new' }
 );
 assert.equal(validateTargetPdfPath('Email Imports/new.txt', existingSet([])).ok, false);
 assert.equal(validateTargetPdfPath('../new.pdf', existingSet([])).ok, false);
 assert.equal(validateTargetPdfPath('.pdf-metadata/new.pdf', existingSet([])).ok, false);
 assert.equal(validateTargetPdfPath('File Metadata/new.pdf', existingSet([])).ok, false);
 assert.equal(validateTargetPdfPath('Email Imports/existing.pdf', existingSet(['Email Imports/existing.pdf'])).ok, false);
+assert.equal(validateTargetPdfPath('Email Imports/new.pdf', existingSet(['Email Imports/new'])).ok, false);
 
 console.log('Email Import target-path policy OK: normalization, same-folder drop suggestions, safe filenames, deterministic unique allocation and fail-closed target validation verified.');
