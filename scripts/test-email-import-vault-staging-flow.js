@@ -2,6 +2,8 @@
 
 const assert = require('assert/strict');
 
+global.deepClone=value=>value==null?value:JSON.parse(JSON.stringify(value));
+
 let duplicateDecisionFactory=model=>({action:'open-existing',match:model.duplicates[0]});
 global.EmailImportReviewModal = class EmailImportReviewModal {
   constructor(app,plugin,model) {
