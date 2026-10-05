@@ -1,13 +1,24 @@
 'use strict';
-const OBSIDIAN_VAULT_WRITE_CONTRACT_VERSION = '0.4';
+const OBSIDIAN_VAULT_WRITE_CONTRACT_VERSION = '0.5';
+
+function vaultBinaryArrayBuffer(data) {
+  if(data instanceof ArrayBuffer) return data;
+  if(ArrayBuffer.isView(data)) {
+    return data.buffer.slice(data.byteOffset,data.byteOffset+data.byteLength);
+  }
+  if(data==null) return new ArrayBuffer(0);
+  const bytes=Buffer.from(data);
+  return bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength);
+}
+
 function createObsidianVaultWriteAdapter({ vault }) {
   async function createBinary(vaultPath, data) {
     if (!vault || typeof vault.createBinary !== 'function') throw new Error('vault.createBinary er ikke tilgjengelig');
-    return await vault.createBinary(vaultPath, data);
+    return await vault.createBinary(vaultPath, vaultBinaryArrayBuffer(data));
   }
   async function modifyBinary(file, data) {
     if (!vault || typeof vault.modifyBinary !== 'function') throw new Error('vault.modifyBinary er ikke tilgjengelig');
-    return await vault.modifyBinary(file, data);
+    return await vault.modifyBinary(file, vaultBinaryArrayBuffer(data));
   }
   async function createText(vaultPath, data) {
     if (!vault || typeof vault.create !== 'function') throw new Error('vault.create er ikke tilgjengelig');
@@ -33,6 +44,14 @@ function createObsidianVaultWriteAdapter({ vault }) {
     if(!vault || typeof vault.createFolder!=='function') throw new Error('vault.createFolder er ikke tilgjengelig');
     return await vault.createFolder(target);
   }
-  return Object.freeze({contractVersion:OBSIDIAN_VAULT_WRITE_CONTRACT_VERSION,createBinary,modifyBinary,createText,modifyText,deleteFile,ensureFolder});
+  return Object.freeze({
+    contractVersion:OBSIDIAN_VAULT_WRITE_CONTRACT_VERSION,
+    createBinary,
+    modifyBinary,
+    createText,
+    modifyText,
+    deleteFile,
+    ensureFolder
+  });
 }
-module.exports={OBSIDIAN_VAULT_WRITE_CONTRACT_VERSION,createObsidianVaultWriteAdapter};
+module.exports={OBSIDIAN_VAULT_WRITE_CONTRACT_VERSION,vaultBinaryArrayBuffer,createObsidianVaultWriteAdapter};
