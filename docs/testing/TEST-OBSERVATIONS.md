@@ -95,8 +95,12 @@ This file is a running list of observations found during practical testing that 
    - A dedicated metadata-repository regression test verifies technical extension persistence, status-update preservation and explicit removal via empty value.
    - Full CI is green on the fix.
    - Practical retest after the metadata fix: the generated email PDF and original ZIP attachment were both created successfully, confirming the previous `not-email-import` failure is fixed. However, the dedicated extraction folder was not created, so the remaining failure is now isolated to the Email Import -> Archive Import handoff/execution boundary after ZIP creation.
-   - The next diagnostic is the `archiveResult` embedded in `lastEmailAttachmentExport`; no further Archive Import code change should be made until that result identifies whether routing was skipped, suppressed/in-flight, or failed during ZIP inspection/extraction.
-   - Practical combined handoff verification remains open.
+   - The next diagnostic was the `archiveResult` embedded in `lastEmailAttachmentExport`.
+   - That diagnostic reported a complete Archive Import success (`extractedArchiveCount: 1`, target folder `05 test/Metadata-Fix-Handoff`, three extracted paths, two linked PDFs, no relationship failures), but a direct Windows filesystem check immediately afterward showed `Test-Path C:\\Obsidian\\Vault\\05 test\\Metadata-Fix-Handoff -> False`.
+   - This exposed a false-success persistence boundary: runtime believed writes succeeded although the expected folder/files were not present at the tested filesystem path.
+   - Obsidian's public API contract requires `Vault.createBinary()` / `modifyBinary()` data to be `ArrayBuffer`. The shared vault-write adapter now normalizes Buffer/typed-array inputs to exact ArrayBuffer slices.
+   - Archive Import now reads every newly created archive member back through the vault API and byte-compares it before counting the member as successfully extracted; its result also includes the resolved vault root path for diagnostics.
+   - Full CI is green on the write-contract/read-back hardening. Practical filesystem verification with a fresh EML remains open.
 
 8. **PDF annotation backup: reassess `.pdfium-backup` after the independent backup solution exists**
    - Keep the current `backupOriginalPdf` safety function for now: it stores one original PDF copy before PDFium Gate first modifies the file and never overwrites an existing copy.
