@@ -8,11 +8,6 @@ const {
   verifiedAttachmentBytes,
   verifiedPdfAttachmentBytes
 } = require('../attachments/attachment-extraction');
-const {
-  isZipAttachment,
-  inspectZipAttachment,
-  extractZipAttachment
-} = require('../attachments/zip-attachment');
 const { buildEmailAttachmentImportRecordValues } = require('../metadata/email-metadata-projection');
 
 function requireFunction(name, value) {
@@ -43,24 +38,6 @@ function suggestedAttachmentVaultPath(parentPdfPath, attachment, pathExists) {
   throw new Error('Could not allocate a unique attachment path.');
 }
 
-function suggestedArchiveFolderVaultPath(zipVaultPath, pathExists) {
-  const exists = requireFunction('pathExists', pathExists);
-  const zipPath = normalizeVaultPath(zipVaultPath);
-  const slash = zipPath.lastIndexOf('/');
-  const folder = slash >= 0 ? zipPath.slice(0, slash) : '';
-  const filename = slash >= 0 ? zipPath.slice(slash + 1) : zipPath;
-  const extension = path.extname(filename);
-  const stem = sanitizeAttachmentFilename(extension ? filename.slice(0, -extension.length) : filename, { id:'archive' });
-
-  for (let index = 1; index < 10000; index++) {
-    const suffix = index === 1 ? '' : ` (${index})`;
-    const name = `${stem}${suffix}`;
-    const candidate = folder ? `${folder}/${name}` : name;
-    if (!exists(candidate)) return candidate;
-  }
-  throw new Error('Could not allocate a unique ZIP extraction folder.');
-}
-
 function buildServices(overrides) {
   return {
     sourceDescriptorFromEmailImportRecord,
@@ -69,37 +46,10 @@ function buildServices(overrides) {
     sanitizeAttachmentFilename,
     verifiedAttachmentBytes,
     verifiedPdfAttachmentBytes,
-    isZipAttachment,
-    inspectZipAttachment,
-    extractZipAttachment,
     buildEmailAttachmentImportRecordValues,
     suggestedAttachmentVaultPath,
-    suggestedArchiveFolderVaultPath,
     ...(overrides || {})
   };
-}
-
-function archiveDecisionModel(zipPlans) {
-  const archives = [];
-  let unsupportedCount = 0;
-  for (const plan of zipPlans.values()) {
-    if (!plan?.inspection) continue;
-    const unsupported = plan.inspection.unsupportedEntries.map(entry => ({
-      path:entry.originalPath,
-      size:entry.uncompressedSize
-    }));
-    unsupportedCount += unsupported.length;
-    archives.push({
-      filename:String(plan.attachment?.filename || 'archive.zip'),
-      totalCount:plan.inspection.fileEntries.length,
-      pdfCount:plan.inspection.pdfEntries.length,
-      nativeCount:plan.inspection.nativeEntries.length,
-      unsupportedCount:unsupported.length,
-      blockedCount:plan.inspection.blockedEntries.length,
-      unsupported
-    });
-  }
-  return { archives, unsupportedCount };
 }
 
 async function runAutomaticEmailAttachmentExport({
@@ -114,8 +64,8 @@ async function runAutomaticEmailAttachmentExport({
   deleteFile,
   saveDocumentMetadataRecordValues,
   updateParentAttachmentLinks,
-  chooseUnsupportedArchiveFiles,
   beforeCreateAttachment,
+  routeCreatedAttachments,
   onRollbackError,
   services
 }) {
@@ -159,7 +109,7 @@ async function runAutomaticEmailAttachmentExport({
       failures:[],
       linkedCount:0,
       relationError:null,
-      archives:[]
+      archiveResult:null
     };
   }
 
@@ -169,40 +119,7 @@ async function runAutomaticEmailAttachmentExport({
   const exported = [];
   const failures = [];
   const relationPaths = [];
-  const zipPlans = new Map();
-
-  for (const item of items) {
-    const attachment = item.attachment;
-    if (!runtime.isZipAttachment(attachment)) continue;
-    try {
-      const verified = runtime.verifiedAttachmentBytes(attachment);
-      const inspection = runtime.inspectZipAttachment({ ...attachment, content:verified.bytes });
-      zipPlans.set(item,{ attachment, inspection, error:null });
-      for (const blocked of inspection.blockedEntries) {
-        failures.push({
-          path:null,
-          filename:`${String(attachment.filename || 'archive.zip')}::${blocked.originalPath}`,
-          error:`ZIP entry was blocked: ${blocked.blockedReason || 'unsafe-entry'}`
-        });
-      }
-    } catch (error) {
-      zipPlans.set(item,{ attachment, inspection:null, error:error instanceof Error ? error.message : String(error) });
-      failures.push({
-        path:null,
-        filename:String(attachment?.filename || attachment?.id || 'archive.zip'),
-        error:`ZIP inspection failed: ${error instanceof Error ? error.message : String(error)}`
-      });
-    }
-  }
-
-  const decisionModel = archiveDecisionModel(zipPlans);
-  let archiveMode = 'supported-only';
-  if (decisionModel.unsupportedCount > 0 && typeof chooseUnsupportedArchiveFiles === 'function') {
-    const decision = await chooseUnsupportedArchiveFiles(decisionModel);
-    if (decision?.action === 'keep') archiveMode = 'all';
-    else if (decision?.action === 'cancel-archives') archiveMode = 'none';
-    else archiveMode = 'supported-only';
-  }
+  const createdAttachments = [];
 
   async function registerPdfTarget(targetPath, attachmentForMetadata) {
     const targetState = getRecordState(targetPath);
@@ -243,6 +160,7 @@ async function runAutomaticEmailAttachmentExport({
       await ensureFolders(targetPath);
       if (typeof beforeCreateAttachment === 'function') await beforeCreateAttachment(targetPath, item);
       createdFile = await create(targetPath, verified.bytes);
+      if (createdFile) createdAttachments.push(createdFile);
 
       if (verifiedPdf) {
         await registerPdfTarget(targetPath,{ ...attachment, sha256:verifiedPdf.sha256 });
@@ -253,72 +171,9 @@ async function runAutomaticEmailAttachmentExport({
         path:targetPath,
         filename:runtime.sanitizeAttachmentFilename(attachment?.filename, attachment),
         sha256:verified.sha256,
-        pdfRegistered,
-        fromArchive:false
+        pdfRegistered
       });
       relationPaths.push(targetPath);
-
-      const zipPlan = zipPlans.get(item);
-      if (!zipPlan?.inspection || archiveMode === 'none') continue;
-
-      const archiveFolder = runtime.suggestedArchiveFolderVaultPath(targetPath, exists);
-      const extractedEntries = runtime.extractZipAttachment(
-        { ...attachment, content:verified.bytes },
-        zipPlan.inspection,
-        { includeUnsupported:archiveMode === 'all' }
-      );
-
-      for (const entry of extractedEntries) {
-        const nestedPath = normalizeVaultPath(`${archiveFolder}/${entry.safePath}`);
-        let nestedFile = null;
-        let nestedPdfRegistered = false;
-        const nestedAttachment = {
-          id:`${String(attachment.id || 'zip')}::${entry.originalPath}`,
-          filename:entry.originalPath,
-          contentType:entry.contentType,
-          content:entry.bytes,
-          size:entry.bytes.length,
-          sha256:entry.sha256
-        };
-        try {
-          await ensureFolders(nestedPath);
-          if (typeof beforeCreateAttachment === 'function') {
-            await beforeCreateAttachment(nestedPath,{ attachment:nestedAttachment, fromArchive:true, archiveAttachment:attachment });
-          }
-          nestedFile = await create(nestedPath,entry.bytes);
-
-          if (entry.support === 'pdf') {
-            const verifiedNestedPdf = runtime.verifiedPdfAttachmentBytes(nestedAttachment);
-            await registerPdfTarget(nestedPath,{ ...nestedAttachment, sha256:verifiedNestedPdf.sha256 });
-            nestedPdfRegistered = true;
-          }
-
-          exported.push({
-            path:nestedPath,
-            filename:entry.safePath,
-            originalArchivePath:entry.originalPath,
-            archivePath:targetPath,
-            archiveFolder,
-            sha256:entry.sha256,
-            pdfRegistered:nestedPdfRegistered,
-            fromArchive:true,
-            support:entry.support
-          });
-        } catch (error) {
-          if (nestedFile && entry.support === 'pdf' && nestedPdfRegistered === false) {
-            try {
-              await remove(nestedFile);
-            } catch (rollbackError) {
-              if (typeof onRollbackError === 'function') onRollbackError(rollbackError, nestedPath);
-            }
-          }
-          failures.push({
-            path:nestedPath,
-            filename:`${String(attachment.filename || 'archive.zip')}::${entry.originalPath}`,
-            error:error instanceof Error ? error.message : String(error)
-          });
-        }
-      }
     } catch (error) {
       if (createdFile && pdfRegistered === false && item.pdfCandidate === true) {
         try {
@@ -351,18 +206,25 @@ async function runAutomaticEmailAttachmentExport({
     }
   }
 
-  const archiveSummaries = [];
-  for (const plan of zipPlans.values()) {
-    archiveSummaries.push({
-      filename:String(plan.attachment?.filename || 'archive.zip'),
-      inspected:Boolean(plan.inspection),
-      error:plan.error || null,
-      totalCount:plan.inspection?.fileEntries?.length || 0,
-      pdfCount:plan.inspection?.pdfEntries?.length || 0,
-      nativeCount:plan.inspection?.nativeEntries?.length || 0,
-      unsupportedCount:plan.inspection?.unsupportedEntries?.length || 0,
-      blockedCount:plan.inspection?.blockedEntries?.length || 0
-    });
+  let archiveResult = null;
+  if (createdAttachments.length && typeof routeCreatedAttachments === 'function') {
+    try {
+      archiveResult = await routeCreatedAttachments(createdAttachments);
+      for (const result of Array.isArray(archiveResult?.results) ? archiveResult.results : []) {
+        if (result?.ok !== false) continue;
+        failures.push({
+          path:result?.zipPath || null,
+          filename:String(result?.zipPath || 'archive.zip').split('/').pop(),
+          error:result?.error || result?.reason || 'Archive Import failed.'
+        });
+      }
+    } catch (error) {
+      failures.push({
+        path:null,
+        filename:'archive-import',
+        error:error instanceof Error ? error.message : String(error)
+      });
+    }
   }
 
   return {
@@ -371,9 +233,7 @@ async function runAutomaticEmailAttachmentExport({
     sourceSha256:source.sha256,
     exported,
     failures,
-    archives:archiveSummaries,
-    archiveMode,
-    unsupportedArchiveCount:decisionModel.unsupportedCount,
+    archiveResult,
     attachmentCount:items.length,
     exportedCount:exported.length,
     failureCount:failures.length,
@@ -385,7 +245,5 @@ async function runAutomaticEmailAttachmentExport({
 module.exports = {
   normalizeVaultPath,
   suggestedAttachmentVaultPath,
-  suggestedArchiveFolderVaultPath,
-  archiveDecisionModel,
   runAutomaticEmailAttachmentExport
 };
