@@ -424,6 +424,7 @@ const PLUGIN_FEATURE_CONTRACTS = Object.freeze({
       "getDocumentMetadataRecordState",
       "getMetadataSchemaSnapshot",
       "saveDocumentMetadataRecordValues",
+      "deleteDocumentMetadataRecordForPdf",
       "suppressArchiveImportPathOnce",
       "handleArchiveImportVaultFiles",
       "findArchivePdfMembersForSourceZip"
@@ -439,7 +440,8 @@ const PLUGIN_FEATURE_CONTRACTS = Object.freeze({
     "ports": [
       "handleDocumentRecordVaultCreate",
       "ensureDocumentRecordIndexReady",
-      "getDocumentMetadataRecordState"
+      "getDocumentMetadataRecordState",
+      "deleteDocumentMetadataRecordForPdf"
     ],
     "mutableStateFields": [
       "archiveImport.suppressedPaths",
