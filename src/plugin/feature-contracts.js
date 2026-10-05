@@ -18,6 +18,7 @@ const PLUGIN_FEATURE_CONTRACTS = Object.freeze({
       "registerPdfDocumentRegisterBasesView",
       "registerMetadataBenchmarkCommands",
       "registerEmailImportCommand",
+      "handleArchiveImportVaultCreate",
       "markDocumentRecordLayoutReady",
       "markDocumentRecordMetadataResolved",
       "cancelDocumentRecordIndexWarmup",
@@ -422,9 +423,23 @@ const PLUGIN_FEATURE_CONTRACTS = Object.freeze({
       "ensureDocumentRecordIndexReady",
       "getDocumentMetadataRecordState",
       "getMetadataSchemaSnapshot",
-      "saveDocumentMetadataRecordValues"
+      "saveDocumentMetadataRecordValues",
+      "suppressArchiveImportPathOnce"
     ],
     "mutableStateFields": []
+  },
+  "archiveImport": {
+    "file": "21-archive-import.js",
+    "className": "ArchiveImportFeature",
+    "stateDomains": [
+      "archiveImport"
+    ],
+    "ports": [],
+    "mutableStateFields": [
+      "archiveImport.suppressedPaths",
+      "archiveImport.inFlight",
+      "archiveImport.lastResult"
+    ]
   }
 });
 
@@ -531,7 +546,10 @@ const PLUGIN_STATE_FIELD_OWNERS = Object.freeze({
   "documentRecords.operationQueue": "documentRecords",
   "documentRecords.recordPathsById": "documentRecords",
   "documentRecords.lastBuildMetrics": "documentRecords",
-  "documentRecords.benchmarkEventSuppression": "documentRecords"
+  "documentRecords.benchmarkEventSuppression": "documentRecords",
+  "archiveImport.suppressedPaths": "archiveImport",
+  "archiveImport.inFlight": "archiveImport",
+  "archiveImport.lastResult": "archiveImport"
 });
 
 module.exports = { PLUGIN_FEATURE_CONTRACTS, PLUGIN_STATE_DOMAIN_OWNERS, PLUGIN_STATE_FIELD_OWNERS };
