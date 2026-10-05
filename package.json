@@ -5,7 +5,7 @@
   "scripts": {
     "build": "node build.js",
     "verify": "node scripts/verify-build.js",
-    "check": "npm run build && npm run test:core:integrity && npm run test:platform:vault-write && npm run test:metadata:record-repository && npm run test:archive-import && npm run test:email-import:zip-attachments && npm run check:i18n && npm run check:i18n-ui && npm run check:architecture-docs && npm run check:examples && npm run check:filemeta && npm run check:identity && npm run verify",
+    "check": "npm run build && npm run test:core:integrity && npm run test:platform:vault-write && npm run test:metadata:record-repository && npm run test:archive-import && npm run test:email-import:zip-attachments && npm run test:email-import:zip-link-routing && npm run check:i18n && npm run check:i18n-ui && npm run check:architecture-docs && npm run check:examples && npm run check:filemeta && npm run check:identity && npm run verify",
     "check:i18n": "node scripts/check-i18n.js",
     "check:i18n-ui": "node scripts/check-i18n-ui.js",
     "check:architecture-docs": "node scripts/check-architecture-docs.js",
@@ -32,12 +32,13 @@
     "test:email-import:attachments": "node scripts/test-email-import-attachments.js",
     "test:email-import:metadata": "node scripts/test-email-import-metadata.js",
     "test:email-import:pdf-electron": "electron scripts/test-email-import-pdf-electron.js",
-    "test:email-import": "npm run test:core:integrity && npm run test:email-import:parser && npm run test:email-import:msg-parser && npm run test:email-import:duplicates && npm run test:email-import:renderer && npm run test:email-import:retention && npm run test:email-import:retained-loader && npm run test:email-import:target-paths && npm run test:email-import:vault-trigger && npm run test:email-import:vault-staging-flow && npm run test:email-import:source-controller && npm run test:email-import:attachment-controller && npm run test:email-import:auto-attachments && npm run test:email-import:zip-attachments && npm run test:email-import:attachment-links && npm run test:email-import:pdf-link-hit-test && npm run test:email-import:pdf-point-adapter && npm run test:email-import:obsidian-adapter && npm run test:email-import:attachments && npm run test:email-import:metadata",
+    "test:email-import": "npm run test:core:integrity && npm run test:email-import:parser && npm run test:email-import:msg-parser && npm run test:email-import:duplicates && npm run test:email-import:renderer && npm run test:email-import:retention && npm run test:email-import:retained-loader && npm run test:email-import:target-paths && npm run test:email-import:vault-trigger && npm run test:email-import:vault-staging-flow && npm run test:email-import:source-controller && npm run test:email-import:attachment-controller && npm run test:email-import:auto-attachments && npm run test:email-import:zip-attachments && npm run test:email-import:zip-link-routing && npm run test:email-import:attachment-links && npm run test:email-import:pdf-link-hit-test && npm run test:email-import:pdf-point-adapter && npm run test:email-import:obsidian-adapter && npm run test:email-import:attachments && npm run test:email-import:metadata",
     "test:email-import:zip-attachments": "node scripts/test-email-import-zip-attachments.js",
     "create:email-import:zip-fixtures": "node scripts/create-email-import-zip-test-fixtures.js",
     "test:archive-import": "node scripts/test-archive-import.js",
     "test:metadata:record-repository": "node scripts/test-metadata-record-repository.js",
-    "test:platform:vault-write": "node scripts/test-obsidian-vault-write.js"
+    "test:platform:vault-write": "node scripts/test-obsidian-vault-write.js",
+    "test:email-import:zip-link-routing": "node scripts/test-email-import-zip-link-routing.js"
   },
   "dependencies": {
     "@kenjiuno/msgreader": "1.28.0",
