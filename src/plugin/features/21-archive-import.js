@@ -143,8 +143,17 @@ class ArchiveImportFeature {
       const slash=targetPath.lastIndexOf('/');
       if(slash>=0) await this.ensureArchiveImportFolderChain(targetPath.slice(0,slash));
       const createdFile=await this.obsidianVaultWriteAdapter.createBinary(targetPath,entry.bytes);
+      const persistedFile=this.obsidianVaultReadAdapter.getAbstractFileByPath(targetPath) || createdFile;
+      if(!persistedFile || String(persistedFile.path || '')!==targetPath) {
+        throw new Error(`Archive member write did not become visible in vault: ${targetPath}`);
+      }
+      const readBack=Buffer.from(await this.obsidianVaultReadAdapter.readBinary(persistedFile));
+      const expected=Buffer.from(entry.bytes || []);
+      if(!readBack.equals(expected)) {
+        throw new Error(`Archive member read-back mismatch: ${targetPath}`);
+      }
       created.push(targetPath);
-      createdEntries.push({path:targetPath,file:createdFile,support:entry.support});
+      createdEntries.push({path:targetPath,file:persistedFile,support:entry.support});
     }
 
     const relationshipResults=[];
@@ -173,6 +182,7 @@ class ArchiveImportFeature {
       handled:true,
       zipPath,
       targetFolder,
+      vaultRootPath:(()=>{ try { return this.obsidianVaultReadAdapter.getBasePath(); } catch(_) { return null; } })(),
       extractedCount:created.length,
       extractedPaths:created,
       linkedPdfCount,
