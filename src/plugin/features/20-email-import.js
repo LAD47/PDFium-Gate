@@ -371,6 +371,12 @@ class EmailImportFeature {
       deleteDocumentMetadataRecordForPdf:pdfPath=>this.ports.deleteDocumentMetadataRecordForPdf(pdfPath),
       saveDocumentMetadataRecordValues:adapter.saveDocumentMetadataRecordValues,
       updateParentAttachmentLinks:model=>this.updateEmailAttachmentLinks(model),
+      writeArchiveRelationshipForPdf:model=>this.ports.writeArchiveRelationshipsForPdf(
+        model.pdfPath,
+        model.provenance,
+        model.memberPaths,
+        null
+      ),
       onRollbackError:(error,targetPath)=>console.warn('[PDFium Gate] Planned email attachment rollback failed',targetPath,error)
     });
   }
