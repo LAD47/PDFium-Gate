@@ -332,6 +332,7 @@ class DiagnosticsFeature {
       pdfKeyboardCopyBridgeState: this.state.bridge.keyboardCopy.state || null,
       pdfNativeCopyBridgeState: this.state.bridge.nativeCopy.state || null,
       keyboardTextModelPrewarmState: this.state.annotation.keyboardTextModelPrewarm || null,
+      lastEmailAttachmentExport: this.lastEmailAttachmentExportDiagnostic ? deepClone(this.lastEmailAttachmentExportDiagnostic) : null,
       lastContextNavigationState: this.state.navigation.lastContextNavigationState || null,
       lastEffectiveCategoryConfig: this.state.context.lastEffectiveCategoryConfig || null,
       lastKnownPdfFilePath: this.state.navigation.lastKnownPdfFilePath || null,
