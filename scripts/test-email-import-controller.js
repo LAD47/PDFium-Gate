@@ -39,8 +39,9 @@ function createHarness(overrides = {}) {
       assert.equal(input, document);
       return { ok: true, values: { email_import_source_sha256: SOURCE_SHA } };
     },
-    generateEmailPdf: async ({ document: input, printHtmlToPdf }) => {
+    generateEmailPdf: async ({ document: input, attachmentManifest, printHtmlToPdf }) => {
       assert.equal(input, document);
+      assert.deepEqual(attachmentManifest,{folderPath:'Email Imports/2026-09-29 - Test subject',groups:[]});
       await printHtmlToPdf({ html: '<html>controlled</html>' });
       return Buffer.from('%PDF-test');
     }
@@ -142,9 +143,11 @@ async function run() {
     });
     const result = await runEmailImport(options);
     assert.deepEqual(result, {
-      ok: true,
-      openedExisting: true,
-      pdfPath: 'Email Imports/existing.pdf'
+      ok:true,
+      openedExisting:true,
+      duplicate:true,
+      sourceSha256:SOURCE_SHA,
+      pdfPath:'Email Imports/existing.pdf'
     });
     assert.ok(calls.includes('open:Email Imports/existing.pdf'));
     assert.ok(!calls.some(item => item.startsWith('create:')));
@@ -189,7 +192,7 @@ async function run() {
     assert.equal(result.openError, openFailure);
   }
 
-  console.log('Email Import source controller OK: source selection, type gating, duplicate lookup, passive review, target validation, retention/PDF rollback and viewer handoff behavior verified.');
+  console.log('Email Import source controller OK: source selection, type gating, duplicate lookup, attachment preflight manifest, target validation, optional retention/PDF rollback and viewer handoff behavior verified.');
 }
 
 run().catch(error => {
