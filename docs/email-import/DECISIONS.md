@@ -319,24 +319,81 @@ This architecture deliberately leaves room for a future vault-wide **find byte-i
 
 The principle is reuse without premature abstraction: promote mechanisms when their responsibility is genuinely general, while keeping feature-specific policy in the feature that owns it.
 
-### D-031 placeholder — non-PDF attachment handling remains a separate decision
+### D-031 — Non-PDF attachments follow the same email attachment-folder model
 
-No policy for importing or exposing ordinary non-PDF attachments is frozen by D-028 through D-030. Their storage location, visibility, opening behavior, relationship metadata, and whether they should become normal vault files or remain source-backed exports must be decided separately after the modular refactor is verified.
+The previous D-031 placeholder is resolved by the October 5 practical design review.
+
+Ordinary user-facing attachments are imported automatically when attachment extraction is enabled. PDFium Gate creates one sibling attachment folder whose vault path is the generated email PDF path without the final `.pdf` extension.
+
+For example:
+
+```text
+Cases/2026-10-05 - Subject.pdf
+Cases/2026-10-05 - Subject/
+```
+
+Direct PDF and non-PDF attachments are placed in that folder. Non-PDF attachments remain ordinary vault files; PDFs enter the normal PDFium Gate document-registration flow.
+
+The generated email PDF lists the actual imported files rather than transport containers.
+
+### D-032 — EML/MSG and ZIP are transport sources, not normal vault documents
+
+EML, MSG and ZIP are import/transport formats.
+
+For EML/MSG, exact source SHA-256, source format, original filename, message identity and other required technical provenance remain in the generated email PDF's metadata record. Retaining the exact original EML/MSG after a successful import is an advanced opt-in setting and is **off by default**.
+
+Automatic vault-staging import deletes the staged EML/MSG only after the import has completed successfully and the exact staging bytes still match the bytes that were imported. Failed or cancelled imports leave the source in place.
+
+For ZIP, a successfully imported source ZIP is deleted from the visible vault after extraction, read-back verification, PDF registration and relationship persistence all succeed. New archive provenance therefore does not depend on a live ZIP path.
+
+This supersedes earlier assumptions in D-004, D-022, D-023 and D-026 where source retention or source-backed attachment workflows were treated as a stronger default.
+
+### D-033 — Email attachment import is preflighted and transactional
+
+Email Import builds a complete attachment plan while the parsed canonical email and decoded source bytes are still in memory, before durable attachment writes begin.
+
+The plan includes direct attachments and the extractable members of every ZIP attachment. ZIP safety checks run during this preflight. Unsafe paths, blocked entries and nested ZIPs fail before attachment extraction begins.
+
+All user-facing attachment outputs are written into the single sibling email attachment folder. Filename/path collisions across direct attachments and multiple ZIPs are resolved deterministically with suffixes such as ` (2)`.
+
+After each file write, the bytes are read back and compared with the planned bytes. PDF metadata registration and attachment/Archive Relationship persistence happen only within the same controlled transaction. If a downstream attachment step fails, PDFium Gate removes metadata records created by that attempt and removes files/folders created by that attempt.
+
+The generated email PDF is rendered from the same preflight plan. Its attachment section therefore lists the actual files that the successful import intends to create, including members of ZIP attachments. A ZIP filename may be shown as a non-target group heading, but users click the actual member files directly.
+
+### D-034 — Multiple ZIP attachments share the email attachment folder
+
+Multiple ZIP attachments in one email are not expanded into separate top-level ZIP-named folders.
+
+Their members are merged into the one sibling attachment folder belonging to the email PDF while each ZIP's internal directory structure is preserved where possible. A single global collision allocator prevents silent overwrites across direct attachments and all ZIP members.
+
+Nested PDF records retain source provenance through the parent email document plus the original archive filename, archive SHA-256 and member path. The source ZIP itself does not need to remain in the vault.
+
+### D-035 — Manual Archive Import is atomic and deletes a successful source ZIP
+
+A ZIP added manually to the vault is imported into a sibling folder with the ZIP's base name.
+
+Archive Import performs full inspection before extraction, then writes and read-back verifies members, creates normal PDF registrations and persists archive relationships. Only after all these steps succeed is the source ZIP deleted.
+
+If a failure occurs after writes have started, all files/folders and fresh PDF metadata records created by that attempt are rolled back. The source ZIP remains.
+
+Because Obsidian normally hides ZIP files in the file explorer, a failed import explicitly warns the user and asks whether the failed source ZIP should be **kept** or **deleted**. Keeping it is the safe/default outcome.
+
+ZIP files that arrive through external filesystem operations are reconciled on Obsidian startup and when the Obsidian window regains focus. Continuous polling is not required.
 
 ## Open questions
 
 The following are intentionally not yet frozen:
 
-1. Default user setting for retaining or discarding the original source.
+1. ~~Default source-retention behavior.~~ Resolved by D-032: retain exact EML/MSG is an advanced opt-in and defaults to off.
 2. Exact visual design of the email PDF.
 3. Whether `Message-ID` should also be visible in the PDF or remain technical metadata only by default.
-4. User-facing behavior and storage rules for non-PDF attachments after the modular refactor.
-5. Naming rules for generated email PDF files beyond the current editable suggestion.
+4. ~~User-facing behavior and storage rules for non-PDF attachments.~~ Resolved by D-031/D-033.
+5. Exact naming policy beyond the current date/subject PDF suggestion; the attachment-folder pairing itself is frozen by D-031.
 6. Batch-import UX and duplicate summary behavior.
-7. Drag-and-drop UX and where it should be accepted in Obsidian.
+7. Additional drag-and-drop surfaces beyond the currently implemented vault staging flow.
 8. How malformed or partially parseable EML/MSG files should be represented to the user.
 9. Whether users should be able to configure semantic mappings from email fields to arbitrary custom metadata fields beyond the initial factory-UUID/property fallback mapping.
-10. Whether Email Import should later add stronger transactional rollback for a metadata record that was created before a downstream metadata verification failure.
+10. ~~Stronger attachment transaction rollback.~~ Resolved for attachment output by D-033; parent email-PDF rollback on post-PDF runtime failures remains a separate future decision.
 11. Exact scope and UX of a future vault-wide byte-identical duplicate finder; this is intentionally outside the current Email Import refactor.
 
 ## Change rule
