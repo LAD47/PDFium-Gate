@@ -583,5 +583,13 @@
   "documentInfo.archive.title": "Vedlegg fra ZIP",
   "documentInfo.archive.source": "Kildearkiv",
   "documentInfo.archive.related": "Filer i samme arkiv",
-  "documentInfo.archive.none": "Ingen andre filer i dette arkivet."
+  "documentInfo.archive.none": "Ingen andre filer i dette arkivet.",
+  "archiveImport.unsupported.title": "ZIP inneholder filer PDFium Gate ikke håndterer direkte",
+  "archiveImport.unsupported.intro": "Valgt(e) ZIP-arkiv inneholder {{count}} fil(er) med formater som ikke håndteres direkte.",
+  "archiveImport.unsupported.supportedInfo": "PDFium Gate kan likevel beholde disse filene uendret, eller hoppe over dem og pakke ut de støttede filene.",
+  "archiveImport.unsupported.archive": "{{filename}} — {{count}} ikke-støttet(e) fil(er)",
+  "archiveImport.unsupported.more": "… og {{count}} til",
+  "archiveImport.unsupported.cancelArchives": "Ikke pakk ut ZIP",
+  "archiveImport.unsupported.skipUnsupported": "Hopp over ikke-støttede filer",
+  "archiveImport.unsupported.keepUnsupported": "Behold dem likevel"
 }
