@@ -93,7 +93,10 @@ This file is a running list of observations found during practical testing that 
    - Root cause: if automatic PDF registration created the minimal document record before Email Import saved its technical provenance, metadata repository `updateRecord()` rewrote only schema-defined user fields and dropped non-schema extension values such as `email_import_source_sha256`. The newly created email PDF therefore immediately lost its Email Import identity.
    - Fix: metadata record updates now persist the union of schema-defined properties and non-system extension values already present in the record value set, while still rejecting `filemeta_*`/legacy system namespaces. This makes update behavior consistent with record creation and preserves technical extension metadata through later status/rename updates.
    - A dedicated metadata-repository regression test verifies technical extension persistence, status-update preservation and explicit removal via empty value.
-   - Full CI is green on the fix. Practical combined handoff verification with a fresh EML remains open.
+   - Full CI is green on the fix.
+   - Practical retest after the metadata fix: the generated email PDF and original ZIP attachment were both created successfully, confirming the previous `not-email-import` failure is fixed. However, the dedicated extraction folder was not created, so the remaining failure is now isolated to the Email Import -> Archive Import handoff/execution boundary after ZIP creation.
+   - The next diagnostic is the `archiveResult` embedded in `lastEmailAttachmentExport`; no further Archive Import code change should be made until that result identifies whether routing was skipped, suppressed/in-flight, or failed during ZIP inspection/extraction.
+   - Practical combined handoff verification remains open.
 
 8. **PDF annotation backup: reassess `.pdfium-backup` after the independent backup solution exists**
    - Keep the current `backupOriginalPdf` safety function for now: it stores one original PDF copy before PDFium Gate first modifies the file and never overwrites an existing copy.
