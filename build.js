@@ -40,6 +40,7 @@ const fragments = [
   read('src/main/pdf-document-register-bases-view.js'),
   read('src/main/example-files-installer.js'),
   read('src/main/email-import-modal.js'),
+  read('src/main/archive-import-modal.js'),
   read('src/main/settings.js'),
   buildPluginSource(ROOT)
 ];
