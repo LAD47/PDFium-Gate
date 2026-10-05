@@ -3,6 +3,7 @@
 const assert = require('assert/strict');
 const { zipSync, strToU8 } = require('fflate');
 const { sha256Hex } = require('../src/core/integrity/sha256');
+const { parseEml } = require('../src/email-import/parsers/eml-parser');
 const {
   safeArchiveEntryPath,
   inspectZipAttachment,
@@ -37,6 +38,37 @@ function zipAttachment(files,name='Saksdokumenter.zip') {
   };
 }
 
+function wrapBase64(buffer) {
+  return Buffer.from(buffer).toString('base64').match(/.{1,76}/g).join('\r\n');
+}
+
+function emlWithZip(zipBytes, zipName='Saksdokumenter.zip') {
+  const boundary='pdfium-gate-zip-integration-test';
+  return Buffer.from([
+    'From: Test Sender <sender@example.invalid>',
+    'To: Test Recipient <recipient@example.invalid>',
+    'Date: Mon, 5 Oct 2026 08:01:00 +0200',
+    'Subject: ZIP parser integration test',
+    'MIME-Version: 1.0',
+    `Content-Type: multipart/mixed; boundary="${boundary}"`,
+    '',
+    `--${boundary}`,
+    'Content-Type: text/plain; charset="utf-8"',
+    '',
+    'ZIP integration test.',
+    '',
+    `--${boundary}`,
+    `Content-Type: application/zip; name="${zipName}"`,
+    'Content-Transfer-Encoding: base64',
+    `Content-Disposition: attachment; filename="${zipName}"`,
+    '',
+    wrapBase64(zipBytes),
+    '',
+    `--${boundary}--`,
+    ''
+  ].join('\r\n'),'utf8');
+}
+
 async function run() {
   assert.equal(safeArchiveEntryPath('../evil.txt').ok,false);
   assert.equal(safeArchiveEntryPath('nested/report.pdf').path,'nested/report.pdf');
@@ -62,6 +94,28 @@ async function run() {
   ]);
   const all=extractZipAttachment(attachment,inspection,{includeUnsupported:true});
   assert.equal(all.length,3);
+
+  {
+    const zipBytes=makeZip({
+      'rapport.pdf':pdfBytes('Parser PDF'),
+      'underkatalog/vedtak.pdf':pdfBytes('Parser nested PDF')
+    });
+    const sourceBytes=emlWithZip(zipBytes);
+    const parsed=await parseEml({sourceBytes,originalFilename:'zip-parser-integration.eml'});
+    assert.equal(parsed.attachments.length,1);
+    const parsedZip=parsed.attachments[0];
+    assert.equal(parsedZip.filename,'Saksdokumenter.zip');
+    assert.equal(parsedZip.contentType,'application/zip');
+    assert.equal(Buffer.isBuffer(parsedZip.content),true);
+    assert.equal(parsedZip.content.equals(zipBytes),true);
+    const parsedInspection=inspectZipAttachment(parsedZip);
+    assert.equal(parsedInspection.pdfEntries.length,2);
+    const parsedExtracted=extractZipAttachment(parsedZip,parsedInspection);
+    assert.deepEqual(parsedExtracted.map(entry=>entry.safePath),[
+      'rapport.pdf',
+      'underkatalog/vedtak.pdf'
+    ]);
+  }
 
   const unsafe=zipAttachment({
     '../evil.txt':strToU8('evil'),
