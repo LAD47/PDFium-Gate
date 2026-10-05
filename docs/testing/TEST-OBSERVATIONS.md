@@ -71,13 +71,14 @@ This file is a running list of observations found during practical testing that 
    - Missing is a temporary safety state awaiting user choice, not a relink/recovery identity.
    - Future backup integration should add **Restore from backup** as the alternative resolution path.
 
-6. **Document deletion: implement approved delete-document-and-metadata workflow**
-   - Add an explicit user-facing **Delete document and metadata** operation for an active document.
-   - Deliberate PDFium Gate deletion removes/trashes the PDF and its associated active record through one controlled operation.
-   - This remains distinct from unexpected/external disappearance, which continues to retain the record as `missing`.
-   - Prefer Obsidian's configured trash behavior rather than irreversible raw deletion.
-   - Detailed sequencing must fail safely: partial failure should preserve metadata rather than silently lose it.
-   - Cleanup of already-missing historical records remains a separate maintenance operation.
+6. **Document deletion: current missing-document flow accepted**
+   - Product decision on 2026-10-05: do not add a separate **Delete document and metadata** command at this stage.
+   - The practically confirmed flow is the accepted behavior:
+     - deleting a registered PDF changes its record to `missing`;
+     - the **Missing documents** review gives the user an explicit second decision;
+     - **Delete metadata** removes the retained missing record only when the user chooses it.
+   - This deliberately avoids silently deleting metadata together with the PDF and leaves room for a future **Restore from backup** action in the same review flow.
+   - Revisit a one-step delete command only if practical use later shows a clear need.
 
 7. **Email Import attachments: better support for non-PDF file types**
    - Improve handling of email attachments that are not PDFs.
