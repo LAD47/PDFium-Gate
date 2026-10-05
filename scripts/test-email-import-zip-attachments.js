@@ -87,10 +87,11 @@ function multipartEml({zipOne,zipTwo,directPdf}){
   const parentPdfPath='05 test/2026-10-05 - Multi ZIP attachment model.pdf';
   const plan=finalizeEmailAttachmentPlan(buildEmailAttachmentPlan({
     document:parsed,
-    parentPdfPath
+    parentPdfPath,
+    folderLabel:'Vedlegg'
   }));
 
-  assert.equal(plan.folderPath,'05 test/2026-10-05 - Multi ZIP attachment model');
+  assert.equal(plan.folderPath,'05 test/2026-10-05 - Multi ZIP attachment model Vedlegg');
   assert.equal(plan.attachmentCount,3);
   assert.equal(plan.archiveCount,2);
   assert.equal(plan.outputCount,5);
@@ -239,7 +240,7 @@ function multipartEml({zipOne,zipTwo,directPdf}){
   assert.equal(rollbackRecords.length,3,'rollback owns every PDF path created by the transaction, including PDFs not yet metadata-processed');
   assert.equal(failedLinksCalled,false);
 
-  console.log('Email Import multi-ZIP attachment model OK: complete preflight plan, one sibling attachment folder, multiple ZIP contents merged safely with collision suffixes, no ZIP transport files persisted, PDFs registered, parent links ordered to match the email PDF, and archive provenance retained on nested PDFs.');
+  console.log('Email Import multi-ZIP attachment model OK: complete preflight plan, one localized sibling attachment folder, multiple ZIP contents merged safely with collision suffixes, no ZIP transport files persisted, PDFs registered, parent links ordered to match the email PDF, and archive provenance retained on nested PDFs.');
 })().catch(error=>{
   console.error('Email Import multi-ZIP attachment model check failed.');
   console.error(error && error.stack ? error.stack : error);
