@@ -7,7 +7,11 @@ function createPluginState() {
       overrideInstalled:false,
       pdfRuntimeRegistration:{seq:0,last:null,reconcileSeq:0,lastReconcile:null},
       missingRecordsDialogTimer:null,
-      missingRecordsDialogOpen:false
+      missingRecordsDialogOpen:false,
+      missingReconciliationLayoutReady:false,
+      missingReconciliationMetadataResolved:false,
+      missingReconciliationIdleHandle:null,
+      missingReconciliationCompleted:false
     },
     navigation: {
       lastKnownPdfFilePath: null,
