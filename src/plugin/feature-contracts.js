@@ -425,7 +425,8 @@ const PLUGIN_FEATURE_CONTRACTS = Object.freeze({
       "getMetadataSchemaSnapshot",
       "saveDocumentMetadataRecordValues",
       "suppressArchiveImportPathOnce",
-      "handleArchiveImportVaultFiles"
+      "handleArchiveImportVaultFiles",
+      "findArchivePdfMembersForSourceZip"
     ],
     "mutableStateFields": []
   },
