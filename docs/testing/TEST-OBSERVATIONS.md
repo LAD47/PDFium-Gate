@@ -80,7 +80,7 @@ This file is a running list of observations found during practical testing that 
    - This deliberately avoids silently deleting metadata together with the PDF and leaves room for a future **Restore from backup** action in the same review flow.
    - Revisit a one-step delete command only if practical use later shows a clear need.
 
-7. **Email Import -> Archive Import ZIP handoff: implemented; practical email test pending**
+7. **Email Import -> Archive Import ZIP handoff: practical persistence confirmed; final DocumentInfo check pending**
    - The first Email Import-specific ZIP implementation was abandoned after practical testing exposed the architectural duplication.
    - Email Import now owns only the source email relationship: it exports the original ZIP beside the generated email PDF and links that ZIP as the source attachment.
    - The created ZIP is then routed to the generic Archive Import module, which owns inspection, aggregate unsupported-file choice, safe extraction, folder preservation, PDF registration and Archive Relationship creation.
@@ -100,7 +100,15 @@ This file is a running list of observations found during practical testing that 
    - This exposed a false-success persistence boundary: runtime believed writes succeeded although the expected folder/files were not present at the tested filesystem path.
    - Obsidian's public API contract requires `Vault.createBinary()` / `modifyBinary()` data to be `ArrayBuffer`. The shared vault-write adapter now normalizes Buffer/typed-array inputs to exact ArrayBuffer slices.
    - Archive Import now reads every newly created archive member back through the vault API and byte-compares it before counting the member as successfully extracted; its result also includes the resolved vault root path for diagnostics.
-   - Full CI is green on the write-contract/read-back hardening. Practical filesystem verification with a fresh EML remains open.
+   - Full CI is green on the write-contract/read-back hardening.
+   - Fresh practical EML retest after the write-contract fix succeeded at the persistence boundary:
+     - the email PDF was created;
+     - the original `Persistence-Check.zip` was created;
+     - direct Windows `Test-Path` confirmed `C:\\Obsidian\\Vault\\05 test\\Persistence-Check` exists;
+     - recursive filesystem listing confirmed `rapport.pdf`, `Vedlegg/vedtak.pdf` and `Vedlegg/notat.txt` exist physically in the expected structure.
+   - The runtime diagnostic from the same run independently agrees with the filesystem result: vault root `C:\\Obsidian\\Vault`, one extracted archive, three extracted members, two linked PDFs and no relationship failures.
+   - This practically confirms the persistence portion of the combined chain `Email Import -> original ZIP -> Archive Import -> physical extracted files`.
+   - Final user-facing verification still pending: confirm the two extracted PDFs show the expected Archive Relationship section in DocumentInfo and that the links open the intended files.
 
 8. **PDF annotation backup: reassess `.pdfium-backup` after the independent backup solution exists**
    - Keep the current `backupOriginalPdf` safety function for now: it stores one original PDF copy before PDFium Gate first modifies the file and never overwrites an existing copy.
