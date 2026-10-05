@@ -111,6 +111,7 @@ function multipartEml({zipOne,zipTwo,directPdf}){
   const sourceSha=sha256Hex(emlBytes);
   const created=new Map();
   const registered=new Set();
+  const autoRegistered=new Set();
   const deleted=[];
   const parentLinks=[];
   const archiveRelations=[];
@@ -125,18 +126,30 @@ function multipartEml({zipOne,zipTwo,directPdf}){
           recordPath:'File Metadata/aa/parent-id.md',
           values:{email_import_source_sha256:sourceSha}
         }
-      : {ready:true,ok:true,registered:registered.has(path),values:{}},
+      : {
+          ready:true,
+          ok:true,
+          registered:registered.has(path) || autoRegistered.has(path),
+          id:(registered.has(path) || autoRegistered.has(path)) ? `auto:${path}` : undefined,
+          recordPath:(registered.has(path) || autoRegistered.has(path)) ? `File Metadata/auto/${Buffer.from(path).toString('hex')}.md` : undefined,
+          values:{}
+        },
     getMetadataSchemaSnapshot:()=>({fields:[]}),
     ensureTargetFolders:async()=>{},
     createBinary:async(path,bytes)=>{
       const file={path,extension:(path.split('.').pop()||'').toLowerCase(),bytes:Buffer.from(bytes)};
       created.set(path,file);
+      if(/\.pdf$/i.test(path)) autoRegistered.add(path);
       return file;
     },
     readBinary:async file=>Buffer.from(file.bytes),
     deleteFile:async file=>{ deleted.push(file.path); created.delete(file.path); },
     deleteFolder:async()=>{ for(const path of [...created.keys()]) created.delete(path); },
-    deleteDocumentMetadataRecordForPdf:async path=>{ registered.delete(path); return {ok:true,deleted:true}; },
+    deleteDocumentMetadataRecordForPdf:async path=>{
+      registered.delete(path);
+      autoRegistered.delete(path);
+      return {ok:true,deleted:true};
+    },
     saveDocumentMetadataRecordValues:async path=>{ registered.add(path); return {ok:true}; },
     updateParentAttachmentLinks:async model=>{
       parentLinks.splice(0,parentLinks.length,...model.attachmentPaths);
@@ -155,6 +168,7 @@ function multipartEml({zipOne,zipTwo,directPdf}){
   assert.equal([...created.keys()].some(path=>/\.zip$/i.test(path)),false);
   assert.deepEqual(parentLinks,plan.entries.map(entry=>`${plan.folderPath}/${entry.relativePath}`));
   assert.equal(registered.has(`${plan.folderPath}/cover.pdf`),true);
+  assert.equal(autoRegistered.has(`${plan.folderPath}/cover.pdf`),true,'transaction tolerates the minimal record created by PDF auto-registration');
   assert.equal(registered.has(`${plan.folderPath}/rapport.pdf`),true);
   assert.equal(registered.has(`${plan.folderPath}/vedtak.pdf`),true);
   assert.equal(archiveRelations.length,2);
@@ -165,6 +179,7 @@ function multipartEml({zipOne,zipTwo,directPdf}){
 
   const failedCreated=new Map();
   const failedRegistered=new Set();
+  const failedAutoRegistered=new Set();
   const rollbackRecords=[];
   let pdfSaveSeq=0;
   let failedLinksCalled=false;
@@ -178,12 +193,20 @@ function multipartEml({zipOne,zipTwo,directPdf}){
           recordPath:'File Metadata/aa/parent-id.md',
           values:{email_import_source_sha256:sourceSha}
         }
-      : {ready:true,ok:true,registered:failedRegistered.has(path),values:{}},
+      : {
+          ready:true,
+          ok:true,
+          registered:failedRegistered.has(path) || failedAutoRegistered.has(path),
+          id:(failedRegistered.has(path) || failedAutoRegistered.has(path)) ? `auto:${path}` : undefined,
+          recordPath:(failedRegistered.has(path) || failedAutoRegistered.has(path)) ? `File Metadata/auto/${Buffer.from(path).toString('hex')}.md` : undefined,
+          values:{}
+        },
     getMetadataSchemaSnapshot:()=>({fields:[]}),
     ensureTargetFolders:async()=>{},
     createBinary:async(path,bytes)=>{
       const file={path,extension:(path.split('.').pop()||'').toLowerCase(),bytes:Buffer.from(bytes)};
       failedCreated.set(path,file);
+      if(/\.pdf$/i.test(path)) failedAutoRegistered.add(path);
       return file;
     },
     readBinary:async file=>Buffer.from(file.bytes),
@@ -192,6 +215,7 @@ function multipartEml({zipOne,zipTwo,directPdf}){
     deleteDocumentMetadataRecordForPdf:async path=>{
       rollbackRecords.push(path);
       failedRegistered.delete(path);
+      failedAutoRegistered.delete(path);
       return {ok:true,deleted:true};
     },
     saveDocumentMetadataRecordValues:async path=>{
@@ -211,7 +235,8 @@ function multipartEml({zipOne,zipTwo,directPdf}){
   assert.equal(failed.rolledBack,true);
   assert.equal(failedCreated.size,0);
   assert.equal(failedRegistered.size,0);
-  assert.equal(rollbackRecords.length,1);
+  assert.equal(failedAutoRegistered.size,1,'third PDF was created but never reached metadata processing before the synthetic failure');
+  assert.equal(rollbackRecords.length,2,'both PDF records reached before failure are rolled back, including auto-registered minimal records');
   assert.equal(failedLinksCalled,false);
 
   console.log('Email Import multi-ZIP attachment model OK: complete preflight plan, one sibling attachment folder, multiple ZIP contents merged safely with collision suffixes, no ZIP transport files persisted, PDFs registered, parent links ordered to match the email PDF, and archive provenance retained on nested PDFs.');
