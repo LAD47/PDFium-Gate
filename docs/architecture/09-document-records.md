@@ -93,7 +93,9 @@ There is no ordinary-document `trashed` state.
 
 When a PDF disappearance is observed while Obsidian/PDFium Gate is running, PDFium Gate changes the active record to `missing` and opens a review dialog that shows the total number of missing documents. The current pre-backup dialog offers explicit deletion of the retained metadata (plus Close). Deleting missing metadata removes only records whose status is `missing`; it must not disturb a later active record even if that new PDF uses the same textual path. Once the independent backup solution is integrated, the intended second resolution path is restore from backup rather than relinking the missing record to a newly imported PDF.
 
-A Command Palette action also opens the missing-document review manually. Detection of PDFs that disappear while Obsidian is not running is a separate reconciliation requirement and remains pending; the current first slice is event-driven for disappearances observed by the live vault lifecycle.
+Offline disappearance is handled by startup reconciliation. Lifecycle waits for both workspace layout readiness and metadata-cache resolution, then schedules reconciliation through the existing idle scheduler so the warm-cache startup path is not moved onto the critical startup path. Reconciliation examines only unambiguous `active` document records, confirms PDF presence against the live vault, and changes an absent PDF to `missing`. Existing `missing` records are left untouched, benchmark records are excluded, and resolver/infrastructure uncertainty fails closed without changing status. If one or more missing records remain after reconciliation, the same missing-document review dialog is opened.
+
+A Command Palette action also opens the missing-document review manually. Offline reconciliation can detect a PDF that is absent at startup, but it deliberately cannot infer that a different PDF replaced the old file at the exact same path while Obsidian was closed; without durable external inventory or content identity, that case is indistinguishable from the original file still being present.
 
 ## Disposable document-record index cache
 
