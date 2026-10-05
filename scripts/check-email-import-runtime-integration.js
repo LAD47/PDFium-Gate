@@ -15,7 +15,9 @@ const bridge=read('main-bridge.js');
 requireMatch(main,/const EMAIL_IMPORT_RUNTIME\s*=\s*\(\(\)\s*=>/,'bundled Email Import runtime');
 requireMatch(main,/class EmailImportFeature\b/,'EmailImportFeature');
 requireMatch(main,/id:\s*['"]import-email-source['"]/,'Email Import command');
-requireMatch(main,/id:\s*['"]import-email-pdf-attachment['"]/,'Email PDF attachment import command');
+forbidMatch(main,/id:\s*['"]import-email-pdf-attachment['"]/,'obsolete on-demand Email PDF attachment import command');
+requireMatch(main,/runPlannedEmailAttachmentExport/,'planned atomic email attachment export');
+requireMatch(main,/buildEmailAttachmentPlan/,'email attachment preflight plan');
 requireMatch(main,/class EmailImportReviewModal\b/,'Email Import review modal');
 requireMatch(main,/class EmailPdfAttachmentImportModal\b/,'Email PDF attachment import modal');
 requireMatch(main,/readVerifiedRetainedSource/,'retained source reread verification');
@@ -43,6 +45,7 @@ console.log(JSON.stringify({
   mainBridgeBytes:Buffer.byteLength(bridge),
   bundledDependencies:true,
   commandWired:true,
-  attachmentImportWired:true,
+  plannedAttachmentImportWired:true,
+  obsoleteAttachmentCommandRemoved:true,
   controlledPrinter:true
 },null,2));
