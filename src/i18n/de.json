@@ -579,5 +579,9 @@
   "settings.documentRegister.registerExisting.confirm": "PDFium Gate hat {{count}} unregistrierte PDFs unter insgesamt {{total}} Benutzer-PDFs gefunden. Übersprungene Probleme: {{problems}}. Jetzt registrieren?",
   "settings.documentRegister.registerExisting.success": "{{created}} PDFs registriert. Bereits registriert: {{registered}}. Übersprungene Probleme: {{problems}}.",
   "settings.documentRegister.registerExisting.failedUnknown": "Unbekannter Registrierungsfehler",
-  "settings.documentRegister.registerExisting.failed": "Vorhandene PDFs konnten nicht registriert werden: {{error}}"
+  "settings.documentRegister.registerExisting.failed": "Vorhandene PDFs konnten nicht registriert werden: {{error}}",
+  "documentInfo.archive.title": "Anhänge aus ZIP",
+  "documentInfo.archive.source": "Quellarchiv",
+  "documentInfo.archive.related": "Dateien im selben Archiv",
+  "documentInfo.archive.none": "Keine weiteren Dateien in diesem Archiv."
 }
