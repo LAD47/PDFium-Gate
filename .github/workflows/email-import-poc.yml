@@ -5,6 +5,7 @@ on:
     branches: [feature/email-import, feature/missing-sha256-recovery]
     paths:
       - 'src/email-import/**'
+      - 'src/archive-import/**'
       - 'src/core/integrity/**'
       - 'src/main/email-import-modal.js'
       - 'src/plugin/**'
@@ -13,6 +14,7 @@ on:
       - 'test/fixtures/email/**'
       - 'scripts/test-core-integrity.js'
       - 'scripts/test-email-import-*.js'
+      - 'scripts/test-archive-import.js'
       - 'scripts/check-email-import-runtime-integration.js'
       - 'scripts/check-i18n*.js'
       - 'scripts/verify/**'
