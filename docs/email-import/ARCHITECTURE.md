@@ -13,9 +13,10 @@ Primary user-facing output:
 
 - PDF
 
-Optional retained source:
+Optional advanced retained source:
 
-- original `.eml` or `.msg`, stored outside the normal visible document area of the vault.
+- exact original `.eml` or `.msg`, stored outside the normal visible document area of the vault only when the user explicitly enables source retention;
+- source retention is off by default because EML/MSG are treated as transport inputs rather than normal working documents.
 
 The feature does not create a parallel permanent email viewer. The generated PDF enters the existing PDFium Gate document workflow.
 
@@ -291,72 +292,89 @@ Rollback removes a retained source only when the current import created it and e
 
 ## 11. Attachments
 
-Attachment handling has three derived roles:
+Attachment handling is planned before durable attachment writes begin.
+
+The importer uses the already parsed Canonical Email Document and decoded attachment payloads to construct one complete attachment plan. This means normal import does not depend on rereading a permanently retained EML/MSG source after the email PDF has been created.
 
 ### Inline resources
 
-CID/related/inline resources support the rendered message. They remain in the canonical attachment array with integrity metadata, but when treated as message resources they are not repeated as ordinary attachments in the email PDF.
+CID/related/inline resources support the rendered message. They remain part of the canonical email model and may be embedded into the controlled message rendering, but they are not exported as ordinary user-facing attachments.
 
-### Ordinary attachments
+### One sibling attachment folder
 
-User-facing attachments are listed in the email PDF. They are not automatically extracted, flattened into the email PDF, or created as visible vault files.
-
-### PDF candidates
-
-An ordinary attachment is a PDF candidate when evidence comes from one or more of:
-
-- MIME type `application/pdf`;
-- decoded payload beginning with `%PDF-`;
-- `.pdf` filename.
-
-PDF-candidate status is advisory during initial email import. An explicit later command may import a verified PDF attachment as its own ordinary PDFium Gate document when the original email source was retained.
-
-### Explicit extraction
-
-The attachment extraction service is a safe primitive for UI/orchestration. It:
-
-- requires decoded payload bytes;
-- verifies size and SHA-256 when available;
-- sanitizes filenames for cross-platform safety;
-- prevents path escape from the caller-supplied destination root;
-- writes and verifies exact bytes;
-- reuses an existing target only when bytes are identical;
-- fails closed on a different-file collision.
-
-The PDF-attachment import flow is user-verified.
-
-### ZIP/container attachment policy
-
-ZIP handling is now a shared Archive Import capability rather than an Email Import submodule.
-
-Email Import has only two ZIP-specific responsibilities:
-
-- export the original ZIP attachment unchanged beside the generated email PDF;
-- keep the original ZIP as the parent email's one-to-one attachment-link target.
-
-After creation, the ZIP file is handed to Archive Import. Archive Import owns:
-
-- ZIP inspection and safety limits;
-- one aggregate unsupported-file decision for a routed batch;
-- dedicated extraction-folder allocation;
-- internal directory preservation and filename sanitization;
-- extraction of supported files and optional preservation of unsupported files;
-- normal PDF registration for extracted PDFs;
-- Archive Relationship creation and DocumentInfo presentation.
-
-A PDF nested inside a ZIP is not modeled as a direct email attachment. The relationship chain is:
+Every imported email has one deterministic attachment folder paired with the email PDF:
 
 ```text
-email PDF -> original ZIP -> extracted archive member
+Cases/2026-10-05 - Subject.pdf
+Cases/2026-10-05 - Subject/
 ```
 
-Therefore nested PDFs receive normal PDF records plus Archive Relationship links, not direct `email_import_attachment_*` provenance. Direct PDF email attachments continue to use the existing Email Import attachment-provenance path.
+Direct PDF and non-PDF attachments are written below this folder. The PDF and folder allocator treats either path as a collision, so a later import receives the same numeric suffix on both concepts rather than accidentally reusing an unrelated folder.
 
-Expanded ZIP members are deliberately not inserted into the parent email's attachment-link block. The original ZIP remains the source attachment's live target.
+All attachment writes are read back and byte-compared before the attachment transaction is accepted.
 
-Nested ZIP files are not recursively expanded in this first implementation. Unsafe archive paths, excessive entry counts/sizes/compression ratios, and unsupported compression methods fail closed.
+### ZIP/container attachments
 
-This separation keeps Email Import responsible for email semantics and Archive Import responsible for archive semantics while preserving the immutable retained email source and SHA-256 integrity boundary.
+ZIP is a transport container, not a persistent user document.
+
+Every ZIP attachment is inspected during attachment-plan preflight, before any attachment files are written. Archive safety limits cover unsafe/traversal paths, path length/depth, entry counts, per-file and aggregate uncompressed size, compression ratio and supported compression. Nested ZIP expansion is intentionally not supported in the current implementation and fails during preflight.
+
+Members of all ZIP attachments are merged into the same sibling email attachment folder. Each ZIP's internal directory structure is preserved where possible. One global collision allocator covers direct attachments and all archive members, so two members such as `Vedlegg/notat.txt` become deterministic paths such as `Vedlegg/notat.txt` and `Vedlegg/notat (2).txt` rather than overwriting each other.
+
+The source ZIP itself is not created as a visible attachment file for a new email import.
+
+The email PDF is rendered from the same plan. It shows the complete user-facing attachment set, including ZIP members. An original ZIP filename may appear as a group heading, but the clickable targets are the actual imported member files.
+
+### PDF attachment registration and provenance
+
+Every planned PDF output becomes an ordinary PDFium Gate document through the existing document-register path.
+
+Direct PDF attachments retain the parent-email source/attachment provenance under the reserved `email_import_attachment_*` namespace.
+
+A PDF originating inside a ZIP additionally records:
+
+- original archive filename;
+- archive SHA-256;
+- original archive-member path;
+- parent email PDF relationship;
+- links to the other members imported from the same source archive.
+
+The source ZIP path is not required for new imports because the ZIP is transient.
+
+DocumentInfo renders archive provenance and related files from the technical relationship block. For an email archive member, the source presentation points back to the parent email and identifies the original ZIP filename.
+
+### Atomic attachment transaction
+
+The planned attachment phase follows an all-or-nothing rule for outputs created by that phase:
+
+1. create target folders/files;
+2. read back and byte-verify every file;
+3. register PDF documents;
+4. write archive provenance/relationships;
+5. write the parent email's attachment-link block.
+
+If a downstream attachment step fails, newly created attachment metadata records and attachment files/folders are rolled back. The source EML/MSG staging file is kept because the overall automatic import is not considered complete.
+
+### Manual Archive Import
+
+A manually added ZIP is owned by the generic Archive Import feature.
+
+Its successful flow is:
+
+```text
+Saksdokumenter.zip
+        |
+        v
+preflight -> extract to Saksdokumenter/ -> byte verification
+        -> PDF registration -> provenance/relationships
+        -> delete Saksdokumenter.zip
+```
+
+The source ZIP is deleted only after the entire archive transaction succeeds.
+
+If an error occurs after extraction begins, files/folders and fresh PDF metadata records created by that attempt are rolled back. The ZIP remains. The user is explicitly warned and can choose to keep the failed ZIP for inspection or delete it. Keep is the safe/default outcome.
+
+Because ZIP files may arrive through Windows Explorer without producing the same Obsidian-side create event as drag/drop, Archive Import also reconciles ZIP files on startup and when the Obsidian window regains focus. It does not continuously poll the filesystem.
 
 ## 12. Metadata and document-register boundary
 
