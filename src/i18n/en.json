@@ -583,5 +583,13 @@
   "documentInfo.archive.title": "Attachments from ZIP",
   "documentInfo.archive.source": "Source archive",
   "documentInfo.archive.related": "Files in the same archive",
-  "documentInfo.archive.none": "No other files in this archive."
+  "documentInfo.archive.none": "No other files in this archive.",
+  "archiveImport.unsupported.title": "ZIP contains files that PDFium Gate does not handle directly",
+  "archiveImport.unsupported.intro": "The selected ZIP archive(s) contain {{count}} file(s) with formats that are not handled directly.",
+  "archiveImport.unsupported.supportedInfo": "PDFium Gate can still keep these files unchanged, or skip them while extracting the supported files.",
+  "archiveImport.unsupported.archive": "{{filename}} — {{count}} unsupported file(s)",
+  "archiveImport.unsupported.more": "… and {{count}} more",
+  "archiveImport.unsupported.cancelArchives": "Do not extract ZIP",
+  "archiveImport.unsupported.skipUnsupported": "Skip unsupported files",
+  "archiveImport.unsupported.keepUnsupported": "Keep them anyway"
 }
