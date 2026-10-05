@@ -22,8 +22,14 @@ const {
   validateTargetPdfPath
 } = require('./runtime/target-path-policy');
 const { runEmailPdfAttachmentImport } = require('./runtime/import-pdf-attachment-controller');
-const { runAutomaticEmailAttachmentExport } = require('./runtime/export-email-attachments-controller');
+const { runAutomaticEmailAttachmentExport, runPlannedEmailAttachmentExport } = require('./runtime/export-email-attachments-controller');
 const { runEmailImport } = require('./runtime/import-email-controller');
+const {
+  attachmentFolderPath,
+  buildEmailAttachmentPlan,
+  finalizeEmailAttachmentPlan,
+  manifestFromPlan
+} = require('./runtime/email-attachment-plan');
 const { generateEmailPdf, validateGeneratedPdf } = require('./render/email-pdf-generator');
 const { EMAIL_ATTACHMENT_PROTOCOL_ACTION } = require('./render/email-html-renderer');
 const { analyzeEmailAttachments } = require('./attachments/attachment-policy');
@@ -64,7 +70,12 @@ module.exports = {
   validateTargetPdfPath,
   runEmailPdfAttachmentImport,
   runAutomaticEmailAttachmentExport,
+  runPlannedEmailAttachmentExport,
   runEmailImport,
+  attachmentFolderPath,
+  buildEmailAttachmentPlan,
+  finalizeEmailAttachmentPlan,
+  manifestFromPlan,
   generateEmailPdf,
   validateGeneratedPdf,
   EMAIL_ATTACHMENT_PROTOCOL_ACTION,
