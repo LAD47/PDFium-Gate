@@ -343,6 +343,12 @@ async function runPlannedEmailAttachmentExport({
     }
 
     for(const item of created) {
+      if(item.entry.support==='pdf' && !registeredPdfPaths.includes(item.path)) {
+        registeredPdfPaths.push(item.path);
+      }
+    }
+
+    for(const item of created) {
       const entry=item.entry;
       if(entry.support!=='pdf') continue;
       const targetState=getRecordState(item.path);
@@ -351,7 +357,6 @@ async function runPlannedEmailAttachmentExport({
       // The file path was fresh when this transaction started. If PDF auto-registration
       // has already created a minimal record in response to createBinary(), that record
       // belongs to this transaction and must be upgraded rather than treated as a collision.
-      if(!registeredPdfPaths.includes(item.path)) registeredPdfPaths.push(item.path);
 
       const provenance=runtime.buildEmailAttachmentImportRecordValues({
         schema,
