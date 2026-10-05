@@ -67,6 +67,7 @@ async function runEmailImport({
   openPdf,
   onPdfRollbackError,
   onRetainedRollbackError,
+  attachmentFolderLabel='',
   services
 }) {
   const choose = requireFunction('chooseSource', chooseSource);
@@ -102,7 +103,7 @@ async function runEmailImport({
     ? await runtime.parseEml({ sourceBytes, originalFilename })
     : await runtime.parseMsg({ sourceBytes, originalFilename });
 
-  const suggestedPdfPath = runtime.suggestedEmailPdfPath(document, exists);
+  const suggestedPdfPath = runtime.suggestedEmailPdfPath(document, exists, attachmentFolderLabel);
   const decision = await review({
     suggestedPdfPath,
     duplicates: duplicateFacts.matches,
@@ -134,12 +135,13 @@ async function runEmailImport({
     }
   }
 
-  const target = runtime.validateTargetPdfPath(decision.pdfPath, exists);
+  const target = runtime.validateTargetPdfPath(decision.pdfPath, exists, attachmentFolderLabel);
   if (!target.ok) return { ok: false, reason: 'invalid-target', error: target.error };
 
   const attachmentPlan=runtime.finalizeEmailAttachmentPlan(runtime.buildEmailAttachmentPlan({
     document,
-    parentPdfPath:target.path
+    parentPdfPath:target.path,
+    folderLabel:attachmentFolderLabel
   }));
 
   const schema = getSchema();
