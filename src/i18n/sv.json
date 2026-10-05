@@ -579,5 +579,9 @@
   "settings.documentRegister.registerExisting.confirm": "PDFium Gate hittade {{count}} oregistrerade PDF-filer av totalt {{total}} användar-PDF-filer. Överhoppade problem: {{problems}}. Registrera dem nu?",
   "settings.documentRegister.registerExisting.success": "Registrerade {{created}} PDF-filer. Redan registrerade: {{registered}}. Överhoppade problem: {{problems}}.",
   "settings.documentRegister.registerExisting.failedUnknown": "Okänt registreringsfel",
-  "settings.documentRegister.registerExisting.failed": "Kunde inte registrera befintliga PDF-filer: {{error}}"
+  "settings.documentRegister.registerExisting.failed": "Kunde inte registrera befintliga PDF-filer: {{error}}",
+  "documentInfo.archive.title": "Bilagor från ZIP",
+  "documentInfo.archive.source": "Källarkiv",
+  "documentInfo.archive.related": "Filer i samma arkiv",
+  "documentInfo.archive.none": "Inga andra filer i detta arkiv."
 }
