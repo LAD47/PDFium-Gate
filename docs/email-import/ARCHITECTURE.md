@@ -323,7 +323,7 @@ ZIP is a transport container, not a persistent user document.
 
 Every ZIP attachment is inspected during attachment-plan preflight, before any attachment files are written. Archive safety limits cover unsafe/traversal paths, path length/depth, entry counts, per-file and aggregate uncompressed size, compression ratio and supported compression. Nested ZIP expansion is intentionally not supported in the current implementation and fails during preflight.
 
-Members of all ZIP attachments are merged into the same sibling email attachment folder. Each ZIP's internal directory structure is preserved where possible. One global collision allocator covers direct attachments and all archive members, so two members such as `Vedlegg/notat.txt` become deterministic paths such as `Vedlegg/notat.txt` and `Vedlegg/notat (2).txt` rather than overwriting each other.
+Members of all ZIP attachments are flattened into the same sibling email attachment folder. ZIP-internal directory structure is not reproduced as user-facing subfolders for email attachments; the original archive-member path remains in technical provenance. One global collision allocator covers direct attachments and all archive members, so two members such as `Vedlegg/notat.txt` from different ZIPs become `notat.txt` and `notat (2).txt` rather than overwriting each other.
 
 The source ZIP itself is not created as a visible attachment file for a new email import.
 
