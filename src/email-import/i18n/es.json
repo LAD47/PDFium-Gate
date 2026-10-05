@@ -47,8 +47,16 @@
   "settings.emailImport.dragDrop.name": "Importar automáticamente correos arrastrados",
   "settings.emailImport.dragDrop.description": "Cuando se añade un archivo .eml o .msg al vault, se importa automáticamente en la misma carpeta sin un diálogo adicional.",
   "settings.emailImport.attachments.name": "Extraer automáticamente los adjuntos del correo",
-  "settings.emailImport.attachments.description": "En las importaciones automáticas mediante arrastrar y soltar, los adjuntos normales se guardan junto al PDF del correo. Los recursos inline/CID permanecen integrados en la visualización del correo.",
+  "settings.emailImport.attachments.description": "En las importaciones automáticas por arrastrar y soltar, los adjuntos normales se extraen junto al PDF del correo. En los adjuntos ZIP se conserva el ZIP original y el contenido compatible se extrae a una subcarpeta propia. Los recursos inline/CID permanecen en la representación del correo.",
   "emailImport.notice.dragDropExisting": "Este correo ya estaba importado. Se abrió el PDF existente: {{path}}.",
   "emailImport.notice.dragDropImported": "Correo importado automáticamente a {{path}}. Adjuntos extraídos: {{count}}.",
-  "emailImport.notice.dragDropImportedWithAttachmentErrors": "Correo importado automáticamente a {{path}}. Adjuntos extraídos: {{count}}; errores: {{failed}}."
+  "emailImport.notice.dragDropImportedWithAttachmentErrors": "Correo importado automáticamente a {{path}}. Adjuntos extraídos: {{count}}; errores: {{failed}}.",
+  "emailImport.zipModal.title": "El adjunto ZIP contiene tipos de archivo no compatibles directamente",
+  "emailImport.zipModal.intro": "El adjunto ZIP contiene {{count}} archivo(s) cuyos formatos PDFium Gate no procesa directamente.",
+  "emailImport.zipModal.supportedInfo": "Los PDF se importan mediante el flujo PDF normal. Los archivos de texto, imagen y medios compatibles se copian automáticamente a la subcarpeta ZIP.",
+  "emailImport.zipModal.archive": "{{filename}} — {{count}} archivo(s) no compatibles",
+  "emailImport.zipModal.more": "…y {{count}} archivo(s) más.",
+  "emailImport.zipModal.cancelArchives": "No extraer ZIP",
+  "emailImport.zipModal.skipUnsupported": "Omitir archivos no compatibles",
+  "emailImport.zipModal.keepUnsupported": "Copiarlos de todos modos"
 }
