@@ -591,5 +591,8 @@
   "archiveImport.unsupported.more": "… og {{count}} til",
   "archiveImport.unsupported.cancelArchives": "Ikke pakk ut ZIP",
   "archiveImport.unsupported.skipUnsupported": "Hopp over ikke-støttede filer",
-  "archiveImport.unsupported.keepUnsupported": "Behold dem likevel"
+  "archiveImport.unsupported.keepUnsupported": "Behold dem likevel",
+  "archiveImport.openPdf.title": "Velg PDF fra ZIP",
+  "archiveImport.openPdf.intro": "Dette e-postvedlegget er et ZIP-arkiv. Velg hvilken utpakket PDF du vil åpne.",
+  "archiveImport.openPdf.open": "Åpne PDF"
 }
