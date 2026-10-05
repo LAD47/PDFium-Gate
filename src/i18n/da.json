@@ -594,5 +594,10 @@
   "archiveImport.unsupported.keepUnsupported": "Behold dem alligevel",
   "archiveImport.openPdf.title": "Vælg PDF fra ZIP",
   "archiveImport.openPdf.intro": "Denne e-mailvedhæftning er et ZIP-arkiv. Vælg hvilken udpakket PDF der skal åbnes.",
-  "archiveImport.openPdf.open": "Åbn PDF"
+  "archiveImport.openPdf.open": "Åbn PDF",
+  "archiveImport.failure.title": "ZIP-import mislykkedes",
+  "archiveImport.failure.intro": "PDFium Gate kunne ikke importere {{name}}. Filer oprettet under forsøget er rullet tilbage.",
+  "archiveImport.failure.question": "ZIP-filen kan være skjult af Obsidians standardindstillinger. Vil du beholde den til senere kontrol eller slette den nu?",
+  "archiveImport.failure.keep": "Behold ZIP",
+  "archiveImport.failure.delete": "Slet ZIP"
 }
