@@ -237,6 +237,9 @@ async onload() {
         });
       };
       this.obsidianPluginRegistrationAdapter.registerEvent(this.obsidianVaultLifecycleAdapter.onCreate(file => refreshDocumentInfoAfterRecordEvent(this.ports.handleDocumentRecordVaultCreate(file),'record-create')));
+      this.obsidianPluginRegistrationAdapter.registerEvent(this.obsidianVaultLifecycleAdapter.onCreate(file => {
+        void this.ports.handleArchiveImportVaultCreate(file);
+      }));
       this.obsidianPluginRegistrationAdapter.registerEvent(this.obsidianVaultLifecycleAdapter.onModify(file => refreshDocumentInfoAfterRecordEvent(this.ports.handleDocumentRecordVaultModify(file),'record-modify')));
       this.obsidianPluginRegistrationAdapter.registerEvent(this.obsidianVaultLifecycleAdapter.onRename((file, oldPath) => refreshDocumentInfoAfterRecordEvent(this.ports.handleDocumentRecordVaultRename(file, oldPath),'record-rename')));
       this.obsidianPluginRegistrationAdapter.registerEvent(this.obsidianVaultLifecycleAdapter.onDelete(file => {
