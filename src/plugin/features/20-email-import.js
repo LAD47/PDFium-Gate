@@ -311,7 +311,7 @@ class EmailImportFeature {
     });
 
     let attachmentResult=null;
-    if(result?.ok && !result.openedExisting && result.pdfPath && this.settings?.emailDragDropExtractAttachments!==false) {
+    if(result?.ok && !result.openedExisting && result.pdfPath) {
       attachmentResult=await this.exportPlannedEmailAttachments(result.pdfPath,result.attachmentPlan);
       this.lastEmailAttachmentExportDiagnostic={
         at:new Date().toISOString(),
@@ -471,7 +471,7 @@ class EmailImportFeature {
     });
 
     let attachmentResult=null;
-    if(result?.ok && !result.openedExisting && result.pdfPath && this.settings?.emailDragDropExtractAttachments!==false) {
+    if(result?.ok && !result.openedExisting && result.pdfPath) {
       try {
         attachmentResult=await this.exportPlannedEmailAttachments(result.pdfPath,result.attachmentPlan);
         this.lastEmailAttachmentExportDiagnostic={
@@ -504,8 +504,7 @@ class EmailImportFeature {
       }
     }
 
-    const attachmentsRequired=this.settings?.emailDragDropExtractAttachments!==false;
-    const attachmentPhaseOk=!attachmentsRequired || attachmentResult?.ok===true;
+    const attachmentPhaseOk=attachmentResult?.ok===true;
     const importTransactionComplete=Boolean(
       result?.ok && result.pdfPath && (
         (!result.openedExisting && attachmentPhaseOk)
