@@ -383,6 +383,11 @@ class EmailImportFeature {
     if(result?.ok && !result.openedExisting && result.pdfPath && this.settings?.emailDragDropExtractAttachments!==false) {
       try {
         attachmentResult=await this.exportAutomaticEmailAttachments(result.pdfPath);
+        if(Array.isArray(attachmentResult?.failures) && attachmentResult.failures.length) {
+          for(const failure of attachmentResult.failures) {
+            console.warn('[PDFium Gate] Automatic email attachment item failed',result.pdfPath,failure);
+          }
+        }
         if(attachmentResult?.relationError) {
           console.warn('[PDFium Gate] Email attachments exported but native attachment links could not be written',result.pdfPath,attachmentResult.relationError);
         }
