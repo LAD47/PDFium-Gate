@@ -14,8 +14,9 @@ This file is a running list of observations found during practical testing that 
 ## Open items
 
 1. **DocumentInfo: Edit button placement**
-   - The **Edit** button should preferably be available both at the top and at the bottom of the DocumentInfo panel.
-   - Reason: users entering the panel may not see the current button until they scroll past all metadata fields.
+   - Candidate implementation on `fix/0.1.227-localized-defaults` renders the same **Edit** action above the metadata fields and again at the bottom of the panel after archive relationships.
+   - Both buttons enter the same edit state and use the existing save/cancel/persistence path; no duplicate editing model was introduced.
+   - Automated contract verification covers the placement. Practical Obsidian verification is still required before moving this item to Completed.
 
 2. **PDF Document Register: current user interface needs redesign**
    - The current Document Register user interface was judged unusable/poor in practical testing.
