@@ -4,7 +4,7 @@ This document records the current release-governance rules for PDFium Gate, incl
 
 ## Public version sequence
 
-Internal `0.1.x` builds remain development history. The planned public sequence is:
+The current `0.1.x` line is publicly distributed through Obsidian Community Plugins as pre-1.0 development/test releases. The planned maturity sequence remains:
 
 - `0.9.0`, `0.9.1`, ... — Beta releases;
 - `0.99.0`, `0.99.1`, ... — Release Candidate phase;
@@ -13,9 +13,9 @@ Internal `0.1.x` builds remain development history. The planned public sequence 
 
 `manifest.json` and the GitHub release/tag use the same plain `x.y.z` version. Beta/Release Candidate is expressed as release status/name rather than adding a prerelease suffix to the manifest version.
 
-## Persisted-format review before public release
+## Persisted-format review before stable/destructive use
 
-Before public/live release, any change to persisted formats, file layouts, configuration structures, IDs, or other user-data representations requires an explicit migration/backward-compatibility review. Pre-release test data may be destructively changed only while that test-phase policy remains explicitly in force.
+Because PDFium Gate is already publicly distributed as a pre-1.0 Community plugin, changes to persisted formats, file layouts, configuration structures, IDs, or other user-data representations require an explicit migration/backward-compatibility review whenever they could affect existing users. Experimental test-only data may be destructively changed only when that scope is explicit.
 
 ## Backup/rollback readiness before destructive public use
 
@@ -52,3 +52,7 @@ Normal Community releases are ordinary GitHub Releases, not GitHub prereleases. 
 BRAT was used during an earlier test phase and is no longer part of the active installation or release workflow. Historical documents may retain BRAT references when they describe that earlier development period.
 
 The public product name and plugin ID were frozen in 0.1.224 as **PDFium Gate** / `pdfium-gate`, and the active GitHub repository is `LAD47/PDFium-Gate`. The public `manifest.json` author metadata is `LAD47`.
+
+## Current confirmed Community baseline
+
+Version **0.1.226** was published through the normal Community Plugins release path on 2026-10-06 and was subsequently offered and installed successfully through Obsidian Community Plugins. Its frozen release evidence is `archive/0.1.226`; the release-time commit is `e57192fa376e0e9d89c60676cd668e9b852944f8`.
