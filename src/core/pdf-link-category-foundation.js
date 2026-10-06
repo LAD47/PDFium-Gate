@@ -6,11 +6,11 @@ const PDF_BACKUP_DIR_NAME = '.pdfium-backup';
 const DEFAULT_HIGHLIGHT_OPACITY = 0.45;
 const CATEGORY_ID_UUID_V4_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const DEFAULT_CATEGORY_DEFINITIONS = Object.freeze([
-  Object.freeze({ id: 'a49dde44-7872-4d89-b97e-027a6e689d94', name: 'Economy', translationKey: 'factory.category.economy', color: '#FFD84D', shortcut: 1, enabled: true }),
-  Object.freeze({ id: '824e1c5a-7074-4232-99ce-e8b1306f20c5', name: 'Regulation', translationKey: 'factory.category.regulation', color: '#6AA9FF', shortcut: 2, enabled: true }),
-  Object.freeze({ id: 'c44c3b4a-110a-4446-a7e9-e3662e1dc791', name: 'Fact', translationKey: 'factory.category.fact', color: '#72C472', shortcut: 3, enabled: true }),
-  Object.freeze({ id: 'ea31f6c8-88dc-4d32-882d-8d3dbdf1f84e', name: 'Documentation', translationKey: 'factory.category.documentation', color: '#B388EB', shortcut: 4, enabled: true }),
-  Object.freeze({ id: '1886403e-77b2-4474-a255-606acc8a5906', name: 'Investigate', translationKey: 'factory.category.investigate', color: '#E57373', shortcut: 5, enabled: true })
+  Object.freeze({ id: 'a49dde44-7872-4d89-b97e-027a6e689d94', value: 'economy', name: 'Economy', translationKey: 'factory.category.economy', color: '#FFD84D', shortcut: 1, enabled: true }),
+  Object.freeze({ id: '824e1c5a-7074-4232-99ce-e8b1306f20c5', value: 'regulation', name: 'Regulation', translationKey: 'factory.category.regulation', color: '#6AA9FF', shortcut: 2, enabled: true }),
+  Object.freeze({ id: 'c44c3b4a-110a-4446-a7e9-e3662e1dc791', value: 'fact', name: 'Fact', translationKey: 'factory.category.fact', color: '#72C472', shortcut: 3, enabled: true }),
+  Object.freeze({ id: 'ea31f6c8-88dc-4d32-882d-8d3dbdf1f84e', value: 'documentation', name: 'Documentation', translationKey: 'factory.category.documentation', color: '#B388EB', shortcut: 4, enabled: true }),
+  Object.freeze({ id: '1886403e-77b2-4474-a255-606acc8a5906', value: 'investigate', name: 'Investigate', translationKey: 'factory.category.investigate', color: '#E57373', shortcut: 5, enabled: true })
 ]);
 function categoryFactoryText(translate,key,fallback) {
   const translated=typeof translate==='function' ? String(translate(key) ?? '').trim() : '';
@@ -24,9 +24,35 @@ function categoryFactoryKnownTexts(getKnownTranslations,key,fallback) {
   }
   return values;
 }
+function defaultCategoryDefinitionFor(category) {
+  const id=String(category?.id || '').trim();
+  return DEFAULT_CATEGORY_DEFINITIONS.find(item=>item.id===id) || null;
+}
+function categoryMachineValue(category) {
+  const definition=defaultCategoryDefinitionFor(category);
+  if(definition) return definition.value;
+  const current=String(category?.value || '').trim();
+  if(current) return current;
+  const id=String(category?.id || '').trim();
+  return categoryIsUuidV4(id) ? `custom-${id}` : '';
+}
+function normalizeCategoryMachineValues(categories) {
+  const next=deepClone(Array.isArray(categories) ? categories : []);
+  let changed=false;
+  for(const category of next) {
+    if(!category || typeof category!=='object') continue;
+    const value=categoryMachineValue(category);
+    if(value && String(category.value || '').trim()!==value) {
+      category.value=value;
+      changed=true;
+    }
+  }
+  return {categories:next,changed};
+}
 function createDefaultCategories(translate = null) {
   return DEFAULT_CATEGORY_DEFINITIONS.map(item=>({
     id:item.id,
+    value:item.value,
     name:categoryFactoryText(translate,item.translationKey,item.name),
     color:item.color,
     shortcut:item.shortcut,
@@ -34,13 +60,15 @@ function createDefaultCategories(translate = null) {
   }));
 }
 function relocalizeDefaultCategoryNames(categories,translate = null,getKnownTranslations = null) {
-  const next=deepClone(Array.isArray(categories) ? categories : []);
-  let changed=false;
+  const normalized=normalizeCategoryMachineValues(categories);
+  const next=normalized.categories;
+  let changed=normalized.changed;
   for(const definition of DEFAULT_CATEGORY_DEFINITIONS) {
     const category=next.find(item=>String(item?.id || '')===definition.id);
     if(!category) continue;
     const current=String(category.name || '').trim();
-    if(!categoryFactoryKnownTexts(getKnownTranslations,definition.translationKey,definition.name).has(current)) continue;
+    const known=categoryFactoryKnownTexts(getKnownTranslations,definition.translationKey,definition.name);
+    if(current && !known.has(current)) continue;
     const target=categoryFactoryText(translate,definition.translationKey,definition.name);
     if(target!==current) { category.name=target; changed=true; }
   }
