@@ -48,7 +48,10 @@ function metadataParseOptionsEditorText(text, previousOptions = []) {
     const value=(split >= 0 ? line.slice(0, split) : line).trim();
     const label=(split >= 0 ? line.slice(split + 1) : line).trim();
     const previous=previousByValue.get(value);
-    out.push({ id:previous?.id || metadataUuidV4(), value, label, active:previous?.active !== false });
+    const labelSource=previous && label===String(previous.label || '')
+      ? (previous.label_source==='factory' ? 'factory' : 'user')
+      : 'user';
+    out.push({ id:previous?.id || metadataUuidV4(), value, label, label_source:labelSource, active:previous?.active !== false });
   }
   return out;
 }
@@ -77,7 +80,7 @@ class MetadataSchemaFieldModal extends Modal {
     new Setting(contentEl)
       .setName(t('metadataSchema.field.label'))
       .setDesc(t('metadataSchema.field.labelDesc'))
-      .addText(text => text.setValue(this.draft.label || '').onChange(value => { this.draft.label=value; }));
+      .addText(text => text.setValue(this.draft.label || '').onChange(value => { this.draft.label=value; this.draft.label_source='user'; }));
 
     new Setting(contentEl)
       .setName(t('metadataSchema.field.property'))
@@ -221,7 +224,8 @@ class MetadataSchemaManagerModal extends Modal {
 
     contentEl.createEl('p', { text:t('metadataSchema.manager.status',{format:status.schema.format_version,revision:status.schema.revision,count:status.schema.fields.length}) });
 
-    status.schema.fields.forEach((field, index) => {
+    const displaySchema=status.presentationSchema || status.schema;
+    displaySchema.fields.forEach((field, index) => {
       const setting = new Setting(contentEl)
         .setName(field.label)
         .setDesc(`${field.property} · ${metadataFieldTypeLabel(field.type,this.plugin)}${field.required ? ` · ${t('metadataSchema.manager.requiredSuffix')}` : ''}`)
@@ -234,7 +238,7 @@ class MetadataSchemaManagerModal extends Modal {
         try { await this.plugin.ports.moveMetadataSchemaField(field.id, 'up'); this.render(); }
         catch (error) { new Notice(t('metadataSchema.manager.moveFailed',{error:error instanceof Error ? error.message : String(error)}), 10000); }
       }));
-      if (index < status.schema.fields.length - 1) setting.addButton(button => button.setButtonText('↓').setTooltip(t('metadataSchema.manager.moveDown')).onClick(async () => {
+      if (index < displaySchema.fields.length - 1) setting.addButton(button => button.setButtonText('↓').setTooltip(t('metadataSchema.manager.moveDown')).onClick(async () => {
         try { await this.plugin.ports.moveMetadataSchemaField(field.id, 'down'); this.render(); }
         catch (error) { new Notice(t('metadataSchema.manager.moveFailed',{error:error instanceof Error ? error.message : String(error)}), 10000); }
       }));
