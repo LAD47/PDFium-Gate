@@ -25,7 +25,15 @@ This file is a running list of observations found during practical testing that 
    - Treat this as a UI/interaction redesign task rather than a small cosmetic fix.
    - Keep the new simple lifecycle visible: active records are usable; missing records are informational/read-only; unregistered PDFs can receive new metadata.
 
-4. **Email/ZIP transport-source redesign: flat email layout and external-ZIP reconciliation practically confirmed**
+4. **PDF annotation backup: reassess `.pdfium-backup` after the independent backup solution exists**
+   - Keep the current `backupOriginalPdf` safety function for now: it stores one original PDF copy before PDFium Gate first modifies the file and never overwrites an existing copy.
+   - Reassess whether this separate per-PDF original-copy mechanism is still needed once the independent backup project provides a validated backup/restore workflow.
+   - Do not remove or merge the behavior merely because both features use the word "backup"; compare their actual protection scope, restore semantics and failure modes first.
+   - If the generic backup solution fully replaces this protection later, remove the old setting and `.pdfium-backup` workflow through an explicit migration/release decision rather than silently changing behavior.
+
+## Completed items
+
+- **Email/ZIP transport-source redesign: flat email layout and external-ZIP reconciliation practically confirmed**
    - **Current replacement model (implemented after the practical UX review on 2026-10-05):** EML/MSG and ZIP are transport sources. A generated email PDF and one localized sibling attachment folder are paired deterministically; Norwegian Bokmål appends ` Vedlegg` to the PDF base name. Direct attachments and members from every ZIP in the email are planned together before durable writes; the email PDF lists the actual imported files, ZIP names are group/provenance labels rather than live link targets, and source ZIP files are not persisted for successful email imports.
    - Exact EML/MSG retention is now advanced opt-in and defaults to off. Automatic staging EML/MSG is deleted only after verified success; failed/cancelled imports keep the source.
    - Manual Archive Import is now transactional: complete preflight before extraction, byte read-back verification, PDF registration and relationship persistence, then source ZIP deletion. Partial failures roll back created output and fresh PDF metadata; the user is warned and chooses **Keep ZIP** or **Delete ZIP**.
@@ -80,14 +88,6 @@ This file is a running list of observations found during practical testing that 
      - choosing `rapport.pdf` opened the extracted report PDF rather than the ZIP;
      - choosing `vedtak.pdf` opened the extracted decision PDF rather than the ZIP.
    - The complete practical chain is therefore confirmed: `EML -> generated email PDF -> retained/original ZIP -> Archive Import -> physical extraction -> PDF registration -> Archive Relationship -> DocumentInfo -> user-facing PDF selection/opening`.
-
-5. **PDF annotation backup: reassess `.pdfium-backup` after the independent backup solution exists**
-   - Keep the current `backupOriginalPdf` safety function for now: it stores one original PDF copy before PDFium Gate first modifies the file and never overwrites an existing copy.
-   - Reassess whether this separate per-PDF original-copy mechanism is still needed once the independent backup project provides a validated backup/restore workflow.
-   - Do not remove or merge the behavior merely because both features use the word "backup"; compare their actual protection scope, restore semantics and failure modes first.
-   - If the generic backup solution fully replaces this protection later, remove the old setting and `.pdfium-backup` workflow through an explicit migration/release decision rather than silently changing behavior.
-
-## Completed items
 
 - **PDF Document Register: automatic and existing-PDF registration practically confirmed**
    - Automatic minimal-record creation for newly detected PDFs is implemented and practically confirmed.
