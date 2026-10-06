@@ -20,7 +20,8 @@ This file is a running list of observations found during practical testing that 
    - The optional example package now contains six synthetic metadata records and two native Obsidian `table` Bases (all documents + awaiting response), so sorting/filtering can be understood without touching real registered PDFs.
    - Missing-record example text no longer promises unsupported manual relink; static examples use current metadata record format v2.
    - The ambiguous legacy example filename `Example PDF Document Register.base` is replaced by explicit native-Base names. Reinstall removes the old file only if it is byte-for-byte unchanged; a modified legacy file is preserved.
-   - Automated verification and one practical Settings/example-package test round remain.
+   - GitHub Actions run `37510815842` passed `npm ci`, `npm audit --audit-level=high` and the full `npm run check`; generated `main.js` was rebuilt from canonical source.
+   - One combined practical Settings/example-package test round remains.
 
 2. **PDF Document Register: current user interface needs redesign**
    - The current Document Register user interface was judged unusable/poor in practical testing.
