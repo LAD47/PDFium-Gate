@@ -13,7 +13,8 @@ This directory contains active architecture documentation, focused test notes, c
 
 - [`planning/ACTIVE-ROADMAP.md`](planning/ACTIVE-ROADMAP.md) — single entry point for current release follow-ups, product backlog and deferred decisions; use this before reading historical handoffs.
 - [`planning/DOCUMENT-METADATA-BACKUP-AND-MAINTENANCE.md`](planning/DOCUMENT-METADATA-BACKUP-AND-MAINTENANCE.md) — approved backup/restore and document-register maintenance direction, including the active/missing-only lifecycle and rejected relink/SHA-recovery experiments.
-- [`planning/0.1.226-COMMUNITY-RELEASE-CLEANUP.md`](planning/0.1.226-COMMUNITY-RELEASE-CLEANUP.md) — planned 0.1.226 cleanup of obsolete BRAT release terminology/workflow and a dedicated README review for Obsidian Community Plugins users.
+- [`planning/0.1.226-COMMUNITY-RELEASE-CLEANUP.md`](planning/0.1.226-COMMUNITY-RELEASE-CLEANUP.md) — completed 0.1.226 Community release cleanup and release evidence; historical/completed, not an active TODO list.
+- [`planning/HANDOFF-2026-10-06-POST-0.1.226.md`](planning/HANDOFF-2026-10-06-POST-0.1.226.md) — concise handoff for continuing development after the user-confirmed 0.1.226 release.
 
 The architecture documents and automated verification describe the current intended contracts. Historical notes may contain experiments or policies that have since been superseded.
 
@@ -23,10 +24,12 @@ The architecture documents and automated verification describe the current inten
 
 ## Releases
 
-- [`releases/0.1.225.md`](releases/0.1.225.md) — release notes and practical verification scope for 0.1.225.
+- [`releases/0.1.226.md`](releases/0.1.226.md) — current user-confirmed Community Plugins release baseline.
+- [`releases/0.1.225.md`](releases/0.1.225.md) — historical release notes and practical verification scope for 0.1.225.
 
 ## Testing
 
+- [`testing/TEST-OBSERVATIONS.md`](testing/TEST-OBSERVATIONS.md) — current practical observations, deferred fixes and completed diagnostic trails.
 - [`testing/BENCHMARK-TEST-0.1.203.md`](testing/BENCHMARK-TEST-0.1.203.md) — preserved benchmark procedure from the metadata startup/cache work.\n- [`testing/IDENTITY-TRANSITION-0.1.224.md`](testing/IDENTITY-TRANSITION-0.1.224.md) — one-time plugin identity transition and regression test.
 
 ## Historical development material
