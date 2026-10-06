@@ -105,7 +105,7 @@ class DocumentInfoFeature {
   }
 
   getDocumentInfoSchemaFields() {
-    const schema=this.ports.getMetadataSchemaSnapshot();
+    const schema=this.ports.getMetadataSchemaPresentationSnapshot();
     return documentInfoVisibleFields(schema);
   }
 
@@ -229,7 +229,7 @@ class DocumentInfoFeature {
     closeButton.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();this.closeDocumentInfoForView(view);});
 
     const body=panel.createDiv({cls:'pdfium-document-info-body'});
-    if(!this.ports.getMetadataSchemaSnapshot()) {
+    if(!this.ports.getMetadataSchemaPresentationSnapshot()) {
       body.createDiv({cls:'pdfium-document-info-message',text:t('documentInfo.schemaUnavailable')});
     } else if(!recordState?.ready) {
       body.createDiv({cls:'pdfium-document-info-message',text:t('documentInfo.loading')});
