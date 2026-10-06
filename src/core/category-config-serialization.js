@@ -17,6 +17,7 @@ function serializeCategoryConfig(config) {
   } else {
     for (const c of cats) {
       lines.push(`  - id: ${yamlQuote(c.id)}`);
+      if (c.value !== undefined) lines.push(`    value: ${yamlQuote(c.value)}`);
       if (c.name !== undefined) lines.push(`    name: ${yamlQuote(c.name)}`);
       if (c.color !== undefined) lines.push(`    color: ${yamlQuote(normalizeHexColor(c.color))}`);
       if (c.shortcut !== undefined && c.shortcut !== null && c.shortcut !== '') lines.push(`    shortcut: ${Number(c.shortcut)}`);
