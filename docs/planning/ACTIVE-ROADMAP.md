@@ -29,7 +29,8 @@ No single feature scope is frozen yet. Start from the open items below and choos
 - Consider showing the **Edit** action both near the top and bottom of long DocumentInfo panels.
 - **0.1.227 localized factory defaults:** user-confirmed product requirement: standard metadata field/option names and the five standard highlight-category names should follow the resolved PDFium Gate UI language.
   - New/reset defaults use the active language while stable UUIDs, properties and machine values remain unchanged.
-  - Existing names may be relocalized only while they are still recognizable as untouched factory names; user-customized names must be preserved.
+  - Standard categories have a stable hidden canonical machine `value` plus a localized display `name`; existing category configs are migrated by permanent UUID.
+  - Existing standard display names may be relocalized only while they are still recognizable as untouched factory names; user-customized and user-created names must be preserved.
   - Candidate implementation lives on `fix/0.1.227-localized-defaults`; practical Norwegian Bokmål verification is still required before merge.
 
 ### PDF Document Register
