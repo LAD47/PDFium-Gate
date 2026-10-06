@@ -20,14 +20,20 @@ const expectedFields = [
 const systemFields = ['filemeta_type','filemeta_profile','filemeta_version','filemeta_id','filemeta_file','filemeta_status'];
 const examplesRoot = 'Examples-Obsidian-PDFium-Gate';
 const supportedLocales = ['en','nb','de','es','sv','da','fr'];
-const installerTextKeys = ['name','description','button','confirm','success','failed'];
+const installerTextKeys = ['section','name','description','button','confirm','success','failed'];
 
 const schemaSource = read('src/metadata/schema-contract.js');
 const templateSource = read('src/metadata/example-files.js');
 const installerSource = read('src/main/example-files-installer.js');
 const activeExample = read('docs/examples/Example - Active PDF record.md');
+const decisionExample = read('docs/examples/Example - Decision.md');
+const reportExample = read('docs/examples/Example - Report.md');
+const memoExample = read('docs/examples/Example - Memo.md');
+const awaitingExample = read('docs/examples/Example - Awaiting response.md');
 const missingExample = read('docs/examples/Example - Missing PDF record.md');
-const baseExample = read('docs/examples/Example PDF Document Register.base');
+const baseExample = read('docs/examples/Example - Native Obsidian Base - All documents.base');
+const awaitingBaseExample = read('docs/examples/Example - Native Obsidian Base - Awaiting response.base');
+const examplesReadme = read('docs/examples/README.md');
 const schemaFeature = read('src/plugin/features/14-metadata-schema.js');
 const settingsSource = read('src/main/settings.js');
 const buildSource = read('build.js');
@@ -43,6 +49,14 @@ for (const field of systemFields) {
   if (!activeExample.includes(`${field}:`)) fail(`active Markdown example is missing system field ${field}`);
   if (!missingExample.includes(`${field}:`)) fail(`missing Markdown example is missing system field ${field}`);
 }
+for (const example of [activeExample,decisionExample,reportExample,memoExample,awaitingExample,missingExample]) {
+  if (!example.includes('filemeta_version: 2')) fail('example Markdown record is not current format v2');
+}
+if (!decisionExample.includes('document_type: "decision"')) fail('decision example missing canonical document type');
+if (!reportExample.includes('document_type: "report"')) fail('report example missing canonical document type');
+if (!memoExample.includes('document_type: "memo"')) fail('memo example missing canonical document type');
+if (!awaitingExample.includes('document_type: "letter"')||!awaitingExample.includes('response_received: false')) fail('awaiting-response example does not demonstrate the intended workflow');
+if (/relink/i.test(missingExample)) fail('missing example still promises unsupported relink behavior');
 
 for (const value of ['decision','letter','report','memo']) {
   if (!schemaSource.includes(`value:'${value}'`)) fail(`factory document_type option is missing ${value}`);
@@ -57,10 +71,14 @@ for (const key of installerTextKeys) {
 }
 
 if (!templateSource.includes(`const PDFIUM_EXAMPLES_ROOT = '${examplesRoot}'`)) fail('runtime example root differs from documented root');
-if (!baseExample.includes(`file.inFolder(\\\"${examplesRoot}\\\")`)) fail('native Base does not filter the example folder');
-if (!baseExample.includes('filemeta_profile') || !baseExample.includes('document')) fail('native Base must filter the document profile');
-if (!baseExample.includes('- type: table')) fail('example Base must use native Obsidian table view');
-if (baseExample.includes('pdfium-document-register')) fail('example Base must not depend on the custom PDFium Gate view');
+for (const nativeBase of [baseExample,awaitingBaseExample]) {
+  if (!nativeBase.includes(`file.inFolder(\\\"${examplesRoot}\\\")`)) fail('native Base does not filter the example folder');
+  if (!nativeBase.includes('filemeta_profile') || !nativeBase.includes('document')) fail('native Base must filter the document profile');
+  if (!nativeBase.includes('- type: table')) fail('example Base must use native Obsidian table view');
+  if (nativeBase.includes('pdfium-document-register')) fail('example Base must not depend on the custom PDFium Gate view');
+}
+if (!awaitingBaseExample.includes('response_received == false')||!awaitingBaseExample.includes('filemeta_status == \\"active\\"')) fail('awaiting-response Base filter is incomplete');
+if (!examplesReadme.includes('Two different Base concepts')||!examplesReadme.includes('PDF Dokumentregister.base')||!examplesReadme.includes('pdfium-document-register')) fail('example README does not explain native Base versus PDFium Gate document register');
 
 if (schemaFeature.includes('example-files-bootstrap.json')) fail('automatic example bootstrap marker must not exist');
 if (schemaFeature.includes('_ensureMetadataExampleFiles')) fail('automatic example bootstrap method must not exist');
@@ -68,9 +86,12 @@ if (schemaFeature.includes('obsidianVaultReadAdapter') || schemaFeature.includes
 if (!installerSource.includes('async function installMetadataExampleFiles(read, write)')) fail('explicit example installer helper is missing');
 if (!installerSource.includes('await write.createText(example.path, example.content)')) fail('new example creation path is missing');
 if (!installerSource.includes('await write.modifyText(existing, example.content)')) fail('confirmed overwrite path is missing');
+if (!installerSource.includes('metadataExampleLegacyNativeBaseYaml()')||!installerSource.includes('legacyPreserved')) fail('legacy example Base migration/preservation guard missing');
+if (!settingsSource.includes("createSettingsGroup('general'")||!settingsSource.includes("createSettingsGroup('metadata-register'")||!settingsSource.includes("createSettingsGroup('advanced'")) fail('Settings is not grouped into compact top-level sections');
+if (!settingsSource.includes("settings.documentRegister.explanation")||!settingsSource.includes("exampleText('section')")) fail('Settings does not explain Document Register versus example Bases');
 if (!buildSource.includes("read('src/main/example-files-installer.js')")) fail('example installer helper is not bundled');
 if (!settingsSource.includes('installMetadataExampleFiles(this.plugin.obsidianVaultReadAdapter,this.plugin.obsidianVaultWriteAdapter)')) fail('Settings does not invoke the explicit example installer helper');
 if (!settingsSource.includes("window.confirm(exampleText('confirm'")) fail('Settings overwrite confirmation is missing');
 if (!settingsSource.includes("setButtonText(exampleText('button'))")) fail('Settings example button is missing');
 
-console.log(`Example files OK: ${expectedFields.length} factory fields, ${supportedLocales.length} installer languages, native Base root, explicit overwrite-confirmed Settings installer.`);
+console.log(`Example files OK: ${expectedFields.length} factory fields, ${supportedLocales.length} installer languages, 6 synthetic records, 2 native Bases, grouped Settings, explicit overwrite-confirmed installer.`);
