@@ -9,6 +9,7 @@ on:
       - 'src/metadata/**'
       - 'src/core/integrity/**'
       - 'src/main/email-import-modal.js'
+      - 'src/main/00-header.js'
       - 'src/plugin/**'
       - 'src/main-bridge/**'
       - 'src/platform/**'
@@ -24,6 +25,8 @@ on:
       - 'scripts/source-bundle.js'
       - 'build.js'
       - 'package.json'
+      - 'manifest.json'
+      - 'versions.json'
       - '.github/workflows/email-import-poc.yml'
       - 'docs/email-import/**'
 
