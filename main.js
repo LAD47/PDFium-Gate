@@ -81548,10 +81548,36 @@ class DocumentInfoFeature {
     const editing=this.state.documentInfo.editingPdfPath===path && recordState?.ready && recordState?.ok;
     const presentationSettings=metadataPresentationSettings(this.settings || {},this.i18n);
     let showReadEditActions=false;
+    let showEditFormActions=false;
+    let editControls=null;
+    let editFormError=null;
     const renderEditAction=host=>{
       const actions=host.createDiv({cls:'pdfium-document-info-actions'});
       const edit=actions.createEl('button',{cls:'mod-cta',text:t('documentInfo.edit')});
       edit.addEventListener('click',event=>{event.preventDefault();this.beginDocumentInfoEdit(view);});
+      return actions;
+    };
+    const renderEditFormActions=host=>{
+      const actions=host.createDiv({cls:'pdfium-document-info-actions'});
+      const cancel=actions.createEl('button',{text:t('documentInfo.cancel')});
+      const save=actions.createEl('button',{cls:'mod-cta',text:t('documentInfo.save')});
+      cancel.addEventListener('click',event=>{event.preventDefault();this.cancelDocumentInfoEdit(view);});
+      save.addEventListener('click',async event=>{
+        event.preventDefault();
+        editFormError?.setText('');
+        for(const control of editControls?.values?.() || []) control.errorEl?.setText('');
+        const result=await this.saveDocumentInfoFromView(view,editControls);
+        if(result.ok) return;
+        for(const [property,messages] of Object.entries(result.errors || {})) {
+          const rawMessages=Array.isArray(messages)?messages:[messages || t('documentInfo.error.invalidValue')];
+          const message=rawMessages.map(item=>pdfiumTranslateMetadataValidationMessage(this.i18n,item)).join(' · ');
+          if(property==='_form') editFormError?.setText(message);
+          else {
+            const control=editControls?.get?.(property);
+            if(control?.errorEl) control.errorEl.setText(message);
+          }
+        }
+      });
       return actions;
     };
 
@@ -81574,7 +81600,11 @@ class DocumentInfoFeature {
     } else if(fields.length===0) {
       body.createDiv({cls:'pdfium-document-info-message',text:t('documentInfo.noFields')});
     } else if(editing) {
-      const controls=new Map();
+      showEditFormActions=true;
+      editControls=new Map();
+      renderEditFormActions(body);
+      editFormError=body.createDiv({cls:'pdfium-document-info-error pdfium-document-info-form-error'});
+      editFormError.setAttribute('aria-live','polite');
       for(const field of fields) {
         const row=body.createDiv({cls:'pdfium-document-info-field pdfium-document-info-field-edit'});
         const label=row.createEl('label',{cls:'pdfium-document-info-label'});
@@ -81591,30 +81621,8 @@ class DocumentInfoFeature {
           control.inputEl.id=id;
           label.setAttribute('for',id);
         }
-        controls.set(field.property,{...control,errorEl});
+        editControls.set(field.property,{...control,errorEl});
       }
-      const formError=body.createDiv({cls:'pdfium-document-info-error pdfium-document-info-form-error'});
-      formError.setAttribute('aria-live','polite');
-      const actions=body.createDiv({cls:'pdfium-document-info-actions'});
-      const cancel=actions.createEl('button',{text:t('documentInfo.cancel')});
-      const save=actions.createEl('button',{cls:'mod-cta',text:t('documentInfo.save')});
-      cancel.addEventListener('click',event=>{event.preventDefault();this.cancelDocumentInfoEdit(view);});
-      save.addEventListener('click',async event=>{
-        event.preventDefault();
-        formError.setText('');
-        for(const control of controls.values()) control.errorEl?.setText('');
-        const result=await this.saveDocumentInfoFromView(view,controls);
-        if(result.ok) return;
-        for(const [property,messages] of Object.entries(result.errors || {})) {
-          const rawMessages=Array.isArray(messages)?messages:[messages || t('documentInfo.error.invalidValue')];
-          const message=rawMessages.map(item=>pdfiumTranslateMetadataValidationMessage(this.i18n,item)).join(' · ');
-          if(property==='_form') formError.setText(message);
-          else {
-            const control=controls.get(property);
-            if(control?.errorEl) control.errorEl.setText(message);
-          }
-        }
-      });
     } else {
       showReadEditActions=true;
       renderEditAction(body);
@@ -81635,6 +81643,7 @@ class DocumentInfoFeature {
     }
 
     if(showReadEditActions) renderEditAction(body);
+    if(showEditFormActions) renderEditFormActions(body);
 
     panel.onkeydown=event=>{
       if(event.key!=='Escape') return;
