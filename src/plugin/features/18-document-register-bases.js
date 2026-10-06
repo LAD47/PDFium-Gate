@@ -11,7 +11,7 @@ class DocumentRegisterBasesFeature {
       return { ok:true, created:false, path, file:existing };
     }
 
-    const schema = this.ports.getMetadataSchemaSnapshot();
+    const schema = this.ports.getMetadataSchemaPresentationSnapshot();
     if (!schema) return { ok:false, created:false, path, error:this.i18n.t('documentRegister.schemaUnavailableShort') };
     if (!this.obsidianVaultWriteAdapter || typeof this.obsidianVaultWriteAdapter.createText !== 'function') {
       return { ok:false, created:false, path, error:this.i18n.t('documentRegister.writeUnavailable') };
@@ -61,7 +61,7 @@ class DocumentRegisterBasesFeature {
       icon:'lucide-files',
       factory:(controller, containerEl) => new PdfDocumentRegisterBasesView(controller, containerEl, {
         app:this.app,
-        getSchema:() => this.ports.getMetadataSchemaSnapshot(),
+        getSchema:() => this.ports.getMetadataSchemaPresentationSnapshot(),
         getSettings:() => this.settings || {},
         getI18n:() => this.i18n || null,
         getFrontmatter:file => this.obsidianMetadataCacheAdapter?.getFrontmatter?.(file) || null,
