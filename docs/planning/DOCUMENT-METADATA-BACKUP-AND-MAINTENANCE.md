@@ -141,7 +141,7 @@ Completed ordinary-PDF cleanup:
 Deferred while core PDFium Gate functionality is completed:
 
 - [ ] Complete and stabilize deferred core functions and practical test observations.
-- [ ] Reconsider lazy-first-save versus automatic minimal system records for discovered PDFs.
+- [x] Automatic minimal system records for newly detected PDFs and the explicit **Register existing PDFs** flow are implemented and practically confirmed; preserve this as the current registration model.
 - [ ] Redesign the PDF Document Register UI/interaction model.
 - [ ] Implement the Document register maintenance report without enabling unsafe destructive cleanup prematurely.
 - [ ] Define any future integration boundary with the independent backup project only after the generic backup design is stable.
