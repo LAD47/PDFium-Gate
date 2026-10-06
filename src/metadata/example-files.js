@@ -94,8 +94,8 @@ function metadataExampleReadmeMarkdown() {
     '',
     '## Two different Base concepts',
     '',
-    '- The Base files in this folder use Obsidian\\'s built-in ' + tick + 'table' + tick + ' view. They demonstrate that PDFium Gate metadata remains ordinary Markdown/YAML that you can reuse in your own Bases.',
-    '- The real PDFium Gate document register is different: ' + tick + 'PDF Dokumentregister.base' + tick + ' reads real records from ' + tick + 'File Metadata/' + tick + ' and uses PDFium Gate\\'s dedicated ' + tick + 'pdfium-document-register' + tick + ' view.',
+    '- The Base files in this folder use Obsidian\'s built-in ' + tick + 'table' + tick + ' view. They demonstrate that PDFium Gate metadata remains ordinary Markdown/YAML that you can reuse in your own Bases.',
+    '- The real PDFium Gate document register is different: ' + tick + 'PDF Dokumentregister.base' + tick + ' reads real records from ' + tick + 'File Metadata/' + tick + ' and uses PDFium Gate\'s dedicated ' + tick + 'pdfium-document-register' + tick + ' view.',
     '',
     '## Included files',
     '',
@@ -114,14 +114,14 @@ function metadataExampleReadmeMarkdown() {
     '',
     'The examples are installed only when you choose the example-package action in PDFium Gate Settings. Running the action again restores the current canonical example files after an explicit warning. A legacy example Base is removed only when it is still byte-for-byte unchanged; modified legacy files and unrelated files are preserved.',
     ''
-  ].join('\\n');
+  ].join('\n');
 }
 
 function metadataExampleRecordMarkdown({id,filePath,status=METADATA_RECORD_STATUS_ACTIVE,values,title,body}) {
   const schema=metadataDefaultSchema();
   return metadataRecordSerializeMarkdown({id,filePath,status,values},schema)
-    + '# ' + title + '\\n\\n'
-    + body + '\\n';
+    + '# ' + title + '\n\n'
+    + body + '\n';
 }
 
 function metadataExampleActiveRecordMarkdown() {
@@ -223,7 +223,7 @@ function metadataExampleNativeAllBaseYaml() {
   const q=value=>JSON.stringify(String(value));
   const lines=[
     '# PDFium Gate example — native Obsidian Base',
-    '# This uses Obsidian\\'s built-in table view, not the PDFium Gate document-register view.',
+    '# This uses Obsidian\'s built-in table view, not the PDFium Gate document-register view.',
     'filters:',
     '  and:',
     '    - ' + q('file.inFolder("' + PDFIUM_EXAMPLES_ROOT + '")'),
@@ -238,7 +238,7 @@ function metadataExampleNativeAllBaseYaml() {
   lines.push('    sort:');
   lines.push('      - property: document_date');
   lines.push('        direction: DESC');
-  return lines.join('\\n') + '\\n';
+  return lines.join('\n') + '\n';
 }
 
 function metadataExampleNativeAwaitingResponseBaseYaml() {
@@ -265,7 +265,7 @@ function metadataExampleNativeAwaitingResponseBaseYaml() {
   lines.push('    sort:');
   lines.push('      - property: document_date');
   lines.push('        direction: DESC');
-  return lines.join('\\n') + '\\n';
+  return lines.join('\n') + '\n';
 }
 
 function metadataExampleLegacyNativeBaseYaml() {
@@ -289,7 +289,7 @@ function metadataExampleLegacyNativeBaseYaml() {
   lines.push('    sort:');
   lines.push('      - property: document_date');
   lines.push('        direction: DESC');
-  return lines.join('\\n') + '\\n';
+  return lines.join('\n') + '\n';
 }
 
 function metadataExampleFiles() {
