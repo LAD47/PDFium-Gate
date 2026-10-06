@@ -52,7 +52,7 @@ The current 0.1.x Community releases include:
 - stable UUID-based document metadata identity across normal PDF rename/move operations;
 - conservative handling of deleted/missing PDFs: records become `missing`, are never automatically rebound, and ordinary PDF relinking/SHA recovery is intentionally unsupported;
 - an Obsidian Bases-powered **PDF Document register** with schema-driven columns, sorting, datatype-aware filtering, inline editing, and missing-PDF actions;
-- a canonical example set copied once into the Vault to demonstrate ordinary Markdown/YAML records and native Obsidian Bases usage;
+- an optional synthetic example package with six metadata records and two native Obsidian Bases, demonstrating both a full table and a practical filtered workflow without touching real registered PDFs;
 - scalable metadata indexing with a disposable cache while Markdown/YAML remains the source of truth;
 - EML/MSG import to normal PDFium Gate PDFs with exact-source SHA-256 duplicate detection;
 - one localized email-attachment folder containing direct attachments and flattened members from multiple ZIP attachments;
@@ -121,7 +121,8 @@ The project deliberately separates durable user data from disposable acceleratio
 - `File Metadata/` contains ordinary indexed Markdown/YAML document records.
 - `.pdf-metadata/` contains plugin metadata/configuration and disposable technical data such as the document-record index cache and the example-bootstrap marker.
 - `PDF Dokumentregister.base` is created on demand as the standard document register. After creation it is treated as user-owned and is not silently overwritten by the plugin.
-- `Examples-Obsidian-PDFium-Gate/` contains a one-time copied example set. These files are user-owned after creation and are never overwritten by the plugin.
+  It reads real records from `File Metadata/` through PDFium Gate's dedicated `pdfium-document-register` Bases view; the native Base files in the example package are learning examples, not alternate production registers.
+- `Examples-Obsidian-PDFium-Gate/` contains an optional synthetic learning package. The example Bases use Obsidian's built-in table view and are intentionally different from the real PDFium Gate document register. The package is installed or restored only through an explicit Settings action with confirmation; unrelated files and modified legacy examples are preserved.
 - PDFs remain normal PDF files in the Vault.
 - Imported email attachments remain ordinary Vault files under one localized sibling attachment folder (for example `Subject Vedlegg/` in Norwegian Bokmål).
 - EML/MSG and ZIP are normally treated as transport sources: successful imports do not require them to remain as visible Vault documents. Exact EML/MSG retention is available only as an advanced opt-in.
