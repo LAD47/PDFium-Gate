@@ -51,4 +51,4 @@ Normal Community releases are ordinary GitHub Releases, not GitHub prereleases. 
 
 BRAT was used during an earlier test phase and is no longer part of the active installation or release workflow. Historical documents may retain BRAT references when they describe that earlier development period.
 
-The public product name and plugin ID were frozen in 0.1.224 as **PDFium Gate** / `pdfium-gate`, and the active GitHub repository is `LAD47/PDFium-Gate`. The public `manifest.json` author metadata still requires cleanup from its development placeholder as part of the 0.1.226 release preparation.
+The public product name and plugin ID were frozen in 0.1.224 as **PDFium Gate** / `pdfium-gate`, and the active GitHub repository is `LAD47/PDFium-Gate`. The public `manifest.json` author metadata is `LAD47`.
