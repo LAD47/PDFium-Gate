@@ -28,7 +28,13 @@ v1 field types are text, date, time, integer, decimal, boolean, select, multisel
 
 ## Canonical factory defaults
 
-Factory-created persistent defaults are canonical English and are not i18n-owned UI text. The standard schema contains nine fields: `document_date`, `document_time`, `sender`, `document_type`, `response_received`, `response_received_date`, `response_sent`, `response_sent_date`, and `response_sent_link`. Labels remain freely user-editable after creation; stable field UUIDs, properties and select machine values do not change when labels change.
+The standard schema contains nine fields: `document_date`, `document_time`, `sender`, `document_type`, `response_received`, `response_received_date`, `response_sent`, `response_sent_date`, and `response_sent_link`.
+
+Persistent machine identity remains canonical and language-independent: field UUID + `property`, and for select options UUID + `value`. Standard factory labels are stored canonically in English and carry `label_source: "factory"`. User-created fields/options and any standard label explicitly edited by the user carry `label_source: "user"` and preserve the user's text verbatim.
+
+Existing pre-0.1.227 schemas are migrated once by stable field/option identity. A legacy label that still matches any known factory translation is classified as factory-owned; a different label is classified as user-owned. Factory-owned labels are canonicalized in persistent schema, while user-owned labels are preserved.
+
+UI consumers do not rewrite the schema when language changes. `metadataSchemaForPresentation()` clones the persistent schema and translates only factory-owned labels for the resolved UI language. DocumentInfo, the metadata field manager and Document Register use that presentation schema. Changing UI language therefore does not increment schema revision, create a schema backup, alter metadata properties/values, or overwrite user-owned labels.
 
 ## Multi-file-type metadata foundation (0.1.223)
 
