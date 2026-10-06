@@ -42,6 +42,13 @@ module.exports=function verifyDocumentInfoContract(){
   if(feature.toLowerCase().includes('record not found')) fail('Unregistered PDF leaks technical record-not-found state to user');
   if(!feature.includes('show_in_document_info')||!feature.includes('field?.active===true')) fail('DocumentInfo schema visibility filtering missing');
   if(!feature.includes('parseNormalizeValidate')) fail('DocumentInfo save flow bypasses field-type registry');
+  if(!feature.includes("const renderEditAction=host=>")) fail('DocumentInfo shared read-mode Edit action renderer missing');
+  if((feature.match(/renderEditAction\(body\);/g)||[]).length!==2) fail('DocumentInfo must render Edit action exactly twice in read mode');
+  const topEditIndex=feature.indexOf('renderEditAction(body);');
+  const fieldsIndex=feature.indexOf('for(const field of fields)',topEditIndex);
+  const archiveIndex=feature.indexOf("const archiveRelationsHost=body.createDiv({cls:'pdfium-document-info-archive-relations'})",fieldsIndex);
+  const bottomEditIndex=feature.indexOf('renderEditAction(body);',topEditIndex+1);
+  if(!(topEditIndex>=0 && fieldsIndex>topEditIndex && archiveIndex>fieldsIndex && bottomEditIndex>archiveIndex)) fail('DocumentInfo Edit actions are not positioned above fields and below archive relations');
   if(!view.includes("t('documentInfo.button')")||!view.includes('pdfium-document-info-panel')) fail('DocumentInfo PDF-view button/panel missing');
   if(!lifecycle.includes("id: 'show-document-info'")||!lifecycle.includes("name: this.i18n.t('commands.showDocumentInfo')")) fail('DocumentInfo Command Palette entry missing');
   if(!feature.includes('resolveExactToken')||!feature.includes('transport.focusPdfRuntime(token)')) fail('DocumentInfo focus restore is not exact-token routed');
@@ -65,6 +72,7 @@ module.exports=function verifyDocumentInfoContract(){
     lazyUnregisteredPresentation:true,
     permanentRecordLocationDecided:true,
     exactRuntimeFocusRestore:true,
-    commandPaletteEntry:true
+    commandPaletteEntry:true,
+    readModeEditActionTopAndBottom:true
   };
 };
