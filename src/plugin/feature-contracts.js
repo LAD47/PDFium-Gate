@@ -348,7 +348,7 @@ const PLUGIN_FEATURE_CONTRACTS = Object.freeze({
       "documentInfo"
     ],
     "ports": [
-      "getMetadataSchemaSnapshot",
+      "getMetadataSchemaPresentationSnapshot",
       "ensureDocumentRecordIndexReady",
       "getDocumentMetadataRecordState",
       "saveDocumentMetadataRecordValues"
@@ -401,7 +401,7 @@ const PLUGIN_FEATURE_CONTRACTS = Object.freeze({
     "className": "DocumentRegisterBasesFeature",
     "stateDomains": [],
     "ports": [
-      "getMetadataSchemaSnapshot",
+      "getMetadataSchemaPresentationSnapshot",
       "resolveDocumentRecordPdfPath",
       "saveDocumentMetadataRecordValues"
     ],
