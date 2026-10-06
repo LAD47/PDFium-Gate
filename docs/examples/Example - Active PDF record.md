@@ -1,7 +1,7 @@
 ---
 filemeta_type: "pdf"
 filemeta_profile: "document"
-filemeta_version: 1
+filemeta_version: 2
 filemeta_id: "11111111-1111-4111-8111-111111111111"
 filemeta_file: "[[Example Documents/example-letter.pdf]]"
 filemeta_status: "active"
@@ -18,4 +18,4 @@ response_sent_link: "[[Example Documents/example-response.md]]"
 
 # Example active PDF metadata record
 
-This is an ordinary Markdown note with YAML/frontmatter. Obsidian Bases can use the properties directly.
+This complete example uses all current factory metadata fields.
