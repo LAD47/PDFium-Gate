@@ -41,7 +41,7 @@ After the public ID has been adopted, stable and test builds use the **same plug
 
 PDFium Gate will have two deliberately separate release channels:
 
-**Stable channel**
+**Community channel (normal channel)**
 
 - Distributed through the official Obsidian Community directory.
 - Intended for ordinary users.
@@ -58,7 +58,7 @@ PDFium Gate will have two deliberately separate release channels:
 - Must not cause ordinary Community-directory users to receive test code.
 - A test release may additionally provide a simple ZIP containing the installable plugin files so testers can install it manually.
 
-Stable and test versions are alternative versions of the same plugin; they are not intended to run side by side.
+Community-channel and test versions are alternative versions of the same plugin; they are not intended to run side by side.
 
 ### Test-program UI inside PDFium Gate
 
@@ -108,9 +108,9 @@ containing those files at the ZIP root.
 
 Manual test installation replaces the installed `pdfium-gate` plugin files and therefore requires an Obsidian/plugin restart as documented in the test instructions.
 
-### Promotion from test to stable
+### Promotion from test to Community channel
 
-A beta build does not become stable merely because CI is green.
+A test build does not become the normal Community release merely because CI is green.
 
 Promotion requires:
 
@@ -124,9 +124,9 @@ Promotion requires:
 
 This separation is intended to ensure that normal users receive only versions we have consciously approved, while volunteer testers can remain ahead of the stable channel.
 
-### Returning from test to stable
+### Returning from test to the Community release
 
-Testers must always have a documented path back to the stable Community version. Because stable and test builds share the same plugin identity, returning to stable means replacing/removing the test installation and reinstalling or restoring the approved Community release according to the current documented procedure.
+Testers must always have a documented path back to the approved Community version. Because stable and test builds share the same plugin identity, returning to stable means replacing/removing the test installation and reinstalling or restoring the approved Community release according to the current documented procedure.
 
 ### Current 0.1.x development line
 
@@ -141,19 +141,21 @@ For the current Community release path:
 - any future opt-in test channel must be designed separately so it cannot silently advance ordinary Community Plugins users to test code.
 
 
-## Current 0.1.226 release preparation
+## Latest completed Community release: 0.1.226
 
-0.1.226 is a release-infrastructure and documentation cleanup for the active Obsidian Community Plugins distribution path.
+0.1.226 completed the Community-release infrastructure cleanup and was published on 2026-10-06.
 
-Before freezing 0.1.226:
+Release evidence:
 
-- `manifest.json`, `package.json`, `package-lock.json`, `versions.json` and the internal plugin version must all agree on `0.1.226`;
-- dependencies must be installed from the committed lockfile with `npm ci`;
-- the generated root runtime must be rebuilt from canonical `src/` and committed if it changes;
-- the full `npm run check` pipeline must pass on the exact candidate;
-- the exact approved candidate must then be merged to `main`, verified by GitHub Actions and frozen under `archive/0.1.226` before publishing.
+- release-time verified commit: `e57192fa376e0e9d89c60676cd668e9b852944f8`;
+- `archive/0.1.226` is the immutable frozen source snapshot;
+- tag/release `0.1.226` targeted that archive;
+- **Build generated runtime** and **Publish Community Plugin release** both succeeded;
+- the GitHub Release is an ordinary release, not a prerelease;
+- required assets `main.js`, `manifest.json` and `styles.css` were published;
+- Obsidian Community Plugins subsequently offered and installed 0.1.226 successfully.
 
-The release notes live in `docs/releases/0.1.226.md`.
+The release notes live in `docs/releases/0.1.226.md`. Remaining product work is tracked in `docs/planning/ACTIVE-ROADMAP.md`; do not treat the completed 0.1.226 checklist as an active release plan.
 
 ## 0.1.225 Email/Archive Import historical baseline
 
