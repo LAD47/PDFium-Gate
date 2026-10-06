@@ -5,6 +5,7 @@ This file is a running list of observations found during practical testing that 
 ## Test baseline
 
 - Current practical test vault: `C:\Obsidian\Vault`
+- Current user-confirmed Community Plugins baseline: **0.1.226** (published, offered and installed through Obsidian on 2026-10-06).
 - The vault was recreated as a clean test vault on 2026-10-02.
 - Old test data is not considered reliable enough for conclusions about current behavior.
 - New test documents should be added manually so each test case has known provenance.
@@ -16,9 +17,10 @@ This file is a running list of observations found during practical testing that 
    - The **Edit** button should preferably be available both at the top and at the bottom of the DocumentInfo panel.
    - Reason: users entering the panel may not see the current button until they scroll past all metadata fields.
 
-2. **DocumentInfo: metadata field labels ignore Norwegian Bokmål**
-   - Metadata field labels are currently shown with English words even when the UI language is set to Norwegian Bokmål.
-   - Review localization/presentation so Norwegian Bokmål labels are shown when that language is selected.
+2. **DocumentInfo: verify older Norwegian Bokmål metadata-label observation**
+   - An older practical observation reported English metadata field labels while the UI language was Norwegian Bokmål.
+   - Current automated i18n coverage is complete, so first reproduce this on the 0.1.226 baseline before changing code.
+   - If it no longer reproduces, move this observation to Completed rather than creating unnecessary localization work.
 
 3. **PDF Document Register: current user interface needs redesign**
    - The current Document Register user interface was judged unusable/poor in practical testing.
