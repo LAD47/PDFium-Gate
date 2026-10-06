@@ -34,6 +34,7 @@ const missingExample = read('docs/examples/Example - Missing PDF record.md');
 const baseExample = read('docs/examples/Example - Native Obsidian Base - All documents.base');
 const awaitingBaseExample = read('docs/examples/Example - Native Obsidian Base - Awaiting response.base');
 const examplesReadme = read('docs/examples/README.md');
+const legacyStaticExamplePath = path.join(root,'docs/examples/Example PDF Document Register.base');
 const schemaFeature = read('src/plugin/features/14-metadata-schema.js');
 const settingsSource = read('src/main/settings.js');
 const buildSource = read('build.js');
@@ -79,6 +80,17 @@ for (const nativeBase of [baseExample,awaitingBaseExample]) {
 }
 if (!awaitingBaseExample.includes('response_received == false')||!awaitingBaseExample.includes('filemeta_status == \\"active\\"')) fail('awaiting-response Base filter is incomplete');
 if (!examplesReadme.includes('Two different Base concepts')||!examplesReadme.includes('PDF Dokumentregister.base')||!examplesReadme.includes('pdfium-document-register')) fail('example README does not explain native Base versus PDFium Gate document register');
+if (fs.existsSync(legacyStaticExamplePath)) fail('ambiguous legacy Base example filename still exists in docs/examples');
+for (const name of [
+  'Example - Decision.md',
+  'Example - Report.md',
+  'Example - Memo.md',
+  'Example - Awaiting response.md',
+  'Example - Native Obsidian Base - All documents.base',
+  'Example - Native Obsidian Base - Awaiting response.base'
+]) {
+  if (!templateSource.includes(name)) fail(`runtime example package is missing ${name}`);
+}
 
 if (schemaFeature.includes('example-files-bootstrap.json')) fail('automatic example bootstrap marker must not exist');
 if (schemaFeature.includes('_ensureMetadataExampleFiles')) fail('automatic example bootstrap method must not exist');
