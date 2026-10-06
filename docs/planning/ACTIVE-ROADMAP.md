@@ -31,7 +31,9 @@ No single feature scope is frozen yet. Start from the open items below and choos
   - New/reset defaults use the active language while stable UUIDs, properties and machine values remain unchanged.
   - Standard categories have a stable hidden canonical machine `value` plus a localized display `name`; existing category configs are migrated by permanent UUID.
   - Existing untouched standard display names follow language changes; user-customized and user-created names are preserved.
-  - Practical verification passed on 2026-10-06 for Bokmål → English → Bokmål, including preservation of a renamed standard category (`Budsjett`).
+  - Practical verification passed on 2026-10-06 for Bokmål → English → Bokmål.
+  - Category verification preserved a renamed standard category (`Budsjett`).
+  - Metadata verification preserved a renamed standard field (`Avsender / organisasjon`) and a renamed standard document-type option (`Avgjørelse`) while their stable machine identities remained unchanged; untouched metadata fields/options continued to follow the active UI language.
   - Automated verification and dependency audit are green. This item is ready for an explicit merge decision; do not merge to `main` implicitly.
 
 ### PDF Document Register
