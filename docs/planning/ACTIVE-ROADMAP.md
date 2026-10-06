@@ -22,7 +22,9 @@ Current 0.1.226 cleanup status on `chore/0.1.226-community-cleanup`:
 - [x] move already-confirmed registration/missing-document observations out of the open test list;
 - [x] replace the public `manifest.json` development placeholder with author `LAD47`;
 - [x] practically verify flat Email ZIP layout and manual external-ZIP focus reconciliation;
-- [x] run the full repository verification pipeline after the cleanup is complete.
+- [x] run the full repository verification pipeline after the cleanup is complete;
+- [x] lock npm dependencies with `package-lock.json` and use `npm ci` in CI for reproducible generated runtime;
+- [x] keep Community release publishing manual-only so workflow maintenance cannot publish before `archive/<version>` is frozen.
 
 ## Product UX backlog
 
