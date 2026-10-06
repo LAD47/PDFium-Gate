@@ -218,6 +218,13 @@ class DocumentInfoFeature {
     const fields=this.getDocumentInfoSchemaFields();
     const editing=this.state.documentInfo.editingPdfPath===path && recordState?.ready && recordState?.ok;
     const presentationSettings=metadataPresentationSettings(this.settings || {},this.i18n);
+    let showReadEditActions=false;
+    const renderEditAction=host=>{
+      const actions=host.createDiv({cls:'pdfium-document-info-actions'});
+      const edit=actions.createEl('button',{cls:'mod-cta',text:t('documentInfo.edit')});
+      edit.addEventListener('click',event=>{event.preventDefault();this.beginDocumentInfoEdit(view);});
+      return actions;
+    };
 
     const header=panel.createDiv({cls:'pdfium-document-info-header'});
     const titleBox=header.createDiv({cls:'pdfium-document-info-heading-box'});
@@ -280,6 +287,8 @@ class DocumentInfoFeature {
         }
       });
     } else {
+      showReadEditActions=true;
+      renderEditAction(body);
       for(const field of fields) {
         const row=body.createDiv({cls:'pdfium-document-info-field'});
         row.createDiv({cls:'pdfium-document-info-label',text:field.label});
@@ -288,9 +297,6 @@ class DocumentInfoFeature {
         if(descriptor?.renderRead) descriptor.renderRead(row,{value,field,settings:presentationSettings});
         else row.createDiv({cls:'pdfium-document-info-value',text:value==null?'—':String(value)});
       }
-      const actions=body.createDiv({cls:'pdfium-document-info-actions'});
-      const edit=actions.createEl('button',{cls:'mod-cta',text:t('documentInfo.edit')});
-      edit.addEventListener('click',event=>{event.preventDefault();this.beginDocumentInfoEdit(view);});
     }
 
     if(recordState?.ready && recordState?.ok && recordState?.registered && recordState?.recordPath) {
@@ -298,6 +304,8 @@ class DocumentInfoFeature {
       archiveRelationsHost.setAttribute('aria-label',t('documentInfo.archive.title'));
       void this.renderDocumentInfoArchiveRelations(archiveRelationsHost,view,path,recordState);
     }
+
+    if(showReadEditActions) renderEditAction(body);
 
     panel.onkeydown=event=>{
       if(event.key!=='Escape') return;
