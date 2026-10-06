@@ -619,5 +619,9 @@
   "factory.metadata.option.decision": "Afgørelse",
   "factory.metadata.option.letter": "Brev",
   "factory.metadata.option.report": "Rapport",
-  "factory.metadata.option.memo": "Notat"
+  "factory.metadata.option.memo": "Notat",
+  "settings.group.general": "Generelt",
+  "settings.group.import": "Import",
+  "settings.group.metadataRegister": "Metadata og dokumentregister",
+  "settings.documentRegister.explanation": "PDFium Gates dokumentregister er forskelligt fra Base-eksempelfilerne. PDF Dokumentregister.base oprettes første gang det rigtige register åbnes, læser registrerede PDF-filer fra File Metadata og bruger PDFium Gates egen Bases-visning. Efter oprettelsen er Base-filen brugerejet, og PDFium Gate overskriver ikke senere ændringer."
 }
