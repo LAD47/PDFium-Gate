@@ -20,7 +20,7 @@ Current 0.1.226 cleanup status on `chore/0.1.226-community-cleanup`:
 - [x] optimize the root `README.md` for ordinary Community Plugins users;
 - [x] remove outdated “Community Plugins is still future” wording from active release documentation;
 - [x] move already-confirmed registration/missing-document observations out of the open test list;
-- [ ] review the public `manifest.json` author metadata, which still uses the development placeholder `OpenAI / test build`;
+- [x] replace the public `manifest.json` development placeholder with author `LAD47`;
 - [ ] practically verify the two remaining Email/Archive Import observations before clearing their “pending” wording;
 - [ ] run the full repository verification pipeline after the cleanup is complete.
 
