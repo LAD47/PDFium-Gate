@@ -13,26 +13,27 @@ This file is a running list of observations found during practical testing that 
 
 ## Open items
 
-1. **DocumentInfo: action placement in long panels**
-   - The read-mode **Edit** action is implemented above the metadata fields and again at the bottom after archive relationships.
-   - Practical Obsidian test 1–7 passed on 2026-10-06: both Edit buttons were present, both entered the same edit mode, Cancel worked, and saving a changed metadata value persisted normally.
-   - Follow-up candidate: edit-mode **Cancel** and **Save** are now also rendered both above the edit fields and at the bottom after archive relationships.
-   - Both top/bottom copies share the same control map, validation messages, cancel path and canonical save/persistence path; no duplicate editing model is introduced.
-   - GitHub Actions run `37505514681` passed `npm ci`, `npm audit --audit-level=high` and the full `npm run check`; generated `main.js` was rebuilt from canonical source.
-   - Only a short practical Obsidian test of the duplicated Cancel/Save controls remains before moving this item to Completed.
-
-2. **PDF Document Register: current user interface needs redesign**
+1. **PDF Document Register: current user interface needs redesign**
    - The current Document Register user interface was judged unusable/poor in practical testing.
    - Treat this as a UI/interaction redesign task rather than a small cosmetic fix.
    - Keep the new simple lifecycle visible: active records are usable; missing records are informational/read-only; unregistered PDFs can receive new metadata.
 
-3. **PDF annotation backup: reassess `.pdfium-backup` after the independent backup solution exists**
+2. **PDF annotation backup: reassess `.pdfium-backup` after the independent backup solution exists**
    - Keep the current `backupOriginalPdf` safety function for now: it stores one original PDF copy before PDFium Gate first modifies the file and never overwrites an existing copy.
    - Reassess whether this separate per-PDF original-copy mechanism is still needed once the independent backup project provides a validated backup/restore workflow.
    - Do not remove or merge the behavior merely because both features use the word "backup"; compare their actual protection scope, restore semantics and failure modes first.
    - If the generic backup solution fully replaces this protection later, remove the old setting and `.pdfium-backup` workflow through an explicit migration/release decision rather than silently changing behavior.
 
 ## Completed items
+
+- **0.1.227 DocumentInfo actions top + bottom: practical verification passed**
+   - Verified on 2026-10-06 on `fix/0.1.227-localized-defaults`.
+   - Read mode shows **Edit** both above the metadata fields and at the bottom after archive relationships.
+   - Edit mode shows **Cancel** and **Save** both above the editable fields and at the bottom after archive relationships.
+   - Practical test 1–7 confirmed both top and bottom Edit buttons enter the same edit mode.
+   - Follow-up practical test 1–7 confirmed top Save persists changes, top Cancel discards changes, bottom Save persists changes, and bottom Cancel discards changes.
+   - All duplicated actions share the same control state, validation and canonical persistence/cancel paths; no parallel editing implementation was introduced.
+   - Automated verification is green in GitHub Actions runs `37501182896` and `37505514681`.
 
 - **0.1.227 localized factory defaults: practical language-switch verification passed**
    - Verified on 2026-10-06 on `fix/0.1.227-localized-defaults`.
