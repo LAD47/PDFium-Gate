@@ -141,6 +141,24 @@ Before the first public Community release, the repository workflows and this doc
 - the public identity is `PDFium Gate` / `pdfium-gate`.
 
 
+## 0.1.225 Email/Archive Import release candidate
+
+0.1.225 is the first release candidate that includes the integrated Email Import / Archive Import transport-source model:
+
+- EML/MSG -> generated email PDF;
+- mandatory transactional attachment import;
+- one localized sibling attachment folder;
+- flattened ZIP members for email attachments;
+- generic manual ZIP import with safe preflight/rollback;
+- source ZIP deletion only after successful verified import;
+- optional retained EML/MSG source, off by default;
+- Archive Relationship / DocumentInfo provenance;
+- startup/focus reconciliation for ZIP files copied through the operating-system file manager.
+
+The release notes live in `docs/releases/0.1.225.md`.
+
+Before freezing 0.1.225, the final flat email-attachment layout and manual ZIP failure/reconciliation flow should be practically confirmed. Automated verification is necessary but does not replace that final Obsidian check.
+
 ## 0.1.224 identity transition
 
 0.1.224 is the dedicated identity transition build described above. It changes
@@ -161,7 +179,7 @@ and regression test procedure.
 The normal Windows working copy is:
 
 ```text
-C:\GitHub\Obsidian-PDFium-Gate-Test
+C:\GitHub\PDFium-Gate
 ```
 
 It must be a normal Git clone of:
@@ -173,7 +191,7 @@ https://github.com/LAD47/PDFium-Gate.git
 Before applying a new project ZIP, verify that the working copy is on `main`, up to date, and clean:
 
 ```powershell
-cd C:\GitHub\Obsidian-PDFium-Gate-Test
+cd C:\GitHub\PDFium-Gate
 git switch main
 git pull --ff-only
 git status
@@ -201,7 +219,7 @@ After confirming that `git status` is clean, remove everything in the working co
 Example PowerShell, run only from the verified repository directory:
 
 ```powershell
-cd C:\GitHub\Obsidian-PDFium-Gate-Test
+cd C:\GitHub\PDFium-Gate
 
 if (git status --porcelain) {
     throw "Working tree is not clean. Stop before replacing files."
