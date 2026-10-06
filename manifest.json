@@ -1,9 +1,9 @@
 {
   "id": "pdfium-gate",
   "name": "PDFium Gate",
-  "version": "0.1.224",
+  "version": "0.1.225",
   "minAppVersion": "1.13.7",
-  "description": "PDFium Gate 0.1.224 - permanent product identity transition to pdfium-gate; runtime features unchanged.",
+  "description": "Enhanced PDF workflows for Obsidian with annotations, metadata, email import, and archive-aware attachments.",
   "author": "OpenAI / test build",
   "isDesktopOnly": true
 }
