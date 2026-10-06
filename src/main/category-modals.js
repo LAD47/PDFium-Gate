@@ -429,7 +429,7 @@ class CategoryConfigModal extends Modal {
     new Setting(this.contentEl).setName(categoryModalT(this.plugin, 'category.inherited.disableHere')).setDesc(categoryModalT(this.plugin, 'category.inherited.disableHereDesc')).addButton(b => b.setButtonText(categoryModalT(this.plugin, 'category.inherited.disableLocal')).setWarning().onClick(() => {
       const existing = this.localConfig.categories.find(c => c.id === cat.id);
       if (existing) existing.enabled = false;
-      else this.localConfig.categories.push({ id: cat.id, enabled: false });
+      else this.localConfig.categories.push({ id: cat.id, value: categoryMachineValue(cat), enabled: false });
       this.page = 'inherited';
       this.render();
     }));
@@ -451,7 +451,7 @@ class CategoryConfigModal extends Modal {
     let id = categoryUuidV4();
     const effectiveIds = new Set((validation.effective?.categories || []).map(c => String(c.id || '')));
     while (effectiveIds.has(id)) id = categoryUuidV4();
-    this.localConfig.categories.push({ id, name: categoryModalT(this.plugin, 'category.new.defaultName', { number:n }), color: '#FFD84D', shortcut: null, enabled: true });
+    this.localConfig.categories.push({ id, value: categoryMachineValue({id}), name: categoryModalT(this.plugin, 'category.new.defaultName', { number:n }), color: '#FFD84D', shortcut: null, enabled: true });
     this.selectedLocalIndex = this.localConfig.categories.length - 1;
     this.page = 'category';
     this.render();
