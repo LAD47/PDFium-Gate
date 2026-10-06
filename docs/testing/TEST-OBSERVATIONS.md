@@ -13,12 +13,21 @@ This file is a running list of observations found during practical testing that 
 
 ## Open items
 
-1. **PDF Document Register: current user interface needs redesign**
+1. **0.1.227 Settings hierarchy + Bases example-package cleanup**
+   - Candidate on `fix/0.1.227-localized-defaults`.
+   - Settings is reorganized into collapsible top-level groups: General, PDF, Import, Metadata and document register, and Advanced; existing persisted setting keys/values are unchanged.
+   - The Metadata/document-register group now explicitly explains that the real `PDF Dokumentregister.base` uses PDFium Gate's custom register view and is different from native example Bases.
+   - The optional example package now contains six synthetic metadata records and two native Obsidian `table` Bases (all documents + awaiting response), so sorting/filtering can be understood without touching real registered PDFs.
+   - Missing-record example text no longer promises unsupported manual relink; static examples use current metadata record format v2.
+   - The ambiguous legacy example filename `Example PDF Document Register.base` is replaced by explicit native-Base names. Reinstall removes the old file only if it is byte-for-byte unchanged; a modified legacy file is preserved.
+   - Automated verification and one practical Settings/example-package test round remain.
+
+2. **PDF Document Register: current user interface needs redesign**
    - The current Document Register user interface was judged unusable/poor in practical testing.
    - Treat this as a UI/interaction redesign task rather than a small cosmetic fix.
    - Keep the new simple lifecycle visible: active records are usable; missing records are informational/read-only; unregistered PDFs can receive new metadata.
 
-2. **PDF annotation backup: reassess `.pdfium-backup` after the independent backup solution exists**
+3. **PDF annotation backup: reassess `.pdfium-backup` after the independent backup solution exists**
    - Keep the current `backupOriginalPdf` safety function for now: it stores one original PDF copy before PDFium Gate first modifies the file and never overwrites an existing copy.
    - Reassess whether this separate per-PDF original-copy mechanism is still needed once the independent backup project provides a validated backup/restore workflow.
    - Do not remove or merge the behavior merely because both features use the word "backup"; compare their actual protection scope, restore semantics and failure modes first.
