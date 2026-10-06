@@ -8,10 +8,10 @@ The project is still in pre-release development. Contributions are welcome, but 
 
 Please read:
 
-- [README.md](README.md) for the project goals and current beta status;
+- [README.md](README.md) for the project goals and current pre-1.0 Community release status;
 - [ARCHITECTURE.md](ARCHITECTURE.md) for the stable architecture entry point;
 - [docs/architecture/](docs/architecture/) for detailed technical contracts;
-- [RELEASE.md](RELEASE.md) for the authoritative build/archive/BRAT release procedure;
+- [RELEASE.md](RELEASE.md) for the authoritative build/archive/Community Plugins release procedure;
 - [TRANSLATING.md](TRANSLATING.md) for translation work.
 
 The current practical compatibility baseline is Obsidian 1.13.7. Most regression testing has been performed on Windows 11. macOS and Linux testing is especially useful.
