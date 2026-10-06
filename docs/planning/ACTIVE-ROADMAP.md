@@ -2,90 +2,78 @@
 
 **Purpose:** one active index for deferred work, release follow-ups and product decisions that still matter.
 
-This file is the entry point for current planning. It does not replace detailed architecture or decision documents. Historical handoffs and superseded experiments should stay in their historical files instead of becoming active TODO items again.
+This file is the entry point for current planning. Historical handoffs, superseded experiments and completed release checklists must not be treated as active TODO items.
 
-## Next release: 0.1.226
+## Current release baseline
 
-Primary plan:
+**0.1.226** is the current user-confirmed Obsidian Community Plugins baseline.
 
-- [0.1.226 Community release cleanup and README review](0.1.226-COMMUNITY-RELEASE-CLEANUP.md)
+Confirmed on 2026-10-06:
 
-Current 0.1.226 cleanup status on `chore/0.1.226-community-cleanup`:
+- exact release candidate merged to `main`;
+- **Build generated runtime** succeeded on the merge commit;
+- immutable `archive/0.1.226` created from the verified commit;
+- ordinary GitHub Release `0.1.226` published, not marked Pre-release;
+- release assets contain `main.js`, `manifest.json` and `styles.css`;
+- tag, archive branch and release-time `main` all pointed to commit `e57192fa376e0e9d89c60676cd668e9b852944f8`;
+- Obsidian Community Plugins offered and installed 0.1.226 successfully.
 
-- [x] remove obsolete BRAT terminology from the active release workflow and release procedure;
-- [x] rename the publisher workflow for the real **Obsidian Community Plugins** distribution path;
-- [x] stop marking normal Community releases as GitHub prereleases;
-- [x] update `RELEASE.md`;
-- [x] update `docs/architecture/14-release-readiness.md`;
-- [x] optimize the root `README.md` for ordinary Community Plugins users;
-- [x] remove outdated “Community Plugins is still future” wording from active release documentation;
-- [x] move already-confirmed registration/missing-document observations out of the open test list;
-- [x] replace the public `manifest.json` development placeholder with author `LAD47`;
-- [x] practically verify flat Email ZIP layout and manual external-ZIP focus reconciliation;
-- [x] run the full repository verification pipeline after the cleanup is complete;
-- [x] lock npm dependencies with `package-lock.json` and use `npm ci` in CI for reproducible generated runtime;
-- [x] keep Community release publishing manual-only so workflow maintenance cannot publish before `archive/<version>` is frozen.
+The completed cleanup record is [0.1.226 Community release cleanup](0.1.226-COMMUNITY-RELEASE-CLEANUP.md).
 
-## Product UX backlog
+## Next development line: 0.1.227
 
-### PDF Document Register
-
-Still active:
-
-- redesign the current PDF Document Register UI/interaction model; practical testing judged the current interface poor enough that this is a redesign task rather than cosmetic polish;
-- implement a clear maintenance/report surface for active, missing, invalid/corrupt and unregistered documents;
-- keep destructive metadata cleanup gated behind a validated backup/rollback capability.
-
-Already resolved — do not reopen as a planning question:
-
-- automatic minimal system records for newly detected PDFs are implemented and practically confirmed;
-- **Register existing PDFs** is implemented and practically confirmed;
-- ordinary PDF identity uses the permanent record UUID and trusted rename/move continuity, not SHA-256 recovery;
-- the ordinary lifecycle is `active` / `missing`; manual relink and the experimental `trashed` state were rejected.
+No single feature scope is frozen yet. Start from the open items below and choose one contained task at a time. Do not reopen resolved 0.1.226 release work unless a regression is demonstrated.
 
 ### DocumentInfo
 
-Review/verify these older observations:
+- Consider showing the **Edit** action both near the top and bottom of long DocumentInfo panels.
+- Re-test the older observation that metadata field labels were English under Norwegian Bokmål on the 0.1.226 baseline.
+  - If reproducible, fix the presentation/localization boundary.
+  - If not reproducible, close the observation rather than changing working i18n code.
 
-- consider showing the **Edit** action both near the top and bottom of a long DocumentInfo panel;
-- verify whether the old observation that metadata field labels ignored Norwegian Bokmål is still reproducible on the current build; close it if later i18n work already resolved it.
+### PDF Document Register
 
-### Missing documents
+This is the largest confirmed UX backlog item.
 
-Current accepted flow is delete PDF -> record becomes `missing` -> explicit review -> optional **Delete metadata**.
+- Redesign the current Document Register UI/interaction model; practical testing judged the current interface poor enough that this is a redesign task rather than cosmetic polish.
+- Implement a clear maintenance/report surface for:
+  - active records;
+  - missing records;
+  - invalid/corrupt records;
+  - PDFs without an active metadata record.
+- Preserve the current simple lifecycle: `active` / `missing`.
+- Preserve permanent UUID identity and trusted rename/move continuity.
+- Do not reintroduce ordinary-PDF SHA recovery, manual relink or the experimental `trashed` state.
 
-Deferred:
+Already resolved — do not reopen as planning questions:
 
-- add **Restore from backup** to the missing-document review only after a validated backup/restore path exists;
-- reconsider a one-step “delete document and metadata” command only if real use shows a clear need.
+- automatic minimal records for newly detected PDFs;
+- explicit **Register existing PDFs**;
+- fresh identity for a new PDF that appears at a path previously owned by a missing historical record;
+- explicit **Missing documents** review and optional **Delete metadata**.
 
-## Backup and destructive-maintenance boundary
+### Backup and destructive maintenance
 
-Authoritative PDFium Gate-side plan:
+Authoritative PDFium Gate-side requirements:
 
 - [Document metadata backup and maintenance plan](DOCUMENT-METADATA-BACKUP-AND-MAINTENANCE.md)
-
-Independent project handoff/provenance:
-
 - [PDFium Backup handoff](PDFIUM-BACKUP-HANDOFF.md)
 
-Active requirements:
+Keep these boundaries:
 
-- keep the generic backup engine independent from PDFium Gate;
-- do not introduce an unconditional runtime dependency on the backup project;
+- the generic backup engine remains an independent project;
+- PDFium Gate must not acquire an unconditional runtime dependency on the backup project;
 - define an integration boundary only after the generic backup design is stable;
-- require validated backup/rollback before permanent destructive maintenance of durable PDFium Gate metadata;
-- practically test destructive maintenance + restore on a clean test vault before enabling such workflows for normal use;
-- reassess the existing per-PDF `.pdfium-backup` / `backupOriginalPdf` safety mechanism only after the independent backup solution exists and its protection scope can be compared properly.
+- broader/permanent destructive maintenance of durable metadata must remain gated behind validated backup/rollback;
+- destructive-maintenance + restore must be practically tested on a clean test vault before that workflow is exposed to normal users;
+- reassess the existing per-PDF `.pdfium-backup` / `backupOriginalPdf` safeguard only after the independent backup solution exists and its protection scope can be compared properly;
+- a future **Restore from backup** action belongs naturally in the missing-document review once a validated restore path exists.
 
-## Email Import / Archive Import deferred product decisions
+### Email Import / Archive Import deferred product decisions
 
-Current decisions and open questions remain in:
+The 0.1.226 transport-source/attachment model is confirmed. Do not reopen its flat attachment layout, source-ZIP cleanup, direct PDF links or external-ZIP focus reconciliation without a demonstrated regression.
 
-- [Email Import decisions](../email-import/DECISIONS.md)
-- [Email Import documentation index](../email-import/README.md)
-
-The following are legitimate future product questions, but are **not automatically 0.1.226 blockers**:
+Legitimate future questions remain:
 
 - exact visual design of generated email PDFs;
 - whether `Message-ID` should be visible or remain technical metadata;
@@ -96,36 +84,47 @@ The following are legitimate future product questions, but are **not automatical
 - configurable semantic mapping from email fields to arbitrary custom metadata fields;
 - parent email-PDF rollback for failures occurring after PDF creation;
 - future vault-wide byte-identical duplicate finding;
-- a future **Open original email** action only if practical use demonstrates a real need.
+- a future **Open original email** action only if practical use demonstrates a real need;
+- broader real-world testing of malformed, corrupt or password-protected ZIP files.
 
-Do not re-open already resolved attachment transaction/output policy merely because older decision text discusses earlier prototypes.
+Current source-of-truth documents:
+
+- [Email Import decisions](../email-import/DECISIONS.md)
+- [Email Import documentation index](../email-import/README.md)
+
+## Release-process safeguards to preserve
+
+These were established while preparing 0.1.226 and are now part of the normal release contract:
+
+- `package-lock.json` is committed;
+- local/CI dependency installation uses `npm ci`;
+- generated runtime is built from canonical `src/`;
+- normal Community publishing is manual-only;
+- freeze `archive/<version>` only after the final `main` build workflow is green;
+- publish an ordinary GitHub Release from the frozen archive;
+- required assets are `main.js`, `manifest.json`, and `styles.css`;
+- treat a release as user-confirmed runtime baseline only after installation/runtime confirmation in Obsidian.
 
 ## Test-observation triage
 
-`docs/testing/TEST-OBSERVATIONS.md` contains both active observations and historical diagnostic trails.
+`docs/testing/TEST-OBSERVATIONS.md` is the detailed practical-testing notebook.
 
 Before each release:
 
 1. check its **Open items** section;
-2. move genuinely active work into this roadmap or a focused planning document;
-3. mark practically confirmed/resolved items as completed;
-4. do not treat historical diagnostic paragraphs as current implementation instructions.
-
-Two status statements particularly deserve re-checking after 0.1.225:
-
-- “final flat email attachment layout remains pending”;
-- “manual Archive Import startup/focus reconciliation practical confirmation is pending”.
-
-If current practical testing already covers them, update the status documents rather than carrying those reminders forward indefinitely.
+2. move genuine product work into this roadmap or a focused planning document;
+3. move confirmed/resolved observations to Completed;
+4. do not treat old diagnostic trails as current implementation instructions.
 
 ## Historical material — not active backlog
 
-These files preserve reasoning but should not be treated as current TODO lists:
+These files preserve reasoning but are not active TODO lists:
 
 - dated Email Import handoffs and dated decision snapshots;
 - `docs/history/**`;
 - superseded SHA-recovery/relink/Trash experiments;
 - the old visible-ZIP Archive Import prototype;
-- BRAT-era release instructions once the 0.1.226 cleanup is complete.
+- BRAT-era release material;
+- the completed 0.1.226 cleanup checklist.
 
 When historical material conflicts with current architecture, current decisions, this roadmap, source code or automated verification, the current material wins.
