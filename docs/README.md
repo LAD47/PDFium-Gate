@@ -11,6 +11,7 @@ This directory contains active architecture documentation, focused test notes, c
 
 ## Active planning
 
+- [`planning/ACTIVE-ROADMAP.md`](planning/ACTIVE-ROADMAP.md) — single entry point for current release follow-ups, product backlog and deferred decisions; use this before reading historical handoffs.
 - [`planning/DOCUMENT-METADATA-BACKUP-AND-MAINTENANCE.md`](planning/DOCUMENT-METADATA-BACKUP-AND-MAINTENANCE.md) — approved backup/restore and document-register maintenance direction, including the active/missing-only lifecycle and rejected relink/SHA-recovery experiments.
 - [`planning/0.1.226-COMMUNITY-RELEASE-CLEANUP.md`](planning/0.1.226-COMMUNITY-RELEASE-CLEANUP.md) — planned 0.1.226 cleanup of obsolete BRAT release terminology/workflow and a dedicated README review for Obsidian Community Plugins users.
 
