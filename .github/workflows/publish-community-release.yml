@@ -2,14 +2,10 @@ name: Publish Community Plugin release
 
 # Manual publish trigger for the current manifest version.
 # Releases are always built from the already-frozen archive/<manifest-version>
-# branch. workflow_dispatch is the normal manual publisher; a change to this
-# workflow also runs it, which keeps the publishing path testable from GitHub.
+# branch. Publishing is intentionally manual so workflow maintenance cannot
+# start a release before the matching archive branch has been frozen.
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/publish-community-release.yml'
 
 permissions:
   contents: write
