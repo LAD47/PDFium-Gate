@@ -40,6 +40,8 @@ No single feature scope is frozen yet. Start from the open items below and choos
 
 This is the largest confirmed UX backlog item.
 
+- **Preparation candidate:** clarify native example Bases versus the real PDFium Gate register, expand the synthetic example package, and reorganize the growing Settings page into collapsible groups. Keep this separate from the later custom register UI redesign; practical verification is required before marking the preparation complete.
+
 - Redesign the current Document Register UI/interaction model; practical testing judged the current interface poor enough that this is a redesign task rather than cosmetic polish.
 - Implement a clear maintenance/report surface for:
   - active records;
