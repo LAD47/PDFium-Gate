@@ -1,0 +1,75 @@
+name: Publish Community Plugin release
+
+# Manual publish trigger for the current manifest version.
+# Releases are always built from the already-frozen archive/<manifest-version>
+# branch. workflow_dispatch is the normal manual publisher; a change to this
+# workflow also runs it, which keeps the publishing path testable from GitHub.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-community-release.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve frozen archive version
+        id: meta
+        shell: bash
+        run: |
+          version=$(node -p "require('./manifest.json').version")
+          archive="archive/$version"
+          git fetch origin "$archive"
+          git checkout --detach FETCH_HEAD
+          archived_version=$(node -p "require('./manifest.json').version")
+          if [ "$version" != "$archived_version" ]; then
+            echo "Manifest version mismatch: main=$version archive=$archived_version" >&2
+            exit 1
+          fi
+          for file in manifest.json main.js styles.css; do
+            if [ ! -f "$file" ]; then
+              echo "Required Community Plugin release asset is missing: $file" >&2
+              exit 1
+            fi
+          done
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "archive=$archive" >> "$GITHUB_OUTPUT"
+
+      - name: Publish GitHub release for Community Plugins
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          version="${{ steps.meta.outputs.version }}"
+          archive="${{ steps.meta.outputs.archive }}"
+          if gh release view "$version" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release $version already exists; leaving it unchanged."
+            exit 0
+          fi
+          notes_file="docs/releases/$version.md"
+          if [ -f "$notes_file" ]; then
+            gh release create "$version" \
+              manifest.json main.js styles.css \
+              --repo "$GITHUB_REPOSITORY" \
+              --target "$archive" \
+              --title "$version" \
+              --prerelease \
+              --notes-file "$notes_file"
+          else
+            gh release create "$version" \
+              manifest.json main.js styles.css \
+              --repo "$GITHUB_REPOSITORY" \
+              --target "$archive" \
+              --title "$version" \
+              --prerelease \
+              --notes "Community Plugin release. Frozen from $archive."
+          fi
