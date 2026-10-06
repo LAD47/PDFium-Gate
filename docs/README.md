@@ -12,6 +12,7 @@ This directory contains active architecture documentation, focused test notes, c
 ## Active planning
 
 - [`planning/DOCUMENT-METADATA-BACKUP-AND-MAINTENANCE.md`](planning/DOCUMENT-METADATA-BACKUP-AND-MAINTENANCE.md) — approved backup/restore and document-register maintenance direction, including the active/missing-only lifecycle and rejected relink/SHA-recovery experiments.
+- [`planning/0.1.226-COMMUNITY-RELEASE-CLEANUP.md`](planning/0.1.226-COMMUNITY-RELEASE-CLEANUP.md) — planned 0.1.226 cleanup of obsolete BRAT release terminology/workflow and a dedicated README review for Obsidian Community Plugins users.
 
 The architecture documents and automated verification describe the current intended contracts. Historical notes may contain experiments or policies that have since been superseded.
 
