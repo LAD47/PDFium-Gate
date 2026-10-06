@@ -72,7 +72,7 @@ The replacement transport-source model has been practically verified for:
 - direct links from the email PDF to imported PDFs;
 - DocumentInfo provenance back to the parent email and original ZIP identity.
 
-A final practical confirmation is still required for the latest **flat email attachment layout** after the most recent refinement that removes ZIP-derived subfolders. Manual Archive Import startup/focus reconciliation and failed-ZIP keep/delete UX also remain release-gate practical checks.
+The latest **flat email attachment layout** was practically confirmed on 2026-10-06, including direct PDF links and preserved ZIP provenance without ZIP-derived user-facing subfolders. Manual Archive Import startup/focus reconciliation for ZIPs copied with the operating-system file manager was also practically confirmed on 2026-10-06. Failed-ZIP keep/delete behavior remains covered by automated regression; broader real-world malformed/corrupt/password-protected ZIP testing remains useful but is not an unresolved 0.1.226 release gate.
 
 ## Verification
 
