@@ -21,7 +21,7 @@ Current 0.1.226 cleanup status on `chore/0.1.226-community-cleanup`:
 - [x] remove outdated “Community Plugins is still future” wording from active release documentation;
 - [x] move already-confirmed registration/missing-document observations out of the open test list;
 - [x] replace the public `manifest.json` development placeholder with author `LAD47`;
-- [ ] practically verify the remaining manual external-ZIP startup/focus reconciliation observation before clearing its “pending” wording;
+- [x] practically verify flat Email ZIP layout and manual external-ZIP focus reconciliation;
 - [ ] run the full repository verification pipeline after the cleanup is complete.
 
 ## Product UX backlog
