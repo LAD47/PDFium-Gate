@@ -13,10 +13,12 @@ This file is a running list of observations found during practical testing that 
 
 ## Open items
 
-1. **DocumentInfo: Edit button placement**
-   - Candidate implementation on `fix/0.1.227-localized-defaults` renders the same **Edit** action above the metadata fields and again at the bottom of the panel after archive relationships.
-   - Both buttons enter the same edit state and use the existing save/cancel/persistence path; no duplicate editing model was introduced.
-   - Automated contract verification covers the placement. GitHub Actions run `37501182896` passed `npm ci`, `npm audit --audit-level=high` and the full `npm run check`; generated `main.js` was rebuilt from canonical source. Practical Obsidian verification is still required before moving this item to Completed.
+1. **DocumentInfo: action placement in long panels**
+   - The read-mode **Edit** action is implemented above the metadata fields and again at the bottom after archive relationships.
+   - Practical Obsidian test 1–7 passed on 2026-10-06: both Edit buttons were present, both entered the same edit mode, Cancel worked, and saving a changed metadata value persisted normally.
+   - Follow-up candidate: edit-mode **Cancel** and **Save** are now also rendered both above the edit fields and at the bottom after archive relationships.
+   - Both top/bottom copies share the same control map, validation messages, cancel path and canonical save/persistence path; no duplicate editing model is introduced.
+   - Automated verification for the new Save/Cancel placement is required, followed by a short practical Obsidian test.
 
 2. **PDF Document Register: current user interface needs redesign**
    - The current Document Register user interface was judged unusable/poor in practical testing.
