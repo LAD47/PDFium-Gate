@@ -1,0 +1,47 @@
+# PDFium Gate example — native Obsidian Base
+# Practical filter example: active documents where no response has been received.
+filters:
+  and:
+    - "file.inFolder(\"Examples-Obsidian-PDFium-Gate\")"
+    - "filemeta_type == \"pdf\""
+    - "filemeta_profile == \"document\""
+    - "filemeta_status == \"active\""
+    - "response_received == false"
+properties:
+  document_date:
+    displayName: "Document date"
+  document_time:
+    displayName: "Document time"
+  sender:
+    displayName: "Sender"
+  document_type:
+    displayName: "Document type"
+  response_received:
+    displayName: "Response received"
+  response_received_date:
+    displayName: "Response received date"
+  response_sent:
+    displayName: "Response sent"
+  response_sent_date:
+    displayName: "Response sent date"
+  response_sent_link:
+    displayName: "Sent response"
+  filemeta_status:
+    displayName: "Status"
+  filemeta_file:
+    displayName: "PDF"
+  filemeta_id:
+    displayName: "Metadata ID"
+views:
+  - type: table
+    name: "Native Base example — awaiting response"
+    order:
+      - document_date
+      - sender
+      - document_type
+      - response_sent
+      - response_sent_date
+      - filemeta_file
+    sort:
+      - property: document_date
+        direction: DESC
