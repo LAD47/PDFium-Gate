@@ -105,7 +105,8 @@ module.exports=function verifyI18nContract(){
   const baseConfigSource=read('src/metadata/document-register-base-config.js');
   const documentRegisterFeature=read('src/plugin/features/18-document-register-bases.js');
   if(!categoryFoundation.includes('function createDefaultCategories(translate = null)')||!categoryConfig.includes('createDefaultCategories(key=>categoryFeatureT(this,key))')||!categoryFoundation.includes('relocalizeDefaultCategoryNames')||!categoryFoundation.includes("value: 'economy'")||!categoryFoundation.includes('normalizeCategoryMachineValues')) fail('category factory defaults must localize display names while preserving stable UUID/machine identity');
-  if(!schemaContractSource.includes('function metadataDefaultSchema(translate = null)')||!schemaRepositorySource.includes('defaultSchemaFactory = null')||!read('src/plugin/features/14-metadata-schema.js').includes('metadataDefaultSchema(key=>this.i18n?.t?.(key) || key)')||!schemaContractSource.includes('metadataRelocalizeFactorySchema')) fail('metadata factory defaults must localize at creation/reset and safely relocalize untouched defaults');
+  const metadataFeatureSource=read('src/plugin/features/14-metadata-schema.js');
+  if(!schemaContractSource.includes('function metadataDefaultSchema()')||!schemaRepositorySource.includes('defaultSchemaFactory = null')||!schemaContractSource.includes('metadataNormalizeFactoryLabelOwnership')||!schemaContractSource.includes('metadataSchemaForPresentation')||!schemaContractSource.includes("label_source:labelSource === 'factory' ? 'factory' : 'user'")||!metadataFeatureSource.includes('getMetadataSchemaPresentationSnapshot()')||!metadataFeatureSource.includes("return {changed:false,presentationOnly:true};")) fail('metadata factory labels must use explicit ownership and presentation-only localization without language-driven schema rewrites');
   if(!baseConfigSource.includes('metadataDocumentRegisterStandardBaseYaml(schema)')||!documentRegisterFeature.includes('metadataDocumentRegisterStandardBaseYaml(schema)')||baseConfigSource.includes('factory.base.')) fail('standard Base factory container text must remain deterministic; schema-owned column labels may be localized');
   for(const localeName of supportedLocales) {
     const locale=translations[localeName];
@@ -140,6 +141,8 @@ module.exports=function verifyI18nContract(){
     diagnosticModalsLocalized:true,
     benchmarkUiLocalized:true,
     localizedFactoryDefaults:true,
+    metadataFactoryLocalizationPresentationOnly:true,
+    explicitMetadataLabelOwnership:true,
     customPersistedLabelsRemainUserOwned:true,
     liveUiLanguageSwitch:true,
     commandPaletteRefreshRequiresPluginReload:true,
