@@ -1,4 +1,4 @@
-name: Refresh Electron 43.4.2 lockfile
+name: Refresh Electron 43.5.0 lockfile
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - fix/0.1.227-localized-defaults
     paths:
       - 'package.json'
-      - '.github/workflows/refresh-electron-43.4.2-lockfile.yml'
+      - '.github/workflows/refresh-electron-43.5.0-lockfile.yml'
   workflow_dispatch:
 
 permissions:
@@ -40,5 +40,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add package-lock.json
-          git commit -m "Refresh lockfile for Electron 43.4.2"
+          git commit -m "Refresh lockfile for Electron 43.5.0"
           git push
