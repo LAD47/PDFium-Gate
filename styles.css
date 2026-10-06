@@ -275,6 +275,35 @@
   margin: 8px 0;
 }
 
+/* Settings: group the growing option set into compact, collapsible sections. */
+.pdfium-settings-group {
+  border-top: 1px solid var(--background-modifier-border);
+}
+.pdfium-settings-group:last-of-type {
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+.pdfium-settings-group-summary {
+  cursor: pointer;
+  padding: 12px 2px;
+  font-size: var(--font-ui-medium);
+  font-weight: 600;
+  color: var(--text-normal);
+}
+.pdfium-settings-group-summary:hover {
+  color: var(--text-accent);
+}
+.pdfium-settings-group-content {
+  padding: 0 0 10px 14px;
+}
+.pdfium-settings-subsection {
+  margin: 14px 0 4px;
+  font-size: var(--font-ui-small);
+  color: var(--text-muted);
+}
+.pdfium-settings-note {
+  margin: 4px 0 8px;
+}
+
 /* Metadata schema manager: keep the ordinary Settings page compact while
    giving field administration enough room for labels, properties and actions. */
 .pdfium-metadata-schema-manager-modal {
