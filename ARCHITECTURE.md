@@ -9,7 +9,7 @@
 - Cross-feature behavior uses explicit operation ports and one canonical owner.
 - Ambiguous PDF/runtime identity fails closed.
 - Markdown/YAML and explicit configuration files are persistent source of truth; RAM indexes/caches are derived.
-- Stable persistent identities are language-independent; human-facing factory metadata labels/options and standard category names follow the resolved UI language while user-customized names remain user-owned.
+- Stable persistent identities are language-independent; standard categories keep permanent UUIDs plus stable hidden machine `value` keys, while their human-facing `name` follows the resolved UI language until the user customizes it. Factory metadata labels/options follow the same machine-value/display-label boundary.
 
 ## Documentation map
 
