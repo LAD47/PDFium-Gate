@@ -5,6 +5,7 @@ const ROOT = path.resolve(__dirname, '..');
 const read = rel => fs.readFileSync(path.join(ROOT, rel), 'utf8');
 const manifest = JSON.parse(read('manifest.json'));
 const pkg = JSON.parse(read('package.json'));
+const versions = JSON.parse(read('versions.json'));
 const header = read('src/main/00-header.js');
 
 function fail(message) {
@@ -16,6 +17,10 @@ if (manifest.id !== 'pdfium-gate') fail('manifest id is ' + manifest.id);
 if (manifest.name !== 'PDFium Gate') fail('manifest name is ' + manifest.name);
 if (pkg.name !== 'pdfium-gate') fail('package name is ' + pkg.name);
 if (manifest.version !== pkg.version) fail('manifest/package version mismatch: ' + manifest.version + ' vs ' + pkg.version);
+if (versions[manifest.version] !== manifest.minAppVersion) fail(
+  'versions.json mapping for ' + manifest.version + ' is ' + versions[manifest.version] +
+  ', expected ' + manifest.minAppVersion
+);
 if (!header.includes("const VIEW_TYPE = 'pdfium-gate-view';")) fail('active view type is not pdfium-gate-view');
 if (header.includes('pdfium-gate-test-view')) fail('legacy view type remains in active header');
 
