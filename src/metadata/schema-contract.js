@@ -63,15 +63,16 @@ function metadataDefaultConfigForType(type) {
   }
 }
 
-function metadataMakeOption(value, label, id = metadataUuidV4()) {
-  return { id, value: String(value || '').trim(), label: String(label || '').trim(), active: true };
+function metadataMakeOption(value, label, id = metadataUuidV4(), labelSource = 'user') {
+  return { id, value: String(value || '').trim(), label: String(label || '').trim(), label_source:labelSource === 'factory' ? 'factory' : 'user', active: true };
 }
 
-function metadataMakeField({ property, label, type = 'text', description = '', required = false, defaultValue = null, showInDocumentInfo = true, showInDefaultBase = true, config = null, id = metadataUuidV4() }) {
+function metadataMakeField({ property, label, labelSource = 'user', type = 'text', description = '', required = false, defaultValue = null, showInDocumentInfo = true, showInDefaultBase = true, config = null, id = metadataUuidV4() }) {
   return {
     id,
     property: String(property || '').trim(),
     label: String(label || '').trim(),
+    label_source:labelSource === 'factory' ? 'factory' : 'user',
     description: String(description || ''),
     type,
     active: true,
@@ -111,44 +112,94 @@ function metadataFactoryKnownTexts(getKnownTranslations,key,fallback) {
   }
   return values;
 }
-function metadataDefaultSchema(translate = null) {
+function metadataFactoryFieldDefinitionFor(field) {
+  const id=String(field?.id || '');
+  const property=String(field?.property || '');
+  return METADATA_FACTORY_FIELD_DEFINITIONS.find(item=>item.id===id && item.property===property) || null;
+}
+function metadataFactoryOptionDefinitionFor(fieldDefinition,option) {
+  if(!fieldDefinition || !Array.isArray(fieldDefinition.options)) return null;
+  const id=String(option?.id || '');
+  const value=String(option?.value || '');
+  return fieldDefinition.options.find(item=>item.id===id && item.value===value) || null;
+}
+function metadataNormalizeFactoryLabelOwnership(schema,getKnownTranslations = null) {
+  const next=metadataClone(schema);
+  if(!next || !Array.isArray(next.fields)) return {schema:next,changed:false};
+  let changed=false;
+  for(const field of next.fields) {
+    if(!field || typeof field!=='object') continue;
+    const definition=metadataFactoryFieldDefinitionFor(field);
+    if(definition) {
+      const current=String(field.label || '').trim();
+      const known=metadataFactoryKnownTexts(getKnownTranslations,definition.labelKey,definition.label);
+      const source=field.label_source==='factory' || field.label_source==='user'
+        ? field.label_source
+        : (known.has(current) ? 'factory' : 'user');
+      if(field.label_source!==source) { field.label_source=source; changed=true; }
+      if(source==='factory' && current!==definition.label) { field.label=definition.label; changed=true; }
+      if(Array.isArray(field.config?.options)) {
+        for(const option of field.config.options) {
+          if(!option || typeof option!=='object') continue;
+          const optionDefinition=metadataFactoryOptionDefinitionFor(definition,option);
+          if(optionDefinition) {
+            const optionCurrent=String(option.label || '').trim();
+            const optionKnown=metadataFactoryKnownTexts(getKnownTranslations,optionDefinition.labelKey,optionDefinition.label);
+            const optionSource=option.label_source==='factory' || option.label_source==='user'
+              ? option.label_source
+              : (optionKnown.has(optionCurrent) ? 'factory' : 'user');
+            if(option.label_source!==optionSource) { option.label_source=optionSource; changed=true; }
+            if(optionSource==='factory' && optionCurrent!==optionDefinition.label) { option.label=optionDefinition.label; changed=true; }
+          } else if(option.label_source!=='user') {
+            option.label_source='user';
+            changed=true;
+          }
+        }
+      }
+    } else {
+      if(field.label_source!=='user') { field.label_source='user'; changed=true; }
+      if(Array.isArray(field.config?.options)) for(const option of field.config.options) {
+        if(option && typeof option==='object' && option.label_source!=='user') { option.label_source='user'; changed=true; }
+      }
+    }
+  }
+  return {schema:next,changed};
+}
+function metadataSchemaForPresentation(schema,translate = null) {
+  const next=metadataClone(schema);
+  if(!next || !Array.isArray(next.fields)) return next;
+  for(const field of next.fields) {
+    const definition=metadataFactoryFieldDefinitionFor(field);
+    if(!definition) continue;
+    if(field.label_source==='factory') field.label=metadataFactoryText(translate,definition.labelKey,definition.label);
+    if(!Array.isArray(field.config?.options)) continue;
+    for(const option of field.config.options) {
+      const optionDefinition=metadataFactoryOptionDefinitionFor(definition,option);
+      if(optionDefinition && option.label_source==='factory') option.label=metadataFactoryText(translate,optionDefinition.labelKey,optionDefinition.label);
+    }
+  }
+  return next;
+}
+function metadataDefaultSchema() {
   return {
     format_version:METADATA_SCHEMA_FORMAT_VERSION,
     revision:1,
     fields:METADATA_FACTORY_FIELD_DEFINITIONS.map(definition=>metadataMakeField({
       id:definition.id,
       property:definition.property,
-      label:metadataFactoryText(translate,definition.labelKey,definition.label),
+      label:definition.label,
+      labelSource:'factory',
       type:definition.type,
       config:definition.type==='select' ? {options:definition.options.map(option=>metadataMakeOption(
-        option.value,metadataFactoryText(translate,option.labelKey,option.label),option.id
+        option.value,option.label,option.id,'factory'
       ))} : null
     }))
   };
 }
 function metadataRelocalizeFactorySchema(schema,translate = null,getKnownTranslations = null) {
-  const next=metadataClone(schema);
-  if(!next || !Array.isArray(next.fields)) return {schema:next,changed:false};
-  let changed=false;
-  for(const definition of METADATA_FACTORY_FIELD_DEFINITIONS) {
-    const field=next.fields.find(item=>item?.id===definition.id && item?.property===definition.property);
-    if(!field) continue;
-    const current=String(field.label || '').trim();
-    if(metadataFactoryKnownTexts(getKnownTranslations,definition.labelKey,definition.label).has(current)) {
-      const target=metadataFactoryText(translate,definition.labelKey,definition.label);
-      if(target!==current) { field.label=target; changed=true; }
-    }
-    if(definition.type!=='select' || !Array.isArray(field.config?.options)) continue;
-    for(const optionDefinition of definition.options) {
-      const option=field.config.options.find(item=>item?.id===optionDefinition.id && item?.value===optionDefinition.value);
-      if(!option) continue;
-      const optionCurrent=String(option.label || '').trim();
-      if(!metadataFactoryKnownTexts(getKnownTranslations,optionDefinition.labelKey,optionDefinition.label).has(optionCurrent)) continue;
-      const target=metadataFactoryText(translate,optionDefinition.labelKey,optionDefinition.label);
-      if(target!==optionCurrent) { option.label=target; changed=true; }
-    }
-  }
-  return {schema:next,changed};
+  const normalized=metadataNormalizeFactoryLabelOwnership(schema,getKnownTranslations);
+  const presented=metadataSchemaForPresentation(normalized.schema,translate);
+  return {schema:presented,changed:JSON.stringify(schema)!==JSON.stringify(presented),presentationOnly:true};
 }
 
 function metadataClone(value) {
@@ -156,7 +207,7 @@ function metadataClone(value) {
 }
 
 function metadataValidateOption(option, path, errors, seenIds, seenValues) {
-  const keys = ['id','value','label','active'];
+  const keys = ['id','value','label','label_source','active'];
   if (!option || typeof option !== 'object' || Array.isArray(option)) { errors.push(`${path}: option must be an object`); return; }
   for (const key of Object.keys(option)) if (!keys.includes(key)) errors.push(`${path}: unknown option property ${key}`);
   if (!metadataIsUuidV4(option.id)) errors.push(`${path}.id: must be UUID v4`);
@@ -164,6 +215,7 @@ function metadataValidateOption(option, path, errors, seenIds, seenValues) {
   if (!METADATA_PROPERTY_PATTERN.test(String(option.value || ''))) errors.push(`${path}.value: must match ${METADATA_PROPERTY_PATTERN}`);
   else if (seenValues.has(option.value)) errors.push(`${path}.value: duplicate option value`); else seenValues.add(option.value);
   if (typeof option.label !== 'string' || !option.label.trim()) errors.push(`${path}.label: required`);
+  if (option.label_source !== undefined && !['factory','user'].includes(option.label_source)) errors.push(`${path}.label_source: must be factory or user`);
   if (typeof option.active !== 'boolean') errors.push(`${path}.active: must be boolean`);
 }
 
@@ -296,7 +348,7 @@ function metadataValidateSchema(schema) {
     schema.fields.forEach((field,index)=>{
       const path=`fields[${index}]`;
       if (!field || typeof field !== 'object' || Array.isArray(field)) { errors.push(`${path}: must be object`); return; }
-      const allowed=['id','property','label','description','type','active','required','default','show_in_document_info','show_in_default_base','config'];
+      const allowed=['id','property','label','label_source','description','type','active','required','default','show_in_document_info','show_in_default_base','config'];
       for (const key of Object.keys(field)) if (!allowed.includes(key)) errors.push(`${path}: unknown property ${key}`);
       if (!metadataIsUuidV4(field.id)) errors.push(`${path}.id: must be UUID v4`);
       else if (ids.has(field.id)) errors.push(`${path}.id: duplicate`); else ids.add(field.id);
@@ -308,6 +360,7 @@ function metadataValidateSchema(schema) {
         if (properties.has(field.property)) errors.push(`${path}.property: duplicate`); else properties.add(field.property);
       }
       if (typeof field.label !== 'string' || !field.label.trim()) errors.push(`${path}.label: required`);
+      if (field.label_source !== undefined && !['factory','user'].includes(field.label_source)) errors.push(`${path}.label_source: must be factory or user`);
       if (typeof field.description !== 'string') errors.push(`${path}.description: must be string`);
       if (!METADATA_FIELD_TYPES.includes(field.type)) errors.push(`${path}.type: unsupported type`);
       for (const key of ['active','required','show_in_document_info','show_in_default_base']) if (typeof field[key] !== 'boolean') errors.push(`${path}.${key}: must be boolean`);
@@ -340,6 +393,10 @@ const metadataSchemaContract = Object.freeze({
   metadataMakeOption,
   metadataMakeField,
   METADATA_FACTORY_FIELD_DEFINITIONS,
+  metadataFactoryFieldDefinitionFor,
+  metadataFactoryOptionDefinitionFor,
+  metadataNormalizeFactoryLabelOwnership,
+  metadataSchemaForPresentation,
   metadataDefaultSchema,
   metadataRelocalizeFactorySchema,
   metadataClone,
