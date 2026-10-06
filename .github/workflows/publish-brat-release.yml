@@ -1,6 +1,6 @@
 name: Publish BRAT release
 
-# Manual publish trigger: 0.1.224
+# Manual publish trigger for the current manifest version.
 # Releases are always built from the already-frozen archive/<manifest-version>
 # branch. workflow_dispatch is the normal manual publisher; a change to this
 # workflow also runs it, which keeps the publishing path testable from GitHub.
@@ -55,10 +55,21 @@ jobs:
             echo "Release $version already exists; leaving it unchanged."
             exit 0
           fi
-          gh release create "$version" \
-            manifest.json main.js styles.css \
-            --repo "$GITHUB_REPOSITORY" \
-            --target "$archive" \
-            --title "$version" \
-            --prerelease \
-            --notes "BRAT test release. Frozen from $archive."
+          notes_file="docs/releases/$version.md"
+          if [ -f "$notes_file" ]; then
+            gh release create "$version" \
+              manifest.json main.js styles.css \
+              --repo "$GITHUB_REPOSITORY" \
+              --target "$archive" \
+              --title "$version" \
+              --prerelease \
+              --notes-file "$notes_file"
+          else
+            gh release create "$version" \
+              manifest.json main.js styles.css \
+              --repo "$GITHUB_REPOSITORY" \
+              --target "$archive" \
+              --title "$version" \
+              --prerelease \
+              --notes "BRAT test release. Frozen from $archive."
+          fi
