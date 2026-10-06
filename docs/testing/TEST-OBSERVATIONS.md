@@ -20,67 +20,12 @@ This file is a running list of observations found during practical testing that 
    - Metadata field labels are currently shown with English words even when the UI language is set to Norwegian Bokmål.
    - Review localization/presentation so Norwegian Bokmål labels are shown when that language is selected.
 
-3. **PDF Document Register: automatic and existing-PDF registration practically confirmed**
-   - Automatic minimal-record creation for newly detected PDFs is implemented and practically confirmed.
-   - Practical test on 2026-10-04 confirmed all of the following:
-     - the Settings toggle exists, defaults to enabled and can be disabled;
-     - copying a PDF into the vault with Windows File Explorer while Obsidian is running creates a record automatically;
-     - UUID, file link and `active` status are correct;
-     - DocumentInfo sees the record before user metadata is entered;
-     - saving user metadata preserves the same UUID;
-     - disabling the toggle prevents automatic record creation.
-   - The user-invoked **Register existing PDFs** action is implemented in Settings and was practically confirmed on 2026-10-04:
-     - with automatic registration disabled, newly copied PDFs remain unregistered;
-     - the scan finds those unregistered PDFs;
-     - confirmation creates minimal active records with fresh UUIDs and correct file links;
-     - a second scan is idempotent and does not create duplicate records or replace UUIDs.
-   - `.pdfium-backup` PDFs and generated benchmark PDFs are excluded by the implementation and automated verifier.
-   - Final practical identity test on 2026-10-04 also passed:
-     - the original record changed to `missing`;
-     - a different PDF copied to the same path stayed unregistered while automatic registration was disabled;
-     - **Register existing PDFs** registered the new PDF;
-     - the new PDF received a fresh UUID different from the historical missing record;
-     - the old record remained `missing` with its original UUID.
-   - Registration identity behavior is therefore practically confirmed for both new and existing PDFs.
-
-4. **PDF Document Register: current user interface needs redesign**
+3. **PDF Document Register: current user interface needs redesign**
    - The current Document Register user interface was judged unusable/poor in practical testing.
    - Treat this as a UI/interaction redesign task rather than a small cosmetic fix.
    - Keep the new simple lifecycle visible: active records are usable; missing records are informational/read-only; unregistered PDFs can receive new metadata.
 
-5. **Missing documents: live-delete and offline reconciliation practically confirmed**
-   - Practical testing on 2026-10-04 confirmed the complete live-delete flow:
-     - deleting a registered PDF while Obsidian is running changes its record to `missing`;
-     - the **Missing documents** dialog opens automatically and shows the correct count;
-     - **Close** leaves the missing metadata record intact;
-     - the Command Palette action reopens the same review;
-     - **Delete metadata** removes the missing metadata record;
-     - a subsequent review reports no remaining missing documents.
-   - Offline startup reconciliation is implemented and practically confirmed:
-     - reconciliation is scheduled from layout readiness through idle scheduling;
-     - a metadata-cache `resolved` event may also request scheduling but is not required, avoiding the missed-event startup bug found during testing;
-     - the record scan stays off the critical startup path;
-     - closing Obsidian, deleting a registered PDF externally, and restarting Obsidian opens the **Missing documents** dialog automatically;
-     - the offline-deleted PDF changes from `active` to `missing`;
-     - the record keeps the same UUID;
-     - a control PDF that still exists remains `active`;
-     - existing `missing` records remain unchanged;
-     - benchmark records are excluded;
-     - resolver/infrastructure uncertainty fails closed without changing status.
-   - Known non-goal: if a different PDF replaces the original at the exact same path while Obsidian is closed, path-only reconciliation cannot distinguish that replacement from the original file.
-   - Missing is a temporary safety state awaiting user choice, not a relink/recovery identity.
-   - Future backup integration should add **Restore from backup** as the alternative resolution path.
-
-6. **Document deletion: current missing-document flow accepted**
-   - Product decision on 2026-10-05: do not add a separate **Delete document and metadata** command at this stage.
-   - The practically confirmed flow is the accepted behavior:
-     - deleting a registered PDF changes its record to `missing`;
-     - the **Missing documents** review gives the user an explicit second decision;
-     - **Delete metadata** removes the retained missing record only when the user chooses it.
-   - This deliberately avoids silently deleting metadata together with the PDF and leaves room for a future **Restore from backup** action in the same review flow.
-   - Revisit a one-step delete command only if practical use later shows a clear need.
-
-7. **Email/ZIP transport-source redesign: practical core flow + localized naming confirmed; final flat-layout/manual-ZIP checks pending**
+4. **Email/ZIP transport-source redesign: practical core flow + localized naming confirmed; final flat-layout/manual-ZIP checks pending**
    - **Current replacement model (implemented after the practical UX review on 2026-10-05):** EML/MSG and ZIP are transport sources. A generated email PDF and one localized sibling attachment folder are paired deterministically; Norwegian Bokmål appends ` Vedlegg` to the PDF base name. Direct attachments and members from every ZIP in the email are planned together before durable writes; the email PDF lists the actual imported files, ZIP names are group/provenance labels rather than live link targets, and source ZIP files are not persisted for successful email imports.
    - Exact EML/MSG retention is now advanced opt-in and defaults to off. Automatic staging EML/MSG is deleted only after verified success; failed/cancelled imports keep the source.
    - Manual Archive Import is now transactional: complete preflight before extraction, byte read-back verification, PDF registration and relationship persistence, then source ZIP deletion. Partial failures roll back created output and fresh PDF metadata; the user is warned and chooses **Keep ZIP** or **Delete ZIP**.
@@ -136,13 +81,68 @@ This file is a running list of observations found during practical testing that 
      - choosing `vedtak.pdf` opened the extracted decision PDF rather than the ZIP.
    - The complete practical chain is therefore confirmed: `EML -> generated email PDF -> retained/original ZIP -> Archive Import -> physical extraction -> PDF registration -> Archive Relationship -> DocumentInfo -> user-facing PDF selection/opening`.
 
-8. **PDF annotation backup: reassess `.pdfium-backup` after the independent backup solution exists**
+5. **PDF annotation backup: reassess `.pdfium-backup` after the independent backup solution exists**
    - Keep the current `backupOriginalPdf` safety function for now: it stores one original PDF copy before PDFium Gate first modifies the file and never overwrites an existing copy.
    - Reassess whether this separate per-PDF original-copy mechanism is still needed once the independent backup project provides a validated backup/restore workflow.
    - Do not remove or merge the behavior merely because both features use the word "backup"; compare their actual protection scope, restore semantics and failure modes first.
    - If the generic backup solution fully replaces this protection later, remove the old setting and `.pdfium-backup` workflow through an explicit migration/release decision rather than silently changing behavior.
 
 ## Completed items
+
+- **PDF Document Register: automatic and existing-PDF registration practically confirmed**
+   - Automatic minimal-record creation for newly detected PDFs is implemented and practically confirmed.
+   - Practical test on 2026-10-04 confirmed all of the following:
+     - the Settings toggle exists, defaults to enabled and can be disabled;
+     - copying a PDF into the vault with Windows File Explorer while Obsidian is running creates a record automatically;
+     - UUID, file link and `active` status are correct;
+     - DocumentInfo sees the record before user metadata is entered;
+     - saving user metadata preserves the same UUID;
+     - disabling the toggle prevents automatic record creation.
+   - The user-invoked **Register existing PDFs** action is implemented in Settings and was practically confirmed on 2026-10-04:
+     - with automatic registration disabled, newly copied PDFs remain unregistered;
+     - the scan finds those unregistered PDFs;
+     - confirmation creates minimal active records with fresh UUIDs and correct file links;
+     - a second scan is idempotent and does not create duplicate records or replace UUIDs.
+   - `.pdfium-backup` PDFs and generated benchmark PDFs are excluded by the implementation and automated verifier.
+   - Final practical identity test on 2026-10-04 also passed:
+     - the original record changed to `missing`;
+     - a different PDF copied to the same path stayed unregistered while automatic registration was disabled;
+     - **Register existing PDFs** registered the new PDF;
+     - the new PDF received a fresh UUID different from the historical missing record;
+     - the old record remained `missing` with its original UUID.
+   - Registration identity behavior is therefore practically confirmed for both new and existing PDFs.
+
+- **Missing documents: live-delete and offline reconciliation practically confirmed**
+   - Practical testing on 2026-10-04 confirmed the complete live-delete flow:
+     - deleting a registered PDF while Obsidian is running changes its record to `missing`;
+     - the **Missing documents** dialog opens automatically and shows the correct count;
+     - **Close** leaves the missing metadata record intact;
+     - the Command Palette action reopens the same review;
+     - **Delete metadata** removes the missing metadata record;
+     - a subsequent review reports no remaining missing documents.
+   - Offline startup reconciliation is implemented and practically confirmed:
+     - reconciliation is scheduled from layout readiness through idle scheduling;
+     - a metadata-cache `resolved` event may also request scheduling but is not required, avoiding the missed-event startup bug found during testing;
+     - the record scan stays off the critical startup path;
+     - closing Obsidian, deleting a registered PDF externally, and restarting Obsidian opens the **Missing documents** dialog automatically;
+     - the offline-deleted PDF changes from `active` to `missing`;
+     - the record keeps the same UUID;
+     - a control PDF that still exists remains `active`;
+     - existing `missing` records remain unchanged;
+     - benchmark records are excluded;
+     - resolver/infrastructure uncertainty fails closed without changing status.
+   - Known non-goal: if a different PDF replaces the original at the exact same path while Obsidian is closed, path-only reconciliation cannot distinguish that replacement from the original file.
+   - Missing is a temporary safety state awaiting user choice, not a relink/recovery identity.
+   - Future backup integration should add **Restore from backup** as the alternative resolution path.
+
+- **Document deletion: current missing-document flow accepted**
+   - Product decision on 2026-10-05: do not add a separate **Delete document and metadata** command at this stage.
+   - The practically confirmed flow is the accepted behavior:
+     - deleting a registered PDF changes its record to `missing`;
+     - the **Missing documents** review gives the user an explicit second decision;
+     - **Delete metadata** removes the retained missing record only when the user chooses it.
+   - This deliberately avoids silently deleting metadata together with the PDF and leaves room for a future **Restore from backup** action in the same review flow.
+   - Revisit a one-step delete command only if practical use later shows a clear need.
 
 - **Archive Import legacy visible-ZIP prototype: practically confirmed, now superseded**
   - The following practical tests were completed on 2026-10-05 against the earlier visible-source-ZIP design. They remain useful regression/history evidence, but the replacement transport-source model now deletes successful ZIP sources and requires a new practical verification pass.
