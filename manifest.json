@@ -4,6 +4,6 @@
   "version": "0.1.225",
   "minAppVersion": "1.13.7",
   "description": "Enhanced PDF workflows for Obsidian with annotations, metadata, email import, and archive-aware attachments.",
-  "author": "OpenAI / test build",
+  "author": "LAD47",
   "isDesktopOnly": true
 }
