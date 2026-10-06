@@ -1,7 +1,7 @@
 {
   "name": "pdfium-gate",
   "private": true,
-  "version": "0.1.225",
+  "version": "0.1.226",
   "scripts": {
     "build": "node build.js",
     "verify": "node scripts/verify-build.js",

@@ -25,6 +25,7 @@ on:
       - 'scripts/source-bundle.js'
       - 'build.js'
       - 'package.json'
+      - 'package-lock.json'
       - 'manifest.json'
       - 'versions.json'
       - '.github/workflows/email-import-poc.yml'
@@ -42,7 +43,7 @@ jobs:
         with:
           node-version: '24'
       - name: Install Email Import dependencies
-        run: npm install --no-package-lock
+        run: npm ci
       - name: Install Electron binary and configure SUID sandbox
         run: |
           node node_modules/electron/install.js

@@ -133,7 +133,7 @@ const nodeFsModule = require('fs');
 
 const VIEW_TYPE = 'pdfium-gate-view';
 const PDF_EXTENSION = 'pdf';
-const PLUGIN_VERSION = '0.1.225';
+const PLUGIN_VERSION = '0.1.226';
 const OBSIDIAN_RUNTIME_VERSION = obsidianModule?.version || obsidianModule?.apiVersion || null;
 const PLATFORM_CONTRACT_VERSION = '0.1';
 
@@ -62250,7 +62250,14 @@ var require_css_syntax_error = __commonJS({
 var require_stringifier = __commonJS({
   "node_modules/postcss/lib/stringifier.js"(exports2, module2) {
     "use strict";
+    var STYLE_TAG = /(<)(\/?style\b)/gi;
+    var COMMENT_OPEN = /(<)(!--)/g;
     var AT_NAME_END = /[\t\n\f\r "#'()/;[\\\]{}]/;
+    function escapeHTMLInCSS(str) {
+      if (typeof str !== "string") return str;
+      if (!str.includes("<")) return str;
+      return str.replace(STYLE_TAG, "\\3c $2").replace(COMMENT_OPEN, "\\3c $2");
+    }
     var DEFAULT_RAW = {
       after: "\n",
       beforeClose: "\n",
@@ -62282,7 +62289,7 @@ var require_stringifier = __commonJS({
     function isCustomProperty(node) {
       if (!node.prop.startsWith("--")) return false;
       let before = node.raws.before;
-      return typeof before === "undefined" || !/[^\s;]$/.test(before);
+      return typeof before === "undefined" || !/\S$/.test(before);
     }
     function pushBody(str, stack, node) {
       let nodes = node.nodes;
@@ -62308,14 +62315,14 @@ var require_stringifier = __commonJS({
     }
     function pushBlock(str, stack, node, start) {
       let between = str.raw(node, "between", "beforeOpen");
-      str.builder(start + between + "{", node, "start");
+      str.builder(escapeHTMLInCSS(start + between) + "{", node, "start");
       let hasNodes = node.nodes && node.nodes.length;
       let close = () => {
         let after = hasNodes ? str.raw(node, "after") : str.raw(node, "after", "emptyBody");
-        if (after) str.builder(after);
+        if (after) str.builder(escapeHTMLInCSS(after));
         str.builder("}", node, "end");
         if (node.type === "rule" && node.raws.ownSemicolon) {
-          str.builder(node.raws.ownSemicolon, node, "end");
+          str.builder(escapeHTMLInCSS(node.raws.ownSemicolon), node, "end");
         }
       };
       if (hasNodes) {
@@ -62335,7 +62342,7 @@ var require_stringifier = __commonJS({
           this.block(node, start);
         } else {
           let end = (node.raws.between || "") + (semicolon ? ";" : "");
-          this.builder(start + end, node);
+          this.builder(escapeHTMLInCSS(start + end), node);
         }
       }
       beforeAfter(node, detect) {
@@ -62365,7 +62372,7 @@ var require_stringifier = __commonJS({
       }
       block(node, start) {
         let between = this.raw(node, "between", "beforeOpen");
-        this.builder(start + between + "{", node, "start");
+        this.builder(escapeHTMLInCSS(start + between) + "{", node, "start");
         let after;
         if (node.nodes && node.nodes.length) {
           this.body(node);
@@ -62373,7 +62380,7 @@ var require_stringifier = __commonJS({
         } else {
           after = this.raw(node, "after", "emptyBody");
         }
-        if (after) this.builder(after);
+        if (after) this.builder(escapeHTMLInCSS(after));
         this.builder("}", node, "end");
       }
       body(node) {
@@ -62392,7 +62399,7 @@ var require_stringifier = __commonJS({
           let child = entry.node;
           let before = this.raw(child, "before");
           if (before) {
-            this.builder(before);
+            this.builder(entry.document ? before : escapeHTMLInCSS(before));
           }
           if (expandable && child.type === "rule") {
             pushBlock(this, stack, child, this.rawValue(child, "selector"));
@@ -62406,7 +62413,7 @@ var require_stringifier = __commonJS({
       comment(node) {
         let left = this.raw(node, "left", "commentLeft");
         let right = this.raw(node, "right", "commentRight");
-        this.builder("/*" + left + node.text + right + "*/", node);
+        this.builder(escapeHTMLInCSS("/*" + left + node.text + right + "*/"), node);
       }
       decl(node, semicolon) {
         let raws = node.raws;
@@ -62416,7 +62423,7 @@ var require_stringifier = __commonJS({
           string += raws.important || " !important";
         }
         if (semicolon) string += ";";
-        this.builder(string, node);
+        this.builder(escapeHTMLInCSS(string), node);
       }
       document(node) {
         this.body(node);
@@ -62593,19 +62600,20 @@ var require_stringifier = __commonJS({
         return value;
       }
       root(node) {
-        let inDocument = node.parent && node.parent.type === "document";
-        if (!inDocument && node.source && node.source.input.hasBOM) {
+        if (node.source && node.source.input.hasBOM) {
           this.builder("\uFEFF", node, "start");
         }
         this.body(node);
         if (node.raws.after) {
-          this.builder(node.raws.after);
+          let after = node.raws.after;
+          let isDocument2 = node.parent && node.parent.type === "document";
+          this.builder(isDocument2 ? after : escapeHTMLInCSS(after));
         }
       }
       rule(node) {
         this.block(node, this.rawValue(node, "selector"));
         if (node.raws.ownSemicolon) {
-          this.builder(node.raws.ownSemicolon, node, "end");
+          this.builder(escapeHTMLInCSS(node.raws.ownSemicolon), node, "end");
         }
       }
       stringify(node, semicolon) {
@@ -62627,55 +62635,9 @@ var require_stringify2 = __commonJS({
   "node_modules/postcss/lib/stringify.js"(exports2, module2) {
     "use strict";
     var Stringifier = require_stringifier();
-    var STYLE_TAG = /(<)(\/?style\b)/gi;
-    var COMMENT_OPEN = /(<)(!--)/g;
-    function escapeHTMLInCSS(str) {
-      if (!str.includes("<")) return str;
-      return str.replace(STYLE_TAG, "\\3c $2").replace(COMMENT_OPEN, "\\3c $2");
-    }
-    var SafeStringifier = class extends Stringifier {
-      escapeHTML(node, print) {
-        let builder = this.builder;
-        let chunks, css;
-        this.builder = (str, child, type) => {
-          if (chunks) {
-            css += str;
-            chunks.push(str, child, type);
-          } else if (str.includes("<")) {
-            css = str;
-            chunks = [str, child, type];
-          } else {
-            builder(str, child, type);
-          }
-        };
-        print();
-        this.builder = builder;
-        if (!chunks) return;
-        let escaped = escapeHTMLInCSS(css);
-        if (escaped === css) {
-          for (let i = 0; i < chunks.length; i += 3) {
-            builder(chunks[i], chunks[i + 1], chunks[i + 2]);
-          }
-        } else {
-          builder(escaped, node);
-        }
-      }
-      root(node) {
-        if (node.parent && node.parent.type === "document") {
-          this.escapeHTML(node, () => this.body(node));
-          if (node.raws.after) this.builder(node.raws.after);
-        } else {
-          this.escapeHTML(node, () => super.root(node));
-        }
-      }
-    };
     function stringify(node, builder) {
-      let str = new SafeStringifier(builder);
-      if (node.type === "root" || node.type === "document") {
-        str.stringify(node);
-      } else {
-        str.escapeHTML(node, () => str.stringify(node));
-      }
+      let str = new Stringifier(builder);
+      str.stringify(node);
     }
     module2.exports = stringify;
     stringify.default = stringify;
@@ -66045,18 +66007,7 @@ var require_list = __commonJS({
         let inQuote = false;
         let prevQuote = "";
         let escape2 = false;
-        let inComment = false;
-        for (let i = 0; i < string.length; i++) {
-          let letter = string[i];
-          if (inComment) {
-            current += letter;
-            if (letter === "*" && string[i + 1] === "/") {
-              current += "/";
-              i += 1;
-              inComment = false;
-            }
-            continue;
-          }
+        for (let letter of string) {
           if (escape2) {
             escape2 = false;
           } else if (letter === "\\") {
@@ -66068,11 +66019,6 @@ var require_list = __commonJS({
           } else if (letter === '"' || letter === "'") {
             inQuote = true;
             prevQuote = letter;
-          } else if (letter === "/" && string[i + 1] === "*") {
-            current += "/*";
-            i += 1;
-            inComment = true;
-            continue;
           } else if (letter === "(") {
             func += 1;
           } else if (letter === ")") {
@@ -66287,19 +66233,15 @@ var require_map_generator = __commonJS({
           }
         } else if (this.css) {
           let annotation = "/*# sourceMappingURL=";
-          let css = "";
-          let cursor = 0;
           let startIndex;
-          while ((startIndex = this.css.indexOf(annotation, cursor)) !== -1) {
+          while ((startIndex = this.css.lastIndexOf(annotation)) !== -1) {
             let endIndex = this.css.indexOf("*/", startIndex + annotation.length);
             if (endIndex === -1) break;
-            while (startIndex > cursor && this.css[startIndex - 1] === "\n") {
+            while (startIndex > 0 && this.css[startIndex - 1] === "\n") {
               startIndex--;
             }
-            css += this.css.slice(cursor, startIndex);
-            cursor = endIndex + 2;
+            this.css = this.css.slice(0, startIndex) + this.css.slice(endIndex + 2);
           }
-          if (cursor > 0) this.css = css + this.css.slice(cursor);
         }
       }
       generate() {
@@ -66977,7 +66919,6 @@ var require_parser = __commonJS({
         let token, type;
         let length = tokens.length;
         let value = "";
-        let last = "";
         let clean = true;
         let next, prev;
         for (let i = 0; i < length; i += 1) {
@@ -66989,18 +66930,16 @@ var require_parser = __commonJS({
             prev = tokens[i - 1] ? tokens[i - 1][0] : "empty";
             next = tokens[i + 1] ? tokens[i + 1][0] : "empty";
             if (!SAFE_COMMENT_NEIGHBOR[prev] && !SAFE_COMMENT_NEIGHBOR[next]) {
-              if (last === ",") {
+              if (value.slice(-1) === ",") {
                 clean = false;
               } else {
                 value += token[1];
-                last = token[1].slice(-1);
               }
             } else {
               clean = false;
             }
           } else {
             value += token[1];
-            last = token[1].slice(-1);
           }
         }
         if (!clean) {
@@ -67874,7 +67813,7 @@ var require_processor = __commonJS({
     var Root2 = require_root();
     var Processor = class {
       constructor(plugins = []) {
-        this.version = "8.5.29";
+        this.version = "8.5.28";
         this.plugins = this.normalize(plugins);
       }
       normalize(plugins) {

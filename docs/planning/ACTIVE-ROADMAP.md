@@ -10,17 +10,21 @@ Primary plan:
 
 - [0.1.226 Community release cleanup and README review](0.1.226-COMMUNITY-RELEASE-CLEANUP.md)
 
-The 0.1.226 release/documentation cleanup should include:
+Current 0.1.226 cleanup status on `chore/0.1.226-community-cleanup`:
 
-- remove obsolete BRAT terminology from active workflows and documentation;
-- rename the publisher workflow for the real **Obsidian Community Plugins** distribution path;
-- stop marking normal Community releases as GitHub prereleases unless that status is explicitly intended;
-- update `RELEASE.md`;
-- update `docs/architecture/14-release-readiness.md`, which still contains pre-Community/BRAT-era wording;
-- review the public `manifest.json` author metadata, which still uses the development placeholder `OpenAI / test build`;
-- optimize the root `README.md` for ordinary Community Plugins users;
-- verify that active documentation no longer describes Community Plugins distribution as a future event;
-- triage stale “pending” wording in test/status documents after the 0.1.225 practical verification.
+- [x] remove obsolete BRAT terminology from the active release workflow and release procedure;
+- [x] rename the publisher workflow for the real **Obsidian Community Plugins** distribution path;
+- [x] stop marking normal Community releases as GitHub prereleases;
+- [x] update `RELEASE.md`;
+- [x] update `docs/architecture/14-release-readiness.md`;
+- [x] optimize the root `README.md` for ordinary Community Plugins users;
+- [x] remove outdated “Community Plugins is still future” wording from active release documentation;
+- [x] move already-confirmed registration/missing-document observations out of the open test list;
+- [x] replace the public `manifest.json` development placeholder with author `LAD47`;
+- [x] practically verify flat Email ZIP layout and manual external-ZIP focus reconciliation;
+- [x] run the full repository verification pipeline after the cleanup is complete;
+- [x] lock npm dependencies with `package-lock.json` and use `npm ci` in CI for reproducible generated runtime;
+- [x] keep Community release publishing manual-only so workflow maintenance cannot publish before `archive/<version>` is frozen.
 
 ## Product UX backlog
 

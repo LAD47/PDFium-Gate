@@ -2,7 +2,7 @@
 
 This document is the authoritative release procedure for **PDFium Gate**.
 
-The purpose of this procedure is to keep source transfer, Git history, generated runtime, frozen archives, and BRAT releases reproducible. Do not improvise a different upload path for normal releases.
+The purpose of this procedure is to keep source transfer, Git history, generated runtime, frozen archives, GitHub Releases, and Obsidian Community Plugins distribution reproducible. Do not improvise a different upload path for normal releases.
 
 ## Release principles
 
@@ -12,12 +12,12 @@ The purpose of this procedure is to keep source transfer, Git history, generated
 - Canonical source lives under `src/`; generated runtime remains generated and committed as required by the existing build workflow.
 - A release is not frozen until the `Build generated runtime` workflow has succeeded and `main` includes any generated-runtime commit produced by that workflow.
 - `archive/<version>` is immutable release evidence. Never repoint or rewrite an existing archive branch.
-- A GitHub/BRAT release is a release-distribution baseline. It becomes a user-confirmed runtime baseline only after explicit testing in Obsidian.
+- A GitHub release used for Community Plugins distribution is a release-distribution baseline. It becomes a user-confirmed runtime baseline only after explicit testing in Obsidian.
 
 
-## Stable and test release channels — decided future policy
+## Community release channel and future test channel
 
-This section records a product/release decision that becomes mandatory before PDFium Gate is distributed to ordinary users through the Obsidian Community directory.
+PDFium Gate is now distributed to ordinary users through Obsidian Community Plugins. This section records the current Community release rules and the constraints for any future opt-in test channel.
 
 ### Public product identity
 
@@ -56,7 +56,6 @@ PDFium Gate will have two deliberately separate release channels:
 - Intended only for users who explicitly opt in to testing.
 - Uses prerelease versions such as `1.1.0-beta.1`, `1.1.0-beta.2`, etc.
 - Must not cause ordinary Community-directory users to receive test code.
-- BRAT may remain useful during development, but it is **not a required dependency** of the long-term PDFium Gate test program.
 - A test release may additionally provide a simple ZIP containing the installable plugin files so testers can install it manually.
 
 Stable and test versions are alternative versions of the same plugin; they are not intended to run side by side.
@@ -129,21 +128,36 @@ This separation is intended to ensure that normal users receive only versions we
 
 Testers must always have a documented path back to the stable Community version. Because stable and test builds share the same plugin identity, returning to stable means replacing/removing the test installation and reinstalling or restoring the approved Community release according to the current documented procedure.
 
-### Current 0.1.x development exception
+### Current 0.1.x development line
 
-The existing `0.1.x` line remains a pre-release development/test line. The current BRAT-oriented workflow may continue while the product is not yet in the Obsidian Community directory.
+The existing `0.1.x` line remains a pre-release development/test line, but normal releases are already distributed through Obsidian Community Plugins.
 
-Before the first public Community release, the repository workflows and this document must be updated so that:
+For the current Community release path:
 
-- test prereleases can advance without exposing them as stable Community updates;
-- stable releases are explicitly promoted;
-- the default branch and manifest follow the stable-channel rules above;
-- the public identity is `PDFium Gate` / `pdfium-gate`.
+- the public identity is `PDFium Gate` / `pdfium-gate`;
+- the release version in `manifest.json`, `package.json` and the GitHub tag must match;
+- the exact verified release is frozen under `archive/<version>`;
+- the normal publishing workflow creates an ordinary GitHub Release, not a GitHub prerelease;
+- any future opt-in test channel must be designed separately so it cannot silently advance ordinary Community Plugins users to test code.
 
 
-## 0.1.225 Email/Archive Import release candidate
+## Current 0.1.226 release preparation
 
-0.1.225 is the first release candidate that includes the integrated Email Import / Archive Import transport-source model:
+0.1.226 is a release-infrastructure and documentation cleanup for the active Obsidian Community Plugins distribution path.
+
+Before freezing 0.1.226:
+
+- `manifest.json`, `package.json`, `package-lock.json`, `versions.json` and the internal plugin version must all agree on `0.1.226`;
+- dependencies must be installed from the committed lockfile with `npm ci`;
+- the generated root runtime must be rebuilt from canonical `src/` and committed if it changes;
+- the full `npm run check` pipeline must pass on the exact candidate;
+- the exact approved candidate must then be merged to `main`, verified by GitHub Actions and frozen under `archive/0.1.226` before publishing.
+
+The release notes live in `docs/releases/0.1.226.md`.
+
+## 0.1.225 Email/Archive Import historical baseline
+
+0.1.225 introduced the integrated Email Import / Archive Import transport-source model:
 
 - EML/MSG -> generated email PDF;
 - mandatory transactional attachment import;
@@ -155,9 +169,7 @@ Before the first public Community release, the repository workflows and this doc
 - Archive Relationship / DocumentInfo provenance;
 - startup/focus reconciliation for ZIP files copied through the operating-system file manager.
 
-The release notes live in `docs/releases/0.1.225.md`.
-
-Before freezing 0.1.225, the final flat email-attachment layout and manual ZIP failure/reconciliation flow should be practically confirmed. Automated verification is necessary but does not replace that final Obsidian check.
+The 0.1.225 release notes live in `docs/releases/0.1.225.md`. The remaining flat Email ZIP layout and external-ZIP focus-reconciliation checks were practically confirmed on 2026-10-06 and are recorded in the active testing/planning documents.
 
 ## 0.1.224 identity transition
 
@@ -315,23 +327,23 @@ git push origin HEAD:refs/heads/archive/$version
 
 This branch is the immutable source snapshot for that release.
 
-## Publish the BRAT prerelease
+## Publish the Community Plugin release
 
 Use GitHub Actions and run the workflow:
 
 ```text
-Publish BRAT release
+Publish Community Plugin release
 ```
 
 The publishing workflow must resolve the already-frozen `archive/<version>` branch and verify that its manifest version matches `main`.
 
-The GitHub prerelease must target:
+The GitHub Release must target:
 
 ```text
 archive/<version>
 ```
 
-and contain these BRAT assets:
+and contain the required Community Plugin assets:
 
 ```text
 main.js
@@ -339,7 +351,7 @@ manifest.json
 styles.css
 ```
 
-Do not manually assemble a BRAT release from unrelated local files.
+The normal Community release must be an ordinary GitHub Release, not a GitHub prerelease. Do not manually assemble a release from unrelated local files.
 
 ## Post-publish verification
 
@@ -350,12 +362,12 @@ After publication, independently verify GitHub before calling the release comple
 - the relevant GitHub Actions run is green;
 - `archive/<version>` exists and points to the final verified commit;
 - `archive/<version>/manifest.json` reports the intended version;
-- GitHub prerelease/tag `<version>` exists;
-- the prerelease targets `archive/<version>`;
-- release assets include exactly the required BRAT files: `main.js`, `manifest.json`, and `styles.css`;
+- GitHub Release/tag `<version>` exists;
+- the release targets `archive/<version>`;
+- release assets include the required Community Plugin files: `main.js`, `manifest.json`, and `styles.css`;
 - the files on GitHub match the intended release content.
 
-Only after these checks should the GitHub/BRAT publication be treated as complete.
+Only after these checks should the GitHub/Community Plugins publication be treated as complete.
 
 ## Runtime confirmation
 

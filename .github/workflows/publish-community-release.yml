@@ -1,15 +1,11 @@
-name: Publish BRAT release
+name: Publish Community Plugin release
 
 # Manual publish trigger for the current manifest version.
 # Releases are always built from the already-frozen archive/<manifest-version>
-# branch. workflow_dispatch is the normal manual publisher; a change to this
-# workflow also runs it, which keeps the publishing path testable from GitHub.
+# branch. Publishing is intentionally manual so workflow maintenance cannot
+# start a release before the matching archive branch has been frozen.
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/publish-brat-release.yml'
 
 permissions:
   contents: write
@@ -37,14 +33,14 @@ jobs:
           fi
           for file in manifest.json main.js styles.css; do
             if [ ! -f "$file" ]; then
-              echo "Required BRAT release asset is missing: $file" >&2
+              echo "Required Community Plugin release asset is missing: $file" >&2
               exit 1
             fi
           done
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "archive=$archive" >> "$GITHUB_OUTPUT"
 
-      - name: Publish GitHub prerelease for BRAT
+      - name: Publish GitHub release for Community Plugins
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
@@ -62,7 +58,6 @@ jobs:
               --repo "$GITHUB_REPOSITORY" \
               --target "$archive" \
               --title "$version" \
-              --prerelease \
               --notes-file "$notes_file"
           else
             gh release create "$version" \
@@ -70,6 +65,5 @@ jobs:
               --repo "$GITHUB_REPOSITORY" \
               --target "$archive" \
               --title "$version" \
-              --prerelease \
-              --notes "BRAT test release. Frozen from $archive."
+              --notes "Community Plugin release. Frozen from $archive."
           fi

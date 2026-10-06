@@ -1,11 +1,23 @@
 # PDFium Gate
 
-**PDFium Gate** is an experimental desktop plugin for [Obsidian](https://obsidian.md/) that explores a more capable, source-oriented workflow for PDF documents.
+**PDFium Gate** is a desktop plugin for [Obsidian](https://obsidian.md/) that turns PDFs into durable, traceable source documents inside an Obsidian workflow.
 
-The project is built around a simple idea: a PDF should remain a durable source document, while Obsidian should provide the surrounding workspace for reading, highlighting, linking, structured metadata, document registers, notes, and long-term analysis.
+It combines PDF reading and annotation with source links, structured Markdown/YAML metadata, DocumentInfo, document registers, email import and archive-aware attachments — while keeping the original PDF as the primary source document.
 
 > [!WARNING]
 > **This is pre-release software.** It is still under active development and has not yet completed broad platform and real-world testing. Make a complete backup of your Obsidian Vault before installing or updating the plugin, especially if the Vault contains important or irreplaceable material.
+
+## At a glance
+
+- Read and annotate PDFs inside Obsidian with selection links back to exact source locations.
+- Add structured document metadata and edit it beside the active PDF through **Document information**.
+- Organize registered PDFs through the Obsidian Bases-powered **PDF Document register**.
+- Import EML/MSG email as PDF with attachments, duplicate detection and provenance.
+- Import ZIP archives transactionally while preserving archive relationships and registering contained PDFs.
+- Keep durable metadata in ordinary Markdown/YAML rather than a proprietary plugin database.
+- Use the interface in English, Norwegian Bokmål, German, Spanish, Swedish, Danish or French.
+
+PDFium Gate is desktop-only. The current compatibility baseline is **Obsidian 1.13.7**.
 
 ## Why this project exists
 
@@ -116,7 +128,7 @@ The project deliberately separates durable user data from disposable acceleratio
 
 The exact internal structures may still evolve before the project reaches a stable 1.0 release. Changes to persisted formats or file layouts require an explicit migration/backward-compatibility review before a public stable release.
 
-## Beta limitations
+## Pre-release limitations
 
 This project should currently be treated as a serious test build rather than finished production software.
 
@@ -127,7 +139,7 @@ Known boundaries include:
 - Cross-platform testing is not yet complete.
 - Pre-1.0 builds may still change workflows, configuration, or persisted structures when testing shows that a better long-term design is needed.
 
-If you find a reproducible problem, please open a GitHub Issue and include the Obsidian version, operating system, plugin version, what you expected, what happened, and any relevant diagnostics.
+If you find a reproducible problem, please [open a GitHub Issue](https://github.com/LAD47/PDFium-Gate/issues) and include the PDFium Gate version, Obsidian version, operating system, what you expected, what happened, and any relevant diagnostics.
 
 ## Documentation
 
