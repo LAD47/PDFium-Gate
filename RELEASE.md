@@ -141,9 +141,23 @@ For the current Community release path:
 - any future opt-in test channel must be designed separately so it cannot silently advance ordinary Community Plugins users to test code.
 
 
-## 0.1.225 Email/Archive Import release candidate
+## Current 0.1.226 release preparation
 
-0.1.225 is the first release candidate that includes the integrated Email Import / Archive Import transport-source model:
+0.1.226 is a release-infrastructure and documentation cleanup for the active Obsidian Community Plugins distribution path.
+
+Before freezing 0.1.226:
+
+- `manifest.json`, `package.json`, `package-lock.json`, `versions.json` and the internal plugin version must all agree on `0.1.226`;
+- dependencies must be installed from the committed lockfile with `npm ci`;
+- the generated root runtime must be rebuilt from canonical `src/` and committed if it changes;
+- the full `npm run check` pipeline must pass on the exact candidate;
+- the exact approved candidate must then be merged to `main`, verified by GitHub Actions and frozen under `archive/0.1.226` before publishing.
+
+The release notes live in `docs/releases/0.1.226.md`.
+
+## 0.1.225 Email/Archive Import historical baseline
+
+0.1.225 introduced the integrated Email Import / Archive Import transport-source model:
 
 - EML/MSG -> generated email PDF;
 - mandatory transactional attachment import;
@@ -155,9 +169,7 @@ For the current Community release path:
 - Archive Relationship / DocumentInfo provenance;
 - startup/focus reconciliation for ZIP files copied through the operating-system file manager.
 
-The release notes live in `docs/releases/0.1.225.md`.
-
-Before freezing 0.1.225, the final flat email-attachment layout and manual ZIP failure/reconciliation flow should be practically confirmed. Automated verification is necessary but does not replace that final Obsidian check.
+The 0.1.225 release notes live in `docs/releases/0.1.225.md`. The remaining flat Email ZIP layout and external-ZIP focus-reconciliation checks were practically confirmed on 2026-10-06 and are recorded in the active testing/planning documents.
 
 ## 0.1.224 identity transition
 
