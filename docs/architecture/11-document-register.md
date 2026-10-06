@@ -2,6 +2,15 @@
 
 The custom `pdfium-document-register` view is a presentation/editing layer over Obsidian Bases and the canonical DocumentRecords write path. Bases remains query/sort owner; the custom view must not become a second metadata database.
 
+## Native Base examples versus the PDFium Gate document register
+
+PDFium Gate intentionally exposes two different Bases concepts and the UI/documentation must keep them distinct:
+
+- the optional files under `Examples-Obsidian-PDFium-Gate/` use Obsidian's built-in `table` view over synthetic Markdown/YAML records; they exist only to teach the portable metadata model and normal Bases filtering/sorting;
+- `PDF Dokumentregister.base` is the real register for user documents. It is created on demand, queries real records under `File Metadata/`, and uses the custom `pdfium-document-register` view.
+
+The example package must never query or mutate real registered PDFs. The real register remains create-once/user-owned after creation. Example-package reinstall is a separate explicit Settings action: it may overwrite the known canonical example files after confirmation, but it must preserve unrelated files and any modified legacy example Base.
+
 ## Current missing-document policy
 
 Missing records are visible historical metadata and are read-only in the document register. The register must not offer manual PDF selection, relink or SHA-based recovery for ordinary PDFs. If a PDF exists without an active record, it is handled as an unregistered document and can receive new metadata through the normal metadata workflow.
