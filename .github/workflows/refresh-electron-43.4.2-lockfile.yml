@@ -1,0 +1,44 @@
+name: Refresh Electron 43.4.2 lockfile
+
+on:
+  push:
+    branches:
+      - fix/0.1.227-localized-defaults
+    paths:
+      - 'package.json'
+      - '.github/workflows/refresh-electron-43.4.2-lockfile.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  refresh-and-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/0.1.227-localized-defaults
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Refresh lockfile
+        run: npm install --package-lock-only --ignore-scripts
+      - name: Clean install
+        run: npm ci
+      - name: Audit all dependencies
+        run: npm audit --audit-level=high
+      - name: Verify source and generated runtime
+        run: npm run check
+      - name: Commit refreshed lockfile
+        shell: bash
+        run: |
+          if git diff --quiet -- package-lock.json; then
+            echo "package-lock.json is already current."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package-lock.json
+          git commit -m "Refresh lockfile for Electron 43.4.2"
+          git push
