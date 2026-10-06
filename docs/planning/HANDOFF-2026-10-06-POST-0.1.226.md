@@ -100,7 +100,7 @@ Use `docs/planning/ACTIVE-ROADMAP.md` as the authoritative active list.
 ### DocumentInfo
 
 1. Consider an **Edit** action at both top and bottom of long panels.
-2. Re-test the older Norwegian Bokmål metadata-label observation on 0.1.226 before changing code. Automated i18n is currently complete; close the observation if it no longer reproduces.
+2. Localized factory metadata/category labels are now implemented and practically verified on `fix/0.1.227-localized-defaults`: Bokmål → English → Bokmål works, while user-customized field/category/option labels remain unchanged. This item is complete pending the explicit merge/release decision.
 
 ### PDF Document Register
 
