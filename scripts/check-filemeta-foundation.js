@@ -35,7 +35,7 @@ if(mixed.ok) fail('mixed filemeta_/pdfmeta_ record must fail closed');
 const legacyValueMarkdown=record.metadataRecordSerializeMarkdown({id,fileType:'pdf',profile:'document',filePath:'Example/test.pdf',status:'active',values:{pdfmeta_fake:'legacy'}},{fields:[]});
 if(legacyValueMarkdown.includes('pdfmeta_fake:')) fail('serializer emitted legacy reserved user value');
 const activeExample=fs.readFileSync(path.join(root,'docs/examples/Example - Active PDF record.md'),'utf8');
-const baseExample=fs.readFileSync(path.join(root,'docs/examples/Example PDF Document Register.base'),'utf8');
+const baseExample=fs.readFileSync(path.join(root,'docs/examples/Example - Native Obsidian Base - All documents.base'),'utf8');
 if(!activeExample.includes('filemeta_profile:') || !activeExample.includes('document')) fail('active example lacks document profile');
 if(!baseExample.includes('filemeta_profile') || !baseExample.includes('document')) fail('example Base lacks document profile filter');
 console.log('File metadata foundation OK: generic filemeta_* identity, active/missing lifecycle, no ordinary-PDF SHA identity, File Metadata root, PDF/document as the only active descriptor.');
