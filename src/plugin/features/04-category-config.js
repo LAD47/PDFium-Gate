@@ -234,6 +234,7 @@ class CategoryConfigFeature {
       sources.push({ folder: item.folder, configPath: item.configPath, inherit: item.config.inherit !== false });
     }
     effective.categories = (effective.categories || []).map(c => ({ enabled: true, ...c }));
+    effective.categories = normalizeCategoryMachineValues(effective.categories).categories;
     this.validateEffectiveCategories(effective.categories, categoryFeatureT(this,'category.validation.effectiveContext',{folder:folder||'/'}));
     effective.categories = effective.categories.map(c => ({ ...c, color: normalizeHexColor(c.color) }));
     return { folder, effective, sources, stopped, chainLeafFirst };
@@ -345,7 +346,9 @@ class CategoryConfigFeature {
   validateLocalConfigForSave(config, folder) {
     const analysis = this.analyzeLocalCategoryConfig(config, folder);
     if (!analysis.ok) throw new Error(analysis.errors[0]?.message || categoryFeatureT(this,'category.validation.invalidData'));
-    return analysis.normalized;
+    const normalized=deepClone(analysis.normalized);
+    normalized.categories=normalizeCategoryMachineValues(normalized.categories || []).categories;
+    return normalized;
   }
 
   async createDefaultCategoryConfig(folder, options = {}) {
