@@ -49,6 +49,13 @@ module.exports=function verifyDocumentInfoContract(){
   const archiveIndex=feature.indexOf("const archiveRelationsHost=body.createDiv({cls:'pdfium-document-info-archive-relations'})",fieldsIndex);
   const bottomEditIndex=feature.indexOf('renderEditAction(body);',topEditIndex+1);
   if(!(topEditIndex>=0 && fieldsIndex>topEditIndex && archiveIndex>fieldsIndex && bottomEditIndex>archiveIndex)) fail('DocumentInfo Edit actions are not positioned above fields and below archive relations');
+  if(!feature.includes("const renderEditFormActions=host=>")) fail('DocumentInfo shared edit-mode Save/Cancel action renderer missing');
+  if((feature.match(/renderEditFormActions\(body\);/g)||[]).length!==2) fail('DocumentInfo must render Save/Cancel actions exactly twice in edit mode');
+  const topFormActionsIndex=feature.indexOf('renderEditFormActions(body);');
+  const editFieldsIndex=feature.indexOf('for(const field of fields)',topFormActionsIndex);
+  const bottomFormActionsIndex=feature.indexOf('renderEditFormActions(body);',topFormActionsIndex+1);
+  if(!(topFormActionsIndex>=0 && editFieldsIndex>topFormActionsIndex && bottomFormActionsIndex>archiveIndex)) fail('DocumentInfo Save/Cancel actions are not positioned above edit fields and below archive relations');
+  if(!feature.includes('this.saveDocumentInfoFromView(view,editControls)')||!feature.includes('this.cancelDocumentInfoEdit(view)')) fail('DocumentInfo top/bottom edit actions do not share canonical save/cancel paths');
   if(!view.includes("t('documentInfo.button')")||!view.includes('pdfium-document-info-panel')) fail('DocumentInfo PDF-view button/panel missing');
   if(!lifecycle.includes("id: 'show-document-info'")||!lifecycle.includes("name: this.i18n.t('commands.showDocumentInfo')")) fail('DocumentInfo Command Palette entry missing');
   if(!feature.includes('resolveExactToken')||!feature.includes('transport.focusPdfRuntime(token)')) fail('DocumentInfo focus restore is not exact-token routed');
@@ -73,6 +80,7 @@ module.exports=function verifyDocumentInfoContract(){
     permanentRecordLocationDecided:true,
     exactRuntimeFocusRestore:true,
     commandPaletteEntry:true,
-    readModeEditActionTopAndBottom:true
+    readModeEditActionTopAndBottom:true,
+    editModeSaveCancelTopAndBottom:true
   };
 };
