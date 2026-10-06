@@ -17,25 +17,27 @@ This file is a running list of observations found during practical testing that 
    - The **Edit** button should preferably be available both at the top and at the bottom of the DocumentInfo panel.
    - Reason: users entering the panel may not see the current button until they scroll past all metadata fields.
 
-2. **Factory defaults: metadata and standard category names must follow UI language**
-   - Practical 0.1.226 behavior confirmed the underlying product issue: factory metadata labels/options and standard category names are English even when PDFium Gate follows Norwegian Bokmål or the user explicitly selects another language.
-   - Product requirement for 0.1.227: these human-facing factory names follow the resolved UI language while stable UUIDs/properties/machine values remain unchanged.
-   - Standard categories now explicitly separate permanent identity from presentation: permanent UUID + hidden canonical machine `value` (for example `economy`) + visible localized `name` (for example `Økonomi`). Existing configs are migrated by UUID; user-created categories receive a UUID-derived machine value.
-   - Existing untouched standard display names may be safely relocalized; user-customized and user-created names must never be overwritten.
-   - Candidate implementation is on `fix/0.1.227-localized-defaults`. Full automated verification passed in GitHub Actions run `37456224896` on 2026-10-06. Practical Norwegian Bokmål/language-switch testing is still required before this item moves to Completed.
-
-3. **PDF Document Register: current user interface needs redesign**
+2. **PDF Document Register: current user interface needs redesign**
    - The current Document Register user interface was judged unusable/poor in practical testing.
    - Treat this as a UI/interaction redesign task rather than a small cosmetic fix.
    - Keep the new simple lifecycle visible: active records are usable; missing records are informational/read-only; unregistered PDFs can receive new metadata.
 
-4. **PDF annotation backup: reassess `.pdfium-backup` after the independent backup solution exists**
+3. **PDF annotation backup: reassess `.pdfium-backup` after the independent backup solution exists**
    - Keep the current `backupOriginalPdf` safety function for now: it stores one original PDF copy before PDFium Gate first modifies the file and never overwrites an existing copy.
    - Reassess whether this separate per-PDF original-copy mechanism is still needed once the independent backup project provides a validated backup/restore workflow.
    - Do not remove or merge the behavior merely because both features use the word "backup"; compare their actual protection scope, restore semantics and failure modes first.
    - If the generic backup solution fully replaces this protection later, remove the old setting and `.pdfium-backup` workflow through an explicit migration/release decision rather than silently changing behavior.
 
 ## Completed items
+
+- **0.1.227 localized factory defaults: practical language-switch verification passed**
+   - Verified on 2026-10-06 on `fix/0.1.227-localized-defaults`.
+   - With **Follow Obsidian / Norwegian Bokmål**, standard metadata field/option labels and the five standard highlight categories displayed in Norwegian.
+   - Switching PDFium Gate to **English** changed untouched factory labels/category names to English without changing document data or stable machine identity.
+   - Switching back to **Norwegian Bokmål** restored the Norwegian factory display names.
+   - A user-customized standard category name (`Budsjett`, changed from `Økonomi`) survived the language switch to English and back unchanged.
+   - Standard categories retain permanent UUIDs and stable hidden machine `value` keys; user-created/user-customized display names remain user-owned.
+   - Automated verification was already green, including GitHub Actions run `37456224896`; the later Electron security refresh also passed full `npm run check`.
 
 - **Electron development dependency security refresh**
    - `npm audit --omit=dev` confirmed 0 production vulnerabilities.
