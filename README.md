@@ -17,7 +17,7 @@ It combines PDF reading and annotation with source links, structured Markdown/YA
 - Keep durable metadata in ordinary Markdown/YAML rather than a proprietary plugin database.
 - Use the interface in English, Norwegian Bokmål, German, Spanish, Swedish, Danish or French.
 
-PDFium Gate is desktop-only. The current compatibility baseline is **Obsidian 1.13.7**.
+PDFium Gate is desktop-only. The current compatibility baseline is **Obsidian 1.13.7**. The current Community Plugins release is **0.1.226**, published and user-confirmed through Obsidian on 2026-10-06.
 
 ## Why this project exists
 
@@ -37,7 +37,7 @@ The project is guided by a few principles:
 
 ## Current capabilities
 
-The current test builds include:
+The current 0.1.x Community releases include:
 
 - an integrated Chromium/PDFium-based PDF view inside Obsidian;
 - mouse and keyboard text selection, including multi-page workflows;
@@ -48,9 +48,9 @@ The current test builds include:
 - optional automatic backup before the plugin makes its first change to a PDF that does not already have a backup;
 - a configurable metadata schema with text, date, time, integer, decimal, yes/no, select, multi-select, and link fields;
 - **Document information** directly beside the active PDF;
-- one Markdown/YAML metadata record per registered PDF, created lazily on first metadata save;
+- one Markdown/YAML metadata record per registered PDF, with automatic minimal records for newly detected PDFs and an explicit **Register existing PDFs** flow;
 - stable UUID-based document metadata identity across normal PDF rename/move operations;
-- conservative handling of deleted/missing PDFs, with explicit relinking instead of unsafe automatic rebinding;
+- conservative handling of deleted/missing PDFs: records become `missing`, are never automatically rebound, and ordinary PDF relinking/SHA recovery is intentionally unsupported;
 - an Obsidian Bases-powered **PDF Document register** with schema-driven columns, sorting, datatype-aware filtering, inline editing, and missing-PDF actions;
 - a canonical example set copied once into the Vault to demonstrate ordinary Markdown/YAML records and native Obsidian Bases usage;
 - scalable metadata indexing with a disposable cache while Markdown/YAML remains the source of truth;
