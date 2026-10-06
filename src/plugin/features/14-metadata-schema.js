@@ -4,16 +4,30 @@ class MetadataSchemaFeature {
   async initializeMetadataSchema() {
     this.metadataSchemaRepository = createMetadataSchemaRepository({
       fileStore:this.obsidianAdapterFileStore,
-      defaultSchemaFactory:() => metadataDefaultSchema(key=>this.i18n?.t?.(key) || key)
+      defaultSchemaFactory:() => metadataDefaultSchema()
     });
     try {
       const loaded = await this.metadataSchemaRepository.loadOrCreateDefault();
-      this.state.metadata.schema = metadataClone(loaded.schema);
+      let activeSchema=metadataClone(loaded.schema);
+      let backupPath=loaded.backupPath || null;
+      let migratedLabelOwnership=false;
+      const normalized=metadataNormalizeFactoryLabelOwnership(
+        activeSchema,
+        key=>this.i18n?.getKnownTranslations?.(key) || []
+      );
+      if(normalized.changed) {
+        normalized.schema.revision=Math.max(1,Number(activeSchema?.revision || 0)+1);
+        const migrated=await this.metadataSchemaRepository.writeSchema(normalized.schema);
+        activeSchema=metadataClone(migrated.schema);
+        backupPath=migrated.backupPath || backupPath;
+        migratedLabelOwnership=true;
+      }
+      this.state.metadata.schema = metadataClone(activeSchema);
       this.state.metadata.loaded = true;
       this.state.metadata.lastError = null;
-      this.state.metadata.lastBackupPath = loaded.backupPath || null;
+      this.state.metadata.lastBackupPath = backupPath;
       if (loaded.created) new Notice(this.i18n.t('metadataSchema.lifecycle.created',{version:PLUGIN_VERSION,path:METADATA_SCHEMA_PATH}), 7000);
-      return { ok:true, created:!!loaded.created, schema:metadataClone(loaded.schema) };
+      return { ok:true, created:!!loaded.created, migratedLabelOwnership, schema:metadataClone(activeSchema) };
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       this.state.metadata.schema = null;
@@ -32,7 +46,8 @@ class MetadataSchemaFeature {
       path:METADATA_SCHEMA_PATH,
       lastError:this.state.metadata.lastError || null,
       lastBackupPath:this.state.metadata.lastBackupPath || null,
-      schema:metadataClone(this.state.metadata.schema)
+      schema:metadataClone(this.state.metadata.schema),
+      presentationSchema:this.getMetadataSchemaPresentationSnapshot()
     };
   }
 
@@ -40,25 +55,25 @@ class MetadataSchemaFeature {
     return metadataClone(this.state.metadata.schema);
   }
 
-  async relocalizeMetadataFactoryLabels() {
+  getMetadataSchemaPresentationSnapshot() {
     const current=this.getMetadataSchemaSnapshot();
-    if(!current) return {changed:false,reason:'schema-unavailable'};
-    const localized=metadataRelocalizeFactorySchema(
-      current,
-      key=>this.i18n?.t?.(key) || key,
-      key=>this.i18n?.getKnownTranslations?.(key) || []
-    );
-    if(!localized.changed) return {changed:false};
-    localized.schema.revision=Math.max(1,Number(current.revision || 0)+1);
-    const saved=await this._persistMetadataSchemaCandidate(localized.schema);
-    return {changed:true,revision:saved.revision};
+    return current ? metadataSchemaForPresentation(current,key=>this.i18n?.t?.(key) || key) : null;
+  }
+
+  async relocalizeMetadataFactoryLabels() {
+    if(!this.getMetadataSchemaSnapshot()) return {changed:false,reason:'schema-unavailable'};
+    return {changed:false,presentationOnly:true};
   }
 
   async _persistMetadataSchemaCandidate(candidate) {
     if (!this.metadataSchemaRepository) throw new Error('Metadata schema repository er ikke initialisert');
-    const validation = metadataValidateSchema(candidate);
+    const normalized=metadataNormalizeFactoryLabelOwnership(
+      candidate,
+      key=>this.i18n?.getKnownTranslations?.(key) || []
+    ).schema;
+    const validation = metadataValidateSchema(normalized);
     if (!validation.ok) throw new Error(validation.errors.join('\n'));
-    const result = await this.metadataSchemaRepository.writeSchema(candidate);
+    const result = await this.metadataSchemaRepository.writeSchema(normalized);
     const saved = result.schema;
     this.state.metadata.schema = metadataClone(saved);
     this.state.metadata.loaded = true;
@@ -132,7 +147,7 @@ class MetadataSchemaFeature {
 
   async resetMetadataSchemaToTestDefaults() {
     const current = this.getMetadataSchemaSnapshot();
-    const next = metadataDefaultSchema(key=>this.i18n?.t?.(key) || key);
+    const next = metadataDefaultSchema();
     if (current && current.format_version === next.format_version && JSON.stringify(current.fields) === JSON.stringify(next.fields)) return current;
     next.revision = Math.max(1, Number(current?.revision || 0) + 1);
     return await this._persistMetadataSchemaCandidate(next);
