@@ -13,6 +13,8 @@ module.exports=async function verifyMetadataSchemaContract(){
     METADATA_SCHEMA_BACKUP_ROOT,
     METADATA_FIELD_TYPES,
     metadataDefaultSchema,
+    metadataNormalizeFactoryLabelOwnership,
+    metadataSchemaForPresentation,
     metadataRelocalizeFactorySchema,
     metadataValidateSchema,
     metadataClone
@@ -53,17 +55,40 @@ module.exports=async function verifyMetadataSchemaContract(){
     'factory.metadata.option.memo':'Notat'
   };
   const nbTranslate=key=>nbFactory[key]||key;
-  const nbSchema=metadataDefaultSchema(nbTranslate);
-  if(nbSchema.fields.find(field=>field.property==='document_date')?.label!=='Dokumentdato') fail('localized metadata factory field label failed');
-  if(nbSchema.fields.find(field=>field.property==='document_type')?.config?.options?.find(option=>option.value==='decision')?.label!=='Vedtak') fail('localized metadata factory option label failed');
-  if(JSON.stringify(nbSchema.fields.map(field=>field.id))!==JSON.stringify(schema.fields.map(field=>field.id))) fail('localized metadata factory changed stable field IDs');
-  if(JSON.stringify(nbSchema.fields.map(field=>field.property))!==JSON.stringify(schema.fields.map(field=>field.property))) fail('localized metadata factory changed stable properties');
+  if(schema.fields.some(field=>field.label_source!=='factory')) fail('factory metadata fields are not explicitly factory-owned');
+  const rawType=schema.fields.find(field=>field.property==='document_type');
+  if(rawType.config.options.some(option=>option.label_source!=='factory')) fail('factory metadata options are not explicitly factory-owned');
+  const rawBeforePresentation=JSON.stringify(schema);
+  const nbSchema=metadataSchemaForPresentation(schema,nbTranslate);
+  if(nbSchema.fields.find(field=>field.property==='document_date')?.label!=='Dokumentdato') fail('metadata presentation field localization failed');
+  if(nbSchema.fields.find(field=>field.property==='document_type')?.config?.options?.find(option=>option.value==='decision')?.label!=='Vedtak') fail('metadata presentation option localization failed');
+  if(JSON.stringify(nbSchema.fields.map(field=>field.id))!==JSON.stringify(schema.fields.map(field=>field.id))) fail('localized metadata presentation changed stable field IDs');
+  if(JSON.stringify(nbSchema.fields.map(field=>field.property))!==JSON.stringify(schema.fields.map(field=>field.property))) fail('localized metadata presentation changed stable properties');
+  if(JSON.stringify(schema)!==rawBeforePresentation) fail('metadata presentation mutated persistent schema');
+
+  const legacy=metadataClone(schema);
+  for(const field of legacy.fields) delete field.label_source;
+  legacy.fields.find(field=>field.property==='document_date').label='Dokumentdato';
+  legacy.fields.find(field=>field.property==='sender').label='Min avsender';
+  const legacyType=legacy.fields.find(field=>field.property==='document_type');
+  for(const option of legacyType.config.options) delete option.label_source;
+  legacyType.config.options.find(option=>option.value==='decision').label='Vedtak';
+  legacyType.config.options.find(option=>option.value==='letter').label='Korrespondanse';
+  const normalized=metadataNormalizeFactoryLabelOwnership(legacy,key=>nbFactory[key]?[nbFactory[key]]:[]);
+  const normalizedDate=normalized.schema.fields.find(field=>field.property==='document_date');
+  const normalizedSender=normalized.schema.fields.find(field=>field.property==='sender');
+  const normalizedType=normalized.schema.fields.find(field=>field.property==='document_type');
+  if(!normalized.changed||normalizedDate.label_source!=='factory'||normalizedDate.label!=='Document date') fail('legacy factory field ownership migration failed');
+  if(normalizedSender.label_source!=='user'||normalizedSender.label!=='Min avsender') fail('legacy custom field label was not preserved');
+  if(normalizedType.config.options.find(option=>option.value==='decision')?.label_source!=='factory'||normalizedType.config.options.find(option=>option.value==='decision')?.label!=='Decision') fail('legacy factory option ownership migration failed');
+  if(normalizedType.config.options.find(option=>option.value==='letter')?.label_source!=='user'||normalizedType.config.options.find(option=>option.value==='letter')?.label!=='Korrespondanse') fail('legacy custom option label was not preserved');
+  const normalizedNb=metadataSchemaForPresentation(normalized.schema,nbTranslate);
+  if(normalizedNb.fields.find(field=>field.property==='document_date')?.label!=='Dokumentdato') fail('factory-owned migrated field did not follow UI language');
+  if(normalizedNb.fields.find(field=>field.property==='sender')?.label!=='Min avsender') fail('user-owned migrated field was translated');
+  if(normalizedNb.fields.find(field=>field.property==='document_type')?.config?.options?.find(option=>option.value==='letter')?.label!=='Korrespondanse') fail('user-owned option was translated');
+
   const relocalized=metadataRelocalizeFactorySchema(schema,nbTranslate,key=>nbFactory[key]?[nbFactory[key]]:[]);
-  if(!relocalized.changed||relocalized.schema.fields[0].label!=='Dokumentdato') fail('existing untouched factory metadata labels were not relocalized');
-  const custom=metadataClone(schema);
-  custom.fields[0].label='Min dokumentdato';
-  const customRelocalized=metadataRelocalizeFactorySchema(custom,nbTranslate,key=>nbFactory[key]?[nbFactory[key]]:[]);
-  if(customRelocalized.schema.fields[0].label!=='Min dokumentdato') fail('custom metadata field label was overwritten by relocalization');
+  if(!relocalized.presentationOnly||relocalized.schema.fields[0].label!=='Dokumentdato') fail('compatibility relocalization helper is not presentation-only');
 
 
   const reserved=metadataClone(schema);
@@ -109,6 +134,7 @@ module.exports=async function verifyMetadataSchemaContract(){
   const edited=metadataClone(second.schema);
   edited.revision+=1;
   edited.fields[2].label='Avsender / organisasjon';
+  edited.fields[2].label_source='user';
   const saved=await repository.writeSchema(edited);
   if(saved.schema.revision!==2||saved.schema.fields[2].label!=='Avsender / organisasjon') fail('schema repository save/read verification failed');
   if(!saved.changed||!saved.backupPath||!saved.backupPath.startsWith(`${METADATA_SCHEMA_BACKUP_ROOT}/document-metadata-schema-`)||!saved.backupPath.endsWith('.json')) fail(`schema repository backup path invalid: ${saved.backupPath}`);
@@ -129,11 +155,15 @@ module.exports=async function verifyMetadataSchemaContract(){
   if(settingsSource.includes('status.schema.fields.forEach')) fail('metadata field administration leaked back into ordinary Settings page');
   if(!settingsSource.includes("settings.metadata.fields.manage")) fail('localized compact Settings entry point to metadata field manager missing');
   if(!modalSource.includes('class MetadataSchemaManagerModal extends Modal')) fail('dedicated metadata schema manager modal missing');
-  if(!modalSource.includes('status.schema.fields.forEach')) fail('metadata manager does not own field list administration');
+  if(!modalSource.includes('status.presentationSchema || status.schema')) fail('metadata manager does not use presentation schema for field administration');
+  if(!modalSource.includes("this.draft.label_source='user'")) fail('metadata field editor does not mark edited labels as user-owned');
   if(!lifecycleSource.includes("id: 'manage-metadata-fields'")) fail('metadata manager command missing');
   if(!lifecycleSource.includes('createObsidianAdapterFileStore')) fail('hidden schema storage is not initialized through Adapter API file store');
   if(featureSource.includes('obsidianVaultReadAdapter')||featureSource.includes('obsidianVaultWriteAdapter')) fail('metadata schema repository fell back to indexed Vault API');
   for(const method of ['adapter.exists','adapter.read','adapter.write','adapter.mkdir','adapter.copy','adapter.rename','adapter.remove']) if(!adapterSource.includes(method)) fail(`Adapter API store missing ${method}`);
+  if(!featureSource.includes('getMetadataSchemaPresentationSnapshot()')||!featureSource.includes('metadataSchemaForPresentation(current')) fail('metadata feature lacks presentation-only localized schema snapshot');
+  if(!featureSource.includes('metadataNormalizeFactoryLabelOwnership(')) fail('metadata feature lacks one-time label ownership migration/normalization');
+  if(!featureSource.includes("return {changed:false,presentationOnly:true};")) fail('metadata language switching still persists relocalized schema labels');
 
   return {
     schemaPath:METADATA_SCHEMA_PATH,
@@ -150,6 +180,9 @@ module.exports=async function verifyMetadataSchemaContract(){
     invalidDateRejected:true,
     invalidTimeRejected:true,
     reservedPrefixRejected:true,
-    pdfMetadataRecordWritesOwnedSeparately:true
+    pdfMetadataRecordWritesOwnedSeparately:true,
+    explicitLabelOwnership:true,
+    presentationOnlyFactoryLocalization:true,
+    customLabelsPreserved:true
   };
 };
