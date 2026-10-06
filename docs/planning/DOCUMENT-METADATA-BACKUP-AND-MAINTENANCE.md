@@ -10,7 +10,7 @@ This plan replaces the abandoned ordinary-PDF SHA recovery, manual relink and lo
 
 Backup/restore is no longer planned as a large subsystem inside PDFium Gate.
 
-While PDFium Gate is still developed entirely with test data, the priority is to complete and stabilize the plugin's core product functions, deferred fixes and document-register design before freezing durable user-data formats around a backup implementation.
+PDFium Gate is now publicly distributed through Obsidian Community Plugins, but destructive durable-metadata maintenance remains deliberately constrained. The priority is to stabilize deferred core UX and the document-register design while the independent backup/restore capability is developed and validated.
 
 The reusable backup engine is planned as a separate project:
 
@@ -145,8 +145,8 @@ Deferred while core PDFium Gate functionality is completed:
 - [ ] Redesign the PDF Document Register UI/interaction model.
 - [ ] Implement the Document register maintenance report without enabling unsafe destructive cleanup prematurely.
 - [ ] Define any future integration boundary with the independent backup project only after the generic backup design is stable.
-- [ ] Gate permanent removal of durable metadata behind a validated backup/rollback capability before public use.
-- [ ] Perform practical destructive-maintenance and restore tests on a clean test vault before public release.
+- [ ] Gate any broader/permanent destructive maintenance of durable metadata behind a validated backup/rollback capability before exposing that maintenance to normal users.
+- [ ] Perform practical destructive-maintenance and restore tests on a clean test vault before enabling the backup-dependent maintenance workflow for normal users.
 
 Generic backup-engine work such as snapshot format, manifest, SHA-256 integrity, retention, staging, journal and rollback belongs in the independent backup project rather than being implemented here.
 
