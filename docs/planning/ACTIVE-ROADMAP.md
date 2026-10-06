@@ -26,7 +26,7 @@ No single feature scope is frozen yet. Start from the open items below and choos
 
 ### DocumentInfo
 
-- **DocumentInfo Edit action top + bottom:** implemented on `fix/0.1.227-localized-defaults` using one shared action path; automated verification pending/required, followed by a short practical Obsidian check before merge.
+- **DocumentInfo Edit action top + bottom:** implemented on `fix/0.1.227-localized-defaults` using one shared action path. Automated verification is green (GitHub Actions run `37501182896`); only a short practical Obsidian check remains before this item can move to Completed.
 - **0.1.227 localized factory defaults:** implementation is complete and practically verified on `fix/0.1.227-localized-defaults`.
   - New/reset defaults use the active language while stable UUIDs, properties and machine values remain unchanged.
   - Standard categories have a stable hidden canonical machine `value` plus a localized display `name`; existing category configs are migrated by permanent UUID.
