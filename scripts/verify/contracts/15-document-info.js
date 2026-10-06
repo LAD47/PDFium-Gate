@@ -38,7 +38,7 @@ module.exports=function verifyDocumentInfoContract(){
   const bridgeComposition=read('src/main-bridge/composition.js');
   const driver=read('src/runtime/chromium-pdf-runtime-driver.js');
   if(feature.includes('valuesByPdfPath')) fail('DocumentInfo retained stale RAM-only document value store');
-  for(const required of ['ensureDocumentRecordIndexReady','getDocumentMetadataRecordState','saveDocumentMetadataRecordValues']) if(!feature.includes(`this.ports.${required}`)) fail(`DocumentInfo persistent record port missing: ${required}`);
+  for(const required of ['getMetadataSchemaPresentationSnapshot','ensureDocumentRecordIndexReady','getDocumentMetadataRecordState','saveDocumentMetadataRecordValues']) if(!feature.includes(`this.ports.${required}`)) fail(`DocumentInfo persistent/presentation port missing: ${required}`);
   if(feature.toLowerCase().includes('record not found')) fail('Unregistered PDF leaks technical record-not-found state to user');
   if(!feature.includes('show_in_document_info')||!feature.includes('field?.active===true')) fail('DocumentInfo schema visibility filtering missing');
   if(!feature.includes('parseNormalizeValidate')) fail('DocumentInfo save flow bypasses field-type registry');
@@ -58,6 +58,7 @@ module.exports=function verifyDocumentInfoContract(){
     invalidDateRejected:true,
     localizedDecimalNormalization:true,
     selectMachineValueLabelMapping:true,
+    localizedSchemaPresentation:true,
     sidePanelInPdfView:true,
     followsCanonicalActiveLeaf:true,
     persistentRecordBacked:true,
