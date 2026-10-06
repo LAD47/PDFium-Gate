@@ -32,10 +32,13 @@ This file is a running list of observations found during practical testing that 
 
 - **0.1.227 localized factory defaults: practical language-switch verification passed**
    - Verified on 2026-10-06 on `fix/0.1.227-localized-defaults`.
-   - With **Follow Obsidian / Norwegian Bokmål**, standard metadata field/option labels and the five standard highlight categories displayed in Norwegian.
-   - Switching PDFium Gate to **English** changed untouched factory labels/category names to English without changing document data or stable machine identity.
+   - With **Follow Obsidian / Norwegian Bokmål**, standard metadata field labels, standard document-type option labels and the five standard highlight categories displayed in Norwegian.
+   - Switching PDFium Gate to **English** changed untouched factory metadata labels/options and category names to English without changing document data or stable machine identity.
    - Switching back to **Norwegian Bokmål** restored the Norwegian factory display names.
    - A user-customized standard category name (`Budsjett`, changed from `Økonomi`) survived the language switch to English and back unchanged.
+   - A user-customized standard metadata field label (`Avsender / organisasjon`, changed from `Avsender`) survived English → Bokmål language switching unchanged.
+   - A user-customized standard document-type option label (`Avgjørelse`, keeping machine value `decision`) also survived language switching unchanged, while untouched options continued to follow the selected UI language.
+   - Standard metadata fields retain permanent UUIDs and stable `property` values; standard select options retain permanent UUIDs and stable machine `value` values. Their factory labels are presentation-owned until the user edits them, after which `label_source: user` protects the custom text.
    - Standard categories retain permanent UUIDs and stable hidden machine `value` keys; user-created/user-customized display names remain user-owned.
    - Automated verification was already green, including GitHub Actions run `37456224896`; the later Electron security refresh also passed full `npm run check`.
 
