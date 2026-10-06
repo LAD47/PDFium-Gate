@@ -37,6 +37,13 @@ This file is a running list of observations found during practical testing that 
 
 ## Completed items
 
+- **Electron development dependency security refresh**
+   - `npm audit --omit=dev` confirmed 0 production vulnerabilities.
+   - The only reported high-severity audit finding was the pinned Electron development dependency `43.3.0`.
+   - Electron `43.4.2` is listed as patched in one upstream advisory but is not a published npm version; the first published 43.x version beyond the affected `<=43.4.1` range is `43.5.0`.
+   - Development/test Electron is therefore pinned to `43.5.0`; this intentionally differs slightly from the Electron `43.3.0` runtime bundled with the currently tested Obsidian build.
+   - GitHub Actions verified a clean install, `npm audit --audit-level=high`, and the full `npm run check` suite successfully after the update.
+
 - **Email/ZIP transport-source redesign: flat email layout and external-ZIP reconciliation practically confirmed**
    - **Current replacement model (implemented after the practical UX review on 2026-10-05):** EML/MSG and ZIP are transport sources. A generated email PDF and one localized sibling attachment folder are paired deterministically; Norwegian Bokmål appends ` Vedlegg` to the PDF base name. Direct attachments and members from every ZIP in the email are planned together before durable writes; the email PDF lists the actual imported files, ZIP names are group/provenance labels rather than live link targets, and source ZIP files are not persisted for successful email imports.
    - Exact EML/MSG retention is now advanced opt-in and defaults to off. Automatic staging EML/MSG is deleted only after verified success; failed/cancelled imports keep the source.
