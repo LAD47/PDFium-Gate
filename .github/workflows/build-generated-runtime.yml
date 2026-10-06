@@ -9,6 +9,7 @@ on:
       - 'build.js'
       - 'scripts/source-bundle.js'
       - 'package.json'
+      - 'package-lock.json'
       - 'manifest.json'
       - 'scripts/verify/**'
       - 'scripts/check-*.js'
@@ -27,7 +28,7 @@ jobs:
         with:
           node-version: '24'
       - name: Install dependencies
-        run: npm install --no-package-lock
+        run: npm ci
       - name: Verify source and generated runtime
         run: npm run check
       - name: Commit generated runtime when needed
