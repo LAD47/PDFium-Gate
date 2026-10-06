@@ -619,5 +619,9 @@
   "factory.metadata.option.decision": "Décision",
   "factory.metadata.option.letter": "Lettre",
   "factory.metadata.option.report": "Rapport",
-  "factory.metadata.option.memo": "Note"
+  "factory.metadata.option.memo": "Note",
+  "settings.group.general": "Général",
+  "settings.group.import": "Importation",
+  "settings.group.metadataRegister": "Métadonnées et registre de documents",
+  "settings.documentRegister.explanation": "Le registre de documents PDFium Gate est différent des fichiers Base d’exemple. PDF Dokumentregister.base est créé lors de la première ouverture du registre réel, lit les PDF enregistrés dans File Metadata et utilise la vue Bases dédiée de PDFium Gate. Après sa création, le fichier Base appartient à l’utilisateur et PDFium Gate n’écrase pas les modifications ultérieures."
 }
