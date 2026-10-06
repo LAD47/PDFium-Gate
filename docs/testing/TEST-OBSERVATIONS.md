@@ -25,11 +25,11 @@ This file is a running list of observations found during practical testing that 
    - Treat this as a UI/interaction redesign task rather than a small cosmetic fix.
    - Keep the new simple lifecycle visible: active records are usable; missing records are informational/read-only; unregistered PDFs can receive new metadata.
 
-4. **Email/ZIP transport-source redesign: flat email layout confirmed; manual external-ZIP reconciliation check pending**
+4. **Email/ZIP transport-source redesign: flat email layout and external-ZIP reconciliation practically confirmed**
    - **Current replacement model (implemented after the practical UX review on 2026-10-05):** EML/MSG and ZIP are transport sources. A generated email PDF and one localized sibling attachment folder are paired deterministically; Norwegian Bokmål appends ` Vedlegg` to the PDF base name. Direct attachments and members from every ZIP in the email are planned together before durable writes; the email PDF lists the actual imported files, ZIP names are group/provenance labels rather than live link targets, and source ZIP files are not persisted for successful email imports.
    - Exact EML/MSG retention is now advanced opt-in and defaults to off. Automatic staging EML/MSG is deleted only after verified success; failed/cancelled imports keep the source.
    - Manual Archive Import is now transactional: complete preflight before extraction, byte read-back verification, PDF registration and relationship persistence, then source ZIP deletion. Partial failures roll back created output and fresh PDF metadata; the user is warned and chooses **Keep ZIP** or **Delete ZIP**.
-   - Archive Import now reconciles externally copied ZIP files on startup and when Obsidian regains focus, covering the Windows File Explorer path without continuous polling.
+   - Archive Import now reconciles externally copied ZIP files on startup and when Obsidian regains focus, covering the Windows File Explorer path without continuous polling. Practical focus-reconciliation verification passed on 2026-10-06: a ZIP copied directly into the Vault with Windows File Explorer while Obsidian was running was detected when Obsidian regained focus, imported automatically with its directory structure preserved, and the source ZIP was deleted after successful import.
    - Automated regression is green for multiple ZIPs in one email, one common attachment folder, collision suffixing, direct links in the email PDF, no persisted email ZIP transport files, archive provenance without a live ZIP path, rollback, successful source deletion, failed-source keep/delete, and external ZIP reconciliation.
    - Practical verification of the replacement model passed on 2026-10-05 with a synthetic email containing one direct PDF and two ZIP attachments:
      - automatic EML import succeeded and the staging EML was removed after verified success;
@@ -168,7 +168,7 @@ This file is a running list of observations found during practical testing that 
     - practical click tests 1-4 passed: PDF-to-PDF and PDF-to-ordinary-file links open the intended vault file;
     - the explicit DocumentInfo link activation routes through Obsidian `workspace.openLinkText`, preserving normal Obsidian link handling.
   - This confirms the preferred UX boundary: users work with archive relationships through DocumentInfo; the File Metadata Markdown relationship block remains an implementation/storage detail.
-  - Historical note: external filesystem arrival detection was not implemented in this prototype. The replacement model now implements startup/focus reconciliation; practical confirmation is pending.
+  - Historical note: external filesystem arrival detection was not implemented in this prototype. The replacement model now implements startup/focus reconciliation, which was practically confirmed on 2026-10-06 by copying a ZIP into the Vault with Windows File Explorer and returning focus to Obsidian.
 
 - **Missing PDF lifecycle and recovery experiment**
   - Practical test confirmed: active record -> unexpected PDF disappearance -> `missing`.
