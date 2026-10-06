@@ -138,10 +138,10 @@ module.exports=function verifyDocumentRegisterBasesContract(){
     if(Object.keys(serialized).length!==4||serialized.unsafe) fail('stored header-filter serialization failed');
   }
   if(!featureSource.includes("name:this.i18n.t('documentRegister.viewName')")||!featureSource.includes('registerBasesView(')) fail('custom Bases registration feature missing');
-  if(!featureSource.includes('this.ports.getMetadataSchemaSnapshot()')||!featureSource.includes('this.ports.resolveDocumentRecordPdfPath(')||!featureSource.includes('this.ports.saveDocumentMetadataRecordValues(')) fail('custom Bases feature does not use explicit schema/identity/save ports');
+  if(!featureSource.includes('this.ports.getMetadataSchemaPresentationSnapshot()')||!featureSource.includes('this.ports.resolveDocumentRecordPdfPath(')||!featureSource.includes('this.ports.saveDocumentMetadataRecordValues(')) fail('custom Bases feature does not use explicit presentation-schema/identity/save ports');
   if(/recoverMissingDocumentRecordByExactSha|relinkMissingDocumentRecord|listPdfFiles:/.test(featureSource)) fail('custom Bases feature must not expose missing-PDF recovery or manual relink');
   if(featureSource.includes('obsidianFrontmatterAdapter')||featureSource.includes('processFrontMatter(')||featureSource.includes('modifyText(')) fail('custom Bases feature unexpectedly mutates metadata or overwrites Base files');
-  if(!featureSource.includes('metadataDocumentRegisterStandardBaseYaml(schema)')||!featureSource.includes('this.obsidianVaultWriteAdapter.createText(path, yaml)')) fail('canonical English standard Document Register Base create-only path missing');
+  if(!featureSource.includes('metadataDocumentRegisterStandardBaseYaml(schema)')||!featureSource.includes('this.obsidianVaultWriteAdapter.createText(path, yaml)')) fail('standard Document Register Base create-only path missing');
   if(!featureSource.includes("name:this.i18n.t('commands.openDocumentRegister')")||!featureSource.includes("getLeaf?.('tab')")||!featureSource.includes('await leaf.openFile(ensured.file)')) fail('standard Dokumentregister open command missing');
   const existingGuard=featureSource.indexOf('if (existing)');
   const createBase=featureSource.indexOf('this.obsidianVaultWriteAdapter.createText(path, yaml)');
