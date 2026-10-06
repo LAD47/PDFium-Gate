@@ -224,7 +224,9 @@ class PdfiumGateSettingsTab extends PluginSettingTab {
           new Notice(exampleText('success',{
             path:PDFIUM_EXAMPLES_ROOT,
             count:result.total,
-            overwritten:result.overwritten.length
+            overwritten:result.overwritten.length,
+            legacyRemoved:result.legacyRemoved?.length || 0,
+            legacyPreserved:result.legacyPreserved?.length || 0
           }),8000);
         } catch(error) {
           const message=error instanceof Error ? error.message : String(error);
