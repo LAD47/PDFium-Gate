@@ -19,6 +19,10 @@ The architecture documents and automated verification describe the current inten
 
 - [`examples/`](examples/) — canonical Markdown/YAML document-record examples and a native Obsidian Bases example. The plugin copies the same example set once into `Examples-Obsidian-PDFium-Gate/` in a user's Vault.
 
+## Releases
+
+- [`releases/0.1.225.md`](releases/0.1.225.md) — release notes and practical verification scope for 0.1.225.
+
 ## Testing
 
 - [`testing/BENCHMARK-TEST-0.1.203.md`](testing/BENCHMARK-TEST-0.1.203.md) — preserved benchmark procedure from the metadata startup/cache work.\n- [`testing/IDENTITY-TRANSITION-0.1.224.md`](testing/IDENTITY-TRANSITION-0.1.224.md) — one-time plugin identity transition and regression test.
