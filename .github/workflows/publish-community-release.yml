@@ -62,7 +62,6 @@ jobs:
               --repo "$GITHUB_REPOSITORY" \
               --target "$archive" \
               --title "$version" \
-              --prerelease \
               --notes-file "$notes_file"
           else
             gh release create "$version" \
@@ -70,6 +69,5 @@ jobs:
               --repo "$GITHUB_REPOSITORY" \
               --target "$archive" \
               --title "$version" \
-              --prerelease \
               --notes "Community Plugin release. Frozen from $archive."
           fi
