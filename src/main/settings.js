@@ -17,8 +17,23 @@ class PdfiumGateSettingsTab extends PluginSettingTab {
 
     const t=(key,params)=>this.plugin.i18n?.t?.(key,params) || key;
     const exampleText=(key,params)=>metadataExampleUiText(this.plugin.i18n,key,params);
-    containerEl.createEl('h3', { text: t('settings.language.section') });
-    new Setting(containerEl)
+    this.openSettingGroups=this.openSettingGroups || new Set(['general']);
+    const createSettingsGroup=(id,label)=>{
+      const details=containerEl.createEl('details',{cls:'pdfium-settings-group'});
+      details.setAttribute('data-settings-group',id);
+      if(this.openSettingGroups.has(id)) details.setAttribute('open','');
+      details.addEventListener('toggle',()=>{
+        if(details.open) this.openSettingGroups.add(id);
+        else this.openSettingGroups.delete(id);
+      });
+      details.createEl('summary',{cls:'pdfium-settings-group-summary',text:label});
+      return details.createDiv({cls:'pdfium-settings-group-content'});
+    };
+    const createSettingsSubsection=(host,label)=>host.createEl('h4',{cls:'pdfium-settings-subsection',text:label});
+
+    const generalGroup=createSettingsGroup('general',t('settings.group.general'));
+    createSettingsSubsection(generalGroup,t('settings.language.section'));
+    new Setting(generalGroup)
       .setName(t('settings.language.name'))
       .setDesc(t('settings.language.description'))
       .addDropdown(dropdown => {
@@ -41,9 +56,9 @@ class PdfiumGateSettingsTab extends PluginSettingTab {
           });
       });
 
-    containerEl.createEl('h3', { text: t('settings.pdf.section') });
+    const pdfGroup=createSettingsGroup('pdf',t('settings.pdf.section'));
 
-    new Setting(containerEl)
+    new Setting(pdfGroup)
       .setName(t('settings.pdf.includeHeaderFooter.name'))
       .setDesc(t('settings.pdf.includeHeaderFooter.description'))
       .addToggle(toggle => toggle
@@ -53,16 +68,17 @@ class PdfiumGateSettingsTab extends PluginSettingTab {
           try { if (this.plugin.mainProcessTransport?.getCapabilities?.().loaded) this.plugin.mainProcessTransport.setIncludeHeaderFooterText(this.plugin.settings.includeHeaderFooterText); } catch (_) {}
         }));
 
-    new Setting(containerEl)
+    new Setting(pdfGroup)
       .setName(t('settings.pdf.backupOriginal.name'))
       .setDesc(t('settings.pdf.backupOriginal.description'))
       .addToggle(toggle => toggle
         .setValue(this.plugin.settings?.backupOriginalPdf !== false)
         .onChange(async value => { await this.saveSetting('backupOriginalPdf', !!value); }));
 
-    containerEl.createEl('h3', { text: t('settings.emailImport.section') });
+    const importGroup=createSettingsGroup('import',t('settings.group.import'));
+    createSettingsSubsection(importGroup,t('settings.emailImport.section'));
 
-    new Setting(containerEl)
+    new Setting(importGroup)
       .setName(t('settings.emailImport.dragDrop.name'))
       .setDesc(t('settings.emailImport.dragDrop.description'))
       .addToggle(toggle => toggle
@@ -71,7 +87,7 @@ class PdfiumGateSettingsTab extends PluginSettingTab {
           await this.saveSetting('emailDragDropAutomaticImport', !!value);
         }));
 
-    new Setting(containerEl)
+    new Setting(importGroup)
       .setName(t('settings.emailImport.retainSource.name'))
       .setDesc(t('settings.emailImport.retainSource.description'))
       .addToggle(toggle => toggle
@@ -80,10 +96,10 @@ class PdfiumGateSettingsTab extends PluginSettingTab {
           await this.saveSetting('emailImportRetainSourceAfterSuccess', !!value);
         }));
 
-    containerEl.createEl('h3', { text: t('settings.regional.section') });
-    containerEl.createEl('p', { text:t('settings.regional.description') });
+    createSettingsSubsection(generalGroup,t('settings.regional.section'));
+    generalGroup.createEl('p', { cls:'setting-item-description pdfium-settings-note', text:t('settings.regional.description') });
 
-    new Setting(containerEl)
+    new Setting(generalGroup)
       .setName(t('settings.regional.dateFormat.name'))
       .addDropdown(dropdown => dropdown
         .addOption('DD.MM.YYYY','17.03.2016')
@@ -93,7 +109,7 @@ class PdfiumGateSettingsTab extends PluginSettingTab {
         .setValue(this.plugin.settings?.regionalDateFormat || 'DD.MM.YYYY')
         .onChange(async value => { await this.saveSetting('regionalDateFormat', value); }));
 
-    new Setting(containerEl)
+    new Setting(generalGroup)
       .setName(t('settings.regional.timeFormat.name'))
       .addDropdown(dropdown => dropdown
         .addOption('HH:mm',t('settings.regional.timeFormat.24hour'))
@@ -101,7 +117,7 @@ class PdfiumGateSettingsTab extends PluginSettingTab {
         .setValue(this.plugin.settings?.regionalTimeFormat || 'HH:mm')
         .onChange(async value => { await this.saveSetting('regionalTimeFormat', value); }));
 
-    new Setting(containerEl)
+    new Setting(generalGroup)
       .setName(t('settings.regional.decimalSeparator.name'))
       .addDropdown(dropdown => dropdown
         .addOption(',',t('settings.regional.decimalSeparator.comma'))
@@ -109,20 +125,21 @@ class PdfiumGateSettingsTab extends PluginSettingTab {
         .setValue(this.plugin.settings?.regionalDecimalSeparator || ',')
         .onChange(async value => { await this.saveSetting('regionalDecimalSeparator', value); }));
 
-    containerEl.createEl('h3', { text: t('settings.metadata.section') });
+    const metadataGroup=createSettingsGroup('metadata-register',t('settings.group.metadataRegister'));
+    createSettingsSubsection(metadataGroup,t('settings.metadata.section'));
     const metadataStatus = this.plugin.ports.getMetadataSchemaStatus();
     const metadataSummary = metadataStatus.loaded && metadataStatus.schema
       ? t('settings.metadata.fields.summary',{count:metadataStatus.schema.fields.length,revision:metadataStatus.schema.revision,path:METADATA_SCHEMA_PATH})
       : t('settings.metadata.fields.schemaInactive',{path:METADATA_SCHEMA_PATH});
 
-    new Setting(containerEl)
+    new Setting(metadataGroup)
       .setName(t('settings.metadata.fields.name'))
       .setDesc(metadataSummary)
       .addButton(button => button.setCta().setButtonText(t('settings.metadata.fields.manage')).onClick(() => {
         new MetadataSchemaManagerModal(this.app, this.plugin).open();
       }));
 
-    new Setting(containerEl)
+    new Setting(metadataGroup)
       .setName(t('settings.metadata.hideFiles.name'))
       .setDesc(t('settings.metadata.hideFiles.description'))
       .addToggle(toggle => toggle
@@ -132,32 +149,10 @@ class PdfiumGateSettingsTab extends PluginSettingTab {
           this.plugin.ports.applyDocumentRecordVisibility();
         }));
 
-    new Setting(containerEl)
-      .setName(exampleText('name'))
-      .setDesc(exampleText('description',{path:PDFIUM_EXAMPLES_ROOT}))
-      .addButton(button => button.setButtonText(exampleText('button')).onClick(async () => {
-        const confirmed=window.confirm(exampleText('confirm',{path:PDFIUM_EXAMPLES_ROOT}));
-        if(!confirmed) return;
-        button.setDisabled(true);
-        try {
-          const result=await installMetadataExampleFiles(this.plugin.obsidianVaultReadAdapter,this.plugin.obsidianVaultWriteAdapter);
-          if(!result?.ok) throw new Error(result?.error || 'Unknown error');
-          new Notice(exampleText('success',{
-            path:PDFIUM_EXAMPLES_ROOT,
-            count:result.total,
-            overwritten:result.overwritten.length
-          }),8000);
-        } catch(error) {
-          const message=error instanceof Error ? error.message : String(error);
-          new Notice(exampleText('failed',{error:message}),10000);
-        } finally {
-          button.setDisabled(false);
-        }
-      }));
+    createSettingsSubsection(metadataGroup,t('settings.documentRegister.section'));
+    metadataGroup.createEl('p',{cls:'setting-item-description pdfium-settings-note',text:t('settings.documentRegister.explanation')});
 
-    containerEl.createEl('h3', { text: t('settings.documentRegister.section') });
-
-    new Setting(containerEl)
+    new Setting(metadataGroup)
       .setName(t('settings.documentRegister.autoRegisterNewPdfs.name'))
       .setDesc(t('settings.documentRegister.autoRegisterNewPdfs.description'))
       .addToggle(toggle => toggle
@@ -166,7 +161,7 @@ class PdfiumGateSettingsTab extends PluginSettingTab {
           await this.saveSetting('autoRegisterNewPdfs', !!value);
         }));
 
-    new Setting(containerEl)
+    new Setting(metadataGroup)
       .setName(t('settings.documentRegister.registerExisting.name'))
       .setDesc(t('settings.documentRegister.registerExisting.description'))
       .addButton(button => button
@@ -205,7 +200,7 @@ class PdfiumGateSettingsTab extends PluginSettingTab {
           }
         }));
 
-    new Setting(containerEl)
+    new Setting(metadataGroup)
       .setName(t('settings.documentRegister.rememberFilters.name'))
       .setDesc(t('settings.documentRegister.rememberFilters.description'))
       .addToggle(toggle => toggle
@@ -214,9 +209,35 @@ class PdfiumGateSettingsTab extends PluginSettingTab {
           await this.saveSetting('rememberDocumentRegisterFilters', !!value);
         }));
 
-    containerEl.createEl('h3', { text: t('settings.advanced.section') });
+    createSettingsSubsection(metadataGroup,exampleText('section'));
 
-    new Setting(containerEl)
+    new Setting(metadataGroup)
+      .setName(exampleText('name'))
+      .setDesc(exampleText('description',{path:PDFIUM_EXAMPLES_ROOT}))
+      .addButton(button => button.setButtonText(exampleText('button')).onClick(async () => {
+        const confirmed=window.confirm(exampleText('confirm',{path:PDFIUM_EXAMPLES_ROOT}));
+        if(!confirmed) return;
+        button.setDisabled(true);
+        try {
+          const result=await installMetadataExampleFiles(this.plugin.obsidianVaultReadAdapter,this.plugin.obsidianVaultWriteAdapter);
+          if(!result?.ok) throw new Error(result?.error || 'Unknown error');
+          new Notice(exampleText('success',{
+            path:PDFIUM_EXAMPLES_ROOT,
+            count:result.total,
+            overwritten:result.overwritten.length
+          }),8000);
+        } catch(error) {
+          const message=error instanceof Error ? error.message : String(error);
+          new Notice(exampleText('failed',{error:message}),10000);
+        } finally {
+          button.setDisabled(false);
+        }
+      }));
+
+
+    const advancedGroup=createSettingsGroup('advanced',t('settings.advanced.section'));
+
+    new Setting(advancedGroup)
       .setName(t('settings.advanced.diagnostics.name'))
       .setDesc(t('settings.advanced.diagnostics.description'))
       .addToggle(toggle => toggle
