@@ -18,7 +18,8 @@ This file is a running list of observations found during practical testing that 
    - Practical Obsidian test 1–7 passed on 2026-10-06: both Edit buttons were present, both entered the same edit mode, Cancel worked, and saving a changed metadata value persisted normally.
    - Follow-up candidate: edit-mode **Cancel** and **Save** are now also rendered both above the edit fields and at the bottom after archive relationships.
    - Both top/bottom copies share the same control map, validation messages, cancel path and canonical save/persistence path; no duplicate editing model is introduced.
-   - Automated verification for the new Save/Cancel placement is required, followed by a short practical Obsidian test.
+   - GitHub Actions run `37505514681` passed `npm ci`, `npm audit --audit-level=high` and the full `npm run check`; generated `main.js` was rebuilt from canonical source.
+   - Only a short practical Obsidian test of the duplicated Cancel/Save controls remains before moving this item to Completed.
 
 2. **PDF Document Register: current user interface needs redesign**
    - The current Document Register user interface was judged unusable/poor in practical testing.
