@@ -30,6 +30,7 @@ module.exports=function verifyI18nContract(){
     if(instances[locale].t('documentInfo.save')!==label) fail(`${locale} DocumentInfo translation failed`);
   }
   if(instances.en.t('category.context.changeCategoryHeading')!=='Change category'||instances.nb.t('category.context.changeCategoryHeading')!=='Endre kategori') fail('category UI translation failed');
+  if(!instances.nb.getKnownTranslations('factory.category.economy').includes('Economy')||!instances.nb.getKnownTranslations('factory.category.economy').includes('Økonomi')) fail('known factory translations are not available for safe relocalization');
   if(instances.en.t('commands.editFolderCategories')!=='PDF: Edit categories for this folder'||instances.nb.t('commands.editFolderCategories')!=='PDF: Rediger kategorier for denne mappen') fail('category command translation failed');
 
   const autoCases={
@@ -103,13 +104,16 @@ module.exports=function verifyI18nContract(){
   const schemaRepositorySource=read('src/metadata/schema-repository.js');
   const baseConfigSource=read('src/metadata/document-register-base-config.js');
   const documentRegisterFeature=read('src/plugin/features/18-document-register-bases.js');
-  if(!categoryFoundation.includes('function createDefaultCategories()')||!categoryConfig.includes('createDefaultCategories()')||categoryFoundation.includes('factory.category.')) fail('category factory defaults must be canonical English and independent of UI language');
-  if(!schemaContractSource.includes('function metadataDefaultSchema()')||!schemaRepositorySource.includes('defaultSchemaFactory = null')||!read('src/plugin/features/14-metadata-schema.js').includes('metadataDefaultSchema()')||schemaContractSource.includes('factory.metadata.')) fail('metadata factory defaults must be canonical English at creation/reset time');
-  if(!baseConfigSource.includes('metadataDocumentRegisterStandardBaseYaml(schema)')||!documentRegisterFeature.includes('metadataDocumentRegisterStandardBaseYaml(schema)')||baseConfigSource.includes('factory.base.')) fail('standard Base factory text must be canonical English');
+  if(!categoryFoundation.includes('function createDefaultCategories(translate = null)')||!categoryConfig.includes('createDefaultCategories(key=>categoryFeatureT(this,key))')||!categoryFoundation.includes('relocalizeDefaultCategoryNames')) fail('category factory defaults must localize through UI language while preserving stable category identity');
+  if(!schemaContractSource.includes('function metadataDefaultSchema(translate = null)')||!schemaRepositorySource.includes('defaultSchemaFactory = null')||!read('src/plugin/features/14-metadata-schema.js').includes('metadataDefaultSchema(key=>this.i18n?.t?.(key) || key)')||!schemaContractSource.includes('metadataRelocalizeFactorySchema')) fail('metadata factory defaults must localize at creation/reset and safely relocalize untouched defaults');
+  if(!baseConfigSource.includes('metadataDocumentRegisterStandardBaseYaml(schema)')||!documentRegisterFeature.includes('metadataDocumentRegisterStandardBaseYaml(schema)')||baseConfigSource.includes('factory.base.')) fail('standard Base factory container text must remain deterministic; schema-owned column labels may be localized');
   for(const localeName of supportedLocales) {
     const locale=translations[localeName];
-    if(Object.keys(locale).some(key=>key.startsWith('factory.'))) fail(`factory defaults leaked into ${localeName} UI translation keys`);
+    for(const key of ['factory.category.economy','factory.category.regulation','factory.category.fact','factory.category.documentation','factory.category.investigate','factory.metadata.documentDate','factory.metadata.documentType','factory.metadata.responseSentLink','factory.metadata.option.decision']) {
+      if(!Object.prototype.hasOwnProperty.call(locale,key)) fail(`${localeName} missing localized factory key: ${key}`);
+    }
   }
+  if(!lifecycle.includes('await this.ports.relocalizeFactoryDefaultsForUiLanguage();')||!settings.includes('relocalizeFactoryDefaultsForUiLanguage')) fail('factory defaults do not follow resolved UI language on startup/settings change');
   if(settings.includes('settings.language.reloadNote')||!settings.includes('setRequestedLanguage?.(')||!settings.includes("refreshDocumentInfoViews?.('ui-language-change')")||!view.includes('refreshLocalizedUi()')) fail('language change must apply immediately to live Settings/PDF/DocumentInfo UI');
 
   for(const key of Object.keys(resolver)) delete global[key];
@@ -135,8 +139,8 @@ module.exports=function verifyI18nContract(){
     documentRegisterLocalized:true,
     diagnosticModalsLocalized:true,
     benchmarkUiLocalized:true,
-    canonicalEnglishFactoryDefaults:true,
-    persistedLabelsRemainUserOwned:true,
+    localizedFactoryDefaults:true,
+    customPersistedLabelsRemainUserOwned:true,
     liveUiLanguageSwitch:true,
     commandPaletteRefreshRequiresPluginReload:true,
     multilingualLocales100Percent:true

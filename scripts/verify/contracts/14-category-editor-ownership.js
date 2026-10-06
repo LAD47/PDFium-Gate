@@ -10,16 +10,33 @@ module.exports=async function verifyCategoryEditorOwnership(){
 
   const foundation=read('src/core/pdf-link-category-foundation.js');
   const foundationSandbox={module:{exports:{}},exports:{},crypto:{randomUUID:()=> '33333333-3333-4333-8333-333333333333'}};
-  vm.runInNewContext(foundation+'\nmodule.exports={categoryUuidV4,categoryIsUuidV4,DEFAULT_CATEGORIES,createDefaultCategories};',foundationSandbox,{filename:'pdf-link-category-foundation.js'});
+  vm.runInNewContext(foundation+'\nmodule.exports={categoryUuidV4,categoryIsUuidV4,DEFAULT_CATEGORIES,createDefaultCategories,relocalizeDefaultCategoryNames};',foundationSandbox,{filename:'pdf-link-category-foundation.js'});
   const ids=foundationSandbox.module.exports.DEFAULT_CATEGORIES.map(c=>String(c.id||''));
   if(ids.length!==5||new Set(ids).size!==5||ids.some(id=>!foundationSandbox.module.exports.categoryIsUuidV4(id))) fail('factory category IDs are not unique UUID v4 values');
   if(foundationSandbox.module.exports.categoryUuidV4()!=='33333333-3333-4333-8333-333333333333') fail('category UUID generator does not use canonical randomUUID source');
   if(foundationSandbox.module.exports.categoryIsUuidV4('economy')) fail('legacy semantic category ID is still accepted as canonical UUID');
   const canonicalNames=foundationSandbox.module.exports.createDefaultCategories().map(c=>String(c.name||''));
   if(JSON.stringify(canonicalNames)!==JSON.stringify(['Economy','Regulation','Fact','Documentation','Investigate'])) fail('canonical English factory category names drifted');
-  const ignoredLanguageArgument=foundationSandbox.module.exports.createDefaultCategories(()=> 'SHOULD NOT BE USED');
-  if(JSON.stringify(ignoredLanguageArgument.map(c=>c.name))!==JSON.stringify(canonicalNames)) fail('category factory defaults unexpectedly depend on UI language');
-  if(JSON.stringify(ignoredLanguageArgument.map(c=>c.id))!==JSON.stringify(ids)) fail('category factory changed stable category IDs');
+  const nbFactory={
+    'factory.category.economy':'Økonomi',
+    'factory.category.regulation':'Forskrift',
+    'factory.category.fact':'Faktum',
+    'factory.category.documentation':'Dokumentasjon',
+    'factory.category.investigate':'Må undersøkes'
+  };
+  const localized=foundationSandbox.module.exports.createDefaultCategories(key=>nbFactory[key]||key);
+  if(JSON.stringify(localized.map(c=>c.name))!==JSON.stringify(['Økonomi','Forskrift','Faktum','Dokumentasjon','Må undersøkes'])) fail('localized factory category names failed');
+  if(JSON.stringify(localized.map(c=>c.id))!==JSON.stringify(ids)) fail('localized category factory changed stable category IDs');
+  const relocalized=foundationSandbox.module.exports.relocalizeDefaultCategoryNames(
+    foundationSandbox.module.exports.createDefaultCategories(),
+    key=>nbFactory[key]||key,
+    key=>nbFactory[key]?[nbFactory[key]]:[]
+  );
+  if(!relocalized.changed||relocalized.categories[0].name!=='Økonomi') fail('untouched factory categories were not relocalized');
+  const customCategories=foundationSandbox.module.exports.createDefaultCategories();
+  customCategories[0].name='Min økonomikategori';
+  const preserved=foundationSandbox.module.exports.relocalizeDefaultCategoryNames(customCategories,key=>nbFactory[key]||key,key=>nbFactory[key]?[nbFactory[key]]:[]);
+  if(preserved.categories[0].name!=='Min økonomikategori') fail('custom category name was overwritten by relocalization');
 
 
   const source=read('src/plugin/features/04-category-config.js');
@@ -122,7 +139,7 @@ module.exports=async function verifyCategoryEditorOwnership(){
   if(modal.includes('Rediger global standard…')||modal.includes('Edit global standard…')) fail('obsolete built-in global-standard editing path remains');
   if(source.includes('ensureBuiltInCategoryEditableAtRoot')) fail('obsolete built-in category materialization owner remains');
   if(source.includes("configPath: '(innebygde standarder)'")) fail('built-in defaults remain a runtime provenance source');
-  if(!source.includes('categories: cleanFolder && inherit ? [] : createDefaultCategories()')) fail('local config bootstrap does not use canonical English factory defaults while keeping inherited local config empty');
+  if(!source.includes('categories: cleanFolder && inherit ? [] : createDefaultCategories(key=>categoryFeatureT(this,key))')) fail('local config bootstrap does not localize factory defaults while keeping inherited local config empty');
   if(!lifecycle.includes('await this.ports.ensureRootCategoryConfigInitialized();')) fail('root category bootstrap is not part of plugin startup');
   if(!modal.includes("addLocalButton.addEventListener('click', () => this.addCategory())")) fail('level create action is not wired to canonical addCategory');
   if(!modal.includes(".setName(createLabel)")) fail('category detail page does not expose create-on-current-level action');

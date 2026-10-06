@@ -30,6 +30,8 @@ class PdfiumGateSettingsTab extends PluginSettingTab {
             const normalized=pdfiumNormalizeLanguageSetting(value);
             this.plugin.i18n?.setRequestedLanguage?.(normalized);
             await this.saveSetting('uiLanguage', normalized);
+            try { await this.plugin.ports?.relocalizeFactoryDefaultsForUiLanguage?.(); }
+            catch (error) { console.warn('[PDFium Gate] factory-label language update failed',error); }
             try {
               const leaves=this.app.workspace?.getLeavesOfType?.(VIEW_TYPE) || [];
               for(const leaf of leaves) leaf?.view?.refreshLocalizedUi?.();

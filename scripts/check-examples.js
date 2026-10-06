@@ -45,7 +45,7 @@ for (const field of systemFields) {
 }
 
 for (const value of ['decision','letter','report','memo']) {
-  if (!schemaSource.includes(`metadataMakeOption('${value}'`)) fail(`factory document_type option is missing ${value}`);
+  if (!schemaSource.includes(`value:'${value}'`)) fail(`factory document_type option is missing ${value}`);
 }
 
 for (const locale of supportedLocales) {

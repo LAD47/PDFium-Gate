@@ -4,7 +4,7 @@ class MetadataSchemaFeature {
   async initializeMetadataSchema() {
     this.metadataSchemaRepository = createMetadataSchemaRepository({
       fileStore:this.obsidianAdapterFileStore,
-      defaultSchemaFactory:() => metadataDefaultSchema()
+      defaultSchemaFactory:() => metadataDefaultSchema(key=>this.i18n?.t?.(key) || key)
     });
     try {
       const loaded = await this.metadataSchemaRepository.loadOrCreateDefault();
@@ -38,6 +38,20 @@ class MetadataSchemaFeature {
 
   getMetadataSchemaSnapshot() {
     return metadataClone(this.state.metadata.schema);
+  }
+
+  async relocalizeMetadataFactoryLabels() {
+    const current=this.getMetadataSchemaSnapshot();
+    if(!current) return {changed:false,reason:'schema-unavailable'};
+    const localized=metadataRelocalizeFactorySchema(
+      current,
+      key=>this.i18n?.t?.(key) || key,
+      key=>this.i18n?.getKnownTranslations?.(key) || []
+    );
+    if(!localized.changed) return {changed:false};
+    localized.schema.revision=Math.max(1,Number(current.revision || 0)+1);
+    const saved=await this._persistMetadataSchemaCandidate(localized.schema);
+    return {changed:true,revision:saved.revision};
   }
 
   async _persistMetadataSchemaCandidate(candidate) {
@@ -118,7 +132,7 @@ class MetadataSchemaFeature {
 
   async resetMetadataSchemaToTestDefaults() {
     const current = this.getMetadataSchemaSnapshot();
-    const next = metadataDefaultSchema();
+    const next = metadataDefaultSchema(key=>this.i18n?.t?.(key) || key);
     if (current && current.format_version === next.format_version && JSON.stringify(current.fields) === JSON.stringify(next.fields)) return current;
     next.revision = Math.max(1, Number(current?.revision || 0) + 1);
     return await this._persistMetadataSchemaCandidate(next);

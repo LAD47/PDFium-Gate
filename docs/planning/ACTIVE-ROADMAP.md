@@ -27,9 +27,10 @@ No single feature scope is frozen yet. Start from the open items below and choos
 ### DocumentInfo
 
 - Consider showing the **Edit** action both near the top and bottom of long DocumentInfo panels.
-- Re-test the older observation that metadata field labels were English under Norwegian Bokmål on the 0.1.226 baseline.
-  - If reproducible, fix the presentation/localization boundary.
-  - If not reproducible, close the observation rather than changing working i18n code.
+- **0.1.227 localized factory defaults:** user-confirmed product requirement: standard metadata field/option names and the five standard highlight-category names should follow the resolved PDFium Gate UI language.
+  - New/reset defaults use the active language while stable UUIDs, properties and machine values remain unchanged.
+  - Existing names may be relocalized only while they are still recognizable as untouched factory names; user-customized names must be preserved.
+  - Candidate implementation lives on `fix/0.1.227-localized-defaults`; practical Norwegian Bokmål verification is still required before merge.
 
 ### PDF Document Register
 

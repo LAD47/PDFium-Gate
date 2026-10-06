@@ -17,10 +17,11 @@ This file is a running list of observations found during practical testing that 
    - The **Edit** button should preferably be available both at the top and at the bottom of the DocumentInfo panel.
    - Reason: users entering the panel may not see the current button until they scroll past all metadata fields.
 
-2. **DocumentInfo: verify older Norwegian Bokmål metadata-label observation**
-   - An older practical observation reported English metadata field labels while the UI language was Norwegian Bokmål.
-   - Current automated i18n coverage is complete, so first reproduce this on the 0.1.226 baseline before changing code.
-   - If it no longer reproduces, move this observation to Completed rather than creating unnecessary localization work.
+2. **Factory defaults: metadata and standard category names must follow UI language**
+   - Practical 0.1.226 behavior confirmed the underlying product issue: factory metadata labels/options and standard category names are English even when PDFium Gate follows Norwegian Bokmål or the user explicitly selects another language.
+   - Product requirement for 0.1.227: these human-facing factory names follow the resolved UI language while stable UUIDs/properties/machine values remain unchanged.
+   - Existing untouched factory names may be safely relocalized; user-customized names must never be overwritten.
+   - Candidate implementation is on `fix/0.1.227-localized-defaults`. Automated verification and practical Norwegian Bokmål testing are required before this item moves to Completed.
 
 3. **PDF Document Register: current user interface needs redesign**
    - The current Document Register user interface was judged unusable/poor in practical testing.

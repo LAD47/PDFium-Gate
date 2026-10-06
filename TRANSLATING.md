@@ -46,6 +46,6 @@ Translate Command Palette display names and user-facing diagnostic labels/button
 
 ## Factory defaults and persistent labels
 
-Factory defaults are **not translation resources**. New default category names, metadata field labels/options, and standard Base presentation text are canonical English regardless of UI language. Locale files should not contain `factory.*` keys.
+Human-facing factory names are translation resources for the standard metadata schema and the five standard highlight categories. Locale files therefore contain `factory.category.*` and `factory.metadata.*` keys. Stable UUIDs, metadata properties, option machine values, colors and shortcuts remain language-independent.
 
-After creation, category names and metadata labels/options are user-owned persistent data and may be edited freely by the user. Translation changes must never rewrite them or change UUIDs, metadata property names, option machine values, or other stable identifiers.
+New or explicitly reset defaults use the resolved UI language. Existing standard names may be relocalized only while they are still recognizable as untouched factory translations for the same stable identity. Once a user customizes a category name, metadata field label or option label, language changes must preserve that customized text. Standard Base container/path text remains deterministic unless a separate product decision changes it.

@@ -83,44 +83,72 @@ function metadataMakeField({ property, label, type = 'text', description = '', r
   };
 }
 
-function metadataDefaultSchema() {
-  const ids = {
-    documentDate:'7ec7d2be-62c8-4a21-83fd-66f2522d7301',
-    documentTime:'c0e66ac0-5228-4b43-82e0-0266cf2cf89a',
-    sender:'4a5982ae-f142-42d4-8b7e-77332956953f',
-    documentType:'eb3f6b84-897d-467b-beba-052112391dd4',
-    responseReceived:'77760968-faf2-4eb7-8652-2f1bc28fc333',
-    responseReceivedDate:'b004696a-6374-48f2-a1b0-36a5136aadf7',
-    responseSent:'62b772bc-0330-4981-872c-3ba56c8195e5',
-    responseSentDate:'b28899d7-dbb1-42bd-bd30-509c0f5e0a27',
-    responseSentLink:'69606cae-7fd5-447f-b715-00b71a70a66a'
-  };
+const METADATA_FACTORY_FIELD_DEFINITIONS = Object.freeze([
+  Object.freeze({ id:'7ec7d2be-62c8-4a21-83fd-66f2522d7301', property:'document_date', label:'Document date', labelKey:'factory.metadata.documentDate', type:'date' }),
+  Object.freeze({ id:'c0e66ac0-5228-4b43-82e0-0266cf2cf89a', property:'document_time', label:'Document time', labelKey:'factory.metadata.documentTime', type:'time' }),
+  Object.freeze({ id:'4a5982ae-f142-42d4-8b7e-77332956953f', property:'sender', label:'Sender', labelKey:'factory.metadata.sender', type:'text' }),
+  Object.freeze({ id:'eb3f6b84-897d-467b-beba-052112391dd4', property:'document_type', label:'Document type', labelKey:'factory.metadata.documentType', type:'select', options:Object.freeze([
+    Object.freeze({ id:'4e10087e-4e09-4fab-9aa3-8f201af57f87', value:'decision', label:'Decision', labelKey:'factory.metadata.option.decision' }),
+    Object.freeze({ id:'2041af74-6dfb-4093-a661-ff2a56dad11f', value:'letter', label:'Letter', labelKey:'factory.metadata.option.letter' }),
+    Object.freeze({ id:'0fb750b8-8ead-4634-a65e-c2a864ff6ced', value:'report', label:'Report', labelKey:'factory.metadata.option.report' }),
+    Object.freeze({ id:'ca49c00e-d71b-4df2-b365-dc836229aa2f', value:'memo', label:'Memo', labelKey:'factory.metadata.option.memo' })
+  ])}),
+  Object.freeze({ id:'77760968-faf2-4eb7-8652-2f1bc28fc333', property:'response_received', label:'Response received', labelKey:'factory.metadata.responseReceived', type:'boolean' }),
+  Object.freeze({ id:'b004696a-6374-48f2-a1b0-36a5136aadf7', property:'response_received_date', label:'Response received date', labelKey:'factory.metadata.responseReceivedDate', type:'date' }),
+  Object.freeze({ id:'62b772bc-0330-4981-872c-3ba56c8195e5', property:'response_sent', label:'Response sent', labelKey:'factory.metadata.responseSent', type:'boolean' }),
+  Object.freeze({ id:'b28899d7-dbb1-42bd-bd30-509c0f5e0a27', property:'response_sent_date', label:'Response sent date', labelKey:'factory.metadata.responseSentDate', type:'date' }),
+  Object.freeze({ id:'69606cae-7fd5-447f-b715-00b71a70a66a', property:'response_sent_link', label:'Sent response', labelKey:'factory.metadata.responseSentLink', type:'link' })
+]);
+function metadataFactoryText(translate,key,fallback) {
+  const translated=typeof translate==='function' ? String(translate(key) ?? '').trim() : '';
+  return translated && translated!==key ? translated : fallback;
+}
+function metadataFactoryKnownTexts(getKnownTranslations,key,fallback) {
+  const values=new Set([String(fallback)]);
+  if(typeof getKnownTranslations==='function') for(const value of getKnownTranslations(key) || []) {
+    const text=String(value ?? '').trim();
+    if(text) values.add(text);
+  }
+  return values;
+}
+function metadataDefaultSchema(translate = null) {
   return {
-    format_version: METADATA_SCHEMA_FORMAT_VERSION,
-    revision: 1,
-    fields: [
-      metadataMakeField({ id:ids.documentDate, property:'document_date', label:'Document date', type:'date' }),
-      metadataMakeField({ id:ids.documentTime, property:'document_time', label:'Document time', type:'time' }),
-      metadataMakeField({ id:ids.sender, property:'sender', label:'Sender', type:'text' }),
-      metadataMakeField({
-        id:ids.documentType,
-        property:'document_type',
-        label:'Document type',
-        type:'select',
-        config:{ options:[
-          metadataMakeOption('decision','Decision','4e10087e-4e09-4fab-9aa3-8f201af57f87'),
-          metadataMakeOption('letter','Letter','2041af74-6dfb-4093-a661-ff2a56dad11f'),
-          metadataMakeOption('report','Report','0fb750b8-8ead-4634-a65e-c2a864ff6ced'),
-          metadataMakeOption('memo','Memo','ca49c00e-d71b-4df2-b365-dc836229aa2f')
-        ] }
-      }),
-      metadataMakeField({ id:ids.responseReceived, property:'response_received', label:'Response received', type:'boolean' }),
-      metadataMakeField({ id:ids.responseReceivedDate, property:'response_received_date', label:'Response received date', type:'date' }),
-      metadataMakeField({ id:ids.responseSent, property:'response_sent', label:'Response sent', type:'boolean' }),
-      metadataMakeField({ id:ids.responseSentDate, property:'response_sent_date', label:'Response sent date', type:'date' }),
-      metadataMakeField({ id:ids.responseSentLink, property:'response_sent_link', label:'Sent response', type:'link' })
-    ]
+    format_version:METADATA_SCHEMA_FORMAT_VERSION,
+    revision:1,
+    fields:METADATA_FACTORY_FIELD_DEFINITIONS.map(definition=>metadataMakeField({
+      id:definition.id,
+      property:definition.property,
+      label:metadataFactoryText(translate,definition.labelKey,definition.label),
+      type:definition.type,
+      config:definition.type==='select' ? {options:definition.options.map(option=>metadataMakeOption(
+        option.value,metadataFactoryText(translate,option.labelKey,option.label),option.id
+      ))} : null
+    }))
   };
+}
+function metadataRelocalizeFactorySchema(schema,translate = null,getKnownTranslations = null) {
+  const next=metadataClone(schema);
+  if(!next || !Array.isArray(next.fields)) return {schema:next,changed:false};
+  let changed=false;
+  for(const definition of METADATA_FACTORY_FIELD_DEFINITIONS) {
+    const field=next.fields.find(item=>item?.id===definition.id && item?.property===definition.property);
+    if(!field) continue;
+    const current=String(field.label || '').trim();
+    if(metadataFactoryKnownTexts(getKnownTranslations,definition.labelKey,definition.label).has(current)) {
+      const target=metadataFactoryText(translate,definition.labelKey,definition.label);
+      if(target!==current) { field.label=target; changed=true; }
+    }
+    if(definition.type!=='select' || !Array.isArray(field.config?.options)) continue;
+    for(const optionDefinition of definition.options) {
+      const option=field.config.options.find(item=>item?.id===optionDefinition.id && item?.value===optionDefinition.value);
+      if(!option) continue;
+      const optionCurrent=String(option.label || '').trim();
+      if(!metadataFactoryKnownTexts(getKnownTranslations,optionDefinition.labelKey,optionDefinition.label).has(optionCurrent)) continue;
+      const target=metadataFactoryText(translate,optionDefinition.labelKey,optionDefinition.label);
+      if(target!==optionCurrent) { option.label=target; changed=true; }
+    }
+  }
+  return {schema:next,changed};
 }
 
 function metadataClone(value) {
@@ -311,7 +339,9 @@ const metadataSchemaContract = Object.freeze({
   metadataDefaultConfigForType,
   metadataMakeOption,
   metadataMakeField,
+  METADATA_FACTORY_FIELD_DEFINITIONS,
   metadataDefaultSchema,
+  metadataRelocalizeFactorySchema,
   metadataClone,
   metadataValidateSchema,
   metadataValidateCanonicalValue

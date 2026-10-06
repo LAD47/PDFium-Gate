@@ -9,7 +9,7 @@
 - Cross-feature behavior uses explicit operation ports and one canonical owner.
 - Ambiguous PDF/runtime identity fails closed.
 - Markdown/YAML and explicit configuration files are persistent source of truth; RAM indexes/caches are derived.
-- Factory-created persistent defaults are canonical English; i18n owns UI presentation only.
+- Stable persistent identities are language-independent; human-facing factory metadata labels/options and standard category names follow the resolved UI language while user-customized names remain user-owned.
 
 ## Documentation map
 

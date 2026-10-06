@@ -76,7 +76,7 @@ The complete UI currently supports:
 
 English is the canonical fallback language. When **Auto** is selected, the plugin follows a supported Obsidian UI language and falls back to English for unsupported languages.
 
-UI language is separate from regional date, time, and decimal formatting. Changing the UI language does not translate or rewrite user-owned metadata labels or category names.
+UI language is separate from regional date, time, and decimal formatting. Standard metadata labels/options and standard category names follow the resolved UI language while they remain untouched factory names; user-customized labels and category names are preserved.
 
 Most open UI surfaces change language immediately. Command Palette display names are the known exception and refresh after the plugin is reloaded or Obsidian is restarted.
 

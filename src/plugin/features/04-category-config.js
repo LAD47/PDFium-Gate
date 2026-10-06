@@ -360,7 +360,7 @@ class CategoryConfigFeature {
     const config = {
       version: 1,
       inherit,
-      categories: cleanFolder && inherit ? [] : createDefaultCategories()
+      categories: cleanFolder && inherit ? [] : createDefaultCategories(key=>categoryFeatureT(this,key))
     };
     const yaml = serializeCategoryConfig(config);
     try { parseYaml(yaml); }
@@ -395,6 +395,23 @@ class CategoryConfigFeature {
       inherit,
       effectiveCategoryCount: (effectiveInfo.effective?.categories || []).filter(c => c.enabled !== false).length
     };
+  }
+
+  async relocalizeRootFactoryCategoryNames() {
+    const root=this.readFolderCategoryConfig('');
+    if(!root.exists) return {changed:false,reason:'root-missing'};
+    const localized=relocalizeDefaultCategoryNames(
+      root.config?.categories || [],
+      key=>categoryFeatureT(this,key),
+      key=>this.i18n?.getKnownTranslations?.(key) || []
+    );
+    if(!localized.changed) return {changed:false,configPath:root.configPath};
+    const next=deepClone(root.config || {version:1,inherit:false,categories:[]});
+    next.version=1;
+    next.inherit=false;
+    next.categories=localized.categories;
+    const saved=await this.saveFolderCategoryConfig('',next);
+    return {changed:true,configPath:root.configPath,backupPath:saved.backupPath || null};
   }
 
   async ensureRootCategoryConfigInitialized() {

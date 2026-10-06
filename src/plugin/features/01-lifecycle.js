@@ -70,6 +70,7 @@ async onload() {
     this.ports.registerMetadataBenchmarkCommands();
     await this.ports.ensureRootCategoryConfigInitialized();
     await this.ports.initializeMetadataSchema();
+    await this.ports.relocalizeFactoryDefaultsForUiLanguage();
     this.ports.registerPdfDocumentRegisterBasesView();
     this.electronRemoteRequireAdapter = createElectronRemoteRequireAdapter({ electronModule:rendererElectronModule });
     this.electronFocusDiagnosticsAdapter = createElectronFocusDiagnosticsAdapter({ mainModuleLoader:this.electronRemoteRequireAdapter });
@@ -357,6 +358,25 @@ async onload() {
       if (resolved?.ok) current = resolved.viewType || this.i18n.t('lifecycle.none');
     } catch (_) {}
     new Notice(this.i18n.t('lifecycle.status',{version:PLUGIN_VERSION,view:current,mode:view?.mode || this.i18n.t('lifecycle.none'),http:this.state.http.port || this.i18n.t('lifecycle.off'),gate:this.state.lifecycle.overrideInstalled ? this.i18n.t('common.yes') : this.i18n.t('common.no'),diagnostics:this.settings?.diagnosticsEnabled ? this.i18n.t('lifecycle.on') : this.i18n.t('lifecycle.disabled')}), 10000);
+  }
+
+  async relocalizeFactoryDefaultsForUiLanguage() {
+    const result={categories:null,metadata:null,errors:[]};
+    try {
+      result.categories=await this.ports.relocalizeRootFactoryCategoryNames();
+    } catch(error) {
+      const message=error instanceof Error ? error.message : String(error);
+      result.errors.push({area:'categories',error:message});
+      console.warn(`[PDFium Gate ${PLUGIN_VERSION}] could not relocalize factory category names`,error);
+    }
+    try {
+      result.metadata=await this.ports.relocalizeMetadataFactoryLabels();
+    } catch(error) {
+      const message=error instanceof Error ? error.message : String(error);
+      result.errors.push({area:'metadata',error:message});
+      console.warn(`[PDFium Gate ${PLUGIN_VERSION}] could not relocalize factory metadata labels`,error);
+    }
+    return {ok:result.errors.length===0,...result};
   }
 
   onunload() {

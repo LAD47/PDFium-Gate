@@ -13,6 +13,7 @@ module.exports=async function verifyMetadataSchemaContract(){
     METADATA_SCHEMA_BACKUP_ROOT,
     METADATA_FIELD_TYPES,
     metadataDefaultSchema,
+    metadataRelocalizeFactorySchema,
     metadataValidateSchema,
     metadataClone
   }=schemaContract;
@@ -36,8 +37,33 @@ module.exports=async function verifyMetadataSchemaContract(){
   if(schema.fields.find(field=>field.property==='response_sent_link')?.type!=='link') fail('response_sent_link is not link');
   if(schema.fields.find(field=>field.property==='response_sent_link')?.label!=='Sent response') fail('response_sent_link canonical label drifted');
   if(schema.fields.find(field=>field.property==='document_time')?.label!=='Document time') fail('document_time canonical label drifted');
-  const secondCanonical=metadataDefaultSchema(key=>'SHOULD NOT BE USED');
-  if(JSON.stringify(secondCanonical)!==JSON.stringify(schema)) fail('metadata factory defaults unexpectedly depend on UI language');
+  const nbFactory={
+    'factory.metadata.documentDate':'Dokumentdato',
+    'factory.metadata.documentTime':'Tidspunkt',
+    'factory.metadata.sender':'Avsender',
+    'factory.metadata.documentType':'Dokumenttype',
+    'factory.metadata.responseReceived':'Svar mottatt',
+    'factory.metadata.responseReceivedDate':'Dato svar mottatt',
+    'factory.metadata.responseSent':'Svar sendt',
+    'factory.metadata.responseSentDate':'Dato svar sendt',
+    'factory.metadata.responseSentLink':'Sendt svar',
+    'factory.metadata.option.decision':'Vedtak',
+    'factory.metadata.option.letter':'Brev',
+    'factory.metadata.option.report':'Rapport',
+    'factory.metadata.option.memo':'Notat'
+  };
+  const nbTranslate=key=>nbFactory[key]||key;
+  const nbSchema=metadataDefaultSchema(nbTranslate);
+  if(nbSchema.fields.find(field=>field.property==='document_date')?.label!=='Dokumentdato') fail('localized metadata factory field label failed');
+  if(nbSchema.fields.find(field=>field.property==='document_type')?.config?.options?.find(option=>option.value==='decision')?.label!=='Vedtak') fail('localized metadata factory option label failed');
+  if(JSON.stringify(nbSchema.fields.map(field=>field.id))!==JSON.stringify(schema.fields.map(field=>field.id))) fail('localized metadata factory changed stable field IDs');
+  if(JSON.stringify(nbSchema.fields.map(field=>field.property))!==JSON.stringify(schema.fields.map(field=>field.property))) fail('localized metadata factory changed stable properties');
+  const relocalized=metadataRelocalizeFactorySchema(schema,nbTranslate,key=>nbFactory[key]?[nbFactory[key]]:[]);
+  if(!relocalized.changed||relocalized.schema.fields[0].label!=='Dokumentdato') fail('existing untouched factory metadata labels were not relocalized');
+  const custom=metadataClone(schema);
+  custom.fields[0].label='Min dokumentdato';
+  const customRelocalized=metadataRelocalizeFactorySchema(custom,nbTranslate,key=>nbFactory[key]?[nbFactory[key]]:[]);
+  if(customRelocalized.schema.fields[0].label!=='Min dokumentdato') fail('custom metadata field label was overwritten by relocalization');
 
 
   const reserved=metadataClone(schema);

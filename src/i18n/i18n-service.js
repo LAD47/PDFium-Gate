@@ -32,8 +32,20 @@ function createPdfiumI18n({ requestedLanguage='auto', obsidianApi=null, windowOb
     return pdfiumInterpolateTranslation(template,params);
   }
 
+  function knownTranslations(key) {
+    const translationKey=String(key || '');
+    const values=[];
+    for(const dictionary of Object.values(dictionaries)) {
+      if(!Object.prototype.hasOwnProperty.call(dictionary,translationKey)) continue;
+      const value=String(dictionary[translationKey] ?? '').trim();
+      if(value && !values.includes(value)) values.push(value);
+    }
+    return values;
+  }
+
   return Object.freeze({
     t:translate,
+    getKnownTranslations:knownTranslations,
     getRequestedLanguage(){ return requested; },
     getResolvedLanguage:resolvedLanguage,
     setRequestedLanguage(value){ requested=pdfiumNormalizeLanguageSetting(value); return resolvedLanguage(); },
