@@ -12,6 +12,20 @@ async function installMetadataExampleFiles(read, write) {
 
     const created=[];
     const overwritten=[];
+    const legacyRemoved=[];
+    const legacyPreserved=[];
+    const legacyPath=`${PDFIUM_EXAMPLES_ROOT}/Example PDF Document Register.base`;
+    const legacy=read.getAbstractFileByPath(legacyPath);
+    if(legacy && !Array.isArray(legacy.children)) {
+      const current=String(await read.readText(legacy));
+      if(current===metadataExampleLegacyNativeBaseYaml()) {
+        await write.deleteFile(legacy,true);
+        legacyRemoved.push(legacyPath);
+      } else {
+        legacyPreserved.push(legacyPath);
+      }
+    }
+
     for (const example of metadataExampleFiles()) {
       const existing = read.getAbstractFileByPath(example.path);
       if (existing && Array.isArray(existing.children)) {
@@ -25,7 +39,14 @@ async function installMetadataExampleFiles(read, write) {
         created.push(example.path);
       }
     }
-    return {ok:true,created,overwritten,total:created.length+overwritten.length};
+    return {
+      ok:true,
+      created,
+      overwritten,
+      legacyRemoved,
+      legacyPreserved,
+      total:created.length+overwritten.length
+    };
   } catch (error) {
     const message=error instanceof Error ? error.message : String(error);
     return {ok:false,error:message};
