@@ -39,6 +39,29 @@ function pdfDocumentRegisterPropertyId(property) {
 }
 
 const PDF_DOCUMENT_REGISTER_HEADER_FILTERS_CONFIG_KEY = 'pdfiumHeaderFilters';
+const PDF_DOCUMENT_REGISTER_HIDDEN_COLUMNS_CONFIG_KEY = 'pdfiumHiddenColumns';
+
+function pdfDocumentRegisterHiddenColumnsFromConfig(value, allowedProperties) {
+  const allowed=new Set((Array.isArray(allowedProperties) ? allowedProperties : []).map(item=>String(item || '').trim()).filter(Boolean));
+  const hidden=new Set();
+  if (!Array.isArray(value)) return hidden;
+  for (const item of value) {
+    const property=String(item || '').trim();
+    if (property && allowed.has(property)) hidden.add(property);
+  }
+  return hidden;
+}
+
+function pdfDocumentRegisterHiddenColumnsToConfig(hiddenColumns, allowedProperties) {
+  const allowed=new Set((Array.isArray(allowedProperties) ? allowedProperties : []).map(item=>String(item || '').trim()).filter(Boolean));
+  const out=[];
+  if (!(hiddenColumns instanceof Set)) return out;
+  for (const property of hiddenColumns) {
+    const key=String(property || '').trim();
+    if (key && allowed.has(key)) out.push(key);
+  }
+  return out.sort((a,b)=>a.localeCompare(b));
+}
 
 function pdfDocumentRegisterSanitizeStoredFilter(filter) {
   if (!filter || typeof filter !== 'object' || Array.isArray(filter)) return null;
@@ -323,6 +346,62 @@ class PdfDocumentRegisterHeaderFilterModal extends Modal {
   onClose() { this.contentEl.empty(); }
 }
 
+class PdfDocumentRegisterColumnPickerModal extends Modal {
+  constructor(app, { columns=[], hiddenColumns=new Set(), i18n=null, onApply }) {
+    super(app);
+    this.columns=Array.isArray(columns) ? columns : [];
+    this.hiddenColumns=hiddenColumns instanceof Set ? new Set(hiddenColumns) : new Set();
+    this.i18n=i18n || null;
+    this.onApply=typeof onApply === 'function' ? onApply : () => {};
+  }
+
+  onOpen() {
+    this.modalEl?.addClass?.('pdfium-document-register-columns-modal');
+    const {contentEl}=this;
+    const t=(key,params)=>this.i18n?.t?.(key,params) || key;
+    contentEl.empty();
+    contentEl.createEl('h2',{text:t('documentRegister.columns.title')});
+    contentEl.createEl('p',{text:t('documentRegister.columns.description')});
+    const list=contentEl.createDiv({cls:'pdfium-document-register-columns-list'});
+    const rows=[];
+    for(const column of this.columns) {
+      const property=String(column?.property || '').trim();
+      if(!property) continue;
+      const row=list.createEl('label',{cls:'pdfium-document-register-columns-choice'});
+      const checkbox=row.createEl('input',{type:'checkbox'});
+      checkbox.checked=!this.hiddenColumns.has(property);
+      row.createSpan({text:String(column?.label || property)});
+      rows.push({property,checkbox});
+    }
+    const errorEl=contentEl.createDiv({cls:'pdfium-document-register-columns-error'});
+    errorEl.setAttribute('aria-live','polite');
+    const actions=contentEl.createDiv({cls:'pdfium-document-register-columns-actions'});
+    const showAll=actions.createEl('button',{text:t('documentRegister.columns.showAll')});
+    const apply=actions.createEl('button',{cls:'mod-cta',text:t('documentRegister.columns.apply')});
+    const cancel=actions.createEl('button',{text:t('common.cancel')});
+
+    showAll.addEventListener('click',event=>{
+      event.preventDefault();
+      for(const row of rows) row.checkbox.checked=true;
+      errorEl.setText('');
+    });
+    apply.addEventListener('click',event=>{
+      event.preventDefault();
+      const visible=rows.filter(row=>row.checkbox.checked);
+      if(!visible.length) {
+        errorEl.setText(t('documentRegister.columns.requireOne'));
+        return;
+      }
+      const hidden=new Set(rows.filter(row=>!row.checkbox.checked).map(row=>row.property));
+      this.onApply(hidden);
+      this.close();
+    });
+    cancel.addEventListener('click',event=>{event.preventDefault();this.close();});
+  }
+
+  onClose(){ this.contentEl.empty(); }
+}
+
 class PdfDocumentRegisterBasesView extends BasesViewBase {
   constructor(controller, parentEl, host) {
     super(controller);
@@ -338,6 +417,48 @@ class PdfDocumentRegisterBasesView extends BasesViewBase {
 
   presentationSettings() {
     return metadataPresentationSettings(this.host?.getSettings?.() || {},this.host?.getI18n?.() || null);
+  }
+
+  documentRegisterColumns(fields) {
+    return [
+      ...(Array.isArray(fields) ? fields : []).map(field=>({
+        property:String(field?.property || '').trim(),
+        label:String(field?.label || field?.property || '').trim(),
+        field
+      })).filter(column=>column.property),
+      {property:'filemeta_status',label:this.t('documentRegister.status'),systemType:'status'},
+      {property:'filemeta_file',label:this.t('documentRegister.pdf'),systemType:'link'}
+    ];
+  }
+
+  getHiddenColumns(columns) {
+    const allowed=(Array.isArray(columns) ? columns : []).map(column=>column.property);
+    const stored=typeof this.config?.get === 'function'
+      ? this.config.get(PDF_DOCUMENT_REGISTER_HIDDEN_COLUMNS_CONFIG_KEY)
+      : null;
+    return pdfDocumentRegisterHiddenColumnsFromConfig(stored,allowed);
+  }
+
+  persistHiddenColumns(hiddenColumns,columns) {
+    if(typeof this.config?.set !== 'function') return false;
+    const allowed=(Array.isArray(columns) ? columns : []).map(column=>column.property);
+    this.config.set(
+      PDF_DOCUMENT_REGISTER_HIDDEN_COLUMNS_CONFIG_KEY,
+      pdfDocumentRegisterHiddenColumnsToConfig(hiddenColumns,allowed)
+    );
+    return true;
+  }
+
+  openColumnPicker(columns,hiddenColumns) {
+    new PdfDocumentRegisterColumnPickerModal(this.host?.app,{
+      columns,
+      hiddenColumns,
+      i18n:this.host?.getI18n?.() || null,
+      onApply:hidden=>{
+        this.persistHiddenColumns(hidden,columns);
+        this.onDataUpdated();
+      }
+    }).open();
   }
 
   shouldPersistHeaderFilters() {
@@ -599,27 +720,41 @@ class PdfDocumentRegisterBasesView extends BasesViewBase {
     }
 
     this.syncHeaderFilterPersistenceState();
-    const fields = metadataBaseVisibleFields(schema);
+    const allFields = metadataBaseVisibleFields(schema);
+    const columns=this.documentRegisterColumns(allFields);
+    const hiddenColumns=this.getHiddenColumns(columns);
+    const fields=allFields.filter(field=>!hiddenColumns.has(String(field.property || '')));
+    const showStatus=!hiddenColumns.has('filemeta_status');
+    const showPdf=!hiddenColumns.has('filemeta_file');
     const entries = pdfDocumentRegisterEntries(this.data);
     if (!entries.length) {
       this.containerEl.createDiv({ cls:'pdfium-document-register-message', text:this.t('documentRegister.noDocuments') });
       return;
     }
 
-    const help = this.containerEl.createDiv({ cls:'pdfium-document-register-edit-help' });
+    const toolbar=this.containerEl.createDiv({cls:'pdfium-document-register-toolbar'});
+    const help = toolbar.createDiv({ cls:'pdfium-document-register-edit-help' });
     const filterCount = this.headerFilters.size;
     const rememberFilters=this.shouldPersistHeaderFilters();
     help.setText(filterCount
       ? this.t('documentRegister.helpActive',{count:filterCount,persistence:rememberFilters ? this.t('documentRegister.filtersSaved') : this.t('documentRegister.filtersTemporary')})
       : this.t('documentRegister.helpIdle',{persistence:rememberFilters ? this.t('documentRegister.filtersSaved') : this.t('documentRegister.filtersTemporary')}));
+    const toolbarActions=toolbar.createDiv({cls:'pdfium-document-register-toolbar-actions'});
+    const columnsButton=toolbarActions.createEl('button',{text:this.t('documentRegister.columns.button')});
+    columnsButton.setAttribute('aria-label',this.t('documentRegister.columns.buttonAria'));
+    columnsButton.addEventListener('click',event=>{
+      event.preventDefault();
+      event.stopPropagation();
+      this.openColumnPicker(columns,hiddenColumns);
+    });
 
     const scroll = this.containerEl.createDiv({ cls:'pdfium-document-register-scroll' });
     const table = scroll.createEl('table', { cls:'pdfium-document-register-table' });
     const thead = table.createEl('thead');
     const headRow = thead.createEl('tr');
     for (const field of fields) this.renderHeaderCell(headRow,{ property:field.property, label:String(field.label || field.property), field });
-    this.renderHeaderCell(headRow,{ property:'filemeta_status', label:this.t('documentRegister.status'), systemType:'status' });
-    this.renderHeaderCell(headRow,{ property:'filemeta_file', label:this.t('documentRegister.pdf'), systemType:'link' });
+    if(showStatus) this.renderHeaderCell(headRow,{ property:'filemeta_status', label:this.t('documentRegister.status'), systemType:'status' });
+    if(showPdf) this.renderHeaderCell(headRow,{ property:'filemeta_file', label:this.t('documentRegister.pdf'), systemType:'link' });
 
     const tbody = table.createEl('tbody');
     let visibleRows = 0;
@@ -638,7 +773,7 @@ class PdfDocumentRegisterBasesView extends BasesViewBase {
       const canOpenPdf = activeRecord && !!resolvedPath;
       const presentedByProperty = new Map(presented.fields.map(item=>[item.property,item]));
       const filterValues = {};
-      for (const field of fields) {
+      for (const field of allFields) {
         const item = presentedByProperty.get(field.property) || { raw:null, display:'—' };
         filterValues[field.property] = { raw:item.raw, display:item.display || '—' };
       }
@@ -661,32 +796,41 @@ class PdfDocumentRegisterBasesView extends BasesViewBase {
         this.renderDisplayCell(cell,{ field:canonicalField, value:item.raw, pdfPath:resolvedPath, editable:canOpenPdf });
       }
 
-      const statusCell = row.createEl('td', { cls:'pdfium-document-register-status-cell' });
-      statusCell.createSpan({
-        cls:activeRecord ? 'pdfium-document-register-status is-active' : 'pdfium-document-register-status is-missing',
-        text:activeRecord ? this.t('common.active') : this.t('common.missing')
-      });
-
-      const pdfCell = row.createEl('td', { cls:'pdfium-document-register-pdf-cell' });
-      if (canOpenPdf) {
-        const openButton = pdfCell.createEl('button', { cls:'pdfium-document-register-open', text:this.t('common.open') });
-        const fileName = String(resolvedPath).split('/').pop() || 'PDF';
-        openButton.setAttribute('aria-label',this.t('documentRegister.openPdfAria',{name:fileName}));
-        openButton.setAttribute('title',String(resolvedPath));
-        openButton.addEventListener('click', event => {
-          event.preventDefault();
-          event.stopPropagation();
-          void this.host?.openLink?.(resolvedPath, entry.file?.path || '');
+      if(showStatus) {
+        const statusCell = row.createEl('td', { cls:'pdfium-document-register-status-cell' });
+        statusCell.createSpan({
+          cls:activeRecord ? 'pdfium-document-register-status is-active' : 'pdfium-document-register-status is-missing',
+          text:activeRecord ? this.t('common.active') : this.t('common.missing')
         });
-        pdfCell.createSpan({ cls:'pdfium-document-register-pdf-name', text:fileName });
-      } else {
-        const label = resolvedPath ? String(resolvedPath).split('/').pop() : (linkTarget ? String(linkTarget).split('/').pop() : this.t('documentRegister.pdfMissing'));
-        pdfCell.createSpan({ cls:'pdfium-document-register-missing-path', text:label || this.t('documentRegister.pdfMissing') });
+      }
+
+      if(showPdf) {
+        const pdfCell = row.createEl('td', { cls:'pdfium-document-register-pdf-cell' });
+        const fileName = resolvedPath
+          ? String(resolvedPath).split('/').pop()
+          : (linkTarget ? String(linkTarget).split('/').pop() : this.t('documentRegister.pdfMissing'));
+        if (canOpenPdf) {
+          const pdfLink=pdfCell.createEl('a',{
+            cls:'internal-link pdfium-document-register-pdf-link',
+            text:fileName || 'PDF',
+            href:String(resolvedPath)
+          });
+          pdfLink.setAttribute('data-href',String(resolvedPath));
+          pdfLink.setAttribute('aria-label',this.t('documentRegister.openPdfAria',{name:fileName || 'PDF'}));
+          pdfLink.setAttribute('title',String(resolvedPath));
+          pdfLink.addEventListener('click',event=>{
+            event.preventDefault();
+            event.stopPropagation();
+            void this.host?.openLink?.(resolvedPath,entry.file?.path || '');
+          });
+        } else {
+          pdfCell.createSpan({ cls:'pdfium-document-register-missing-path', text:fileName || this.t('documentRegister.pdfMissing') });
+        }
       }
     }
     if (!visibleRows && this.headerFilters.size) {
       const emptyRow = tbody.createEl('tr');
       const emptyCell = emptyRow.createEl('td', { cls:'pdfium-document-register-filter-empty', text:this.t('documentRegister.noFilterMatches') });
-      emptyCell.setAttribute('colspan',String(fields.length + 2));
+      emptyCell.setAttribute('colspan',String(fields.length + (showStatus?1:0) + (showPdf?1:0)));
     }
   }}
