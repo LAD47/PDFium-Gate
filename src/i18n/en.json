@@ -646,5 +646,11 @@
   "documentRegister.overview.reasonAmbiguousPdfPath": "Multiple records point to the same PDF",
   "documentRegister.overview.reasonIdentity": "Document identity conflict",
   "documentRegister.overview.noErrors": "No document-record errors.",
-  "documentRegister.overview.noUnregistered": "No unregistered PDFs."
+  "documentRegister.overview.noUnregistered": "No unregistered PDFs.",
+  "documentRegister.overview.duplicateUuid": "UUID",
+  "documentRegister.overview.duplicateUserMetadata": "User metadata",
+  "documentRegister.overview.duplicateMetadataIdentical": "User metadata are identical",
+  "documentRegister.overview.duplicateMetadataDifferent": "User metadata differ",
+  "documentRegister.overview.duplicateNoUserMetadata": "No user metadata",
+  "documentRegister.overview.duplicateCompareHint": "Compare the records before deleting anything."
 }
