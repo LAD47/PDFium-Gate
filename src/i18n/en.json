@@ -624,7 +624,7 @@
   "settings.group.import": "Import",
   "settings.group.metadataRegister": "Metadata and document register",
   "settings.documentRegister.explanation": "The PDFium Gate document register is different from the example Base files. PDF Dokumentregister.base is created when the real register is first opened, reads registered PDFs from File Metadata, and uses PDFium Gate’s dedicated Bases view. After creation, the Base file is user-owned and PDFium Gate does not overwrite later changes.",
-  "documentRegister.columns.button": "Columns…",
+  "documentRegister.columns.button": "Choose columns",
   "documentRegister.columns.buttonAria": "Choose visible columns",
   "documentRegister.columns.title": "Visible columns",
   "documentRegister.columns.description": "Choose which columns are shown in this Document Register view. This changes only the view, not the metadata.",
