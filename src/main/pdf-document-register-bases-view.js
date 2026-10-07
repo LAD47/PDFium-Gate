@@ -411,6 +411,7 @@ class PdfDocumentRegisterBasesView extends BasesViewBase {
     this.activeEditCancel = null;
     this.headerFilters = new Map();
     this.headerFilterPersistenceEnabled = null;
+    this.statusSummaryRequestId = 0;
   }
 
   t(key,params){ return pdfDocumentRegisterT(this.host,key,params); }
@@ -584,6 +585,57 @@ class PdfDocumentRegisterBasesView extends BasesViewBase {
     return true;
   }
 
+  renderStatusOverview() {
+    const overview=this.containerEl.createDiv({cls:'pdfium-document-register-overview'});
+    overview.setAttribute('aria-label',this.t('documentRegister.overview.title'));
+    const specs=[
+      ['active','documentRegister.overview.active','activeCount'],
+      ['missing','documentRegister.overview.missing','missingCount'],
+      ['error','documentRegister.overview.errors','errorCount'],
+      ['unregistered','documentRegister.overview.unregistered','unregisteredCount']
+    ];
+    const valueEls=new Map();
+    for(const [kind,labelKey] of specs) {
+      const card=overview.createDiv({cls:`pdfium-document-register-overview-card is-${kind}`});
+      const valueEl=card.createDiv({cls:'pdfium-document-register-overview-value',text:'…'});
+      card.createDiv({cls:'pdfium-document-register-overview-label',text:this.t(labelKey)});
+      valueEls.set(kind,valueEl);
+    }
+
+    const requestId=++this.statusSummaryRequestId;
+    const load=typeof this.host?.getStatusSummary === 'function'
+      ? Promise.resolve(this.host.getStatusSummary())
+      : Promise.resolve({ok:false,error:this.t('documentRegister.overview.unavailable')});
+
+    void load.then(summary=>{
+      if(requestId!==this.statusSummaryRequestId || overview.isConnected===false) return;
+      if(!summary?.ok) {
+        for(const valueEl of valueEls.values()) valueEl.setText('—');
+        overview.classList.add('has-error');
+        overview.setAttribute('title',summary?.error || this.t('documentRegister.overview.unavailable'));
+        return;
+      }
+      const values={
+        active:Number(summary.activeCount || 0),
+        missing:Number(summary.missingCount || 0),
+        error:Number(summary.errorCount || 0),
+        unregistered:Number(summary.unregisteredCount || 0)
+      };
+      for(const [kind,value] of Object.entries(values)) {
+        const valueEl=valueEls.get(kind);
+        if(valueEl) valueEl.setText(String(value));
+        const card=valueEl?.parentElement;
+        if(card && kind!=='active' && value>0) card.classList.add('has-attention');
+      }
+    }).catch(error=>{
+      if(requestId!==this.statusSummaryRequestId || overview.isConnected===false) return;
+      for(const valueEl of valueEls.values()) valueEl.setText('—');
+      overview.classList.add('has-error');
+      overview.setAttribute('title',error instanceof Error ? error.message : String(error));
+    });
+    return overview;
+  }
+
   cancelActiveEdit() {
     const cancel = this.activeEditCancel;
     this.activeEditCancel = null;
@@ -727,6 +779,7 @@ class PdfDocumentRegisterBasesView extends BasesViewBase {
     const showStatus=!hiddenColumns.has('filemeta_status');
     const showPdf=!hiddenColumns.has('filemeta_file');
     const entries = pdfDocumentRegisterEntries(this.data);
+    this.renderStatusOverview();
     if (!entries.length) {
       this.containerEl.createDiv({ cls:'pdfium-document-register-message', text:this.t('documentRegister.noDocuments') });
       return;
