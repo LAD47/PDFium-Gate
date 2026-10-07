@@ -31,6 +31,7 @@ This file is a running list of observations found during practical testing that 
    - GitHub Actions run `37614784955` passed `npm ci`, `npm audit --audit-level=high` and the full `npm run check`, including behavioral verification that validation detail is retained, displayed in the status summary and removed with the invalid-record lifecycle.
    - Practical inspection identified the two real invalid records as old test/development data containing the retired reserved system field `filemeta_sha256`. Current schema editing rejects `filemeta_*`/legacy `pdfmeta_*` user properties, so this specific fault is not expected from normal user-created metadata fields.
    - Follow-up candidate makes Document Register table text explicitly selectable/copyable and prevents a drag-selected value in an editable cell from immediately opening edit mode. This is intended for exact copying of paths, UUIDs, hashes and diagnostics during troubleshooting.
+   - GitHub Actions run `37624443247` passed `npm ci`, `npm audit --audit-level=high` and the full `npm run check`, including contract checks for explicit text selection and selection-safe inline editing.
    - The two old records can be repaired manually by removing only the obsolete `filemeta_sha256` line; no permanent product migration is planned for this test-only field.
 
 
