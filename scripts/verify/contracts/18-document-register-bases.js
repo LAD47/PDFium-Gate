@@ -67,6 +67,8 @@ module.exports=function verifyDocumentRegisterBasesContract(){
   if(!standardBaseYaml.includes('file.inFolder(\\"File Metadata\\")')||!standardBaseYaml.includes('filemeta_type == \\"pdf\\"')||!standardBaseYaml.includes('filemeta_profile == \\"document\\"')) fail('standard Dokumentregister Base does not scope query to canonical PDF/document metadata records');
   if(!standardBaseYaml.includes('type: pdfium-document-register')||!standardBaseYaml.includes('property: document_date')||!standardBaseYaml.includes('direction: DESC')) fail('standard Dokumentregister Base lacks custom view/default newest-first sort');
   if(!standardBaseYaml.includes('displayName: "Document date"')||!standardBaseYaml.includes('displayName: "Status"')||!standardBaseYaml.includes('displayName: "PDF"')) fail('standard Document Register Base lacks canonical English human display names');
+  if(!standardBaseYaml.includes('pdfiumHiddenColumns:')||!standardBaseYaml.includes('      - document_time')||!standardBaseYaml.includes('      - response_received')) fail('standard Document Register Base lacks compact default hidden-column config');
+  if(standardBaseYaml.includes('      - document_date\n')===false||standardBaseYaml.includes('      - sender\n')===false||standardBaseYaml.includes('      - document_type\n')===false) fail('standard Document Register Base compact defaults hid primary columns');
   const ignoredLocalizedBase=baseConfig.metadataDocumentRegisterStandardBaseYaml(schema,()=> 'SHOULD NOT BE USED');
   if(ignoredLocalizedBase!==standardBaseYaml) fail('standard Base factory unexpectedly depends on UI language');
   if(standardBaseYaml.includes('filemeta_id')||standardBaseYaml.includes('record filename')) fail('standard Dokumentregister Base exposes technical identity fields');
@@ -117,6 +119,12 @@ module.exports=function verifyDocumentRegisterBasesContract(){
   if(!viewSource.includes('metadataFieldTypeRegistry.parseNormalizeValidate')||!viewSource.includes('pdfDocumentRegisterMatchesFilter(filter')) fail('0.1.206 filter validation/matching does not reuse canonical field types');
   if(viewSource.includes("this.config.set('filters'")||viewSource.includes('modifyText(PDF_DOCUMENT_REGISTER_STANDARD_BASE_PATH')||viewSource.includes('modifyText("PDF Dokumentregister.base"')) fail('header filters must not rewrite native Bases filters or the Base file directly');
   if(!viewSource.includes("PDF_DOCUMENT_REGISTER_HEADER_FILTERS_CONFIG_KEY = 'pdfiumHeaderFilters'")||!viewSource.includes('pdfDocumentRegisterHeaderFiltersFromConfig(')||!viewSource.includes('pdfDocumentRegisterHeaderFiltersToConfig(')) fail('persistent header-filter config contract missing');
+  if(!viewSource.includes("PDF_DOCUMENT_REGISTER_HIDDEN_COLUMNS_CONFIG_KEY = 'pdfiumHiddenColumns'")||!viewSource.includes('pdfDocumentRegisterHiddenColumnsFromConfig(')||!viewSource.includes('pdfDocumentRegisterHiddenColumnsToConfig(')) fail('persistent hidden-column config contract missing');
+  if(!viewSource.includes('class PdfDocumentRegisterColumnPickerModal extends Modal')||!viewSource.includes("documentRegister.columns.button")||!viewSource.includes('this.openColumnPicker(columns,hiddenColumns)')) fail('Document Register column picker UI missing');
+  if(!viewSource.includes("this.config.set(\n      PDF_DOCUMENT_REGISTER_HIDDEN_COLUMNS_CONFIG_KEY")||!viewSource.includes('this.onDataUpdated();')) fail('column visibility is not persisted through the current Bases view config');
+  if(viewSource.includes("cls:'pdfium-document-register-open'")||viewSource.includes("text:this.t('common.open')")) fail('PDF column still renders a separate Open button');
+  if(!viewSource.includes("cls:'internal-link pdfium-document-register-pdf-link'")||!viewSource.includes("text:fileName || 'PDF'")||!viewSource.includes("this.host?.openLink?.(resolvedPath")) fail('PDF column does not render the filename as a clickable internal link');
+  if(!viewSource.includes("if(showStatus)")||!viewSource.includes("if(showPdf)")||!viewSource.includes("fields=allFields.filter")) fail('column visibility is not applied to metadata and system columns');
   if(!viewSource.includes('rememberDocumentRegisterFilters')||!viewSource.includes('persistHeaderFiltersIfEnabled()')||!viewSource.includes('this.config.set(')) fail('optional header-filter persistence path missing');
   if(viewSource.includes("sortButton.setAttribute('title'")||viewSource.includes("filterButton.setAttribute('title'")) fail('header buttons must not duplicate native title and Obsidian accessibility tooltip text');
   if(!viewSource.includes("property:'filemeta_status', label:this.t('documentRegister.status')")||!viewSource.includes("property:'filemeta_file', label:this.t('documentRegister.pdf')")) fail('status/PDF headers are not wired to localized shared header interaction');
@@ -182,6 +190,9 @@ module.exports=function verifyDocumentRegisterBasesContract(){
     transientHeaderFilterPrototype:true,
     optionalPersistentHeaderFilters:true,
     persistentHeaderFiltersDefaultOff:true,
+    persistentColumnVisibility:true,
+    compactStandardColumns:true,
+    pdfFilenameIsClickableLink:true,
     headerTooltipDeduplicated:true,
     internalVersionSynchronized:true,
     staleVersionedMainBridgeCleanup:true,
@@ -191,7 +202,7 @@ module.exports=function verifyDocumentRegisterBasesContract(){
     booleanFilter:true,
     textContainsFilter:true,
     headerFilterDoesNotWriteNativeBasesFilters:true,
-    humanStatusAndPdfActions:viewSource.includes("text:activeRecord ? this.t('common.active') : this.t('common.missing')")&&viewSource.includes("text:this.t('common.open')"),
+    humanStatusAndPdfActions:viewSource.includes("text:activeRecord ? this.t('common.active') : this.t('common.missing')")&&viewSource.includes("cls:'internal-link pdfium-document-register-pdf-link'"),
     multilingualUiRoadmapDocumented:read('docs/history/MILESTONE.md').includes('Future localization reminder')
   };
 };
