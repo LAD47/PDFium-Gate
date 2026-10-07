@@ -15,7 +15,8 @@ function documentRecordBenchmarkMemorySnapshot() {
 
 function documentRecordRegisterStatusSnapshot(documentRecords,pdfFiles,getState) {
   const state=documentRecords || {};
-  const problemRecordPaths=new Set(state.invalidRecordPaths || []);
+  const invalidRecordPaths=new Set(state.invalidRecordPaths || []);
+  const problemRecordPaths=new Set(invalidRecordPaths);
   for(const id of state.ambiguousIds || []) {
     const paths=state.recordPathsById?.get?.(id);
     for(const path of paths || []) problemRecordPaths.add(metadataRecordNormalizeVaultPath(path));
@@ -36,8 +37,21 @@ function documentRecordRegisterStatusSnapshot(documentRecords,pdfFiles,getState)
     else if(entry?.status===METADATA_RECORD_STATUS_MISSING) missingCount++;
   }
 
-  let unregisteredCount=0;
+  const errorItems=[...problemRecordPaths].map(recordPath=>{
+    const entry=state.entryByRecordPath?.get?.(recordPath) || null;
+    let reason='identity';
+    if(invalidRecordPaths.has(recordPath)) reason='invalid';
+    else if(entry?.id && state.ambiguousIds?.has?.(entry.id)) reason='ambiguous-id';
+    else if(entry?.pdfPath && state.ambiguousPdfPaths?.has?.(entry.pdfPath)) reason='ambiguous-pdf-path';
+    return {
+      recordPath:metadataRecordNormalizeVaultPath(recordPath),
+      pdfPath:metadataRecordNormalizeVaultPath(entry?.pdfPath || ''),
+      reason
+    };
+  }).sort((a,b)=>a.recordPath.localeCompare(b.recordPath));
+
   const registrationProblemPaths=[];
+  const unregisteredPdfPaths=[];
   const files=Array.isArray(pdfFiles) ? pdfFiles : [];
   for(const file of files) {
     const path=metadataRecordNormalizeVaultPath(file?.path);
@@ -46,18 +60,22 @@ function documentRecordRegisterStatusSnapshot(documentRecords,pdfFiles,getState)
       registrationProblemPaths.push(path);
       continue;
     }
-    if(!registrationState.registered) unregisteredCount++;
+    if(!registrationState.registered) unregisteredPdfPaths.push(path);
   }
+  unregisteredPdfPaths.sort((a,b)=>a.localeCompare(b));
 
   return {
     ok:true,
     activeCount,
     missingCount,
-    errorCount:problemRecordPaths.size,
-    unregisteredCount,
+    errorCount:errorItems.length,
+    unregisteredCount:unregisteredPdfPaths.length,
+    allCount:activeCount + missingCount,
     totalRecordCount:Number(state.entryByRecordPath?.size || 0) + Number(state.invalidRecordPaths?.size || 0),
     totalPdfCount:files.length,
-    problemRecordPaths:[...problemRecordPaths].sort((a,b)=>a.localeCompare(b)),
+    errorItems,
+    unregisteredPdfPaths,
+    problemRecordPaths:errorItems.map(item=>item.recordPath),
     registrationProblemCount:registrationProblemPaths.length,
     registrationProblemPaths
   };
