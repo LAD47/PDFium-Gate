@@ -27,7 +27,9 @@ This file is a running list of observations found during practical testing that 
    - GitHub Actions run `37609277920` passed `npm ci`, `npm audit --audit-level=high`, the full `npm run check`, and behavioral verification of status counts, concrete error/unregistered items, filter order and selected-state wiring; generated `main.js` was rebuilt from canonical source.
    - Practical status-filter test 1–8 passed on 2026-10-07.
    - Follow-up practical check found two remaining **Invalid metadata record** entries even after stale-path self-healing. Their metadata files therefore still exist in the vault; this is a real-record diagnostic case rather than stale RAM state.
-   - Candidate follow-up now preserves the canonical parser/validation error per invalid record and renders that exact detail under the broad error category. Fresh automated verification and practical inspection of the two real records remain.
+   - Candidate follow-up now preserves the canonical parser/validation error per invalid record and renders that exact detail under the broad error category.
+   - GitHub Actions run `37614784955` passed `npm ci`, `npm audit --audit-level=high` and the full `npm run check`, including behavioral verification that validation detail is retained, displayed in the status summary and removed with the invalid-record lifecycle.
+   - Practical inspection of the two real invalid records remains.
 
 2. **PDF Document Register: current user interface needs redesign**
    - The current Document Register user interface was judged unusable/poor in practical testing.
