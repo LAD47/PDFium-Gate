@@ -664,7 +664,10 @@ class DocumentRecordsFeature {
         return {ok:false,error:'Metadata record PDF target changed and must be reviewed again before deletion'};
       }
 
-      await this.obsidianVaultWriteAdapter.deleteFile(file,true);
+      if(typeof this.obsidianVaultWriteAdapter?.trashFile!=='function') {
+        return {ok:false,error:'Metadata record trash operation is unavailable'};
+      }
+      await this.obsidianVaultWriteAdapter.trashFile(file);
       this.removeDocumentRecordEntryByPath(path);
       this.state.documentRecords.lastError=null;
       const remainingIds=this.state.documentRecords.idsByPdfPath.get(pdfPath);
