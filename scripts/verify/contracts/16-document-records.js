@@ -197,7 +197,7 @@ module.exports=async function verifyDocumentRecordsContract(){
   owner.obsidianVaultReadAdapter={
     listMarkdownFiles:()=>[...files.values()].map(item=>item.file),
     listFiles:()=>[...pdfFiles.values()],
-    getAbstractFileByPath:path=>pdfFiles.get(String(path||'')) || extraVaultFiles.get(String(path||'')) || null
+    getAbstractFileByPath:path=>pdfFiles.get(String(path||'')) || files.get(String(path||''))?.file || extraVaultFiles.get(String(path||'')) || null
   };
   owner.obsidianLinkResolutionAdapter={resolveFirst:(linkpath)=>{
     const target=String(linkpath||'');
@@ -206,9 +206,16 @@ module.exports=async function verifyDocumentRecordsContract(){
     return {ok:true,file:direct};
   }};
   owner.obsidianMetadataCacheAdapter={getFrontmatter:()=>null};
+  const trashedRecordPaths=[];
   owner.obsidianVaultWriteAdapter={
     async deleteFile(file){
       if(!file?.path) throw new Error('test delete mangler fil');
+      files.delete(file.path);
+      return true;
+    },
+    async trashFile(file){
+      if(!file?.path) throw new Error('test trash mangler fil');
+      trashedRecordPaths.push(file.path);
       files.delete(file.path);
       return true;
     }
@@ -458,12 +465,25 @@ module.exports=async function verifyDocumentRecordsContract(){
   for(const duplicateId of duplicateIds){
     const recordPath=recordApi.metadataRecordPathFromId(duplicateId);
     const file={path:recordPath,extension:'md'};
-    files.set(recordPath,{file,record:{id:duplicateId,pdfPath:'Dup/x.pdf',status:recordApi.METADATA_RECORD_STATUS_ACTIVE,values:{}}});
+    files.set(recordPath,{file,record:{id:duplicateId,pdfPath:'Dup/x.pdf',status:recordApi.METADATA_RECORD_STATUS_ACTIVE,values:{sender:duplicateId===duplicateIds[0]?'Old':'Keep'}}});
   }
   owner.state.documentRecords=makeState();
   await owner.ensureDocumentRecordIndexReady();
   lookup=owner.getDocumentMetadataRecordState('Dup/x.pdf');
   if(lookup.ok||lookup.reason!=='ambiguous-pdf-path') fail('duplicate PDF-path records did not fail closed');
+
+  const duplicateFirstPath=recordApi.metadataRecordPathFromId(duplicateIds[0]);
+  const wrongDelete=await owner.deleteDuplicateDocumentMetadataRecord(duplicateFirstPath,duplicateIds[1],'Dup/x.pdf');
+  if(wrongDelete?.ok||!files.has(duplicateFirstPath)) fail('duplicate-record delete did not fail closed on stale/wrong UUID');
+
+  const duplicateDelete=await owner.deleteDuplicateDocumentMetadataRecord(duplicateFirstPath,duplicateIds[0],'Dup/x.pdf');
+  if(!duplicateDelete?.ok||!duplicateDelete.deleted||duplicateDelete.remainingRecordCount!==1) fail(`guarded duplicate-record delete failed: ${JSON.stringify(duplicateDelete)}`);
+  if(files.has(duplicateFirstPath)||!trashedRecordPaths.includes(duplicateFirstPath)) fail('duplicate metadata record was not routed through trash');
+  lookup=owner.getDocumentMetadataRecordState('Dup/x.pdf');
+  if(!lookup?.ok||!lookup.registered||lookup.id!==duplicateIds[1]||lookup.values?.sender!=='Keep') fail('remaining duplicate record did not become the sole active record');
+
+  const secondDelete=await owner.deleteDuplicateDocumentMetadataRecord(recordApi.metadataRecordPathFromId(duplicateIds[1]),duplicateIds[1],'Dup/x.pdf');
+  if(secondDelete?.ok) fail('duplicate-record delete remained available after ambiguity was resolved');
 
   for(const key of globalKeys) delete global[key];
   delete global.metadataUuidV4;
@@ -516,6 +536,9 @@ module.exports=async function verifyDocumentRecordsContract(){
     missingRecoveryUnsupported:true,
     manualRelinkUnsupported:true,
     behavioralAmbiguityFailClosed:true,
+    guardedDuplicateRecordDelete:true,
+    duplicateRecordDeleteUsesTrash:true,
+    duplicateDeleteLeavesSoleActiveRecord:true,
     coldIndexMetricsCaptured:true,
     forcedIndexBenchmark:true,
     benchmarkEventSuppressionScoped:true,
