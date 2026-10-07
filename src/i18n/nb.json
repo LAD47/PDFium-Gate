@@ -624,7 +624,7 @@
   "settings.group.import": "Import",
   "settings.group.metadataRegister": "Metadata og dokumentregister",
   "settings.documentRegister.explanation": "PDFium Gate-dokumentregisteret er noe annet enn eksempel-Base-filene. PDF Dokumentregister.base opprettes når det virkelige registeret åpnes første gang, leser registrerte PDF-er fra File Metadata og bruker PDFium Gates egen Bases-visning. Etter opprettelse er Base-filen brukerens egen, og PDFium Gate overskriver ikke senere endringer.",
-  "documentRegister.columns.button": "Kolonner…",
+  "documentRegister.columns.button": "Velg Kolonner",
   "documentRegister.columns.buttonAria": "Velg synlige kolonner",
   "documentRegister.columns.title": "Synlige kolonner",
   "documentRegister.columns.description": "Velg hvilke kolonner som skal vises i denne Dokumentregister-visningen. Dette endrer bare visningen, ikke metadataene.",
