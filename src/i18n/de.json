@@ -646,5 +646,11 @@
   "documentRegister.overview.reasonAmbiguousPdfPath": "Mehrere Datensätze verweisen auf dieselbe PDF",
   "documentRegister.overview.reasonIdentity": "Konflikt der Dokumentidentität",
   "documentRegister.overview.noErrors": "Keine Fehler in Dokumentdatensätzen.",
-  "documentRegister.overview.noUnregistered": "Keine nicht registrierten PDFs."
+  "documentRegister.overview.noUnregistered": "Keine nicht registrierten PDFs.",
+  "documentRegister.overview.duplicateUuid": "UUID",
+  "documentRegister.overview.duplicateUserMetadata": "Benutzermetadaten",
+  "documentRegister.overview.duplicateMetadataIdentical": "Die Benutzermetadaten sind identisch",
+  "documentRegister.overview.duplicateMetadataDifferent": "Die Benutzermetadaten unterscheiden sich",
+  "documentRegister.overview.duplicateNoUserMetadata": "Keine Benutzermetadaten",
+  "documentRegister.overview.duplicateCompareHint": "Vergleichen Sie die Datensätze, bevor etwas gelöscht wird."
 }
