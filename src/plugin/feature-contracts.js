@@ -406,7 +406,8 @@ const PLUGIN_FEATURE_CONTRACTS = Object.freeze({
       "getMetadataSchemaPresentationSnapshot",
       "getDocumentRegisterStatusSummary",
       "resolveDocumentRecordPdfPath",
-      "saveDocumentMetadataRecordValues"
+      "saveDocumentMetadataRecordValues",
+      "deleteDuplicateDocumentMetadataRecord"
     ],
     "mutableStateFields": []
   },
