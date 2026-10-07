@@ -20,7 +20,8 @@ This file is a running list of observations found during practical testing that 
    - Visibility persists in the current Base view under `pdfiumHiddenColumns`; stale/unknown values are sanitized.
    - Newly created standard registers use a compact default set: Document date, Sender, Document type, Status and PDF. Existing user-owned Base files are not rewritten.
    - GitHub Actions run `37601435010` passed `npm ci`, `npm audit --audit-level=high` and the full `npm run check`; generated `main.js` was rebuilt from canonical source.
-   - Practical Obsidian testing remains.
+   - Practical test 1–9 passed on 2026-10-07 for clickable PDF links, column show/hide persistence, Show all, and the minimum-one-column guard.
+   - Follow-up polish requested after that pass: put PDF first and move the **Columns…** control to the left near the result area. Automated verification and a short practical check of those two changes remain.
 
 2. **PDF Document Register: current user interface needs redesign**
    - The current Document Register user interface was judged unusable/poor in practical testing.
