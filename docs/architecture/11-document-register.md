@@ -127,6 +127,7 @@ The second contained Document Register redesign slice turns the health overview 
 - **All** is last and resets the quick status filter to the normal valid registered-record table. Its count is Active + Missing; Errors and Unregistered are maintenance states outside the valid Base-row set and are therefore not included in the All count.
 - Technical backup PDFs and benchmark PDFs remain excluded through the existing registration-file policy.
 - Quick status filters are transient view state and do not rewrite native Base filters, metadata records or the schema. Existing per-column header filters remain independent and continue to apply to the normal Active/Missing/All table.
+- Table text is explicitly selectable/copyable, including diagnostic paths, validation messages and long technical values. Inline-edit cells must not enter edit mode when the click completes a non-empty text selection inside that cell; Enter/F2 and ordinary unselected clicks still enter the existing editor.
 - Problem-list metadata-file links and unregistered PDF links are ordinary Obsidian links. This slice deliberately does not add destructive delete/repair actions; those require separate safety/UX decisions.
 - The filter bar is rendered even when the Base query has no valid rows, because an empty table may still coexist with invalid records or unregistered PDFs.
 - Invalid-record paths are maintained by the same record-index lifecycle used by DocumentInfo and registration. A record that is corrected or deleted must leave the Errors count without requiring a full restart.
