@@ -3996,9 +3996,9 @@ function metadataDocumentRegisterStandardBaseYaml(schema) {
     for(const property of hiddenColumns) lines.push(`      - ${property}`);
   }
   lines.push('    order:');
+  lines.push('      - filemeta_file');
   for (const field of fields) lines.push(`      - ${field.property}`);
   lines.push('      - filemeta_status');
-  lines.push('      - filemeta_file');
 
   const hasDocumentDate = fields.some(field => field.property === 'document_date');
   lines.push('    sort:');
@@ -75483,13 +75483,13 @@ class PdfDocumentRegisterBasesView extends BasesViewBase {
 
   documentRegisterColumns(fields) {
     return [
+      {property:'filemeta_file',label:this.t('documentRegister.pdf'),systemType:'link'},
       ...(Array.isArray(fields) ? fields : []).map(field=>({
         property:String(field?.property || '').trim(),
         label:String(field?.label || field?.property || '').trim(),
         field
       })).filter(column=>column.property),
-      {property:'filemeta_status',label:this.t('documentRegister.status'),systemType:'status'},
-      {property:'filemeta_file',label:this.t('documentRegister.pdf'),systemType:'link'}
+      {property:'filemeta_status',label:this.t('documentRegister.status'),systemType:'status'}
     ];
   }
 
@@ -75795,12 +75795,6 @@ class PdfDocumentRegisterBasesView extends BasesViewBase {
     }
 
     const toolbar=this.containerEl.createDiv({cls:'pdfium-document-register-toolbar'});
-    const help = toolbar.createDiv({ cls:'pdfium-document-register-edit-help' });
-    const filterCount = this.headerFilters.size;
-    const rememberFilters=this.shouldPersistHeaderFilters();
-    help.setText(filterCount
-      ? this.t('documentRegister.helpActive',{count:filterCount,persistence:rememberFilters ? this.t('documentRegister.filtersSaved') : this.t('documentRegister.filtersTemporary')})
-      : this.t('documentRegister.helpIdle',{persistence:rememberFilters ? this.t('documentRegister.filtersSaved') : this.t('documentRegister.filtersTemporary')}));
     const toolbarActions=toolbar.createDiv({cls:'pdfium-document-register-toolbar-actions'});
     const columnsButton=toolbarActions.createEl('button',{text:this.t('documentRegister.columns.button')});
     columnsButton.setAttribute('aria-label',this.t('documentRegister.columns.buttonAria'));
@@ -75810,13 +75804,20 @@ class PdfDocumentRegisterBasesView extends BasesViewBase {
       this.openColumnPicker(columns,hiddenColumns);
     });
 
+    const help = toolbar.createDiv({ cls:'pdfium-document-register-edit-help' });
+    const filterCount = this.headerFilters.size;
+    const rememberFilters=this.shouldPersistHeaderFilters();
+    help.setText(filterCount
+      ? this.t('documentRegister.helpActive',{count:filterCount,persistence:rememberFilters ? this.t('documentRegister.filtersSaved') : this.t('documentRegister.filtersTemporary')})
+      : this.t('documentRegister.helpIdle',{persistence:rememberFilters ? this.t('documentRegister.filtersSaved') : this.t('documentRegister.filtersTemporary')}));
+
     const scroll = this.containerEl.createDiv({ cls:'pdfium-document-register-scroll' });
     const table = scroll.createEl('table', { cls:'pdfium-document-register-table' });
     const thead = table.createEl('thead');
     const headRow = thead.createEl('tr');
+    if(showPdf) this.renderHeaderCell(headRow,{ property:'filemeta_file', label:this.t('documentRegister.pdf'), systemType:'link' });
     for (const field of fields) this.renderHeaderCell(headRow,{ property:field.property, label:String(field.label || field.property), field });
     if(showStatus) this.renderHeaderCell(headRow,{ property:'filemeta_status', label:this.t('documentRegister.status'), systemType:'status' });
-    if(showPdf) this.renderHeaderCell(headRow,{ property:'filemeta_file', label:this.t('documentRegister.pdf'), systemType:'link' });
 
     const tbody = table.createEl('tbody');
     let visibleRows = 0;
@@ -75846,26 +75847,6 @@ class PdfDocumentRegisterBasesView extends BasesViewBase {
       const row = tbody.createEl('tr');
       row.dataset.pdfmetaStatus = activeRecord ? METADATA_RECORD_STATUS_ACTIVE : METADATA_RECORD_STATUS_MISSING;
 
-      const fieldByProperty = new Map(fields.map(field=>[field.property,field]));
-      for (const field of fields) {
-        const item = presentedByProperty.get(field.property) || { property:field.property, raw:null, display:'—' };
-        const cell = row.createEl('td');
-        const canonicalField = fieldByProperty.get(item.property);
-        if (!canonicalField) {
-          cell.setText(item.display || '—');
-          continue;
-        }
-        this.renderDisplayCell(cell,{ field:canonicalField, value:item.raw, pdfPath:resolvedPath, editable:canOpenPdf });
-      }
-
-      if(showStatus) {
-        const statusCell = row.createEl('td', { cls:'pdfium-document-register-status-cell' });
-        statusCell.createSpan({
-          cls:activeRecord ? 'pdfium-document-register-status is-active' : 'pdfium-document-register-status is-missing',
-          text:activeRecord ? this.t('common.active') : this.t('common.missing')
-        });
-      }
-
       if(showPdf) {
         const pdfCell = row.createEl('td', { cls:'pdfium-document-register-pdf-cell' });
         const fileName = resolvedPath
@@ -75889,6 +75870,27 @@ class PdfDocumentRegisterBasesView extends BasesViewBase {
           pdfCell.createSpan({ cls:'pdfium-document-register-missing-path', text:fileName || this.t('documentRegister.pdfMissing') });
         }
       }
+
+      const fieldByProperty = new Map(fields.map(field=>[field.property,field]));
+      for (const field of fields) {
+        const item = presentedByProperty.get(field.property) || { property:field.property, raw:null, display:'—' };
+        const cell = row.createEl('td');
+        const canonicalField = fieldByProperty.get(item.property);
+        if (!canonicalField) {
+          cell.setText(item.display || '—');
+          continue;
+        }
+        this.renderDisplayCell(cell,{ field:canonicalField, value:item.raw, pdfPath:resolvedPath, editable:canOpenPdf });
+      }
+
+      if(showStatus) {
+        const statusCell = row.createEl('td', { cls:'pdfium-document-register-status-cell' });
+        statusCell.createSpan({
+          cls:activeRecord ? 'pdfium-document-register-status is-active' : 'pdfium-document-register-status is-missing',
+          text:activeRecord ? this.t('common.active') : this.t('common.missing')
+        });
+      }
+
     }
     if (!visibleRows && this.headerFilters.size) {
       const emptyRow = tbody.createEl('tr');
