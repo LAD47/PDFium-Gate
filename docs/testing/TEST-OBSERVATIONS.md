@@ -41,7 +41,7 @@ This file is a running list of observations found during practical testing that 
    - Agreed UX: a **Delete metadata** button belongs on each record, directly with its displayed user metadata. The action must never infer which record is correct.
    - Candidate implementation now requires confirmation, shows a stronger warning when the compared user metadata differ, revalidates path/UUID/PDF identity before removal, and sends the selected metadata record through Obsidian's trash flow rather than permanently deleting it.
    - GitHub Actions run `37628967629` passed `npm ci`, `npm audit --audit-level=high` and the full `npm run check`. Behavioral verification confirms stale/wrong UUID deletion is rejected, the selected duplicate is trashed, the remaining record becomes the sole active record, and a second delete attempt is rejected once ambiguity is resolved.
-   - Practical verification on the observed pair remains.
+   - Practical verification on the observed pair passed completely on 2026-10-07: steps 1–6 OK. The two conflicting records were grouped correctly, differing user metadata were shown, cancel left everything unchanged, the selected metadata record was moved through Obsidian's trash flow after confirmation, the PDF remained untouched, and the surviving record became the sole active record with the conflict removed.
 
 
 2. **PDF Document Register: current user interface needs redesign**
