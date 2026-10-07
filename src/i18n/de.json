@@ -636,5 +636,15 @@
   "documentRegister.overview.missing": "Fehlend",
   "documentRegister.overview.errors": "Fehler",
   "documentRegister.overview.unregistered": "Nicht registriert",
-  "documentRegister.overview.unavailable": "Der Dokumentstatus ist vorübergehend nicht verfügbar."
+  "documentRegister.overview.unavailable": "Der Dokumentstatus ist vorübergehend nicht verfügbar.",
+  "documentRegister.overview.all": "Alle",
+  "documentRegister.overview.filterAria": "{label} anzeigen",
+  "documentRegister.overview.metadataFile": "Metadatendatei",
+  "documentRegister.overview.problem": "Problem",
+  "documentRegister.overview.reasonInvalid": "Ungültiger Metadatensatz",
+  "documentRegister.overview.reasonAmbiguousId": "Doppelte Metadaten-ID",
+  "documentRegister.overview.reasonAmbiguousPdfPath": "Mehrere Datensätze verweisen auf dieselbe PDF",
+  "documentRegister.overview.reasonIdentity": "Konflikt der Dokumentidentität",
+  "documentRegister.overview.noErrors": "Keine Fehler in Dokumentdatensätzen.",
+  "documentRegister.overview.noUnregistered": "Keine nicht registrierten PDFs."
 }
