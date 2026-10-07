@@ -99,3 +99,17 @@ This custom state is distinct from native Base `filters`: the plugin must not wr
 ## 0.1.223 profile filter
 
 The standard PDF Document Register remains a PDF-specific user view, but its Base filter now targets the generic record layer with both `filemeta_type == "pdf"` and `filemeta_profile == "document"`. This keeps the current UI simple while allowing future registers to select other type/profile combinations.
+
+## 0.1.227 compact columns and PDF-link boundary
+
+The first Document Register redesign slice keeps the custom view but reduces table width and removes an unnecessary action control.
+
+- The PDF system column renders the resolved PDF filename as a normal clickable Obsidian-style internal link. There is no separate **Open** button. Missing PDFs render the remembered filename/path as non-clickable muted text.
+- The custom view exposes a **Columns…** chooser containing schema-driven metadata columns plus the Status and PDF system columns.
+- Column visibility is presentation state only. It does not add/remove metadata fields, rewrite document records, or change the metadata schema.
+- Visibility is stored under the custom Bases view-config key `pdfiumHiddenColumns`, so the choice belongs to that Base view. Unknown/stale property names are ignored when read back.
+- Hiding a column does not silently remove a filter on that property; filter state remains independent presentation state and becomes accessible again when the column is shown.
+- At least one column must remain visible.
+- Newly created standard `PDF Dokumentregister.base` files start compact: `document_date`, `sender`, `document_type`, Status and PDF are visible, while the standard time/response-detail columns start hidden. User-defined fields that are enabled for the default Base are not automatically hidden.
+- The create-once ownership rule still applies. Existing user-owned Base files are not rewritten to adopt these defaults; their visibility changes only when the user uses the column chooser.
+
