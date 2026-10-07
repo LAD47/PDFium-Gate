@@ -164,6 +164,8 @@ module.exports=function verifyDocumentRegisterBasesContract(){
   if(!pluginStateSource.includes('invalidRecordPaths: new Set()')) fail('document record state does not track invalid record paths');
   if(!recordFeatureSource.includes('async getDocumentRegisterStatusSummary()')||!recordFeatureSource.includes('function documentRecordRegisterStatusSnapshot(')||!recordFeatureSource.includes('invalidRecordPaths=new Set(state.invalidRecordPaths')||!recordFeatureSource.includes('problemRecordPaths=new Set(invalidRecordPaths)')) fail('Document Register status summary is missing or does not include invalid records');
   if(!recordFeatureSource.includes('this.state.documentRecords.invalidRecordPaths.add(path)')||!recordFeatureSource.includes('this.state.documentRecords.invalidRecordPaths.delete(path)')) fail('invalid record tracking is not maintained by live record refresh');
+  if(!recordFeatureSource.includes('pruneMissingInvalidDocumentRecordPaths()')||!recordFeatureSource.includes('const existsAsMarkdown=!!file')||!recordFeatureSource.includes('staleInvalidRemovedCount')) fail('Document Register does not self-heal stale invalid-record paths before status summary');
+  if(!recordFeatureSource.includes("reason:'vault-lookup-unavailable'")||!recordFeatureSource.includes('uncertainPaths.push(path)')) fail('stale-invalid pruning does not fail closed on lookup uncertainty');
   if(!recordFeatureSource.includes('unregisteredPdfPaths.push(path)')||!recordFeatureSource.includes('METADATA_RECORD_STATUS_MISSING) missingCount++')) fail('Document Register status summary does not count/expose unregistered or missing documents');
   if(!recordFeatureSource.includes('errorItems')||!recordFeatureSource.includes("reason='ambiguous-id'")||!recordFeatureSource.includes("reason='ambiguous-pdf-path'")) fail('Document Register status summary does not expose problem rows/reasons');
   if(!featureSource.includes('getStatusSummary:() => this.ports.getDocumentRegisterStatusSummary()')) fail('Document Register view host does not expose canonical status summary');
@@ -277,6 +279,8 @@ module.exports=function verifyDocumentRegisterBasesContract(){
     allStatusFilterLast:true,
     specialErrorAndUnregisteredLists:true,
     invalidRecordTracking:true,
+    staleInvalidRecordSelfHealing:true,
+    failClosedInvalidPathLookup:true,
     unregisteredPdfCount:true,
     headerTooltipDeduplicated:true,
     internalVersionSynchronized:true,
