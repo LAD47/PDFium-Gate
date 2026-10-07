@@ -15,8 +15,10 @@ module.exports=async function verifyDocumentRecordVisibility(){
   if(!featureSource.includes("DOCUMENT_RECORD_VISIBILITY_BODY_CLASS = 'pdfium-hide-document-records'")) fail('visibility body-class contract missing');
   if(!featureSource.includes("DOCUMENT_RECORD_VISIBILITY_SETTING = 'hideDocumentMetadataFilesInExplorer'")) fail('visibility setting contract missing');
   if(!styles.includes('.workspace-leaf-content[data-type="file-explorer"]')) fail('visibility CSS is not scoped to File Explorer');
-  if(!styles.includes('.nav-folder:has(> .nav-folder-title[data-path="File Metadata"])')) fail('visibility CSS does not target exact canonical record root');
-  if(!styles.includes('display: none !important;')) fail('visibility CSS does not actually hide the File Explorer folder');
+  if(!styles.includes('.nav-folder-title[data-path="File Metadata"]')) fail('visibility CSS does not target exact canonical record root title');
+  if(!styles.includes('.nav-folder-title[data-path="File Metadata"] + .nav-folder-children')) fail('visibility CSS does not hide the canonical record root children');
+  if(styles.includes(':has(')) fail('visibility CSS reintroduced the expensive :has selector');
+  if(!styles.includes('display: none;')) fail('visibility CSS does not actually hide the File Explorer folder');
   if(!settings.includes("settings.metadata.hideFiles.name")) fail('localized visibility setting UI missing');
   if(!settings.includes("hideDocumentMetadataFilesInExplorer !== false")) fail('visibility setting is not default-on');
   if(!lifecycle.includes("id: 'toggle-document-metadata-files'")) fail('visibility Command Palette entry missing');
