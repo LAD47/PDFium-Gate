@@ -37,7 +37,9 @@ This file is a running list of observations found during practical testing that 
    - Removing the obsolete SHA field exposed a real identity conflict: records `02eef1fc-d30b-4f87-9d1f-1816f702d965` and `0720c77a-5e4d-4e91-91be-1d6de488ea59` both point to `10_Kilder/PDF/Fredrikstad Blad/Betalte 10.100 kroner i pipegebyr.pdf`.
    - Follow-up candidate groups all records for one ambiguous PDF together and compares their user metadata as identical/different before any destructive decision.
    - GitHub Actions run `37626673113` passed `npm ci`, `npm audit --audit-level=high` and the full `npm run check`, including behavioral verification of grouped duplicate-PDF conflicts and order-independent metadata comparison.
-   - Practical comparison on the observed pair remains.
+   - Practical comparison on the observed pair reported **User metadata differ**.
+   - Agreed UX: a **Delete metadata** button belongs on each record, directly with its displayed user metadata. The action must never infer which record is correct.
+   - Candidate implementation now requires confirmation, shows a stronger warning when the compared user metadata differ, revalidates path/UUID/PDF identity before removal, and sends the selected metadata record through Obsidian's trash flow rather than permanently deleting it. Fresh automation + practical verification remain.
 
 
 2. **PDF Document Register: current user interface needs redesign**
