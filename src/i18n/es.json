@@ -652,5 +652,14 @@
   "documentRegister.overview.duplicateMetadataIdentical": "Los metadatos de usuario son idénticos",
   "documentRegister.overview.duplicateMetadataDifferent": "Los metadatos de usuario son diferentes",
   "documentRegister.overview.duplicateNoUserMetadata": "Sin metadatos de usuario",
-  "documentRegister.overview.duplicateCompareHint": "Compare los registros antes de eliminar nada."
+  "documentRegister.overview.duplicateCompareHint": "Compare los registros antes de eliminar nada.",
+  "documentRegister.overview.duplicateDeleteButton": "Eliminar metadatos",
+  "documentRegister.overview.duplicateDeleteTitle": "¿Eliminar registro de metadatos duplicado?",
+  "documentRegister.overview.duplicateDeleteWarningIdentical": "Este registro contiene los mismos metadatos de usuario que los otros registros de este PDF. Solo se eliminará este registro de metadatos, no el PDF.",
+  "documentRegister.overview.duplicateDeleteWarningDifferent": "Este registro contiene metadatos de usuario diferentes de los otros registros de este PDF. Eliminarlo puede causar una pérdida permanente de información. Compare cuidadosamente los registros antes de continuar.",
+  "documentRegister.overview.duplicateDeleteRecord": "Archivo de metadatos: {record}",
+  "documentRegister.overview.duplicateDeleteUuidValue": "UUID: {id}",
+  "documentRegister.overview.duplicateDeletePdf": "PDF: {pdf}",
+  "documentRegister.overview.duplicateDeleteConfirm": "Eliminar registro de metadatos",
+  "documentRegister.overview.duplicateDeleteFailed": "No se pudo eliminar el registro de metadatos."
 }
