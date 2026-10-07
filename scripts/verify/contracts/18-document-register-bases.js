@@ -87,6 +87,8 @@ module.exports=function verifyDocumentRegisterBasesContract(){
   if(unavailable.registerBasesView('pdfium-document-register',{factory:()=>({})})!==false) fail('Bases registration adapter must fail open when API is unavailable');
 
   const viewSource=read('src/main/pdf-document-register-bases-view.js');
+  const recordFeatureSource=read('src/plugin/features/16-document-records.js');
+  const pluginStateSource=read('src/plugin/plugin-state.js');
   const baseConfigSource=read('src/metadata/document-register-base-config.js');
   const featureSource=read('src/plugin/features/18-document-register-bases.js');
   const lifecycleSource=read('src/plugin/features/01-lifecycle.js');
@@ -127,6 +129,15 @@ module.exports=function verifyDocumentRegisterBasesContract(){
   if(viewSource.includes("cls:'pdfium-document-register-open'")||viewSource.includes("text:this.t('common.open')")) fail('PDF column still renders a separate Open button');
   if(!viewSource.includes("cls:'internal-link pdfium-document-register-pdf-link'")||!viewSource.includes("text:fileName || 'PDF'")||!viewSource.includes("this.host?.openLink?.(resolvedPath")) fail('PDF column does not render the filename as a clickable internal link');
   if(!viewSource.includes("if(showStatus)")||!viewSource.includes("if(showPdf)")||!viewSource.includes("fields=allFields.filter")) fail('column visibility is not applied to metadata and system columns');
+  if(!pluginStateSource.includes('invalidRecordPaths: new Set()')) fail('document record state does not track invalid record paths');
+  if(!recordFeatureSource.includes('async getDocumentRegisterStatusSummary()')||!recordFeatureSource.includes('problemRecordPaths=new Set(this.state.documentRecords.invalidRecordPaths)')) fail('Document Register status summary is missing or does not include invalid records');
+  if(!recordFeatureSource.includes('this.state.documentRecords.invalidRecordPaths.add(path)')||!recordFeatureSource.includes('this.state.documentRecords.invalidRecordPaths.delete(path)')) fail('invalid record tracking is not maintained by live record refresh');
+  if(!recordFeatureSource.includes('unregisteredCount++')||!recordFeatureSource.includes('METADATA_RECORD_STATUS_MISSING) missingCount++')) fail('Document Register status summary does not count unregistered/missing documents');
+  if(!featureSource.includes('getStatusSummary:() => this.ports.getDocumentRegisterStatusSummary()')) fail('Document Register view host does not expose canonical status summary');
+  if(!viewSource.includes('renderStatusOverview()')||!viewSource.includes("documentRegister.overview.active")||!viewSource.includes("documentRegister.overview.unregistered")) fail('Document Register status overview UI missing');
+  const overviewIndex=viewSource.indexOf('this.renderStatusOverview();');
+  const emptyIndex=viewSource.indexOf('if (!entries.length)');
+  if(overviewIndex<0||emptyIndex<0||overviewIndex>emptyIndex) fail('Document Register status overview is not rendered when the table has no valid rows');
   const pdfHeaderIndex=viewSource.indexOf("if(showPdf) this.renderHeaderCell(headRow");
   const fieldHeaderIndex=viewSource.indexOf("for (const field of fields) this.renderHeaderCell(headRow");
   if(pdfHeaderIndex<0||fieldHeaderIndex<0||pdfHeaderIndex>fieldHeaderIndex) fail('PDF header is not the first rendered table column');
@@ -216,6 +227,9 @@ module.exports=function verifyDocumentRegisterBasesContract(){
     persistentColumnVisibility:true,
     compactStandardColumns:true,
     pdfFilenameIsClickableLink:true,
+    statusOverview:true,
+    invalidRecordTracking:true,
+    unregisteredPdfCount:true,
     headerTooltipDeduplicated:true,
     internalVersionSynchronized:true,
     staleVersionedMainBridgeCleanup:true,
