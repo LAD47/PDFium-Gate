@@ -630,5 +630,11 @@
   "documentRegister.columns.description": "Choose which columns are shown in this Document Register view. This changes only the view, not the metadata.",
   "documentRegister.columns.showAll": "Show all",
   "documentRegister.columns.apply": "Apply",
-  "documentRegister.columns.requireOne": "At least one column must remain visible."
+  "documentRegister.columns.requireOne": "At least one column must remain visible.",
+  "documentRegister.overview.title": "Document status",
+  "documentRegister.overview.active": "Active",
+  "documentRegister.overview.missing": "Missing",
+  "documentRegister.overview.errors": "Errors",
+  "documentRegister.overview.unregistered": "Unregistered",
+  "documentRegister.overview.unavailable": "Document status is temporarily unavailable."
 }
