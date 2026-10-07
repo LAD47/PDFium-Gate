@@ -54,3 +54,5 @@ jobs:
           git add main.js main-bridge.js
           git commit -m "Build 0.1.227 Community review cleanup [skip ci]"
           git push
+
+# rerun after visibility verifier update
