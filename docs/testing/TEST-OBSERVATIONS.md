@@ -13,12 +13,20 @@ This file is a running list of observations found during practical testing that 
 
 ## Open items
 
-1. **PDF Document Register: current user interface needs redesign**
+1. **0.1.227 Document Register: clickable PDF filename + column chooser**
+   - Candidate on `fix/0.1.227-localized-defaults`.
+   - The PDF column now renders the PDF filename itself as the clickable internal link; the separate Open button is removed. Missing PDFs remain non-clickable.
+   - A per-view **Columns…** chooser can show/hide schema metadata fields plus Status and PDF without changing metadata.
+   - Visibility persists in the current Base view under `pdfiumHiddenColumns`; stale/unknown values are sanitized.
+   - Newly created standard registers use a compact default set: Document date, Sender, Document type, Status and PDF. Existing user-owned Base files are not rewritten.
+   - Automated verification and practical Obsidian testing remain.
+
+2. **PDF Document Register: current user interface needs redesign**
    - The current Document Register user interface was judged unusable/poor in practical testing.
    - Treat this as a UI/interaction redesign task rather than a small cosmetic fix.
    - Keep the new simple lifecycle visible: active records are usable; missing records are informational/read-only; unregistered PDFs can receive new metadata.
 
-2. **PDF annotation backup: reassess `.pdfium-backup` after the independent backup solution exists**
+3. **PDF annotation backup: reassess `.pdfium-backup` after the independent backup solution exists**
    - Keep the current `backupOriginalPdf` safety function for now: it stores one original PDF copy before PDFium Gate first modifies the file and never overwrites an existing copy.
    - Reassess whether this separate per-PDF original-copy mechanism is still needed once the independent backup project provides a validated backup/restore workflow.
    - Do not remove or merge the behavior merely because both features use the word "backup"; compare their actual protection scope, restore semantics and failure modes first.
