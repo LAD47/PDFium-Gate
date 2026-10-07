@@ -117,10 +117,11 @@ Promotion requires:
 1. repository verification succeeds;
 2. the build has been explicitly tested in the target Obsidian environment;
 3. required regression tests are accepted;
-4. no known blocker remains for the release;
-5. the exact stable candidate is frozen under `archive/<stable-version>`;
-6. a normal (non-prerelease) GitHub Release is created with the approved stable version;
-7. only then is the stable/default-branch manifest advanced for Community distribution.
+4. the exact candidate passes the mandatory Obsidian Community Review branch / preview scan and all findings are reviewed;
+5. no known blocker remains for the release;
+6. the exact stable candidate is frozen under `archive/<stable-version>`;
+7. a normal (non-prerelease) GitHub Release is created with the approved stable version;
+8. only then is the stable/default-branch manifest advanced for Community distribution.
 
 This separation is intended to ensure that normal users receive only versions we have consciously approved, while volunteer testers can remain ahead of the stable channel.
 
@@ -271,6 +272,28 @@ npm run check
 ```
 
 Do not commit if the check fails or if `git status` contains unexpected files.
+
+## Mandatory Community preview scan before merge
+
+Every future Community Plugins release must pass an Obsidian Community **Review branch / preview scan** before the release candidate is merged to `main`.
+
+Run this gate only after the candidate has the intended release version, generated runtime is current, and `npm run check` is green.
+
+Procedure:
+
+1. Open the plugin entry in the Obsidian Community portal.
+2. Choose **Review branch** / **Run preview scan**.
+3. Scan the exact release candidate. Prefer the candidate commit SHA when the portal accepts it; otherwise scan the candidate branch and record its current SHA.
+4. Review the complete report:
+   - every **Error** is release-blocking and must be fixed;
+   - every **Warning** or **Recommendation** must be reviewed and either fixed or explicitly accepted/documented;
+   - confirm that manifest, release-asset size, CSS, dependency, behavior, obfuscation and build-verification sections have no unexplained regressions.
+5. Record the scan date, scanned branch/commit SHA, result, and disposition of any remaining findings in the active release handoff or release notes.
+6. If the candidate changes after the scan in source code, generated runtime, `manifest.json`, `styles.css`, dependencies/lockfile, build configuration, or release workflow, rerun the preview scan before merge.
+
+A green local/CI build does not replace this external Community-directory scan. Likewise, a preview scan does not replace the project's own tests.
+
+Do not merge a Community release candidate to `main` until this gate has been completed and its result has been reviewed.
 
 ## Commit and push to main
 
