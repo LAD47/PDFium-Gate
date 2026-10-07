@@ -125,6 +125,15 @@ module.exports=function verifyDocumentRegisterBasesContract(){
   if(viewSource.includes("cls:'pdfium-document-register-open'")||viewSource.includes("text:this.t('common.open')")) fail('PDF column still renders a separate Open button');
   if(!viewSource.includes("cls:'internal-link pdfium-document-register-pdf-link'")||!viewSource.includes("text:fileName || 'PDF'")||!viewSource.includes("this.host?.openLink?.(resolvedPath")) fail('PDF column does not render the filename as a clickable internal link');
   if(!viewSource.includes("if(showStatus)")||!viewSource.includes("if(showPdf)")||!viewSource.includes("fields=allFields.filter")) fail('column visibility is not applied to metadata and system columns');
+  {
+    const fromConfig=eval(`(${ctx.extractNamedFunction(viewSource,'pdfDocumentRegisterHiddenColumnsFromConfig')})`);
+    const toConfig=eval(`(${ctx.extractNamedFunction(viewSource,'pdfDocumentRegisterHiddenColumnsToConfig')})`);
+    const allowed=['document_date','sender','filemeta_status','filemeta_file'];
+    const restored=fromConfig(['sender','unknown','sender','filemeta_file'],allowed);
+    if(restored.size!==2||!restored.has('sender')||!restored.has('filemeta_file')||restored.has('unknown')) fail('hidden-column restore did not sanitize stale/duplicate properties');
+    const serialized=toConfig(new Set(['filemeta_file','unknown','sender']),allowed);
+    if(JSON.stringify(serialized)!==JSON.stringify(['filemeta_file','sender'])) fail('hidden-column serialization did not sanitize/sort properties');
+  }
   if(!viewSource.includes('rememberDocumentRegisterFilters')||!viewSource.includes('persistHeaderFiltersIfEnabled()')||!viewSource.includes('this.config.set(')) fail('optional header-filter persistence path missing');
   if(viewSource.includes("sortButton.setAttribute('title'")||viewSource.includes("filterButton.setAttribute('title'")) fail('header buttons must not duplicate native title and Obsidian accessibility tooltip text');
   if(!viewSource.includes("property:'filemeta_status', label:this.t('documentRegister.status')")||!viewSource.includes("property:'filemeta_file', label:this.t('documentRegister.pdf')")) fail('status/PDF headers are not wired to localized shared header interaction');
