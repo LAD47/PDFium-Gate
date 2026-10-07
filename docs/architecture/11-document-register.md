@@ -115,17 +115,19 @@ The first Document Register redesign slice keeps the custom view but reduces tab
 - The create-once ownership rule still applies. Existing user-owned Base files are not rewritten to adopt these defaults; their visibility changes only when the user uses the column chooser.
 
 
-## 0.1.227 document-status overview
+## 0.1.227 document-status filters
 
-The second contained Document Register redesign slice adds a read-only health overview above the table:
+The second contained Document Register redesign slice turns the health overview into five quick filters above the result area, in this order: **Active**, **Missing**, **Errors**, **Unregistered**, **All**.
 
-- **Active** counts valid, unambiguous records whose lifecycle state is `active`.
-- **Missing** counts valid, unambiguous records whose lifecycle state is `missing`.
-- **Errors** counts metadata-record files that are invalid/corrupt or participate in ambiguous record-ID/PDF-path identity. Problem records are excluded from the normal Active/Missing counts.
-- **Unregistered** counts user PDF files accepted by the normal registration scan that do not currently resolve to an active metadata record.
+- **Active** counts valid, unambiguous records whose lifecycle state is `active` and filters the normal register table to those rows.
+- **Missing** counts valid, unambiguous records whose lifecycle state is `missing` and filters the normal register table to those rows.
+- **Errors** counts metadata-record files that are invalid/corrupt or participate in ambiguous record-ID/PDF-path identity. Because such files cannot always appear as valid Base rows, this filter renders a focused problem list in the same register surface, with the metadata file, any known PDF path and a problem reason.
+- **Unregistered** counts user PDF files accepted by the normal registration scan that do not currently resolve to an active metadata record. This filter renders those concrete PDF paths in the same result surface.
+- **All** is last and resets the quick status filter to the normal valid registered-record table. Its count is Active + Missing; Errors and Unregistered are maintenance states outside the valid Base-row set and are therefore not included in the All count.
 - Technical backup PDFs and benchmark PDFs remain excluded through the existing registration-file policy.
-- The overview is informational in this slice; the four cards are not action buttons.
-- The overview is rendered even when the Base query has no valid rows, because an empty table may still coexist with invalid records or unregistered PDFs.
+- Quick status filters are transient view state and do not rewrite native Base filters, metadata records or the schema. Existing per-column header filters remain independent and continue to apply to the normal Active/Missing/All table.
+- Problem-list metadata-file links and unregistered PDF links are ordinary Obsidian links. This slice deliberately does not add destructive delete/repair actions; those require separate safety/UX decisions.
+- The filter bar is rendered even when the Base query has no valid rows, because an empty table may still coexist with invalid records or unregistered PDFs.
 - Invalid-record paths are maintained by the same record-index lifecycle used by DocumentInfo and registration. A record that is corrected or deleted must leave the Errors count without requiring a full restart.
 - The custom Bases view consumes the summary through an explicit host port; it does not scan/write metadata itself.
 
