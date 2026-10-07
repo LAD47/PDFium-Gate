@@ -114,3 +114,18 @@ The first Document Register redesign slice keeps the custom view but reduces tab
 - Newly created standard `PDF Dokumentregister.base` files start compact: `document_date`, `sender`, `document_type`, Status and PDF are visible, while the standard time/response-detail columns start hidden. User-defined fields that are enabled for the default Base are not automatically hidden.
 - The create-once ownership rule still applies. Existing user-owned Base files are not rewritten to adopt these defaults; their visibility changes only when the user uses the column chooser.
 
+
+## 0.1.227 document-status overview
+
+The second contained Document Register redesign slice adds a read-only health overview above the table:
+
+- **Active** counts valid, unambiguous records whose lifecycle state is `active`.
+- **Missing** counts valid, unambiguous records whose lifecycle state is `missing`.
+- **Errors** counts metadata-record files that are invalid/corrupt or participate in ambiguous record-ID/PDF-path identity. Problem records are excluded from the normal Active/Missing counts.
+- **Unregistered** counts user PDF files accepted by the normal registration scan that do not currently resolve to an active metadata record.
+- Technical backup PDFs and benchmark PDFs remain excluded through the existing registration-file policy.
+- The overview is informational in this slice; the four cards are not action buttons.
+- The overview is rendered even when the Base query has no valid rows, because an empty table may still coexist with invalid records or unregistered PDFs.
+- Invalid-record paths are maintained by the same record-index lifecycle used by DocumentInfo and registration. A record that is corrected or deleted must leave the Errors count without requiring a full restart.
+- The custom Bases view consumes the summary through an explicit host port; it does not scan/write metadata itself.
+
