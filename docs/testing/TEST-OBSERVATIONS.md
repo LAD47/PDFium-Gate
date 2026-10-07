@@ -13,32 +13,27 @@ This file is a running list of observations found during practical testing that 
 
 ## Open items
 
-1. **0.1.227 Document Register: clickable PDF filename + column chooser**
-   - Candidate on `fix/0.1.227-localized-defaults`.
-   - The PDF column now renders the PDF filename itself as the clickable internal link; the separate Open button is removed. Missing PDFs remain non-clickable.
-   - A per-view **Columns…** chooser can show/hide schema metadata fields plus Status and PDF without changing metadata.
-   - Visibility persists in the current Base view under `pdfiumHiddenColumns`; stale/unknown values are sanitized.
-   - Newly created standard registers use a compact default set: Document date, Sender, Document type, Status and PDF. Existing user-owned Base files are not rewritten.
-   - GitHub Actions run `37601435010` passed `npm ci`, `npm audit --audit-level=high` and the full `npm run check`; generated `main.js` was rebuilt from canonical source.
-   - Practical test 1–9 passed on 2026-10-07 for clickable PDF links, column show/hide persistence, Show all, and the minimum-one-column guard.
-   - Follow-up polish requested after that pass: put PDF first and move the **Columns…** control to the left near the result area.
-   - GitHub Actions run `37603506103` passed `npm ci`, `npm audit --audit-level=high` and the full `npm run check`; generated `main.js` was rebuilt from canonical source.
-   - Follow-up UI polish changed the button text to **Velg Kolonner** in Norwegian and added explicit spacing between the button and the help text so the two no longer read as one control.
-   - GitHub Actions run `37605344254` passed the full verification and rebuilt generated `main.js`.
-   - Only a short practical check of the final button text/spacing remains.
-
-2. **PDF Document Register: current user interface needs redesign**
+1. **PDF Document Register: current user interface needs redesign**
    - The current Document Register user interface was judged unusable/poor in practical testing.
    - Treat this as a UI/interaction redesign task rather than a small cosmetic fix.
    - Keep the new simple lifecycle visible: active records are usable; missing records are informational/read-only; unregistered PDFs can receive new metadata.
 
-3. **PDF annotation backup: reassess `.pdfium-backup` after the independent backup solution exists**
+2. **PDF annotation backup: reassess `.pdfium-backup` after the independent backup solution exists**
    - Keep the current `backupOriginalPdf` safety function for now: it stores one original PDF copy before PDFium Gate first modifies the file and never overwrites an existing copy.
    - Reassess whether this separate per-PDF original-copy mechanism is still needed once the independent backup project provides a validated backup/restore workflow.
    - Do not remove or merge the behavior merely because both features use the word "backup"; compare their actual protection scope, restore semantics and failure modes first.
    - If the generic backup solution fully replaces this protection later, remove the old setting and `.pdfium-backup` workflow through an explicit migration/release decision rather than silently changing behavior.
 
 ## Completed items
+
+- **0.1.227 Document Register first redesign slice: practical verification passed**
+   - Verified on 2026-10-07 on `fix/0.1.227-localized-defaults`.
+   - PDF is now the first column and the filename itself is the clickable link; the separate Open button is gone.
+   - Per-view **Velg Kolonner** can show/hide metadata fields plus Status and PDF without changing metadata; visibility persists under `pdfiumHiddenColumns`.
+   - Practical test 1–9 passed for PDF links, show/hide persistence, Show all and the minimum-one-column guard.
+   - Follow-up polish putting PDF first, moving **Velg Kolonner** left and visually separating it from the help text was also user-confirmed.
+   - New standard registers start compact; existing user-owned Base files are not rewritten.
+   - Automated verification is green in runs `37601435010`, `37603506103` and `37605344254`.
 
 - **0.1.227 Settings hierarchy + Bases example-package cleanup: practical verification passed**
    - Verified on 2026-10-07 on `fix/0.1.227-localized-defaults`.
