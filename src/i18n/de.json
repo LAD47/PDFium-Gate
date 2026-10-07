@@ -652,5 +652,14 @@
   "documentRegister.overview.duplicateMetadataIdentical": "Die Benutzermetadaten sind identisch",
   "documentRegister.overview.duplicateMetadataDifferent": "Die Benutzermetadaten unterscheiden sich",
   "documentRegister.overview.duplicateNoUserMetadata": "Keine Benutzermetadaten",
-  "documentRegister.overview.duplicateCompareHint": "Vergleichen Sie die Datensätze, bevor etwas gelöscht wird."
+  "documentRegister.overview.duplicateCompareHint": "Vergleichen Sie die Datensätze, bevor etwas gelöscht wird.",
+  "documentRegister.overview.duplicateDeleteButton": "Metadaten löschen",
+  "documentRegister.overview.duplicateDeleteTitle": "Doppelten Metadatensatz löschen?",
+  "documentRegister.overview.duplicateDeleteWarningIdentical": "Dieser Datensatz enthält dieselben Benutzermetadaten wie die anderen Datensätze für diese PDF. Gelöscht wird nur dieser Metadatensatz, nicht die PDF.",
+  "documentRegister.overview.duplicateDeleteWarningDifferent": "Dieser Datensatz enthält andere Benutzermetadaten als die anderen Datensätze für diese PDF. Beim Löschen können Informationen dauerhaft verloren gehen. Vergleichen Sie die Datensätze sorgfältig.",
+  "documentRegister.overview.duplicateDeleteRecord": "Metadatendatei: {record}",
+  "documentRegister.overview.duplicateDeleteUuidValue": "UUID: {id}",
+  "documentRegister.overview.duplicateDeletePdf": "PDF: {pdf}",
+  "documentRegister.overview.duplicateDeleteConfirm": "Metadatensatz löschen",
+  "documentRegister.overview.duplicateDeleteFailed": "Der Metadatensatz konnte nicht gelöscht werden."
 }
