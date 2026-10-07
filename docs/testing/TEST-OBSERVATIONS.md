@@ -21,6 +21,7 @@ This file is a running list of observations found during practical testing that 
    - Unregistered renders the concrete user PDFs that lack an active metadata record; the PDF filenames are clickable.
    - All resets the quick status filter to the normal valid registered-record table (Active + Missing).
    - Invalid paths are tracked live by the canonical document-record index, so correcting/deleting an invalid record removes it from the error set without a restart.
+   - Follow-up from practical testing: stale invalid-record paths can survive in RAM if a delete event was missed. Candidate fix now revalidates invalid paths against the live vault before the Errors summary; confirmed-missing paths are pruned from RAM only, while lookup uncertainty preserves the error entry.
    - No destructive repair/delete operation is added in this slice.
    - GitHub Actions run `37609277920` passed `npm ci`, `npm audit --audit-level=high`, the full `npm run check`, and behavioral verification of status counts, concrete error/unregistered items, filter order and selected-state wiring; generated `main.js` was rebuilt from canonical source.
    - Practical Obsidian testing remains.
