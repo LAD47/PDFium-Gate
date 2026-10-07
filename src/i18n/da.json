@@ -646,5 +646,11 @@
   "documentRegister.overview.reasonAmbiguousPdfPath": "Flere poster peger på samme PDF",
   "documentRegister.overview.reasonIdentity": "Konflikt i dokumentidentitet",
   "documentRegister.overview.noErrors": "Ingen fejl i dokumentposter.",
-  "documentRegister.overview.noUnregistered": "Ingen uregistrerede PDF-filer."
+  "documentRegister.overview.noUnregistered": "Ingen uregistrerede PDF-filer.",
+  "documentRegister.overview.duplicateUuid": "UUID",
+  "documentRegister.overview.duplicateUserMetadata": "Brugermetadata",
+  "documentRegister.overview.duplicateMetadataIdentical": "Brugermetadata er identiske",
+  "documentRegister.overview.duplicateMetadataDifferent": "Brugermetadata er forskellige",
+  "documentRegister.overview.duplicateNoUserMetadata": "Ingen brugermetadata",
+  "documentRegister.overview.duplicateCompareHint": "Sammenlign posterne, før noget slettes."
 }
