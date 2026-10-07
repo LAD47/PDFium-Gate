@@ -40,7 +40,7 @@ No single feature scope is frozen yet. Start from the open items below and choos
 
 This is the largest confirmed UX backlog item.
 
-- **Preparation candidate:** native example Bases versus the real PDFium Gate register are now explicitly separated, the synthetic example package is expanded, and Settings is reorganized into collapsible groups. Automated verification is green (run `37510815842`); one combined practical Settings/example-package test remains before this preparation can be marked complete.
+- **Preparation complete (0.1.227):** native example Bases versus the real PDFium Gate register are explicitly separated, the synthetic example package is expanded, and Settings is reorganized into collapsible groups. Automated verification is green (run `37510815842`) and practical test 1–9 passed on 2026-10-07.
 
 - Redesign the current Document Register UI/interaction model; practical testing judged the current interface poor enough that this is a redesign task rather than cosmetic polish.
 - Implement a clear maintenance/report surface for:
