@@ -19,7 +19,8 @@ This file is a running list of observations found during practical testing that 
    - Active/Missing count only valid, unambiguous records. Errors counts invalid/corrupt or identity-ambiguous metadata records. Unregistered uses the same user-PDF eligibility policy as Register existing PDFs.
    - Invalid paths are tracked live by the canonical document-record index, so correcting/deleting an invalid record removes it from the error set without a restart.
    - The overview remains visible when the table has no valid rows.
-   - Automated verification and practical Obsidian testing remain.
+   - GitHub Actions run `37606821050` passed `npm ci`, `npm audit --audit-level=high`, the full `npm run check`, and the behavioral status-count contract; generated `main.js` was rebuilt from canonical source.
+   - Practical Obsidian testing remains.
 
 2. **PDF Document Register: current user interface needs redesign**
    - The current Document Register user interface was judged unusable/poor in practical testing.
