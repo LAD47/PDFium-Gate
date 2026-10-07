@@ -35,7 +35,9 @@ This file is a running list of observations found during practical testing that 
    - The two old records can be repaired manually by removing only the obsolete `filemeta_sha256` line; no permanent product migration is planned for this test-only field.
    - Practical retest confirmed selectable/copyable table text works.
    - Removing the obsolete SHA field exposed a real identity conflict: records `02eef1fc-d30b-4f87-9d1f-1816f702d965` and `0720c77a-5e4d-4e91-91be-1d6de488ea59` both point to `10_Kilder/PDF/Fredrikstad Blad/Betalte 10.100 kroner i pipegebyr.pdf`.
-   - Follow-up candidate groups all records for one ambiguous PDF together and compares their user metadata as identical/different before any destructive decision. Fresh automation + practical comparison remain.
+   - Follow-up candidate groups all records for one ambiguous PDF together and compares their user metadata as identical/different before any destructive decision.
+   - GitHub Actions run `37626673113` passed `npm ci`, `npm audit --audit-level=high` and the full `npm run check`, including behavioral verification of grouped duplicate-PDF conflicts and order-independent metadata comparison.
+   - Practical comparison on the observed pair remains.
 
 
 2. **PDF Document Register: current user interface needs redesign**
