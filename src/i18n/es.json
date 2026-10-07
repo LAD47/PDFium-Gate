@@ -636,5 +636,15 @@
   "documentRegister.overview.missing": "Faltantes",
   "documentRegister.overview.errors": "Errores",
   "documentRegister.overview.unregistered": "Sin registrar",
-  "documentRegister.overview.unavailable": "El estado de documentos no está disponible temporalmente."
+  "documentRegister.overview.unavailable": "El estado de documentos no está disponible temporalmente.",
+  "documentRegister.overview.all": "Todos",
+  "documentRegister.overview.filterAria": "Mostrar {label}",
+  "documentRegister.overview.metadataFile": "Archivo de metadatos",
+  "documentRegister.overview.problem": "Problema",
+  "documentRegister.overview.reasonInvalid": "Registro de metadatos no válido",
+  "documentRegister.overview.reasonAmbiguousId": "ID de metadatos duplicado",
+  "documentRegister.overview.reasonAmbiguousPdfPath": "Varios registros apuntan al mismo PDF",
+  "documentRegister.overview.reasonIdentity": "Conflicto de identidad del documento",
+  "documentRegister.overview.noErrors": "No hay errores en los registros de documentos.",
+  "documentRegister.overview.noUnregistered": "No hay PDF sin registrar."
 }
