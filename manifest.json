@@ -3,7 +3,7 @@
   "name": "PDFium Gate",
   "version": "0.1.226",
   "minAppVersion": "1.13.7",
-  "description": "Enhanced PDF workflows for Obsidian with annotations, metadata, email import, and archive-aware attachments.",
+  "description": "Enhanced PDF workflows with annotations, metadata, email import, and archive-aware attachments.",
   "author": "LAD47",
   "isDesktopOnly": true
 }
