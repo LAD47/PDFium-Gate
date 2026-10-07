@@ -630,5 +630,11 @@
   "documentRegister.columns.description": "Wählen Sie, welche Spalten in dieser Dokumentregister-Ansicht angezeigt werden. Dadurch wird nur die Ansicht geändert, nicht die Metadaten.",
   "documentRegister.columns.showAll": "Alle anzeigen",
   "documentRegister.columns.apply": "Anwenden",
-  "documentRegister.columns.requireOne": "Mindestens eine Spalte muss sichtbar bleiben."
+  "documentRegister.columns.requireOne": "Mindestens eine Spalte muss sichtbar bleiben.",
+  "documentRegister.overview.title": "Dokumentstatus",
+  "documentRegister.overview.active": "Aktiv",
+  "documentRegister.overview.missing": "Fehlend",
+  "documentRegister.overview.errors": "Fehler",
+  "documentRegister.overview.unregistered": "Nicht registriert",
+  "documentRegister.overview.unavailable": "Der Dokumentstatus ist vorübergehend nicht verfügbar."
 }
