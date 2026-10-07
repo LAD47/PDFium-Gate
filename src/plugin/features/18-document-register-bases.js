@@ -68,6 +68,7 @@ class DocumentRegisterBasesFeature {
         getFrontmatter:file => this.obsidianMetadataCacheAdapter?.getFrontmatter?.(file) || null,
         resolvePdfPath:(linkTarget, recordPath) => this.ports.resolveDocumentRecordPdfPath(linkTarget, recordPath),
         saveValues:(pdfPath, updates) => this.ports.saveDocumentMetadataRecordValues(pdfPath, updates),
+        deleteDuplicateRecord:(recordPath, expectedId, expectedPdfPath) => this.ports.deleteDuplicateDocumentMetadataRecord(recordPath, expectedId, expectedPdfPath),
         openLink:(path, sourcePath) => this.app.workspace.openLinkText(path, sourcePath || '')
       })
     });
