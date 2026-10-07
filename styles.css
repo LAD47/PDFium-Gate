@@ -630,6 +630,18 @@ body.pdfium-hide-document-records
   overflow-wrap: anywhere;
 }
 
+.pdfium-document-register-problem-kind {
+  font-weight: 600;
+  color: var(--text-normal);
+}
+.pdfium-document-register-problem-detail {
+  margin-top: 3px;
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
 .pdfium-document-register-toolbar {
   display: flex;
   align-items: center;
