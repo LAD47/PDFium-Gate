@@ -186,6 +186,7 @@ module.exports=async function verifyDocumentRecordsContract(){
   owner.state={documentRecords:makeState()};
   owner.settings={autoRegisterNewPdfs:true};
   owner.ports={getMetadataSchemaSnapshot:()=>schema};
+  const extraVaultFiles=new Map();
   const pdfFiles=new Map([
     ['Docs/a.pdf',{path:'Docs/a.pdf',extension:'pdf'}],
     ['Archive/a.pdf',{path:'Archive/a.pdf',extension:'pdf'}],
@@ -196,7 +197,7 @@ module.exports=async function verifyDocumentRecordsContract(){
   owner.obsidianVaultReadAdapter={
     listMarkdownFiles:()=>[...files.values()].map(item=>item.file),
     listFiles:()=>[...pdfFiles.values()],
-    getAbstractFileByPath:path=>pdfFiles.get(String(path||'')) || null
+    getAbstractFileByPath:path=>pdfFiles.get(String(path||'')) || extraVaultFiles.get(String(path||'')) || null
   };
   owner.obsidianLinkResolutionAdapter={resolveFirst:(linkpath)=>{
     const target=String(linkpath||'');
@@ -232,6 +233,25 @@ module.exports=async function verifyDocumentRecordsContract(){
   const secondReady=owner.ensureDocumentRecordIndexReady('cold-start-demand');
   if(firstReady!==secondReady) fail('DocumentRecords readiness is not single-flight');
   await firstReady;
+
+  // Status-summary self-healing: an invalid-record path that no longer exists
+  // must disappear automatically, while a still-existing invalid Markdown file
+  // remains visible as an error. Lookup uncertainty must never delete state.
+  const staleInvalidPath='File Metadata/ff/stale-invalid.md';
+  const presentInvalidPath='File Metadata/ee/present-invalid.md';
+  owner.state.documentRecords.invalidRecordPaths.add(staleInvalidPath);
+  extraVaultFiles.set(presentInvalidPath,{path:presentInvalidPath,extension:'md'});
+  owner.state.documentRecords.invalidRecordPaths.add(presentInvalidPath);
+  let registerStatus=await owner.getDocumentRegisterStatusSummary();
+  if(registerStatus.errorCount!==1||registerStatus.staleInvalidRemovedCount!==1||!owner.state.documentRecords.invalidRecordPaths.has(presentInvalidPath)||owner.state.documentRecords.invalidRecordPaths.has(staleInvalidPath)) {
+    fail(`Document Register stale-invalid pruning failed: ${JSON.stringify(registerStatus)}`);
+  }
+  extraVaultFiles.delete(presentInvalidPath);
+  registerStatus=await owner.getDocumentRegisterStatusSummary();
+  if(registerStatus.errorCount!==0||registerStatus.staleInvalidRemovedCount!==1||owner.state.documentRecords.invalidRecordPaths.has(presentInvalidPath)) {
+    fail(`Document Register did not prune invalid record after file disappearance: ${JSON.stringify(registerStatus)}`);
+  }
+
   if(ownerIdleCancelled!==1) fail('on-demand readiness did not cancel pending idle warmup');
   if(!owner.state.documentRecords.lastBuildMetrics || owner.state.documentRecords.lastBuildMetrics.reason!=='cold-start-demand') fail('document record on-demand cold-start metrics were not captured');
   if(owner.state.documentRecords.lastBuildMetrics.startupScheduleMode!=='on-demand-before-idle') fail('on-demand startup scheduling mode not captured');
