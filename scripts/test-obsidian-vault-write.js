@@ -19,7 +19,11 @@ const {vaultBinaryArrayBuffer,createObsidianVaultWriteAdapter}=require('../src/p
     async modify(){},
     async delete(){}
   };
-  const adapter=createObsidianVaultWriteAdapter({vault});
+  const trashed=[];
+  const fileManager={
+    async trashFile(file){ trashed.push(file?.path || ''); }
+  };
+  const adapter=createObsidianVaultWriteAdapter({vault,fileManager});
   const source=Buffer.from([1,2,3,4,5]);
   const created=await adapter.createBinary('05 test/a.bin',source);
   assert.equal(created.path,'05 test/a.bin');
@@ -37,7 +41,10 @@ const {vaultBinaryArrayBuffer,createObsidianVaultWriteAdapter}=require('../src/p
   assert.ok(direct instanceof ArrayBuffer);
   assert.deepEqual([...new Uint8Array(direct)],[6,5,4]);
 
-  console.log('Obsidian vault binary write adapter OK: Buffer and typed-array payloads are normalized to exact ArrayBuffer slices before Vault.createBinary/modifyBinary.');
+  await adapter.trashFile({path:'File Metadata/aa/test.md',extension:'md'});
+  assert.deepEqual(trashed,['File Metadata/aa/test.md']);
+
+  console.log('Obsidian vault write adapter OK: binary payloads are normalized and user-facing removal routes through FileManager.trashFile.');
 })().catch(error=>{
   console.error('Obsidian vault binary write adapter check failed.');
   console.error(error && error.stack ? error.stack : error);
