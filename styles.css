@@ -511,10 +511,13 @@ body.pdfium-hide-document-records
   width: 100%;
   height: 100%;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 .pdfium-document-register-scroll {
   width: 100%;
-  height: 100%;
+  min-height: 0;
+  flex: 1 1 auto;
   overflow: auto;
 }
 .pdfium-document-register-table {
@@ -555,11 +558,27 @@ body.pdfium-hide-document-records
 
 /* 0.1.197: inline editing for the schema-aware PDF document register.
    Presentation only; persistence still routes through DocumentRecords. */
+.pdfium-document-register-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--background-modifier-border);
+  background: var(--background-primary);
+}
 .pdfium-document-register-edit-help {
-  padding: 8px 10px;
+  flex: 1 1 auto;
+  min-width: 0;
   color: var(--text-muted);
   font-size: var(--font-ui-smaller);
-  border-bottom: 1px solid var(--background-modifier-border);
+}
+.pdfium-document-register-toolbar-actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 6px;
+}
+.pdfium-document-register-toolbar-actions button {
+  min-height: 28px;
 }
 .pdfium-document-register-table td.is-editable {
   cursor: text;
@@ -636,16 +655,15 @@ body.pdfium-hide-document-records
   color: var(--text-error);
 }
 .pdfium-document-register-pdf-cell {
-  min-width: 180px;
+  min-width: 140px;
 }
-.pdfium-document-register-open {
-  min-height: 26px;
-  padding: 2px 9px;
+.pdfium-document-register-pdf-link {
+  color: var(--link-color);
+  text-decoration: none;
 }
-.pdfium-document-register-pdf-name {
-  margin-left: 8px;
-  color: var(--text-muted);
-  font-size: var(--font-ui-smaller);
+.pdfium-document-register-pdf-link:hover,
+.pdfium-document-register-pdf-link:focus-visible {
+  text-decoration: underline;
 }
 
 /* 0.1.205 test: clickable document-register column headers.
@@ -760,6 +778,40 @@ body.pdfium-hide-document-records
   font-size: var(--font-ui-smaller);
 }
 .pdfium-document-register-filter-error {
+  min-height: 1.4em;
+  margin-top: 8px;
+  color: var(--text-error);
+  font-size: var(--font-ui-small);
+}
+
+.pdfium-document-register-columns-modal .modal-content {
+  min-width: min(440px, 80vw);
+}
+.pdfium-document-register-columns-list {
+  display: grid;
+  gap: 5px;
+  max-height: 55vh;
+  overflow: auto;
+  margin-top: 10px;
+}
+.pdfium-document-register-columns-choice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 6px;
+  border-radius: var(--radius-s);
+  cursor: pointer;
+}
+.pdfium-document-register-columns-choice:hover {
+  background: var(--background-modifier-hover);
+}
+.pdfium-document-register-columns-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 14px;
+}
+.pdfium-document-register-columns-error {
   min-height: 1.4em;
   margin-top: 8px;
   color: var(--text-error);
