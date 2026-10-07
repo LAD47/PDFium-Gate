@@ -652,5 +652,14 @@
   "documentRegister.overview.duplicateMetadataIdentical": "Brukermetadataene er identiske",
   "documentRegister.overview.duplicateMetadataDifferent": "Brukermetadataene er forskjellige",
   "documentRegister.overview.duplicateNoUserMetadata": "Ingen brukermetadata",
-  "documentRegister.overview.duplicateCompareHint": "Sammenlign recordene før noe slettes."
+  "documentRegister.overview.duplicateCompareHint": "Sammenlign recordene før noe slettes.",
+  "documentRegister.overview.duplicateDeleteButton": "Slett metadata",
+  "documentRegister.overview.duplicateDeleteTitle": "Slette duplisert metadatarecord?",
+  "documentRegister.overview.duplicateDeleteWarningIdentical": "Denne recorden har samme brukermetadata som den/de andre recordene for denne PDF-en. Sletting fjerner bare denne metadatarecorden, ikke PDF-en.",
+  "documentRegister.overview.duplicateDeleteWarningDifferent": "Denne recorden har brukermetadata som er forskjellige fra den/de andre recordene for denne PDF-en. Sletting kan føre til permanent tap av informasjon. Sammenlign recordene nøye før du fortsetter.",
+  "documentRegister.overview.duplicateDeleteRecord": "Metadatafil: {record}",
+  "documentRegister.overview.duplicateDeleteUuidValue": "UUID: {id}",
+  "documentRegister.overview.duplicateDeletePdf": "PDF: {pdf}",
+  "documentRegister.overview.duplicateDeleteConfirm": "Slett metadatarecord",
+  "documentRegister.overview.duplicateDeleteFailed": "Metadatarecorden kunne ikke slettes."
 }
