@@ -636,5 +636,15 @@
   "documentRegister.overview.missing": "Manquants",
   "documentRegister.overview.errors": "Erreurs",
   "documentRegister.overview.unregistered": "Non enregistrés",
-  "documentRegister.overview.unavailable": "L’état des documents est temporairement indisponible."
+  "documentRegister.overview.unavailable": "L’état des documents est temporairement indisponible.",
+  "documentRegister.overview.all": "Tous",
+  "documentRegister.overview.filterAria": "Afficher {label}",
+  "documentRegister.overview.metadataFile": "Fichier de métadonnées",
+  "documentRegister.overview.problem": "Problème",
+  "documentRegister.overview.reasonInvalid": "Enregistrement de métadonnées invalide",
+  "documentRegister.overview.reasonAmbiguousId": "ID de métadonnées dupliqué",
+  "documentRegister.overview.reasonAmbiguousPdfPath": "Plusieurs enregistrements pointent vers le même PDF",
+  "documentRegister.overview.reasonIdentity": "Conflit d’identité du document",
+  "documentRegister.overview.noErrors": "Aucune erreur dans les enregistrements de documents.",
+  "documentRegister.overview.noUnregistered": "Aucun PDF non enregistré."
 }
