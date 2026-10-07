@@ -13,14 +13,16 @@ This file is a running list of observations found during practical testing that 
 
 ## Open items
 
-1. **0.1.227 Document Register: document-status overview**
+1. **0.1.227 Document Register: quick status filters**
    - Candidate on `fix/0.1.227-localized-defaults`.
-   - Adds four read-only overview cards above the register: Active, Missing, Errors and Unregistered.
-   - Active/Missing count only valid, unambiguous records. Errors counts invalid/corrupt or identity-ambiguous metadata records. Unregistered uses the same user-PDF eligibility policy as Register existing PDFs.
+   - The status bar is now clickable in the order Active, Missing, Errors, Unregistered, All; the selected filter is visibly marked and **All** is last.
+   - Active/Missing filter the normal schema-aware register rows; existing column filters remain independent.
+   - Errors renders concrete invalid/identity-ambiguous metadata records in the same register surface, with a clickable metadata file, any known PDF and a localized reason.
+   - Unregistered renders the concrete user PDFs that lack an active metadata record; the PDF filenames are clickable.
+   - All resets the quick status filter to the normal valid registered-record table (Active + Missing).
    - Invalid paths are tracked live by the canonical document-record index, so correcting/deleting an invalid record removes it from the error set without a restart.
-   - The overview remains visible when the table has no valid rows.
-   - GitHub Actions run `37606821050` passed `npm ci`, `npm audit --audit-level=high`, the full `npm run check`, and the behavioral status-count contract; generated `main.js` was rebuilt from canonical source.
-   - Practical Obsidian testing remains.
+   - No destructive repair/delete operation is added in this slice.
+   - Previous count-only automation was green in run `37606821050`; the clickable-filter revision still needs fresh full automation and practical Obsidian testing.
 
 2. **PDF Document Register: current user interface needs redesign**
    - The current Document Register user interface was judged unusable/poor in practical testing.
