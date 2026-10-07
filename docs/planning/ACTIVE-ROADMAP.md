@@ -44,7 +44,7 @@ This is the largest confirmed UX backlog item.
 
 - Redesign the current Document Register UI/interaction model; practical testing judged the current interface poor enough that this is a redesign task rather than cosmetic polish.
 - **First redesign slice complete (0.1.227):** PDF is the first column and the filename itself is the clickable link; per-Base **Velg Kolonner** controls visible columns without changing metadata. New standard registers start compact; existing user-owned Base files are not rewritten. Automated verification is green (runs `37601435010`, `37603506103`, `37605344254`) and the complete practical verification passed on 2026-10-07.
-- **Second redesign slice in progress (0.1.227):** add a read-only status overview for Active, Missing, Errors and Unregistered. Counts are sourced from the canonical document-record index and the existing PDF registration policy; practical verification is required before this slice is complete.
+- **Second redesign slice in progress (0.1.227):** add a read-only status overview for Active, Missing, Errors and Unregistered. Counts are sourced from the canonical document-record index and the existing PDF registration policy. Automated verification is green (run `37606821050`); practical verification remains.
 - Implement a clear maintenance/report surface for:
   - active records;
   - missing records;
