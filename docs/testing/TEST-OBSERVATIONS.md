@@ -19,7 +19,8 @@ This file is a running list of observations found during practical testing that 
    - A per-view **Columns…** chooser can show/hide schema metadata fields plus Status and PDF without changing metadata.
    - Visibility persists in the current Base view under `pdfiumHiddenColumns`; stale/unknown values are sanitized.
    - Newly created standard registers use a compact default set: Document date, Sender, Document type, Status and PDF. Existing user-owned Base files are not rewritten.
-   - Automated verification and practical Obsidian testing remain.
+   - GitHub Actions run `37601435010` passed `npm ci`, `npm audit --audit-level=high` and the full `npm run check`; generated `main.js` was rebuilt from canonical source.
+   - Practical Obsidian testing remains.
 
 2. **PDF Document Register: current user interface needs redesign**
    - The current Document Register user interface was judged unusable/poor in practical testing.
