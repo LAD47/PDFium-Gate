@@ -646,5 +646,11 @@
   "documentRegister.overview.reasonAmbiguousPdfPath": "Plusieurs enregistrements pointent vers le même PDF",
   "documentRegister.overview.reasonIdentity": "Conflit d’identité du document",
   "documentRegister.overview.noErrors": "Aucune erreur dans les enregistrements de documents.",
-  "documentRegister.overview.noUnregistered": "Aucun PDF non enregistré."
+  "documentRegister.overview.noUnregistered": "Aucun PDF non enregistré.",
+  "documentRegister.overview.duplicateUuid": "UUID",
+  "documentRegister.overview.duplicateUserMetadata": "Métadonnées utilisateur",
+  "documentRegister.overview.duplicateMetadataIdentical": "Les métadonnées utilisateur sont identiques",
+  "documentRegister.overview.duplicateMetadataDifferent": "Les métadonnées utilisateur diffèrent",
+  "documentRegister.overview.duplicateNoUserMetadata": "Aucune métadonnée utilisateur",
+  "documentRegister.overview.duplicateCompareHint": "Comparez les enregistrements avant toute suppression."
 }
