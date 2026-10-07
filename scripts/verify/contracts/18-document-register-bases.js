@@ -13,9 +13,10 @@ module.exports=function verifyDocumentRegisterBasesContract(){
   const registrationApi=require(path.join(ROOT,'src/platform/obsidian-plugin-registration.js'));
   const recordContract=require(path.join(ROOT,'src/metadata/record-contract.js'));
   global.metadataRecordNormalizeVaultPath=recordContract.metadataRecordNormalizeVaultPath;
+  global.metadataRecordClone=recordContract.metadataRecordClone;
   global.METADATA_RECORD_STATUS_ACTIVE=recordContract.METADATA_RECORD_STATUS_ACTIVE;
   global.METADATA_RECORD_STATUS_MISSING=recordContract.METADATA_RECORD_STATUS_MISSING;
-  const {documentRecordRegisterStatusSnapshot}=require(path.join(ROOT,'src/plugin/features/16-document-records.js'));
+  const {documentRecordRegisterStatusSnapshot,documentRecordComparableValues}=require(path.join(ROOT,'src/plugin/features/16-document-records.js'));
 
   const schema=schemaApi.metadataDefaultSchema();
   const registry=registryApi.createMetadataFieldTypeRegistry();
@@ -86,15 +87,18 @@ module.exports=function verifyDocumentRegisterBasesContract(){
     const documentRecords={
       invalidRecordPaths:new Set(['File Metadata/ff/invalid.md']),
       invalidRecordErrors:new Map([['File Metadata/ff/invalid.md','filemeta_id er ikke UUID v4']]),
-      ambiguousIds:new Set(['dup-id']),
-      ambiguousPdfPaths:new Set(),
-      recordPathsById:new Map([['dup-id',new Set(['File Metadata/aa/dup-a.md','File Metadata/bb/dup-b.md'])]]),
-      idsByPdfPath:new Map(),
+      ambiguousIds:new Set(),
+      ambiguousPdfPaths:new Set(['Docs/shared.pdf']),
+      recordPathsById:new Map([
+        ['dup-a-id',new Set(['File Metadata/aa/dup-a.md'])],
+        ['dup-b-id',new Set(['File Metadata/bb/dup-b.md'])]
+      ]),
+      idsByPdfPath:new Map([['Docs/shared.pdf',new Set(['dup-a-id','dup-b-id'])]]),
       entryByRecordPath:new Map([
         ['File Metadata/01/active.md',{status:'active'}],
         ['File Metadata/02/missing.md',{status:'missing'}],
-        ['File Metadata/aa/dup-a.md',{id:'dup-id',pdfPath:'Docs/dup-a.pdf',status:'active'}],
-        ['File Metadata/bb/dup-b.md',{id:'dup-id',pdfPath:'Docs/dup-b.pdf',status:'active'}]
+        ['File Metadata/aa/dup-a.md',{id:'dup-a-id',recordPath:'File Metadata/aa/dup-a.md',pdfPath:'Docs/shared.pdf',status:'active',values:{sender:'Oslo',document_type:'letter'}}],
+        ['File Metadata/bb/dup-b.md',{id:'dup-b-id',recordPath:'File Metadata/bb/dup-b.md',pdfPath:'Docs/shared.pdf',status:'active',values:{document_type:'letter',sender:'Oslo'}}]
       ])
     };
     const pdfFiles=[{path:'Docs/active.pdf'},{path:'Docs/unregistered.pdf'},{path:'Docs/problem.pdf'}];
@@ -106,8 +110,10 @@ module.exports=function verifyDocumentRegisterBasesContract(){
     const summary=documentRecordRegisterStatusSnapshot(documentRecords,pdfFiles,path=>registrationStates[path]);
     if(summary.activeCount!==1||summary.missingCount!==1||summary.errorCount!==3||summary.unregisteredCount!==1||summary.allCount!==2) fail('Document Register status snapshot produced incorrect category counts');
     if(summary.totalRecordCount!==5||summary.totalPdfCount!==3||summary.registrationProblemCount!==1) fail('Document Register status snapshot produced incorrect totals/problem count');
-    if(summary.errorItems.length!==3||summary.errorItems.filter(item=>item.reason==='ambiguous-id').length!==2||summary.errorItems.filter(item=>item.reason==='invalid').length!==1) fail('Document Register status snapshot did not expose concrete error items/reasons');
+    if(summary.errorItems.length!==3||summary.errorItems.filter(item=>item.reason==='ambiguous-pdf-path').length!==2||summary.errorItems.filter(item=>item.reason==='invalid').length!==1) fail('Document Register status snapshot did not expose concrete error items/reasons');
     if(summary.errorItems.find(item=>item.reason==='invalid')?.detail!=='filemeta_id er ikke UUID v4') fail('Document Register status snapshot did not preserve concrete invalid-record validation detail');
+    if(summary.duplicatePdfGroups.length!==1||summary.duplicatePdfGroups[0].pdfPath!=='Docs/shared.pdf'||summary.duplicatePdfGroups[0].records.length!==2||summary.duplicatePdfGroups[0].metadataIdentical!==true) fail('Document Register status snapshot did not group/compare duplicate PDF records correctly');
+    if(documentRecordComparableValues({b:2,a:1})!==documentRecordComparableValues({a:1,b:2})) fail('duplicate-record metadata comparison depends on object key order');
     if(JSON.stringify(summary.unregisteredPdfPaths)!==JSON.stringify(['Docs/unregistered.pdf'])) fail('Document Register status snapshot did not expose concrete unregistered PDF paths');
   }
 
@@ -176,6 +182,8 @@ module.exports=function verifyDocumentRegisterBasesContract(){
   if(!recordFeatureSource.includes("reason:'vault-lookup-unavailable'")||!recordFeatureSource.includes('uncertainPaths.push(path)')) fail('stale-invalid pruning does not fail closed on lookup uncertainty');
   if(!recordFeatureSource.includes('unregisteredPdfPaths.push(path)')||!recordFeatureSource.includes('METADATA_RECORD_STATUS_MISSING) missingCount++')) fail('Document Register status summary does not count/expose unregistered or missing documents');
   if(!recordFeatureSource.includes('errorItems')||!recordFeatureSource.includes("reason='ambiguous-id'")||!recordFeatureSource.includes("reason='ambiguous-pdf-path'")) fail('Document Register status summary does not expose problem rows/reasons');
+  if(!recordFeatureSource.includes('duplicatePdfGroups')||!recordFeatureSource.includes('metadataIdentical')||!recordFeatureSource.includes('documentRecordComparableValues(')) fail('Document Register status summary does not group/compare duplicate PDF records');
+  if(!viewSource.includes('renderDuplicatePdfGroups(')||!viewSource.includes('renderDuplicateRecordMetadata(')||!viewSource.includes('summary.duplicatePdfGroups')) fail('Document Register error view does not render grouped duplicate-record comparison');
   if(!featureSource.includes('getStatusSummary:() => this.ports.getDocumentRegisterStatusSummary()')) fail('Document Register view host does not expose canonical status summary');
   if(!viewSource.includes('renderStatusOverview(')||!viewSource.includes("documentRegister.overview.active")||!viewSource.includes("documentRegister.overview.unregistered")||!viewSource.includes("documentRegister.overview.all")) fail('Document Register status overview/filter UI missing');
   if(!viewSource.includes("this.statusFilter = 'all'")||!viewSource.includes("setStatusFilter(kind)")||!viewSource.includes("this.statusFilter==='active' && !activeRecord")||!viewSource.includes("this.statusFilter==='missing' && activeRecord")) fail('Active/Missing/All status filtering is not wired into normal register rows');
@@ -248,6 +256,7 @@ module.exports=function verifyDocumentRegisterBasesContract(){
   delete global.metadataValidateCanonicalValue;
   delete global.metadataClone;
   delete global.metadataRecordNormalizeVaultPath;
+  delete global.metadataRecordClone;
   delete global.METADATA_RECORD_STATUS_ACTIVE;
   delete global.METADATA_RECORD_STATUS_MISSING;
 
@@ -286,6 +295,7 @@ module.exports=function verifyDocumentRegisterBasesContract(){
     clickableStatusFilters:true,
     allStatusFilterLast:true,
     specialErrorAndUnregisteredLists:true,
+    groupedDuplicatePdfComparison:true,
     invalidRecordTracking:true,
     staleInvalidRecordSelfHealing:true,
     invalidRecordValidationDetail:true,
