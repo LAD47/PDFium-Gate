@@ -104,8 +104,9 @@ The standard PDF Document Register remains a PDF-specific user view, but its Bas
 
 The first Document Register redesign slice keeps the custom view but reduces table width and removes an unnecessary action control.
 
-- The PDF system column renders the resolved PDF filename as a normal clickable Obsidian-style internal link. There is no separate **Open** button. Missing PDFs render the remembered filename/path as non-clickable muted text.
+- The PDF system column is the first table column and renders the resolved PDF filename as a normal clickable Obsidian-style internal link. There is no separate **Open** button. Missing PDFs render the remembered filename/path as non-clickable muted text.
 - The custom view exposes a **Columns…** chooser containing schema-driven metadata columns plus the Status and PDF system columns.
+- The **Columns…** control is placed at the left edge of the register toolbar so it is visible next to the result area instead of being pushed to the far right.
 - Column visibility is presentation state only. It does not add/remove metadata fields, rewrite document records, or change the metadata schema.
 - Visibility is stored under the custom Bases view-config key `pdfiumHiddenColumns`, so the choice belongs to that Base view. Unknown/stale property names are ignored when read back.
 - Hiding a column does not silently remove a filter on that property; filter state remains independent presentation state and becomes accessible again when the column is shown.
