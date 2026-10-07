@@ -92,8 +92,8 @@ module.exports=function verifyDocumentRegisterBasesContract(){
       entryByRecordPath:new Map([
         ['File Metadata/01/active.md',{status:'active'}],
         ['File Metadata/02/missing.md',{status:'missing'}],
-        ['File Metadata/aa/dup-a.md',{status:'active'}],
-        ['File Metadata/bb/dup-b.md',{status:'active'}]
+        ['File Metadata/aa/dup-a.md',{id:'dup-id',pdfPath:'Docs/dup-a.pdf',status:'active'}],
+        ['File Metadata/bb/dup-b.md',{id:'dup-id',pdfPath:'Docs/dup-b.pdf',status:'active'}]
       ])
     };
     const pdfFiles=[{path:'Docs/active.pdf'},{path:'Docs/unregistered.pdf'},{path:'Docs/problem.pdf'}];
