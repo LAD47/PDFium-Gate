@@ -636,5 +636,15 @@
   "documentRegister.overview.missing": "Saknas",
   "documentRegister.overview.errors": "Fel",
   "documentRegister.overview.unregistered": "Oregistrerade",
-  "documentRegister.overview.unavailable": "Dokumentstatus är tillfälligt otillgänglig."
+  "documentRegister.overview.unavailable": "Dokumentstatus är tillfälligt otillgänglig.",
+  "documentRegister.overview.all": "Alla",
+  "documentRegister.overview.filterAria": "Visa {label}",
+  "documentRegister.overview.metadataFile": "Metadatafil",
+  "documentRegister.overview.problem": "Problem",
+  "documentRegister.overview.reasonInvalid": "Ogiltig metadatapost",
+  "documentRegister.overview.reasonAmbiguousId": "Duplicerat metadata-ID",
+  "documentRegister.overview.reasonAmbiguousPdfPath": "Flera poster pekar på samma PDF",
+  "documentRegister.overview.reasonIdentity": "Konflikt i dokumentidentitet",
+  "documentRegister.overview.noErrors": "Inga fel i dokumentposter.",
+  "documentRegister.overview.noUnregistered": "Inga oregistrerade PDF-filer."
 }
