@@ -29,7 +29,10 @@ This file is a running list of observations found during practical testing that 
    - Follow-up practical check found two remaining **Invalid metadata record** entries even after stale-path self-healing. Their metadata files therefore still exist in the vault; this is a real-record diagnostic case rather than stale RAM state.
    - Candidate follow-up now preserves the canonical parser/validation error per invalid record and renders that exact detail under the broad error category.
    - GitHub Actions run `37614784955` passed `npm ci`, `npm audit --audit-level=high` and the full `npm run check`, including behavioral verification that validation detail is retained, displayed in the status summary and removed with the invalid-record lifecycle.
-   - Practical inspection of the two real invalid records remains.
+   - Practical inspection identified the two real invalid records as old test/development data containing the retired reserved system field `filemeta_sha256`. Current schema editing rejects `filemeta_*`/legacy `pdfmeta_*` user properties, so this specific fault is not expected from normal user-created metadata fields.
+   - Follow-up candidate makes Document Register table text explicitly selectable/copyable and prevents a drag-selected value in an editable cell from immediately opening edit mode. This is intended for exact copying of paths, UUIDs, hashes and diagnostics during troubleshooting.
+   - The two old records can be repaired manually by removing only the obsolete `filemeta_sha256` line; no permanent product migration is planned for this test-only field.
+
 
 2. **PDF Document Register: current user interface needs redesign**
    - The current Document Register user interface was judged unusable/poor in practical testing.
