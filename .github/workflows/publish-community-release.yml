@@ -9,6 +9,9 @@ on:
 
 permissions:
   contents: write
+  id-token: write
+  attestations: write
+  artifact-metadata: write
 
 jobs:
   publish:
@@ -17,6 +20,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
 
       - name: Resolve frozen archive version
         id: meta
@@ -39,6 +46,34 @@ jobs:
           done
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "archive=$archive" >> "$GITHUB_OUTPUT"
+
+      - name: Install frozen release dependencies
+        run: npm ci
+
+      - name: Rebuild and verify frozen release
+        shell: bash
+        run: |
+          npm run check
+          if ! git diff --quiet -- main.js main-bridge.js; then
+            echo "Frozen archive does not contain the generated runtime produced by its canonical source." >&2
+            git diff --stat -- main.js main-bridge.js >&2
+            exit 1
+          fi
+
+      - name: Attest main.js
+        uses: actions/attest@v4
+        with:
+          subject-path: main.js
+
+      - name: Attest manifest.json
+        uses: actions/attest@v4
+        with:
+          subject-path: manifest.json
+
+      - name: Attest styles.css
+        uses: actions/attest@v4
+        with:
+          subject-path: styles.css
 
       - name: Publish GitHub release for Community Plugins
         env:
