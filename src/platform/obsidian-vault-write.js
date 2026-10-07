@@ -11,7 +11,7 @@ function vaultBinaryArrayBuffer(data) {
   return bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength);
 }
 
-function createObsidianVaultWriteAdapter({ vault }) {
+function createObsidianVaultWriteAdapter({ vault, fileManager = null }) {
   async function createBinary(vaultPath, data) {
     if (!vault || typeof vault.createBinary !== 'function') throw new Error('vault.createBinary er ikke tilgjengelig');
     return await vault.createBinary(vaultPath, vaultBinaryArrayBuffer(data));
@@ -33,6 +33,11 @@ function createObsidianVaultWriteAdapter({ vault }) {
     if (!vault || typeof vault.delete !== 'function') throw new Error('vault.delete er ikke tilgjengelig');
     return await vault.delete(file, force === true);
   }
+  async function trashFile(file) {
+    if (!file) throw new Error('trashFile mangler fil');
+    if (!fileManager || typeof fileManager.trashFile !== 'function') throw new Error('fileManager.trashFile er ikke tilgjengelig');
+    return await fileManager.trashFile(file);
+  }
   async function ensureFolder(vaultPath) {
     const target=String(vaultPath||'').replace(/\\/g,'/').replace(/^\/+|\/+$/g,'');
     if(!target) return null;
@@ -51,6 +56,7 @@ function createObsidianVaultWriteAdapter({ vault }) {
     createText,
     modifyText,
     deleteFile,
+    trashFile,
     ensureFolder
   });
 }
