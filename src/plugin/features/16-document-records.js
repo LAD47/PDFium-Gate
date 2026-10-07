@@ -79,6 +79,7 @@ class DocumentRecordsFeature {
     this.state.documentRecords.idsByPdfPath.clear();
     this.state.documentRecords.ambiguousIds.clear();
     this.state.documentRecords.ambiguousPdfPaths.clear();
+    this.state.documentRecords.invalidRecordPaths.clear();
   }
 
   recomputeDocumentRecordPdfPath(pdfPath) {
@@ -138,6 +139,7 @@ class DocumentRecordsFeature {
     const canonicalPath=metadataRecordPathFromId(id);
     if(recordPath!==canonicalPath) throw new Error(`metadata-record ligger på ikke-canonical sti: ${recordPath}`);
     const normalized={...entry,recordPath,id,pdfPath,values:metadataRecordClone(entry.values || {})};
+    this.state.documentRecords.invalidRecordPaths.delete(recordPath);
     this.state.documentRecords.entryByRecordPath.set(recordPath,normalized);
     let idPaths=this.state.documentRecords.recordPathsById.get(id);
     if(!idPaths) {
@@ -160,6 +162,7 @@ class DocumentRecordsFeature {
 
   removeDocumentRecordEntryByPath(recordPath) {
     const path=metadataRecordNormalizeVaultPath(recordPath);
+    this.state.documentRecords.invalidRecordPaths.delete(path);
     const entry=this.state.documentRecords.entryByRecordPath.get(path);
     if(!entry) return null;
     this.state.documentRecords.entryByRecordPath.delete(path);
@@ -290,7 +293,11 @@ class DocumentRecordsFeature {
           parsed=await this.parseDocumentRecordFile(file,schema,true);
           diskReadParseMs+=documentRecordBenchmarkNowMs()-readStarted;
         }
-        if(!parsed?.ok) { invalidCount++; continue; }
+        if(!parsed?.ok) {
+          invalidCount++;
+          this.state.documentRecords.invalidRecordPaths.add(metadataRecordNormalizeVaultPath(file?.path));
+          continue;
+        }
         cacheWriteItems.push({file,parsed});
         const indexStarted=documentRecordBenchmarkNowMs();
         this.addDocumentRecordEntry({
@@ -304,6 +311,7 @@ class DocumentRecordsFeature {
         indexPopulateMs+=documentRecordBenchmarkNowMs()-indexStarted;
       } catch(error) {
         invalidCount++;
+        this.state.documentRecords.invalidRecordPaths.add(metadataRecordNormalizeVaultPath(file?.path));
         console.warn(`[PDFium Gate ${PLUGIN_VERSION}] Ignorerer ugyldig metadata-record ${file?.path || ''}`,error);
       }
     }
@@ -563,6 +571,56 @@ class DocumentRecordsFeature {
       .sort((a,b)=>metadataRecordNormalizeVaultPath(a?.path).localeCompare(metadataRecordNormalizeVaultPath(b?.path),undefined,{numeric:true,sensitivity:'base'}));
   }
 
+  async getDocumentRegisterStatusSummary() {
+    await this.ensureDocumentRecordIndexReady('document-register-status');
+    const problemRecordPaths=new Set(this.state.documentRecords.invalidRecordPaths);
+    for(const id of this.state.documentRecords.ambiguousIds) {
+      const paths=this.state.documentRecords.recordPathsById.get(id);
+      for(const path of paths || []) problemRecordPaths.add(metadataRecordNormalizeVaultPath(path));
+    }
+    for(const pdfPath of this.state.documentRecords.ambiguousPdfPaths) {
+      const ids=this.state.documentRecords.idsByPdfPath.get(pdfPath);
+      for(const id of ids || []) {
+        const paths=this.state.documentRecords.recordPathsById.get(id);
+        for(const path of paths || []) problemRecordPaths.add(metadataRecordNormalizeVaultPath(path));
+      }
+    }
+
+    let activeCount=0;
+    let missingCount=0;
+    for(const [recordPath,entry] of this.state.documentRecords.entryByRecordPath.entries()) {
+      if(problemRecordPaths.has(recordPath)) continue;
+      if(entry?.status===METADATA_RECORD_STATUS_ACTIVE) activeCount++;
+      else if(entry?.status===METADATA_RECORD_STATUS_MISSING) missingCount++;
+    }
+
+    const pdfFiles=this.listDocumentRegistrationPdfFiles();
+    let unregisteredCount=0;
+    const registrationProblemPaths=[];
+    for(const file of pdfFiles) {
+      const path=metadataRecordNormalizeVaultPath(file?.path);
+      const state=this.getDocumentMetadataRecordState(path);
+      if(!state.ok) {
+        registrationProblemPaths.push(path);
+        continue;
+      }
+      if(!state.registered) unregisteredCount++;
+    }
+
+    return {
+      ok:true,
+      activeCount,
+      missingCount,
+      errorCount:problemRecordPaths.size,
+      unregisteredCount,
+      totalRecordCount:this.state.documentRecords.entryByRecordPath.size + this.state.documentRecords.invalidRecordPaths.size,
+      totalPdfCount:pdfFiles.length,
+      problemRecordPaths:[...problemRecordPaths].sort((a,b)=>a.localeCompare(b)),
+      registrationProblemCount:registrationProblemPaths.length,
+      registrationProblemPaths
+    };
+  }
+
   async getExistingPdfRegistrationSummary() {
     await this.ensureDocumentRecordIndexReady('existing-pdf-scan');
     return await this.runDocumentRecordOperation(async()=>{
@@ -669,9 +727,11 @@ class DocumentRecordsFeature {
     const parsed=await this.parseDocumentRecordFile(file,schema,true);
     this.removeDocumentRecordEntryByPath(path);
     if(!parsed.ok) {
+      this.state.documentRecords.invalidRecordPaths.add(path);
       this.state.documentRecords.lastError=`Ugyldig metadata-record ${path}: ${parsed.error || 'ukjent feil'}`;
       return {ok:false,error:this.state.documentRecords.lastError};
     }
+    this.state.documentRecords.invalidRecordPaths.delete(path);
     this.addDocumentRecordEntry({id:parsed.record.id,pdfPath:parsed.record.pdfPath,status:parsed.record.status,values:parsed.record.values,recordPath:path,file});
     this.state.documentRecords.lastError=null;
     return {ok:true};
