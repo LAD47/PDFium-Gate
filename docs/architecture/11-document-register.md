@@ -129,5 +129,6 @@ The second contained Document Register redesign slice turns the health overview 
 - Problem-list metadata-file links and unregistered PDF links are ordinary Obsidian links. This slice deliberately does not add destructive delete/repair actions; those require separate safety/UX decisions.
 - The filter bar is rendered even when the Base query has no valid rows, because an empty table may still coexist with invalid records or unregistered PDFs.
 - Invalid-record paths are maintained by the same record-index lifecycle used by DocumentInfo and registration. A record that is corrected or deleted must leave the Errors count without requiring a full restart.
+- Before the Errors summary is returned, the in-memory invalid-record set is self-healed against the live Obsidian vault: an invalid-record path that is confirmed to no longer exist as a Markdown file is removed from RAM state automatically. This does **not** delete or modify any file. If vault lookup is unavailable or throws, the path is retained (fail closed) rather than being silently discarded.
 - The custom Bases view consumes the summary through an explicit host port; it does not scan/write metadata itself.
 
