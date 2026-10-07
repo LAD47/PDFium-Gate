@@ -363,6 +363,60 @@ class PdfDocumentRegisterHeaderFilterModal extends Modal {
   onClose() { this.contentEl.empty(); }
 }
 
+class PdfDocumentRegisterDuplicateDeleteModal extends Modal {
+  constructor(app, { record=null, pdfPath='', metadataIdentical=false, i18n=null, onDelete }) {
+    super(app);
+    this.record=record || {};
+    this.pdfPath=String(pdfPath || '');
+    this.metadataIdentical=metadataIdentical === true;
+    this.i18n=i18n || null;
+    this.onDelete=typeof onDelete === 'function' ? onDelete : async()=>({ok:false,error:'Delete operation unavailable'});
+  }
+
+  onOpen() {
+    this.modalEl?.addClass?.('pdfium-document-register-duplicate-delete-modal');
+    const {contentEl}=this;
+    const t=(key,params)=>this.i18n?.t?.(key,params) || key;
+    contentEl.empty();
+    contentEl.createEl('h2',{text:t('documentRegister.overview.duplicateDeleteTitle')});
+    contentEl.createEl('p',{
+      cls:'pdfium-document-register-duplicate-delete-warning',
+      text:t(this.metadataIdentical
+        ? 'documentRegister.overview.duplicateDeleteWarningIdentical'
+        : 'documentRegister.overview.duplicateDeleteWarningDifferent')
+    });
+
+    const details=contentEl.createDiv({cls:'pdfium-document-register-duplicate-delete-details'});
+    details.createDiv({text:t('documentRegister.overview.duplicateDeleteRecord',{record:String(this.record?.recordPath || '')})});
+    details.createDiv({text:t('documentRegister.overview.duplicateDeleteUuidValue',{id:String(this.record?.id || '')})});
+    details.createDiv({text:t('documentRegister.overview.duplicateDeletePdf',{pdf:this.pdfPath})});
+
+    const errorEl=contentEl.createDiv({cls:'pdfium-document-register-duplicate-delete-error'});
+    errorEl.setAttribute('aria-live','polite');
+    const actions=contentEl.createDiv({cls:'pdfium-document-register-duplicate-delete-actions'});
+    const cancel=actions.createEl('button',{text:t('common.cancel')});
+    const remove=actions.createEl('button',{cls:'mod-warning',text:t('documentRegister.overview.duplicateDeleteConfirm')});
+
+    cancel.addEventListener('click',event=>{event.preventDefault();this.close();});
+    remove.addEventListener('click',async event=>{
+      event.preventDefault();
+      errorEl.setText('');
+      cancel.disabled=true;
+      remove.disabled=true;
+      const result=await this.onDelete();
+      if(!result?.ok || result.deleted!==true) {
+        cancel.disabled=false;
+        remove.disabled=false;
+        errorEl.setText(result?.error || t('documentRegister.overview.duplicateDeleteFailed'));
+        return;
+      }
+      this.close();
+    });
+  }
+
+  onClose(){ this.contentEl.empty(); }
+}
+
 class PdfDocumentRegisterColumnPickerModal extends Modal {
   constructor(app, { columns=[], hiddenColumns=new Set(), i18n=null, onApply }) {
     super(app);
@@ -689,6 +743,28 @@ class PdfDocumentRegisterBasesView extends BasesViewBase {
         row.createEl('td',{cls:'pdfium-document-register-duplicate-uuid',text:String(record?.id || '—')});
         const metadataCell=row.createEl('td',{cls:'pdfium-document-register-duplicate-metadata'});
         this.renderDuplicateRecordMetadata(metadataCell,record);
+        const deleteButton=metadataCell.createEl('button',{
+          cls:'pdfium-document-register-duplicate-delete-button',
+          text:this.t('documentRegister.overview.duplicateDeleteButton')
+        });
+        deleteButton.addEventListener('click',event=>{
+          event.preventDefault();
+          event.stopPropagation();
+          new PdfDocumentRegisterDuplicateDeleteModal(this.host?.app,{
+            record,
+            pdfPath:group.pdfPath,
+            metadataIdentical:group.metadataIdentical === true,
+            i18n:this.host?.getI18n?.() || null,
+            onDelete:async()=>{
+              const result=await this.host?.deleteDuplicateRecord?.(record.recordPath,record.id,group.pdfPath);
+              if(result?.ok && result.deleted===true) {
+                this.statusSummary=null;
+                this.onDataUpdated();
+              }
+              return result || {ok:false,error:this.t('documentRegister.overview.duplicateDeleteFailed')};
+            }
+          }).open();
+        });
       }
     }
     return groupedPaths;
