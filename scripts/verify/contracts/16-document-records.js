@@ -160,7 +160,7 @@ module.exports=async function verifyDocumentRecordsContract(){
   const {DocumentRecordsFeature}=require(featureModulePath);
   const makeState=()=>({
     initialized:false,readyPromise:null,warmupIdleHandle:null,warmupScheduledAtMs:null,warmupScheduleMode:null,warmupLayoutReady:false,warmupMetadataResolved:false,warmupGateOrder:'',operationQueue:Promise.resolve(),byPdfPath:new Map(),byId:new Map(),entryByRecordPath:new Map(),
-    recordPathsById:new Map(),idsByPdfPath:new Map(),ambiguousIds:new Set(),ambiguousPdfPaths:new Set(),lastError:null,
+    recordPathsById:new Map(),idsByPdfPath:new Map(),ambiguousIds:new Set(),ambiguousPdfPaths:new Set(),invalidRecordPaths:new Set(),lastError:null,
     lastBuildMetrics:null,benchmarkEventSuppression:false
   });
   const files=new Map();
