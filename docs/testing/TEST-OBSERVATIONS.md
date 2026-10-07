@@ -27,6 +27,13 @@ This file is a running list of observations found during practical testing that 
 
 ## Completed items
 
+- **0.1.227 versioned release candidate: automated verification passed**
+   - Version identity is aligned across `manifest.json`, `package.json`, `package-lock.json`, `versions.json` and `src/main/00-header.js`.
+   - Candidate release notes exist at `docs/releases/0.1.227.md`.
+   - Run `37659496179` passed full `npm run check`, dependency audit, the complete Email Import test suite and explicit 0.1.227 identity checks.
+   - Generated `main.js` is **4,570,242 bytes** and contains the matching 0.1.227 runtime version.
+   - The remaining external gate is the mandatory Community Review branch / preview scan against the exact final candidate SHA after temporary verifier cleanup.
+
 - **0.1.227 Community Plugin review cleanup: automated verification passed**
    - The manifest description no longer includes the redundant word “Obsidian”.
    - Generated Email/Archive runtime bundles use esbuild whitespace/syntax minification without identifier minification.
