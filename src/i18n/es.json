@@ -630,5 +630,11 @@
   "documentRegister.columns.description": "Elige qué columnas se muestran en esta vista del registro de documentos. Esto solo cambia la vista, no los metadatos.",
   "documentRegister.columns.showAll": "Mostrar todas",
   "documentRegister.columns.apply": "Aplicar",
-  "documentRegister.columns.requireOne": "Debe quedar visible al menos una columna."
+  "documentRegister.columns.requireOne": "Debe quedar visible al menos una columna.",
+  "documentRegister.overview.title": "Estado de documentos",
+  "documentRegister.overview.active": "Activos",
+  "documentRegister.overview.missing": "Faltantes",
+  "documentRegister.overview.errors": "Errores",
+  "documentRegister.overview.unregistered": "Sin registrar",
+  "documentRegister.overview.unavailable": "El estado de documentos no está disponible temporalmente."
 }
