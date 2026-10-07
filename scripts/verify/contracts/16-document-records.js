@@ -160,7 +160,7 @@ module.exports=async function verifyDocumentRecordsContract(){
   const {DocumentRecordsFeature}=require(featureModulePath);
   const makeState=()=>({
     initialized:false,readyPromise:null,warmupIdleHandle:null,warmupScheduledAtMs:null,warmupScheduleMode:null,warmupLayoutReady:false,warmupMetadataResolved:false,warmupGateOrder:'',operationQueue:Promise.resolve(),byPdfPath:new Map(),byId:new Map(),entryByRecordPath:new Map(),
-    recordPathsById:new Map(),idsByPdfPath:new Map(),ambiguousIds:new Set(),ambiguousPdfPaths:new Set(),invalidRecordPaths:new Set(),lastError:null,
+    recordPathsById:new Map(),idsByPdfPath:new Map(),ambiguousIds:new Set(),ambiguousPdfPaths:new Set(),invalidRecordPaths:new Set(),invalidRecordErrors:new Map(),lastError:null,
     lastBuildMetrics:null,benchmarkEventSuppression:false
   });
   const files=new Map();
@@ -240,16 +240,21 @@ module.exports=async function verifyDocumentRecordsContract(){
   const staleInvalidPath='File Metadata/ff/stale-invalid.md';
   const presentInvalidPath='File Metadata/ee/present-invalid.md';
   owner.state.documentRecords.invalidRecordPaths.add(staleInvalidPath);
+  owner.state.documentRecords.invalidRecordErrors.set(staleInvalidPath,'stale invalid detail');
   extraVaultFiles.set(presentInvalidPath,{path:presentInvalidPath,extension:'md'});
   owner.state.documentRecords.invalidRecordPaths.add(presentInvalidPath);
+  owner.state.documentRecords.invalidRecordErrors.set(presentInvalidPath,'filemeta_id er ikke UUID v4');
   let registerStatus=await owner.getDocumentRegisterStatusSummary();
   if(registerStatus.errorCount!==1||registerStatus.staleInvalidRemovedCount!==1||!owner.state.documentRecords.invalidRecordPaths.has(presentInvalidPath)||owner.state.documentRecords.invalidRecordPaths.has(staleInvalidPath)) {
     fail(`Document Register stale-invalid pruning failed: ${JSON.stringify(registerStatus)}`);
   }
+  if(registerStatus.errorItems[0]?.detail!=='filemeta_id er ikke UUID v4'||owner.state.documentRecords.invalidRecordErrors.has(staleInvalidPath)) {
+    fail(`Document Register invalid-record validation detail drifted: ${JSON.stringify(registerStatus)}`);
+  }
   extraVaultFiles.delete(presentInvalidPath);
   registerStatus=await owner.getDocumentRegisterStatusSummary();
-  if(registerStatus.errorCount!==0||registerStatus.staleInvalidRemovedCount!==1||owner.state.documentRecords.invalidRecordPaths.has(presentInvalidPath)) {
-    fail(`Document Register did not prune invalid record after file disappearance: ${JSON.stringify(registerStatus)}`);
+  if(registerStatus.errorCount!==0||registerStatus.staleInvalidRemovedCount!==1||owner.state.documentRecords.invalidRecordPaths.has(presentInvalidPath)||owner.state.documentRecords.invalidRecordErrors.has(presentInvalidPath)) {
+    fail(`Document Register did not prune invalid record/error detail after file disappearance: ${JSON.stringify(registerStatus)}`);
   }
 
   if(ownerIdleCancelled!==1) fail('on-demand readiness did not cancel pending idle warmup');
