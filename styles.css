@@ -717,6 +717,40 @@ body.pdfium-hide-document-records
   font-style: italic;
 }
 
+.pdfium-document-register-duplicate-delete-button {
+  margin-top: 8px;
+}
+.pdfium-document-register-duplicate-delete-modal .modal-content {
+  min-width: min(560px, 86vw);
+}
+.pdfium-document-register-duplicate-delete-warning {
+  line-height: 1.45;
+}
+.pdfium-document-register-duplicate-delete-details {
+  margin: 12px 0;
+  padding: 9px 11px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s);
+  background: var(--background-secondary);
+  font-family: var(--font-monospace);
+  font-size: var(--font-ui-smaller);
+  line-height: 1.45;
+  -webkit-user-select: text;
+  user-select: text;
+  overflow-wrap: anywhere;
+}
+.pdfium-document-register-duplicate-delete-error {
+  min-height: 1.4em;
+  color: var(--text-error);
+  font-size: var(--font-ui-small);
+}
+.pdfium-document-register-duplicate-delete-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+
 .pdfium-document-register-toolbar {
   display: flex;
   align-items: center;
