@@ -630,5 +630,11 @@
   "documentRegister.columns.description": "Välj vilka kolumner som ska visas i den här dokumentregistervyn. Detta ändrar bara vyn, inte metadata.",
   "documentRegister.columns.showAll": "Visa alla",
   "documentRegister.columns.apply": "Använd",
-  "documentRegister.columns.requireOne": "Minst en kolumn måste vara synlig."
+  "documentRegister.columns.requireOne": "Minst en kolumn måste vara synlig.",
+  "documentRegister.overview.title": "Dokumentstatus",
+  "documentRegister.overview.active": "Aktiva",
+  "documentRegister.overview.missing": "Saknas",
+  "documentRegister.overview.errors": "Fel",
+  "documentRegister.overview.unregistered": "Oregistrerade",
+  "documentRegister.overview.unavailable": "Dokumentstatus är tillfälligt otillgänglig."
 }
