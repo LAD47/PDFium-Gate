@@ -22,7 +22,8 @@ This file is a running list of observations found during practical testing that 
    - All resets the quick status filter to the normal valid registered-record table (Active + Missing).
    - Invalid paths are tracked live by the canonical document-record index, so correcting/deleting an invalid record removes it from the error set without a restart.
    - No destructive repair/delete operation is added in this slice.
-   - Previous count-only automation was green in run `37606821050`; the clickable-filter revision still needs fresh full automation and practical Obsidian testing.
+   - GitHub Actions run `37609277920` passed `npm ci`, `npm audit --audit-level=high`, the full `npm run check`, and behavioral verification of status counts, concrete error/unregistered items, filter order and selected-state wiring; generated `main.js` was rebuilt from canonical source.
+   - Practical Obsidian testing remains.
 
 2. **PDF Document Register: current user interface needs redesign**
    - The current Document Register user interface was judged unusable/poor in practical testing.
