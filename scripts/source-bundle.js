@@ -245,7 +245,9 @@ function buildArchiveImportSource(root) {
     target:['node20'],
     write:false,
     sourcemap:false,
-    minify:false,
+    minifyWhitespace:true,
+    minifySyntax:true,
+    minifyIdentifiers:false,
     logLevel:'silent'
   });
   const output = result.outputFiles?.[0]?.text;
@@ -272,7 +274,9 @@ function buildEmailImportSource(root) {
     target:['node20'],
     write:false,
     sourcemap:false,
-    minify:false,
+    minifyWhitespace:true,
+    minifySyntax:true,
+    minifyIdentifiers:false,
     logLevel:'silent'
   });
   const output = result.outputFiles?.[0]?.text;
