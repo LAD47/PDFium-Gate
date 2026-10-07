@@ -887,9 +887,12 @@ class PdfDocumentRegisterBasesView extends BasesViewBase {
     const entries = pdfDocumentRegisterEntries(this.data);
 
     if(this.statusFilter==='error' || this.statusFilter==='unregistered') {
-      const specialHost=this.containerEl.createDiv({cls:'pdfium-document-register-special-host'});
-      specialHost.createDiv({cls:'pdfium-document-register-message',text:this.t('common.loading')});
-      this.renderStatusOverview(summary=>this.renderSpecialStatusTable(specialHost,summary));
+      let specialHost=null;
+      this.renderStatusOverview(summary=>{
+        if(specialHost) this.renderSpecialStatusTable(specialHost,summary);
+      });
+      specialHost=this.containerEl.createDiv({cls:'pdfium-document-register-special-host'});
+      specialHost.createDiv({cls:'pdfium-document-register-message',text:'…'});
       if(this.statusSummary?.ok) this.renderSpecialStatusTable(specialHost,this.statusSummary);
       return;
     }
