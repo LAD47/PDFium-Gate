@@ -13,49 +13,29 @@ This file is a running list of observations found during practical testing that 
 
 ## Open items
 
-1. **0.1.227 Document Register: quick status filters**
-   - Candidate on `fix/0.1.227-localized-defaults`.
-   - The status bar is now clickable in the order Active, Missing, Errors, Unregistered, All; the selected filter is visibly marked and **All** is last.
-   - Active/Missing filter the normal schema-aware register rows; existing column filters remain independent.
-   - Errors renders concrete invalid/identity-ambiguous metadata records in the same register surface, with a clickable metadata file, any known PDF and a localized reason.
-   - Unregistered renders the concrete user PDFs that lack an active metadata record; the PDF filenames are clickable.
-   - All resets the quick status filter to the normal valid registered-record table (Active + Missing).
-   - Invalid paths are tracked live by the canonical document-record index, so correcting/deleting an invalid record removes it from the error set without a restart.
-   - Follow-up from practical testing: stale invalid-record paths can survive in RAM if a delete event was missed. The candidate fix revalidates invalid paths against the live vault before the Errors summary; confirmed-missing paths are pruned from RAM only, while lookup uncertainty preserves the error entry.
-   - GitHub Actions run `37613516468` passed the full `npm run check`, including a behavioral regression test where a still-existing invalid record remains an error and then disappears automatically from the error set after the file is removed.
-   - No destructive repair/delete operation is added in this slice.
-   - GitHub Actions run `37609277920` passed `npm ci`, `npm audit --audit-level=high`, the full `npm run check`, and behavioral verification of status counts, concrete error/unregistered items, filter order and selected-state wiring; generated `main.js` was rebuilt from canonical source.
-   - Practical status-filter test 1–8 passed on 2026-10-07.
-   - Follow-up practical check found two remaining **Invalid metadata record** entries even after stale-path self-healing. Their metadata files therefore still exist in the vault; this is a real-record diagnostic case rather than stale RAM state.
-   - Candidate follow-up now preserves the canonical parser/validation error per invalid record and renders that exact detail under the broad error category.
-   - GitHub Actions run `37614784955` passed `npm ci`, `npm audit --audit-level=high` and the full `npm run check`, including behavioral verification that validation detail is retained, displayed in the status summary and removed with the invalid-record lifecycle.
-   - Practical inspection identified the two real invalid records as old test/development data containing the retired reserved system field `filemeta_sha256`. Current schema editing rejects `filemeta_*`/legacy `pdfmeta_*` user properties, so this specific fault is not expected from normal user-created metadata fields.
-   - Follow-up candidate makes Document Register table text explicitly selectable/copyable and prevents a drag-selected value in an editable cell from immediately opening edit mode. This is intended for exact copying of paths, UUIDs, hashes and diagnostics during troubleshooting.
-   - GitHub Actions run `37624443247` passed `npm ci`, `npm audit --audit-level=high` and the full `npm run check`, including contract checks for explicit text selection and selection-safe inline editing.
-   - The two old records can be repaired manually by removing only the obsolete `filemeta_sha256` line; no permanent product migration is planned for this test-only field.
-   - Practical retest confirmed selectable/copyable table text works.
-   - Removing the obsolete SHA field exposed a real identity conflict: records `02eef1fc-d30b-4f87-9d1f-1816f702d965` and `0720c77a-5e4d-4e91-91be-1d6de488ea59` both point to `10_Kilder/PDF/Fredrikstad Blad/Betalte 10.100 kroner i pipegebyr.pdf`.
-   - Follow-up candidate groups all records for one ambiguous PDF together and compares their user metadata as identical/different before any destructive decision.
-   - GitHub Actions run `37626673113` passed `npm ci`, `npm audit --audit-level=high` and the full `npm run check`, including behavioral verification of grouped duplicate-PDF conflicts and order-independent metadata comparison.
-   - Practical comparison on the observed pair reported **User metadata differ**.
-   - Agreed UX: a **Delete metadata** button belongs on each record, directly with its displayed user metadata. The action must never infer which record is correct.
-   - Candidate implementation now requires confirmation, shows a stronger warning when the compared user metadata differ, revalidates path/UUID/PDF identity before removal, and sends the selected metadata record through Obsidian's trash flow rather than permanently deleting it.
-   - GitHub Actions run `37628967629` passed `npm ci`, `npm audit --audit-level=high` and the full `npm run check`. Behavioral verification confirms stale/wrong UUID deletion is rejected, the selected duplicate is trashed, the remaining record becomes the sole active record, and a second delete attempt is rejected once ambiguity is resolved.
-   - Practical verification on the observed pair passed completely on 2026-10-07: steps 1–6 OK. The two conflicting records were grouped correctly, differing user metadata were shown, cancel left everything unchanged, the selected metadata record was moved through Obsidian's trash flow after confirmation, the PDF remained untouched, and the surviving record became the sole active record with the conflict removed.
+1. **0.1.227 Document Register: final closure review**
+   - The PDF-first/column redesign, quick status filters, invalid-record diagnostics, selectable/copyable table text, duplicate-PDF comparison and guarded duplicate-metadata deletion are all automated-green and practically verified.
+   - One small UX review remains before declaring the full redesign complete: inspect the current **Missing** and **Unregistered** views and decide whether either needs another direct action in the register itself.
+   - Do not reopen the confirmed Active/Error/duplicate behavior without a demonstrated regression.
 
-
-2. **PDF Document Register: current user interface needs redesign**
-   - The current Document Register user interface was judged unusable/poor in practical testing.
-   - Treat this as a UI/interaction redesign task rather than a small cosmetic fix.
-   - Keep the new simple lifecycle visible: active records are usable; missing records are informational/read-only; unregistered PDFs can receive new metadata.
-
-3. **PDF annotation backup: reassess `.pdfium-backup` after the independent backup solution exists**
+2. **PDF annotation backup: reassess `.pdfium-backup` after the independent backup solution exists**
    - Keep the current `backupOriginalPdf` safety function for now: it stores one original PDF copy before PDFium Gate first modifies the file and never overwrites an existing copy.
    - Reassess whether this separate per-PDF original-copy mechanism is still needed once the independent backup project provides a validated backup/restore workflow.
    - Do not remove or merge the behavior merely because both features use the word "backup"; compare their actual protection scope, restore semantics and failure modes first.
    - If the generic backup solution fully replaces this protection later, remove the old setting and `.pdfium-backup` workflow through an explicit migration/release decision rather than silently changing behavior.
 
 ## Completed items
+
+- **0.1.227 Document Register quick status/maintenance slice: practical verification passed**
+   - Verified on 2026-10-07 on `fix/0.1.227-localized-defaults`.
+   - Quick filters are Active, Missing, Errors, Unregistered, All; the selected filter is visibly marked and All is last.
+   - Stale invalid-record references self-heal only when the live metadata file is confirmed absent; lookup uncertainty fails closed.
+   - Invalid records expose the canonical parser/validation error. The retired `filemeta_sha256` failures found during testing were old development data, not a normal user-created metadata-field path.
+   - Document Register text, including diagnostics, paths and technical values, is selectable/copyable; drag-selection in editable cells does not trigger editing.
+   - Multiple valid records pointing to one PDF are grouped by PDF and show UUID/path plus user metadata, with an explicit identical/different comparison.
+   - Row-level **Delete metadata** requires confirmation, warns more strongly when metadata differ, revalidates record path + UUID + PDF immediately before removal, routes the selected metadata file through Obsidian's trash flow, never deletes the PDF, and leaves the surviving record as the sole active record.
+   - Automated verification is green in runs `37609277920`, `37613516468`, `37614784955`, `37624443247`, `37626673113` and `37628967629`.
+   - Practical filter test 1–8, copy/selection test, duplicate comparison and duplicate-delete test 1–6 all passed.
 
 - **0.1.227 Document Register first redesign slice: practical verification passed**
    - Verified on 2026-10-07 on `fix/0.1.227-localized-defaults`.
