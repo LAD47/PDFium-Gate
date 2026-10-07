@@ -43,7 +43,7 @@ This is the largest confirmed UX backlog item.
 - **Preparation complete (0.1.227):** native example Bases versus the real PDFium Gate register are explicitly separated, the synthetic example package is expanded, and Settings is reorganized into collapsible groups. Automated verification is green (run `37510815842`) and practical test 1–9 passed on 2026-10-07.
 
 - Redesign the current Document Register UI/interaction model; practical testing judged the current interface poor enough that this is a redesign task rather than cosmetic polish.
-- **First redesign slice in progress (0.1.227):** replace the PDF Open button with a clickable filename link and add per-Base show/hide column selection. New standard registers start with a compact five-column view; existing user-owned Base files are not rewritten. Automated verification is green (runs `37601435010` and `37603506103`) and practical test 1–9 passed on 2026-10-07. Follow-up polish now puts PDF first and moves **Columns…** to the left; only a short practical verification of those two placements remains.
+- **First redesign slice complete (0.1.227):** PDF is the first column and the filename itself is the clickable link; per-Base **Velg Kolonner** controls visible columns without changing metadata. New standard registers start compact; existing user-owned Base files are not rewritten. Automated verification is green (runs `37601435010`, `37603506103`, `37605344254`) and the complete practical verification passed on 2026-10-07.
 - Implement a clear maintenance/report surface for:
   - active records;
   - missing records;
