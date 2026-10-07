@@ -1,5 +1,7 @@
 # Handoff — after PDFium Gate 0.1.226 Community release
 
+> **Superseded for current 0.1.227 work:** use `HANDOFF-2026-10-07-0.1.227-DOCUMENT-REGISTER.md`. This file is retained as the historical handoff immediately after the 0.1.226 Community Plugins release.
+
 **Date:** 2026-10-06  
 **Repository:** `LAD47/PDFium-Gate`  
 **Authoritative branch for continued development:** `main`
