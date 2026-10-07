@@ -630,5 +630,11 @@
   "documentRegister.columns.description": "Choisissez les colonnes affichées dans cette vue du registre de documents. Cela modifie uniquement la vue, pas les métadonnées.",
   "documentRegister.columns.showAll": "Tout afficher",
   "documentRegister.columns.apply": "Appliquer",
-  "documentRegister.columns.requireOne": "Au moins une colonne doit rester visible."
+  "documentRegister.columns.requireOne": "Au moins une colonne doit rester visible.",
+  "documentRegister.overview.title": "État des documents",
+  "documentRegister.overview.active": "Actifs",
+  "documentRegister.overview.missing": "Manquants",
+  "documentRegister.overview.errors": "Erreurs",
+  "documentRegister.overview.unregistered": "Non enregistrés",
+  "documentRegister.overview.unavailable": "L’état des documents est temporairement indisponible."
 }
