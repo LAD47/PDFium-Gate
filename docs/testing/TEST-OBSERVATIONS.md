@@ -23,7 +23,9 @@ This file is a running list of observations found during practical testing that 
    - Practical test 1–9 passed on 2026-10-07 for clickable PDF links, column show/hide persistence, Show all, and the minimum-one-column guard.
    - Follow-up polish requested after that pass: put PDF first and move the **Columns…** control to the left near the result area.
    - GitHub Actions run `37603506103` passed `npm ci`, `npm audit --audit-level=high` and the full `npm run check`; generated `main.js` was rebuilt from canonical source.
-   - Only a short practical check of those two placement changes remains.
+   - Follow-up UI polish changed the button text to **Velg Kolonner** in Norwegian and added explicit spacing between the button and the help text so the two no longer read as one control.
+   - GitHub Actions run `37605344254` passed the full verification and rebuilt generated `main.js`.
+   - Only a short practical check of the final button text/spacing remains.
 
 2. **PDF Document Register: current user interface needs redesign**
    - The current Document Register user interface was judged unusable/poor in practical testing.
