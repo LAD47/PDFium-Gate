@@ -148,6 +148,7 @@ module.exports=function verifyDocumentRegisterBasesContract(){
   if(!viewSource.includes('metadataBasePrepareFieldUpdate(')||!viewSource.includes('metadataFieldTypeRegistry.get(field.type)')) fail('custom Bases inline edit bypasses field-type registry');
   if(!viewSource.includes('this.host?.saveValues?.(pdfPath')) fail('custom Bases inline edit does not route through explicit save operation');
   if(viewSource.includes('processFrontMatter(')||viewSource.includes('obsidianVaultWriteAdapter')||viewSource.includes('createText(')) fail('custom Bases view writes metadata directly');
+  if(!stylesSource.includes('.pdfium-document-register-duplicate-delete-details')||!stylesSource.includes('user-select: text;')) fail('duplicate delete confirmation does not keep identity details copyable');
   if(viewSource.includes("document_type==='letter'")||viewSource.includes("'letter':'Brev'")||viewSource.includes('letter → Brev')) fail('custom Bases view hardcodes document-type translation');
   if(/PdfDocumentRelinkModal|listPdfFiles|relinkMissingRecord|recoverMissingRecord|documentRegister\.relink/.test(viewSource)) fail('missing-PDF relink/recovery UX must not be exposed');
   if(!viewSource.includes("pdfium-document-register-missing-path")) fail('missing records must remain visibly identifiable in the custom Bases view');
@@ -184,7 +185,10 @@ module.exports=function verifyDocumentRegisterBasesContract(){
   if(!recordFeatureSource.includes('errorItems')||!recordFeatureSource.includes("reason='ambiguous-id'")||!recordFeatureSource.includes("reason='ambiguous-pdf-path'")) fail('Document Register status summary does not expose problem rows/reasons');
   if(!recordFeatureSource.includes('duplicatePdfGroups')||!recordFeatureSource.includes('metadataIdentical')||!recordFeatureSource.includes('documentRecordComparableValues(')) fail('Document Register status summary does not group/compare duplicate PDF records');
   if(!viewSource.includes('renderDuplicatePdfGroups(')||!viewSource.includes('renderDuplicateRecordMetadata(')||!viewSource.includes('summary.duplicatePdfGroups')) fail('Document Register error view does not render grouped duplicate-record comparison');
+  if(!viewSource.includes('class PdfDocumentRegisterDuplicateDeleteModal extends Modal')||!viewSource.includes("documentRegister.overview.duplicateDeleteButton")||!viewSource.includes('this.host?.deleteDuplicateRecord?.(')) fail('duplicate-record comparison does not expose confirmed row-level delete UX');
+  if(!recordFeatureSource.includes('async deleteDuplicateDocumentMetadataRecord(')||!recordFeatureSource.includes("this.state.documentRecords.ambiguousPdfPaths.has(pdfPath)")||!recordFeatureSource.includes('await this.obsidianVaultWriteAdapter.trashFile(file)')) fail('duplicate-record deletion is not guarded and routed through trash');
   if(!featureSource.includes('getStatusSummary:() => this.ports.getDocumentRegisterStatusSummary()')) fail('Document Register view host does not expose canonical status summary');
+  if(!featureSource.includes('deleteDuplicateRecord:(recordPath, expectedId, expectedPdfPath) => this.ports.deleteDuplicateDocumentMetadataRecord(')) fail('Document Register view host does not expose guarded duplicate-record deletion');
   if(!viewSource.includes('renderStatusOverview(')||!viewSource.includes("documentRegister.overview.active")||!viewSource.includes("documentRegister.overview.unregistered")||!viewSource.includes("documentRegister.overview.all")) fail('Document Register status overview/filter UI missing');
   if(!viewSource.includes("this.statusFilter = 'all'")||!viewSource.includes("setStatusFilter(kind)")||!viewSource.includes("this.statusFilter==='active' && !activeRecord")||!viewSource.includes("this.statusFilter==='missing' && activeRecord")) fail('Active/Missing/All status filtering is not wired into normal register rows');
   if(!viewSource.includes("this.statusFilter==='error' || this.statusFilter==='unregistered'")||!viewSource.includes('renderSpecialStatusTable(')||!viewSource.includes('summary.errorItems')||!viewSource.includes('summary.unregisteredPdfPaths')) fail('Error/Unregistered status filtering does not render concrete special result lists');
@@ -296,6 +300,8 @@ module.exports=function verifyDocumentRegisterBasesContract(){
     allStatusFilterLast:true,
     specialErrorAndUnregisteredLists:true,
     groupedDuplicatePdfComparison:true,
+    confirmedDuplicateMetadataDelete:true,
+    duplicateMetadataDeleteUsesTrash:true,
     invalidRecordTracking:true,
     staleInvalidRecordSelfHealing:true,
     invalidRecordValidationDetail:true,
