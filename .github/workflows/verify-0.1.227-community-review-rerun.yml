@@ -1,0 +1,58 @@
+name: Verify 0.1.227 Community review cleanup rerun
+
+on:
+  push:
+    branches:
+      - fix/0.1.227-localized-defaults
+    paths:
+      - '.github/workflows/verify-0.1.227-community-review-rerun.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  verify-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/0.1.227-localized-defaults
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Audit dependencies
+        run: npm audit --audit-level=high
+
+      - name: Verify source and generated runtime
+        run: npm run check
+
+      - name: Run full Email Import tests
+        run: npm run test:email-import
+
+      - name: Report Community review targets
+        shell: bash
+        run: |
+          node -e "const fs=require('fs'); console.log('main.js bytes=' + fs.statSync('main.js').size)"
+          echo "CSS review patterns:"
+          grep -n -E '!important|:has\(|text-decoration-style' styles.css || true
+
+      - name: Commit generated runtime when needed
+        shell: bash
+        run: |
+          if git diff --quiet -- main.js main-bridge.js; then
+            echo "Generated runtime is already current."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add main.js main-bridge.js
+          git commit -m "Build 0.1.227 Community review cleanup [skip ci]"
+          git push
+
+# rerun after visibility verifier update
