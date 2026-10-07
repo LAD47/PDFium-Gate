@@ -43,7 +43,7 @@ This is the largest confirmed UX backlog item.
 - **Preparation complete (0.1.227):** native example Bases versus the real PDFium Gate register are explicitly separated, the synthetic example package is expanded, and Settings is reorganized into collapsible groups. Automated verification is green (run `37510815842`) and practical test 1–9 passed on 2026-10-07.
 
 - Redesign the current Document Register UI/interaction model; practical testing judged the current interface poor enough that this is a redesign task rather than cosmetic polish.
-- **First redesign slice in progress (0.1.227):** replace the PDF Open button with a clickable filename link and add per-Base show/hide column selection. New standard registers start with a compact five-column view; existing user-owned Base files are not rewritten.
+- **First redesign slice in progress (0.1.227):** replace the PDF Open button with a clickable filename link and add per-Base show/hide column selection. New standard registers start with a compact five-column view; existing user-owned Base files are not rewritten. Automated verification is green (run `37601435010`); practical Obsidian verification remains.
 - Implement a clear maintenance/report surface for:
   - active records;
   - missing records;
