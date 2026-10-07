@@ -25,7 +25,9 @@ This file is a running list of observations found during practical testing that 
    - GitHub Actions run `37613516468` passed the full `npm run check`, including a behavioral regression test where a still-existing invalid record remains an error and then disappears automatically from the error set after the file is removed.
    - No destructive repair/delete operation is added in this slice.
    - GitHub Actions run `37609277920` passed `npm ci`, `npm audit --audit-level=high`, the full `npm run check`, and behavioral verification of status counts, concrete error/unregistered items, filter order and selected-state wiring; generated `main.js` was rebuilt from canonical source.
-   - Practical Obsidian testing remains.
+   - Practical status-filter test 1–8 passed on 2026-10-07.
+   - Follow-up practical check found two remaining **Invalid metadata record** entries even after stale-path self-healing. Their metadata files therefore still exist in the vault; this is a real-record diagnostic case rather than stale RAM state.
+   - Candidate follow-up now preserves the canonical parser/validation error per invalid record and renders that exact detail under the broad error category. Fresh automated verification and practical inspection of the two real records remain.
 
 2. **PDF Document Register: current user interface needs redesign**
    - The current Document Register user interface was judged unusable/poor in practical testing.
