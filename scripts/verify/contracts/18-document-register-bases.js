@@ -68,6 +68,8 @@ module.exports=function verifyDocumentRegisterBasesContract(){
   if(!standardBaseYaml.includes('type: pdfium-document-register')||!standardBaseYaml.includes('property: document_date')||!standardBaseYaml.includes('direction: DESC')) fail('standard Dokumentregister Base lacks custom view/default newest-first sort');
   if(!standardBaseYaml.includes('displayName: "Document date"')||!standardBaseYaml.includes('displayName: "Status"')||!standardBaseYaml.includes('displayName: "PDF"')) fail('standard Document Register Base lacks canonical English human display names');
   if(!standardBaseYaml.includes('pdfiumHiddenColumns:')||!standardBaseYaml.includes('      - document_time')||!standardBaseYaml.includes('      - response_received')) fail('standard Document Register Base lacks compact default hidden-column config');
+  const orderBlock=standardBaseYaml.split('    order:')[1]?.split('    sort:')[0] || '';
+  if(!orderBlock.trimStart().startsWith('- filemeta_file')) fail('standard Document Register Base does not put PDF first in column order');
   if(standardBaseYaml.includes('      - document_date\n')===false||standardBaseYaml.includes('      - sender\n')===false||standardBaseYaml.includes('      - document_type\n')===false) fail('standard Document Register Base compact defaults hid primary columns');
   const ignoredLocalizedBase=baseConfig.metadataDocumentRegisterStandardBaseYaml(schema,()=> 'SHOULD NOT BE USED');
   if(ignoredLocalizedBase!==standardBaseYaml) fail('standard Base factory unexpectedly depends on UI language');
@@ -125,6 +127,18 @@ module.exports=function verifyDocumentRegisterBasesContract(){
   if(viewSource.includes("cls:'pdfium-document-register-open'")||viewSource.includes("text:this.t('common.open')")) fail('PDF column still renders a separate Open button');
   if(!viewSource.includes("cls:'internal-link pdfium-document-register-pdf-link'")||!viewSource.includes("text:fileName || 'PDF'")||!viewSource.includes("this.host?.openLink?.(resolvedPath")) fail('PDF column does not render the filename as a clickable internal link');
   if(!viewSource.includes("if(showStatus)")||!viewSource.includes("if(showPdf)")||!viewSource.includes("fields=allFields.filter")) fail('column visibility is not applied to metadata and system columns');
+  const pdfHeaderIndex=viewSource.indexOf("if(showPdf) this.renderHeaderCell(headRow");
+  const fieldHeaderIndex=viewSource.indexOf("for (const field of fields) this.renderHeaderCell(headRow");
+  if(pdfHeaderIndex<0||fieldHeaderIndex<0||pdfHeaderIndex>fieldHeaderIndex) fail('PDF header is not the first rendered table column');
+  const pdfCellIndex=viewSource.indexOf("const pdfCell = row.createEl('td'");
+  const fieldCellIndex=viewSource.indexOf("const fieldByProperty = new Map(fields.map");
+  if(pdfCellIndex<0||fieldCellIndex<0||pdfCellIndex>fieldCellIndex) fail('PDF body cell is not the first rendered table column');
+  const toolbarActionsIndex=viewSource.indexOf("const toolbarActions=toolbar.createDiv");
+  const toolbarHelpIndex=viewSource.indexOf("const help = toolbar.createDiv");
+  if(toolbarActionsIndex<0||toolbarHelpIndex<0||toolbarActionsIndex>toolbarHelpIndex) fail('Columns button is not positioned on the left before help text');
+  const pickerPdfIndex=viewSource.indexOf("{property:'filemeta_file',label:this.t('documentRegister.pdf')");
+  const pickerFieldIndex=viewSource.indexOf("...(Array.isArray(fields) ? fields : [])");
+  if(pickerPdfIndex<0||pickerFieldIndex<0||pickerPdfIndex>pickerFieldIndex) fail('column picker does not mirror PDF-first table order');
   {
     const fromConfig=eval(`(${ctx.extractNamedFunction(viewSource,'pdfDocumentRegisterHiddenColumnsFromConfig')})`);
     const toConfig=eval(`(${ctx.extractNamedFunction(viewSource,'pdfDocumentRegisterHiddenColumnsToConfig')})`);
