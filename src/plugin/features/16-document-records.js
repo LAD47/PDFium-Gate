@@ -46,7 +46,8 @@ function documentRecordRegisterStatusSnapshot(documentRecords,pdfFiles,getState)
     return {
       recordPath:metadataRecordNormalizeVaultPath(recordPath),
       pdfPath:metadataRecordNormalizeVaultPath(entry?.pdfPath || ''),
-      reason
+      reason,
+      detail:reason==='invalid' ? String(state.invalidRecordErrors?.get?.(recordPath) || '') : ''
     };
   }).sort((a,b)=>a.recordPath.localeCompare(b.recordPath));
 
@@ -148,6 +149,7 @@ class DocumentRecordsFeature {
     this.state.documentRecords.ambiguousIds.clear();
     this.state.documentRecords.ambiguousPdfPaths.clear();
     this.state.documentRecords.invalidRecordPaths.clear();
+    this.state.documentRecords.invalidRecordErrors.clear();
   }
 
   recomputeDocumentRecordPdfPath(pdfPath) {
@@ -208,6 +210,7 @@ class DocumentRecordsFeature {
     if(recordPath!==canonicalPath) throw new Error(`metadata-record ligger på ikke-canonical sti: ${recordPath}`);
     const normalized={...entry,recordPath,id,pdfPath,values:metadataRecordClone(entry.values || {})};
     this.state.documentRecords.invalidRecordPaths.delete(recordPath);
+    this.state.documentRecords.invalidRecordErrors.delete(recordPath);
     this.state.documentRecords.entryByRecordPath.set(recordPath,normalized);
     let idPaths=this.state.documentRecords.recordPathsById.get(id);
     if(!idPaths) {
@@ -231,6 +234,7 @@ class DocumentRecordsFeature {
   removeDocumentRecordEntryByPath(recordPath) {
     const path=metadataRecordNormalizeVaultPath(recordPath);
     this.state.documentRecords.invalidRecordPaths.delete(path);
+    this.state.documentRecords.invalidRecordErrors.delete(path);
     const entry=this.state.documentRecords.entryByRecordPath.get(path);
     if(!entry) return null;
     this.state.documentRecords.entryByRecordPath.delete(path);
@@ -363,7 +367,9 @@ class DocumentRecordsFeature {
         }
         if(!parsed?.ok) {
           invalidCount++;
-          this.state.documentRecords.invalidRecordPaths.add(metadataRecordNormalizeVaultPath(file?.path));
+          const invalidPath=metadataRecordNormalizeVaultPath(file?.path);
+          this.state.documentRecords.invalidRecordPaths.add(invalidPath);
+          this.state.documentRecords.invalidRecordErrors.set(invalidPath,String(parsed?.error || 'metadata record kunne ikke valideres'));
           continue;
         }
         cacheWriteItems.push({file,parsed});
@@ -379,7 +385,10 @@ class DocumentRecordsFeature {
         indexPopulateMs+=documentRecordBenchmarkNowMs()-indexStarted;
       } catch(error) {
         invalidCount++;
-        this.state.documentRecords.invalidRecordPaths.add(metadataRecordNormalizeVaultPath(file?.path));
+        const invalidPath=metadataRecordNormalizeVaultPath(file?.path);
+        const invalidError=error instanceof Error ? error.message : String(error);
+        this.state.documentRecords.invalidRecordPaths.add(invalidPath);
+        this.state.documentRecords.invalidRecordErrors.set(invalidPath,invalidError || 'metadata record kunne ikke indekseres');
         console.warn(`[PDFium Gate ${PLUGIN_VERSION}] Ignorerer ugyldig metadata-record ${file?.path || ''}`,error);
       }
     }
@@ -673,6 +682,8 @@ class DocumentRecordsFeature {
         if(!existsAsMarkdown) {
           invalid.delete(rawPath);
           invalid.delete(path);
+          this.state.documentRecords.invalidRecordErrors.delete(rawPath);
+          this.state.documentRecords.invalidRecordErrors.delete(path);
           removedPaths.push(path);
         }
       } catch(error) {
@@ -810,11 +821,14 @@ class DocumentRecordsFeature {
     const parsed=await this.parseDocumentRecordFile(file,schema,true);
     this.removeDocumentRecordEntryByPath(path);
     if(!parsed.ok) {
+      const detail=String(parsed.error || 'ukjent feil');
       this.state.documentRecords.invalidRecordPaths.add(path);
-      this.state.documentRecords.lastError=`Ugyldig metadata-record ${path}: ${parsed.error || 'ukjent feil'}`;
+      this.state.documentRecords.invalidRecordErrors.set(path,detail);
+      this.state.documentRecords.lastError=`Ugyldig metadata-record ${path}: ${detail}`;
       return {ok:false,error:this.state.documentRecords.lastError};
     }
     this.state.documentRecords.invalidRecordPaths.delete(path);
+    this.state.documentRecords.invalidRecordErrors.delete(path);
     this.addDocumentRecordEntry({id:parsed.record.id,pdfPath:parsed.record.pdfPath,status:parsed.record.status,values:parsed.record.values,recordPath:path,file});
     this.state.documentRecords.lastError=null;
     return {ok:true};
