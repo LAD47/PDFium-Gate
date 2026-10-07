@@ -630,6 +630,59 @@ class DocumentRecordsFeature {
     });
   }
 
+  async deleteDuplicateDocumentMetadataRecord(recordPath,expectedId,expectedPdfPath) {
+    const path=metadataRecordNormalizeVaultPath(recordPath);
+    const id=String(expectedId || '').trim().toLowerCase();
+    const pdfPath=metadataRecordNormalizeVaultPath(expectedPdfPath);
+    if(!metadataRecordIsPath(path) || !metadataRecordIsUuidV4(id) || !pdfPath || !/\.pdf$/i.test(pdfPath)) {
+      return {ok:false,error:'Duplicate metadata record identity is missing or invalid'};
+    }
+    await this.ensureDocumentRecordIndexReady('duplicate-record-delete');
+    return await this.runDocumentRecordOperation(async()=>{
+      const entry=this.state.documentRecords.entryByRecordPath.get(path) || null;
+      if(!entry) return {ok:false,error:'Metadata record is no longer indexed'};
+      if(String(entry.id || '').toLowerCase()!==id || metadataRecordNormalizeVaultPath(entry.pdfPath)!==pdfPath) {
+        return {ok:false,error:'Metadata record changed after the comparison was shown'};
+      }
+      const ids=this.state.documentRecords.idsByPdfPath.get(pdfPath);
+      if(!this.state.documentRecords.ambiguousPdfPaths.has(pdfPath) || !(ids instanceof Set) || ids.size<2 || !ids.has(id)) {
+        return {ok:false,error:'The PDF no longer has this duplicate-record conflict'};
+      }
+
+      const file=this.obsidianVaultReadAdapter?.getAbstractFileByPath?.(path) || null;
+      if(!file || String(file.extension || '').toLowerCase()!=='md') {
+        return {ok:false,error:'Metadata record file could not be resolved'};
+      }
+      const schema=this.ports.getMetadataSchemaSnapshot();
+      if(!schema) return {ok:false,error:'Metadata schema is unavailable'};
+      const parsed=await this.parseDocumentRecordFile(file,schema,true);
+      if(!parsed?.ok || String(parsed.record?.id || '').toLowerCase()!==id) {
+        return {ok:false,error:'Metadata record changed and must be reviewed again before deletion'};
+      }
+      const currentPdfPath=this.resolveDocumentRecordPdfPath(parsed.record.pdfPath,path);
+      if(currentPdfPath!==pdfPath) {
+        return {ok:false,error:'Metadata record PDF target changed and must be reviewed again before deletion'};
+      }
+
+      await this.obsidianVaultWriteAdapter.deleteFile(file,true);
+      this.removeDocumentRecordEntryByPath(path);
+      this.state.documentRecords.lastError=null;
+      const remainingIds=this.state.documentRecords.idsByPdfPath.get(pdfPath);
+      return {
+        ok:true,
+        deleted:true,
+        id,
+        recordPath:path,
+        pdfPath,
+        remainingRecordCount:Number(remainingIds?.size || 0)
+      };
+    }).catch(error=>{
+      const message=error instanceof Error ? error.message : String(error);
+      this.state.documentRecords.lastError=message;
+      return {ok:false,error:message};
+    });
+  }
+
   async deleteDocumentMetadataRecordForPdf(pdfPath) {
     const path=metadataRecordNormalizeVaultPath(pdfPath);
     if(!path || !/\.pdf$/i.test(path)) return {ok:false,error:'PDF path is missing or invalid'};
