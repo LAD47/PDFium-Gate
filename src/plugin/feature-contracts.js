@@ -370,6 +370,7 @@ const PLUGIN_FEATURE_CONTRACTS = Object.freeze({
     "mutableStateFields": [
       "documentRecords.ambiguousIds",
       "documentRecords.ambiguousPdfPaths",
+      "documentRecords.invalidRecordPaths",
       "documentRecords.byId",
       "documentRecords.byPdfPath",
       "documentRecords.entryByRecordPath",
@@ -402,6 +403,7 @@ const PLUGIN_FEATURE_CONTRACTS = Object.freeze({
     "stateDomains": [],
     "ports": [
       "getMetadataSchemaPresentationSnapshot",
+      "getDocumentRegisterStatusSummary",
       "resolveDocumentRecordPdfPath",
       "saveDocumentMetadataRecordValues"
     ],
@@ -545,6 +547,7 @@ const PLUGIN_STATE_FIELD_OWNERS = Object.freeze({
   "documentInfo.editingPdfPath": "documentInfo",
   "documentRecords.ambiguousIds": "documentRecords",
   "documentRecords.ambiguousPdfPaths": "documentRecords",
+  "documentRecords.invalidRecordPaths": "documentRecords",
   "documentRecords.byId": "documentRecords",
   "documentRecords.byPdfPath": "documentRecords",
   "documentRecords.entryByRecordPath": "documentRecords",
