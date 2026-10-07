@@ -623,5 +623,12 @@
   "settings.group.general": "Allgemein",
   "settings.group.import": "Import",
   "settings.group.metadataRegister": "Metadaten und Dokumentregister",
-  "settings.documentRegister.explanation": "Das PDFium-Gate-Dokumentregister unterscheidet sich von den Beispiel-Base-Dateien. PDF Dokumentregister.base wird beim ersten Öffnen des echten Registers erstellt, liest registrierte PDFs aus File Metadata und verwendet die eigene Bases-Ansicht von PDFium Gate. Nach der Erstellung gehört die Base-Datei dem Benutzer; spätere Änderungen werden von PDFium Gate nicht überschrieben."
+  "settings.documentRegister.explanation": "Das PDFium-Gate-Dokumentregister unterscheidet sich von den Beispiel-Base-Dateien. PDF Dokumentregister.base wird beim ersten Öffnen des echten Registers erstellt, liest registrierte PDFs aus File Metadata und verwendet die eigene Bases-Ansicht von PDFium Gate. Nach der Erstellung gehört die Base-Datei dem Benutzer; spätere Änderungen werden von PDFium Gate nicht überschrieben.",
+  "documentRegister.columns.button": "Spalten…",
+  "documentRegister.columns.buttonAria": "Sichtbare Spalten auswählen",
+  "documentRegister.columns.title": "Sichtbare Spalten",
+  "documentRegister.columns.description": "Wählen Sie, welche Spalten in dieser Dokumentregister-Ansicht angezeigt werden. Dadurch wird nur die Ansicht geändert, nicht die Metadaten.",
+  "documentRegister.columns.showAll": "Alle anzeigen",
+  "documentRegister.columns.apply": "Anwenden",
+  "documentRegister.columns.requireOne": "Mindestens eine Spalte muss sichtbar bleiben."
 }
