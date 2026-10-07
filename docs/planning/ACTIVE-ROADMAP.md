@@ -42,9 +42,9 @@ This is the largest confirmed UX backlog item.
 
 - **Preparation complete (0.1.227):** native example Bases versus the real PDFium Gate register are explicitly separated, the synthetic example package is expanded, and Settings is reorganized into collapsible groups. Automated verification is green (run `37510815842`) and practical test 1–9 passed on 2026-10-07.
 
-- **Document Register redesign substantially complete (0.1.227):** the first slice is complete with PDF-first layout, filename links, **Velg Kolonner**, compact factory defaults and preservation of user-owned Base files. Automated verification is green (runs `37601435010`, `37603506103`, `37605344254`) and practical verification passed on 2026-10-07.
-- **Quick status/maintenance slice complete (0.1.227):** the status overview is a quick filter in the order Active, Missing, Errors, Unregistered, All. Active/Missing/All reuse the normal register table; Errors/Unregistered render concrete maintenance rows in the same register surface. Practical status-filter test 1–8 passed. Stale invalid-record paths self-heal against the live vault (run `37613516468`); invalid records expose canonical validation details (run `37614784955`); table/diagnostic text is selectable and copyable without triggering inline edit (run `37624443247`, practical pass); duplicate-PDF records are grouped and their user metadata compared (run `37626673113`); and row-level **Delete metadata** uses explicit confirmation, stronger warning for differing metadata, exact identity revalidation and Obsidian trash routing (run `37628967629`, practical test 1–6 passed). The tested duplicate was removed safely, the PDF was preserved, and the surviving record became the sole active record.
-- **Final Document Register closure action implemented (0.1.227, awaiting practical verification):** **Missing** was reviewed and intentionally remains read-only in the register; its separate missing-document review flow remains the safe maintenance path. **Unregistered** now exposes one **Register all** action in the register itself, reusing the established `registerExistingPdfRecords()` flow rather than introducing per-PDF opt-in or a second registration model. After one focused practical test, the overall Document Register redesign can be marked complete. Do not reopen the already-confirmed Active/Error/duplicate flows without a demonstrated regression.
+- **Document Register redesign complete and practically verified (0.1.227):** PDF-first layout, filename links, **Velg Kolonner**, compact factory defaults, quick filters Active/Missing/Errors/Unregistered/All, concrete invalid-record diagnostics, selectable/copyable table text, duplicate-record comparison and guarded **Delete metadata** are all confirmed.
+- **Final Unregistered closure passed:** with automatic registration disabled, two new test PDFs appeared under **Unregistered**; **Register all** registered both through the canonical `registerExistingPdfRecords()` flow, Unregistered returned to 0, both moved to **Active** with ordinary metadata records/new UUIDs, and **Missing** remained unchanged/read-only. Practical closure test 1–6 passed on 2026-10-07. Final closure CI run `37641023959` was green.
+- Preserve the confirmed register behavior and do not reopen Active/Missing/Error/duplicate/Unregistered flows without a demonstrated regression.
 - Preserve the current simple lifecycle: `active` / `missing`.
 - Preserve permanent UUID identity and trusted rename/move continuity.
 - Do not reintroduce ordinary-PDF SHA recovery, manual relink or the experimental `trashed` state.
@@ -55,6 +55,17 @@ Already resolved — do not reopen as planning questions:
 - explicit **Register existing PDFs**;
 - fresh identity for a new PDF that appears at a path previously owned by a missing historical record;
 - explicit **Missing documents** review and optional **Delete metadata**.
+
+### Community Plugin review follow-up
+
+- **0.1.226 scanner failure addressed for 0.1.227:** the manifest description no longer contains the redundant word “Obsidian”.
+- **Release-size warning addressed:** generated Email/Archive runtime bundles now use esbuild whitespace/syntax minification without identifier minification. Verified `main.js` size is **4,570,242 bytes**, below the 5 MB Community/Sync target. A permanent `check:community` gate prevents regressions.
+- **Artifact provenance added:** the Community release workflow now rebuilds/verifies the frozen archive and generates GitHub artifact attestations for `main.js`, `manifest.json` and `styles.css` before publishing.
+- **CSS review warnings addressed:** active `styles.css` contains no `!important`, `:has()` or `text-decoration-style`; the visibility verifier was updated to the new exact-root selectors.
+- **Privileged desktop behavior documented:** README now explains filesystem access, vault enumeration, clipboard use and the bundled dynamic-code dependency.
+- Full source/runtime verification, dependency audit and the complete Email Import test suite are green in runs `37656502583` and `37656591061`.
+- Remaining scanner recommendations for vault enumeration and clipboard access are intentional product behavior. The `new Function(...)` finding comes from `source-map-js` via `sanitize-html -> postcss -> source-map-js`; dependency replacement can be reviewed later, but there is no current vulnerable-dependency finding.
+- Before any 0.1.227 merge/release decision, run the Community **Review branch / preview scan** against the candidate branch if available.
 
 ### Backup and destructive maintenance
 
