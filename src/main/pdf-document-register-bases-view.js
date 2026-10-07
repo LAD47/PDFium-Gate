@@ -421,13 +421,13 @@ class PdfDocumentRegisterBasesView extends BasesViewBase {
 
   documentRegisterColumns(fields) {
     return [
+      {property:'filemeta_file',label:this.t('documentRegister.pdf'),systemType:'link'},
       ...(Array.isArray(fields) ? fields : []).map(field=>({
         property:String(field?.property || '').trim(),
         label:String(field?.label || field?.property || '').trim(),
         field
       })).filter(column=>column.property),
-      {property:'filemeta_status',label:this.t('documentRegister.status'),systemType:'status'},
-      {property:'filemeta_file',label:this.t('documentRegister.pdf'),systemType:'link'}
+      {property:'filemeta_status',label:this.t('documentRegister.status'),systemType:'status'}
     ];
   }
 
