@@ -71,6 +71,8 @@ The verification pipeline covers the build, internationalization, architecture d
 
 A pull request should not deliberately weaken or bypass a verification gate just to make a change pass.
 
+For a Community release candidate, repository CI is only one gate. The authoritative [release procedure](RELEASE.md) also requires an Obsidian Community **Review branch / preview scan** of the exact candidate before merge to `main`. Any later candidate change that affects source, generated runtime, manifest, CSS, dependencies, build configuration, or release workflow requires that external preview scan to be repeated.
+
 ## Architecture rules
 
 The project currently protects several architectural properties that should remain intact unless a deliberate architecture change is discussed first:
