@@ -85,6 +85,7 @@ module.exports=function verifyDocumentRegisterBasesContract(){
   {
     const documentRecords={
       invalidRecordPaths:new Set(['File Metadata/ff/invalid.md']),
+      invalidRecordErrors:new Map([['File Metadata/ff/invalid.md','filemeta_id er ikke UUID v4']]),
       ambiguousIds:new Set(['dup-id']),
       ambiguousPdfPaths:new Set(),
       recordPathsById:new Map([['dup-id',new Set(['File Metadata/aa/dup-a.md','File Metadata/bb/dup-b.md'])]]),
@@ -106,6 +107,7 @@ module.exports=function verifyDocumentRegisterBasesContract(){
     if(summary.activeCount!==1||summary.missingCount!==1||summary.errorCount!==3||summary.unregisteredCount!==1||summary.allCount!==2) fail('Document Register status snapshot produced incorrect category counts');
     if(summary.totalRecordCount!==5||summary.totalPdfCount!==3||summary.registrationProblemCount!==1) fail('Document Register status snapshot produced incorrect totals/problem count');
     if(summary.errorItems.length!==3||summary.errorItems.filter(item=>item.reason==='ambiguous-id').length!==2||summary.errorItems.filter(item=>item.reason==='invalid').length!==1) fail('Document Register status snapshot did not expose concrete error items/reasons');
+    if(summary.errorItems.find(item=>item.reason==='invalid')?.detail!=='filemeta_id er ikke UUID v4') fail('Document Register status snapshot did not preserve concrete invalid-record validation detail');
     if(JSON.stringify(summary.unregisteredPdfPaths)!==JSON.stringify(['Docs/unregistered.pdf'])) fail('Document Register status snapshot did not expose concrete unregistered PDF paths');
   }
 
@@ -162,8 +164,11 @@ module.exports=function verifyDocumentRegisterBasesContract(){
   if(!viewSource.includes("cls:'internal-link pdfium-document-register-pdf-link'")||!viewSource.includes("text:fileName || 'PDF'")||!viewSource.includes("this.host?.openLink?.(resolvedPath")) fail('PDF column does not render the filename as a clickable internal link');
   if(!viewSource.includes("if(showStatus)")||!viewSource.includes("if(showPdf)")||!viewSource.includes("fields=allFields.filter")) fail('column visibility is not applied to metadata and system columns');
   if(!pluginStateSource.includes('invalidRecordPaths: new Set()')) fail('document record state does not track invalid record paths');
+  if(!pluginStateSource.includes('invalidRecordErrors: new Map()')) fail('document record state does not track invalid record validation details');
   if(!recordFeatureSource.includes('async getDocumentRegisterStatusSummary()')||!recordFeatureSource.includes('function documentRecordRegisterStatusSnapshot(')||!recordFeatureSource.includes('invalidRecordPaths=new Set(state.invalidRecordPaths')||!recordFeatureSource.includes('problemRecordPaths=new Set(invalidRecordPaths)')) fail('Document Register status summary is missing or does not include invalid records');
   if(!recordFeatureSource.includes('this.state.documentRecords.invalidRecordPaths.add(path)')||!recordFeatureSource.includes('this.state.documentRecords.invalidRecordPaths.delete(path)')) fail('invalid record tracking is not maintained by live record refresh');
+  if(!recordFeatureSource.includes('invalidRecordErrors.set(')||!recordFeatureSource.includes('invalidRecordErrors.delete(')||!recordFeatureSource.includes("detail:reason==='invalid'")) fail('invalid-record validation details are not maintained through index lifecycle/status summary');
+  if(!viewSource.includes("cls:'pdfium-document-register-problem-detail'")||!viewSource.includes('if(item.detail)')) fail('Document Register error table does not render concrete validation detail');
   if(!recordFeatureSource.includes('pruneMissingInvalidDocumentRecordPaths()')||!recordFeatureSource.includes('const existsAsMarkdown=!!file')||!recordFeatureSource.includes('staleInvalidRemovedCount')) fail('Document Register does not self-heal stale invalid-record paths before status summary');
   if(!recordFeatureSource.includes("reason:'vault-lookup-unavailable'")||!recordFeatureSource.includes('uncertainPaths.push(path)')) fail('stale-invalid pruning does not fail closed on lookup uncertainty');
   if(!recordFeatureSource.includes('unregisteredPdfPaths.push(path)')||!recordFeatureSource.includes('METADATA_RECORD_STATUS_MISSING) missingCount++')) fail('Document Register status summary does not count/expose unregistered or missing documents');
@@ -280,6 +285,7 @@ module.exports=function verifyDocumentRegisterBasesContract(){
     specialErrorAndUnregisteredLists:true,
     invalidRecordTracking:true,
     staleInvalidRecordSelfHealing:true,
+    invalidRecordValidationDetail:true,
     failClosedInvalidPathLookup:true,
     unregisteredPdfCount:true,
     headerTooltipDeduplicated:true,
