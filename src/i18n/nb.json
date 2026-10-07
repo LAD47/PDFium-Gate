@@ -636,5 +636,15 @@
   "documentRegister.overview.missing": "Mangler",
   "documentRegister.overview.errors": "Feil",
   "documentRegister.overview.unregistered": "Uregistrerte",
-  "documentRegister.overview.unavailable": "Dokumentstatus er midlertidig utilgjengelig."
+  "documentRegister.overview.unavailable": "Dokumentstatus er midlertidig utilgjengelig.",
+  "documentRegister.overview.all": "Alle",
+  "documentRegister.overview.filterAria": "Vis {label}",
+  "documentRegister.overview.metadataFile": "Metadatafil",
+  "documentRegister.overview.problem": "Problem",
+  "documentRegister.overview.reasonInvalid": "Ugyldig metadatarecord",
+  "documentRegister.overview.reasonAmbiguousId": "Duplisert metadata-ID",
+  "documentRegister.overview.reasonAmbiguousPdfPath": "Flere records peker til samme PDF",
+  "documentRegister.overview.reasonIdentity": "Konflikt i dokumentidentitet",
+  "documentRegister.overview.noErrors": "Ingen feil i dokumentrecords.",
+  "documentRegister.overview.noUnregistered": "Ingen uregistrerte PDF-er."
 }
