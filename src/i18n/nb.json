@@ -646,5 +646,11 @@
   "documentRegister.overview.reasonAmbiguousPdfPath": "Flere records peker til samme PDF",
   "documentRegister.overview.reasonIdentity": "Konflikt i dokumentidentitet",
   "documentRegister.overview.noErrors": "Ingen feil i dokumentrecords.",
-  "documentRegister.overview.noUnregistered": "Ingen uregistrerte PDF-er."
+  "documentRegister.overview.noUnregistered": "Ingen uregistrerte PDF-er.",
+  "documentRegister.overview.duplicateUuid": "UUID",
+  "documentRegister.overview.duplicateUserMetadata": "Brukermetadata",
+  "documentRegister.overview.duplicateMetadataIdentical": "Brukermetadataene er identiske",
+  "documentRegister.overview.duplicateMetadataDifferent": "Brukermetadataene er forskjellige",
+  "documentRegister.overview.duplicateNoUserMetadata": "Ingen brukermetadata",
+  "documentRegister.overview.duplicateCompareHint": "Sammenlign recordene før noe slettes."
 }
