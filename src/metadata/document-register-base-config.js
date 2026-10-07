@@ -3,6 +3,14 @@
 const PDF_DOCUMENT_REGISTER_BASE_VIEW_TYPE = 'pdfium-document-register';
 const PDF_DOCUMENT_REGISTER_STANDARD_BASE_PATH = 'PDF Dokumentregister.base';
 const PDF_DOCUMENT_REGISTER_STANDARD_VIEW_NAME = 'Document Register';
+const PDF_DOCUMENT_REGISTER_STANDARD_HIDDEN_COLUMNS = Object.freeze([
+  'document_time',
+  'response_received',
+  'response_received_date',
+  'response_sent',
+  'response_sent_date',
+  'response_sent_link'
+]);
 
 function metadataDocumentRegisterYamlString(value) {
   return JSON.stringify(String(value == null ? '' : value));
@@ -42,6 +50,13 @@ function metadataDocumentRegisterStandardBaseYaml(schema) {
   lines.push('views:');
   lines.push(`  - type: ${PDF_DOCUMENT_REGISTER_BASE_VIEW_TYPE}`);
   lines.push(`    name: ${metadataDocumentRegisterYamlString(PDF_DOCUMENT_REGISTER_STANDARD_VIEW_NAME)}`);
+  const hiddenColumns=fields
+    .map(field=>field.property)
+    .filter(property=>PDF_DOCUMENT_REGISTER_STANDARD_HIDDEN_COLUMNS.includes(property));
+  if(hiddenColumns.length) {
+    lines.push('    pdfiumHiddenColumns:');
+    for(const property of hiddenColumns) lines.push(`      - ${property}`);
+  }
   lines.push('    order:');
   for (const field of fields) lines.push(`      - ${field.property}`);
   lines.push('      - filemeta_status');
@@ -58,6 +73,7 @@ module.exports = {
   PDF_DOCUMENT_REGISTER_BASE_VIEW_TYPE,
   PDF_DOCUMENT_REGISTER_STANDARD_BASE_PATH,
   PDF_DOCUMENT_REGISTER_STANDARD_VIEW_NAME,
+  PDF_DOCUMENT_REGISTER_STANDARD_HIDDEN_COLUMNS,
   metadataDocumentRegisterBaseFields,
   metadataDocumentRegisterStandardBaseYaml
 };
