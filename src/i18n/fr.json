@@ -624,7 +624,7 @@
   "settings.group.import": "Importation",
   "settings.group.metadataRegister": "Métadonnées et registre de documents",
   "settings.documentRegister.explanation": "Le registre de documents PDFium Gate est différent des fichiers Base d’exemple. PDF Dokumentregister.base est créé lors de la première ouverture du registre réel, lit les PDF enregistrés dans File Metadata et utilise la vue Bases dédiée de PDFium Gate. Après sa création, le fichier Base appartient à l’utilisateur et PDFium Gate n’écrase pas les modifications ultérieures.",
-  "documentRegister.columns.button": "Colonnes…",
+  "documentRegister.columns.button": "Choisir les colonnes",
   "documentRegister.columns.buttonAria": "Choisir les colonnes visibles",
   "documentRegister.columns.title": "Colonnes visibles",
   "documentRegister.columns.description": "Choisissez les colonnes affichées dans cette vue du registre de documents. Cela modifie uniquement la vue, pas les métadonnées.",
