@@ -58,9 +58,9 @@ function metadataDocumentRegisterStandardBaseYaml(schema) {
     for(const property of hiddenColumns) lines.push(`      - ${property}`);
   }
   lines.push('    order:');
+  lines.push('      - filemeta_file');
   for (const field of fields) lines.push(`      - ${field.property}`);
   lines.push('      - filemeta_status');
-  lines.push('      - filemeta_file');
 
   const hasDocumentDate = fields.some(field => field.property === 'document_date');
   lines.push('    sort:');
