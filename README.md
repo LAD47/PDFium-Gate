@@ -114,6 +114,17 @@ Updates are delivered through Obsidian's normal Community Plugins update mechani
 - The architecture is intended to remain desktop/cross-platform where Electron and Chromium permit it, but macOS and Linux have not yet received the same level of practical testing.
 - The PDF integration depends on Electron/Chromium's built-in PDF viewer. Changes in future Obsidian/Electron/Chromium releases can therefore require compatibility work.
 
+## Privileged desktop access
+
+PDFium Gate is desktop-only and uses a small number of privileged desktop capabilities for specific local workflows:
+
+- **Filesystem access:** reads an EML/MSG source selected by the user, performs verified email-source retention and attachment extraction inside the current Vault, and reads or writes plugin-managed files whose paths are derived from the current Vault or the plugin installation. It does not use filesystem access to scan unrelated external folders.
+- **Vault enumeration:** lists Vault files to build and reconcile the document register, detect unregistered PDFs, and maintain metadata indexes.
+- **Clipboard access:** the PDF selection bridge temporarily reads and writes text in the system clipboard when capturing a user-triggered Chromium PDF selection, then restores the previous clipboard text when that operation finishes.
+- **Bundled dynamic-code dependency:** PDFium Gate does not implement its own `eval()` flow. The bundled `sanitize-html` dependency currently pulls in `postcss` / `source-map-js`, whose quick-sort implementation contains a `new Function(...)` optimization. This is tracked as dependency-review work rather than being patched locally in the release candidate.
+
+These capabilities are local parts of the desktop workflow. PDFium Gate does not include client-side telemetry.
+
 ## What the plugin stores
 
 The project deliberately separates durable user data from disposable acceleration data and internal configuration.
