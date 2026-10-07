@@ -652,5 +652,14 @@
   "documentRegister.overview.duplicateMetadataIdentical": "Les métadonnées utilisateur sont identiques",
   "documentRegister.overview.duplicateMetadataDifferent": "Les métadonnées utilisateur diffèrent",
   "documentRegister.overview.duplicateNoUserMetadata": "Aucune métadonnée utilisateur",
-  "documentRegister.overview.duplicateCompareHint": "Comparez les enregistrements avant toute suppression."
+  "documentRegister.overview.duplicateCompareHint": "Comparez les enregistrements avant toute suppression.",
+  "documentRegister.overview.duplicateDeleteButton": "Supprimer les métadonnées",
+  "documentRegister.overview.duplicateDeleteTitle": "Supprimer l’enregistrement de métadonnées en double ?",
+  "documentRegister.overview.duplicateDeleteWarningIdentical": "Cet enregistrement contient les mêmes métadonnées utilisateur que les autres enregistrements de ce PDF. Seul cet enregistrement de métadonnées sera supprimé, pas le PDF.",
+  "documentRegister.overview.duplicateDeleteWarningDifferent": "Cet enregistrement contient des métadonnées utilisateur différentes de celles des autres enregistrements de ce PDF. La suppression peut entraîner une perte définitive d’informations. Comparez soigneusement les enregistrements avant de continuer.",
+  "documentRegister.overview.duplicateDeleteRecord": "Fichier de métadonnées : {record}",
+  "documentRegister.overview.duplicateDeleteUuidValue": "UUID : {id}",
+  "documentRegister.overview.duplicateDeletePdf": "PDF : {pdf}",
+  "documentRegister.overview.duplicateDeleteConfirm": "Supprimer l’enregistrement de métadonnées",
+  "documentRegister.overview.duplicateDeleteFailed": "L’enregistrement de métadonnées n’a pas pu être supprimé."
 }
