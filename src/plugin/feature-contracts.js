@@ -407,6 +407,7 @@ const PLUGIN_FEATURE_CONTRACTS = Object.freeze({
       "getDocumentRegisterStatusSummary",
       "resolveDocumentRecordPdfPath",
       "saveDocumentMetadataRecordValues",
+      "registerExistingPdfRecords",
       "deleteDuplicateDocumentMetadataRecord"
     ],
     "mutableStateFields": []

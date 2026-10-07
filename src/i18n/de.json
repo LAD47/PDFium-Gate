@@ -647,6 +647,7 @@
   "documentRegister.overview.reasonIdentity": "Konflikt der Dokumentidentität",
   "documentRegister.overview.noErrors": "Keine Fehler in Dokumentdatensätzen.",
   "documentRegister.overview.noUnregistered": "Keine nicht registrierten PDFs.",
+  "documentRegister.overview.registerAllUnregistered": "Alle registrieren",
   "documentRegister.overview.duplicateUuid": "UUID",
   "documentRegister.overview.duplicateUserMetadata": "Benutzermetadaten",
   "documentRegister.overview.duplicateMetadataIdentical": "Die Benutzermetadaten sind identisch",

@@ -647,6 +647,7 @@
   "documentRegister.overview.reasonIdentity": "Konflikt i dokumentidentitet",
   "documentRegister.overview.noErrors": "Ingen fejl i dokumentposter.",
   "documentRegister.overview.noUnregistered": "Ingen uregistrerede PDF-filer.",
+  "documentRegister.overview.registerAllUnregistered": "Registrer alle",
   "documentRegister.overview.duplicateUuid": "UUID",
   "documentRegister.overview.duplicateUserMetadata": "Brugermetadata",
   "documentRegister.overview.duplicateMetadataIdentical": "Brugermetadata er identiske",

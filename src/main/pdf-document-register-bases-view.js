@@ -826,6 +826,31 @@ class PdfDocumentRegisterBasesView extends BasesViewBase {
         host.createDiv({cls:'pdfium-document-register-message',text:this.t('documentRegister.overview.noUnregistered')});
         return;
       }
+      const actions=host.createDiv({cls:'pdfium-document-register-special-actions'});
+      const registerButton=actions.createEl('button',{cls:'mod-cta',text:this.t('documentRegister.overview.registerAllUnregistered')});
+      const actionError=actions.createDiv({cls:'pdfium-document-register-message'});
+      actionError.hidden=true;
+      registerButton.addEventListener('click',event=>{
+        event.preventDefault();
+        event.stopPropagation();
+        registerButton.disabled=true;
+        actionError.hidden=true;
+        actionError.setText('');
+        void Promise.resolve(this.host?.registerExistingPdfs?.()).then(result=>{
+          if(!result?.ok) {
+            registerButton.disabled=false;
+            actionError.hidden=false;
+            actionError.setText(this.t('settings.documentRegister.registerExisting.failed',{error:result?.error || this.t('common.unknown')}));
+            return;
+          }
+          this.statusSummary=null;
+          this.onDataUpdated();
+        }).catch(error=>{
+          registerButton.disabled=false;
+          actionError.hidden=false;
+          actionError.setText(this.t('settings.documentRegister.registerExisting.failed',{error:error instanceof Error ? error.message : String(error)}));
+        });
+      });
       const scroll=host.createDiv({cls:'pdfium-document-register-scroll'});
       const table=scroll.createEl('table',{cls:'pdfium-document-register-table pdfium-document-register-special-table'});
       const head=table.createEl('thead').createEl('tr');

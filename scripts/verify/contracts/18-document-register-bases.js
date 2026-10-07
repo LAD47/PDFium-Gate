@@ -245,6 +245,8 @@ module.exports=function verifyDocumentRegisterBasesContract(){
   }
   if(!featureSource.includes("name:this.i18n.t('documentRegister.viewName')")||!featureSource.includes('registerBasesView(')) fail('custom Bases registration feature missing');
   if(!featureSource.includes('this.ports.getMetadataSchemaPresentationSnapshot()')||!featureSource.includes('this.ports.resolveDocumentRecordPdfPath(')||!featureSource.includes('this.ports.saveDocumentMetadataRecordValues(')) fail('custom Bases feature does not use explicit presentation-schema/identity/save ports');
+  if(!viewSource.includes("documentRegister.overview.registerAllUnregistered")||!viewSource.includes('this.host?.registerExistingPdfs?.()')) fail('Unregistered view does not expose the bulk registration action');
+  if(!featureSource.includes('registerExistingPdfs:() => this.ports.registerExistingPdfRecords()')) fail('Document Register bulk registration does not reuse the canonical existing-PDF registration flow');
   if(/recoverMissingDocumentRecordByExactSha|relinkMissingDocumentRecord|listPdfFiles:/.test(featureSource)) fail('custom Bases feature must not expose missing-PDF recovery or manual relink');
   if(featureSource.includes('obsidianFrontmatterAdapter')||featureSource.includes('processFrontMatter(')||featureSource.includes('modifyText(')) fail('custom Bases feature unexpectedly mutates metadata or overwrites Base files');
   if(!featureSource.includes('metadataDocumentRegisterStandardBaseYaml(schema)')||!featureSource.includes('this.obsidianVaultWriteAdapter.createText(path, yaml)')) fail('standard Document Register Base create-only path missing');
@@ -309,6 +311,7 @@ module.exports=function verifyDocumentRegisterBasesContract(){
     selectionSafeInlineEdit:true,
     failClosedInvalidPathLookup:true,
     unregisteredPdfCount:true,
+    unregisteredBulkRegistration:true,
     headerTooltipDeduplicated:true,
     internalVersionSynchronized:true,
     staleVersionedMainBridgeCleanup:true,
