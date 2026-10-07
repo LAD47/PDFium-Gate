@@ -13,20 +13,35 @@ This file is a running list of observations found during practical testing that 
 
 ## Open items
 
-1. **0.1.227 Document Register: final closure action awaiting practical verification**
-   - The PDF-first/column redesign, quick status filters, invalid-record diagnostics, selectable/copyable table text, duplicate-PDF comparison and guarded duplicate-metadata deletion are all automated-green and practically verified.
-   - Final review concluded that **Missing** should remain read-only in the register; the separate missing-document review flow remains the safe maintenance path.
-   - **Unregistered** now has one direct **Register all** action that reuses the established existing-PDF registration flow and creates ordinary minimal metadata records. No per-PDF opt-in was added because metadata registration is the normal product behavior.
-   - Run one focused practical test of this bulk action. If it passes, mark the overall Document Register redesign complete.
-   - Do not reopen the confirmed Active/Error/duplicate behavior without a demonstrated regression.
-
-2. **PDF annotation backup: reassess `.pdfium-backup` after the independent backup solution exists**
+1. **PDF annotation backup: reassess `.pdfium-backup` after the independent backup solution exists**
    - Keep the current `backupOriginalPdf` safety function for now: it stores one original PDF copy before PDFium Gate first modifies the file and never overwrites an existing copy.
    - Reassess whether this separate per-PDF original-copy mechanism is still needed once the independent backup project provides a validated backup/restore workflow.
    - Do not remove or merge the behavior merely because both features use the word "backup"; compare their actual protection scope, restore semantics and failure modes first.
    - If the generic backup solution fully replaces this protection later, remove the old setting and `.pdfium-backup` workflow through an explicit migration/release decision rather than silently changing behavior.
 
+2. **Community scanner dependency recommendation: review the bundled dynamic-code source later**
+   - The scanner's `new Function(...)` recommendation is traced to `source-map-js`, pulled in by `sanitize-html -> postcss -> source-map-js`.
+   - PDFium Gate does not define its own `eval()` flow.
+   - Current dependency audit reports no vulnerable dependencies.
+   - Do not patch vendored third-party code locally merely to silence the recommendation; evaluate an upstream dependency update or alternative sanitizer in a separate contained task.
+
 ## Completed items
+
+- **0.1.227 Community Plugin review cleanup: automated verification passed**
+   - The manifest description no longer includes the redundant word “Obsidian”.
+   - Generated Email/Archive runtime bundles use esbuild whitespace/syntax minification without identifier minification.
+   - `main.js` is verified at **4,570,242 bytes**, below the 5 MB target; `check:community` now fails future builds that exceed 5,000,000 bytes.
+   - `styles.css` no longer contains `!important`, `:has()` or `text-decoration-style`.
+   - The release workflow rebuilds/verifies the frozen archive and creates GitHub artifact attestations for `main.js`, `manifest.json` and `styles.css`.
+   - README documents filesystem access, vault enumeration, clipboard access and the bundled dynamic-code dependency.
+   - Runs `37656502583` and `37656591061` are green; the latter includes full `npm run check`, dependency audit and the complete Email Import test suite.
+
+- **0.1.227 Document Register redesign: complete and practically verified**
+   - Final closure test 1–6 passed on 2026-10-07.
+   - With automatic registration disabled, two new test PDFs appeared under **Unregistered**.
+   - **Register all** registered both through the canonical existing-PDF flow; Unregistered returned to 0 and both documents moved to **Active** with ordinary metadata records and fresh UUIDs.
+   - **Missing** remained unchanged/read-only.
+   - Final closure CI run `37641023959` was green.
 
 - **0.1.227 Document Register quick status/maintenance slice: practical verification passed**
    - Verified on 2026-10-07 on `fix/0.1.227-localized-defaults`.
