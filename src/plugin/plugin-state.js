@@ -109,6 +109,7 @@ function createPluginState() {
       ambiguousIds: new Set(),
       ambiguousPdfPaths: new Set(),
       invalidRecordPaths: new Set(),
+      invalidRecordErrors: new Map(),
       lastError: null,
       lastBuildMetrics: null,
       benchmarkEventSuppression: false
