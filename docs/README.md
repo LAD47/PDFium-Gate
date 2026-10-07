@@ -14,7 +14,8 @@ This directory contains active architecture documentation, focused test notes, c
 - [`planning/ACTIVE-ROADMAP.md`](planning/ACTIVE-ROADMAP.md) — single entry point for current release follow-ups, product backlog and deferred decisions; use this before reading historical handoffs.
 - [`planning/DOCUMENT-METADATA-BACKUP-AND-MAINTENANCE.md`](planning/DOCUMENT-METADATA-BACKUP-AND-MAINTENANCE.md) — approved backup/restore and document-register maintenance direction, including the active/missing-only lifecycle and rejected relink/SHA-recovery experiments.
 - [`planning/0.1.226-COMMUNITY-RELEASE-CLEANUP.md`](planning/0.1.226-COMMUNITY-RELEASE-CLEANUP.md) — completed 0.1.226 Community release cleanup and release evidence; historical/completed, not an active TODO list.
-- [`planning/HANDOFF-2026-10-06-POST-0.1.226.md`](planning/HANDOFF-2026-10-06-POST-0.1.226.md) — concise handoff for continuing development after the user-confirmed 0.1.226 release.
+- [`planning/HANDOFF-2026-10-07-0.1.227-DOCUMENT-REGISTER.md`](planning/HANDOFF-2026-10-07-0.1.227-DOCUMENT-REGISTER.md) — current handoff for continuing the 0.1.227 candidate after the practically verified Document Register redesign/maintenance work.
+- [`planning/HANDOFF-2026-10-06-POST-0.1.226.md`](planning/HANDOFF-2026-10-06-POST-0.1.226.md) — historical handoff immediately after the user-confirmed 0.1.226 release; superseded for current 0.1.227 work by the 2026-10-07 handoff.
 
 The architecture documents and automated verification describe the current intended contracts. Historical notes may contain experiments or policies that have since been superseded.
 
