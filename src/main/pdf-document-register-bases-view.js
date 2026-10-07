@@ -629,6 +629,71 @@ class PdfDocumentRegisterBasesView extends BasesViewBase {
     return link;
   }
 
+  renderDuplicateRecordMetadata(cell,record) {
+    if(!cell) return;
+    const values=record?.values && typeof record.values==='object' && !Array.isArray(record.values) ? record.values : {};
+    const keys=Object.keys(values).sort((a,b)=>a.localeCompare(b));
+    if(!keys.length) {
+      cell.createDiv({cls:'pdfium-document-register-duplicate-empty',text:this.t('documentRegister.overview.duplicateNoUserMetadata')});
+      return;
+    }
+    const schema=this.host?.getSchema?.() || null;
+    const fields=new Map((Array.isArray(schema?.fields) ? schema.fields : []).map(field=>[String(field?.property || ''),field]));
+    for(const property of keys) {
+      const field=fields.get(property) || null;
+      const raw=values[property];
+      let display='';
+      if(field) display=metadataBaseFormatFieldValue(metadataFieldTypeRegistry,field,raw,this.presentationSettings());
+      if(!display) {
+        if(Array.isArray(raw)) display=raw.map(item=>String(item)).join(', ');
+        else if(raw && typeof raw==='object') display=JSON.stringify(raw);
+        else if(raw===null || raw===undefined || raw==='') display='—';
+        else display=String(raw);
+      }
+      const line=cell.createDiv({cls:'pdfium-document-register-duplicate-metadata-line'});
+      line.createSpan({cls:'pdfium-document-register-duplicate-metadata-label',text:`${String(field?.label || property)}: `});
+      line.createSpan({text:display});
+    }
+  }
+
+  renderDuplicatePdfGroups(host,groups) {
+    const groupedPaths=new Set();
+    for(const group of Array.isArray(groups) ? groups : []) {
+      if(!group || !Array.isArray(group.records) || group.records.length<2) continue;
+      const box=host.createDiv({cls:'pdfium-document-register-duplicate-group'});
+      const header=box.createDiv({cls:'pdfium-document-register-duplicate-header'});
+      const heading=header.createDiv({cls:'pdfium-document-register-duplicate-heading'});
+      heading.createDiv({cls:'pdfium-document-register-problem-kind',text:this.t('documentRegister.overview.reasonAmbiguousPdfPath')});
+      const pdfLine=heading.createDiv({cls:'pdfium-document-register-duplicate-pdf'});
+      this.createStatusPathLink(pdfLine,group.pdfPath,{label:String(group.pdfPath || '').split('/').pop()});
+      header.createDiv({
+        cls:`pdfium-document-register-duplicate-result ${group.metadataIdentical ? 'is-identical' : 'is-different'}`,
+        text:this.t(group.metadataIdentical
+          ? 'documentRegister.overview.duplicateMetadataIdentical'
+          : 'documentRegister.overview.duplicateMetadataDifferent')
+      });
+      box.createDiv({cls:'pdfium-document-register-duplicate-hint',text:this.t('documentRegister.overview.duplicateCompareHint')});
+
+      const table=box.createEl('table',{cls:'pdfium-document-register-table pdfium-document-register-duplicate-table'});
+      const head=table.createEl('thead').createEl('tr');
+      head.createEl('th',{text:this.t('documentRegister.overview.metadataFile')});
+      head.createEl('th',{text:this.t('documentRegister.overview.duplicateUuid')});
+      head.createEl('th',{text:this.t('documentRegister.overview.duplicateUserMetadata')});
+      const body=table.createEl('tbody');
+      for(const record of group.records) {
+        const recordPath=String(record?.recordPath || '');
+        if(recordPath) groupedPaths.add(recordPath);
+        const row=body.createEl('tr');
+        const recordCell=row.createEl('td');
+        this.createStatusPathLink(recordCell,recordPath,{label:recordPath.split('/').pop()});
+        row.createEl('td',{cls:'pdfium-document-register-duplicate-uuid',text:String(record?.id || '—')});
+        const metadataCell=row.createEl('td',{cls:'pdfium-document-register-duplicate-metadata'});
+        this.renderDuplicateRecordMetadata(metadataCell,record);
+      }
+    }
+    return groupedPaths;
+  }
+
   renderSpecialStatusTable(host,summary) {
     if(!host) return;
     host.empty();
@@ -640,11 +705,16 @@ class PdfDocumentRegisterBasesView extends BasesViewBase {
     const mode=this.statusFilter;
     if(mode==='error') {
       const items=Array.isArray(summary.errorItems) ? summary.errorItems : [];
-      if(!items.length) {
+      const groups=Array.isArray(summary.duplicatePdfGroups) ? summary.duplicatePdfGroups : [];
+      if(!items.length && !groups.length) {
         host.createDiv({cls:'pdfium-document-register-message',text:this.t('documentRegister.overview.noErrors')});
         return;
       }
-      const scroll=host.createDiv({cls:'pdfium-document-register-scroll'});
+      const scroll=host.createDiv({cls:'pdfium-document-register-scroll pdfium-document-register-error-scroll'});
+      const groupedPaths=this.renderDuplicatePdfGroups(scroll,groups);
+      const remainingItems=items.filter(item=>!groupedPaths.has(String(item?.recordPath || '')));
+      if(!remainingItems.length) return;
+
       const table=scroll.createEl('table',{cls:'pdfium-document-register-table pdfium-document-register-special-table'});
       const head=table.createEl('thead').createEl('tr');
       head.createEl('th',{text:this.t('documentRegister.overview.metadataFile')});
@@ -657,7 +727,7 @@ class PdfDocumentRegisterBasesView extends BasesViewBase {
         'ambiguous-pdf-path':'documentRegister.overview.reasonAmbiguousPdfPath',
         identity:'documentRegister.overview.reasonIdentity'
       };
-      for(const item of items) {
+      for(const item of remainingItems) {
         const row=body.createEl('tr');
         const recordCell=row.createEl('td');
         this.createStatusPathLink(recordCell,item.recordPath,{label:String(item.recordPath || '').split('/').pop()});
