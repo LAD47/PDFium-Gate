@@ -1,0 +1,21 @@
+name: Verify permanent Community preview gate
+
+on:
+  push:
+    branches:
+      - fix/0.1.227-localized-defaults
+    paths:
+      - '.github/workflows/verify-community-preview-gate.yml'
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/0.1.227-localized-defaults
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: npm ci
+      - run: npm run check:community
