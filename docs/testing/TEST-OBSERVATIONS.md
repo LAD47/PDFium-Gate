@@ -39,7 +39,9 @@ This file is a running list of observations found during practical testing that 
    - GitHub Actions run `37626673113` passed `npm ci`, `npm audit --audit-level=high` and the full `npm run check`, including behavioral verification of grouped duplicate-PDF conflicts and order-independent metadata comparison.
    - Practical comparison on the observed pair reported **User metadata differ**.
    - Agreed UX: a **Delete metadata** button belongs on each record, directly with its displayed user metadata. The action must never infer which record is correct.
-   - Candidate implementation now requires confirmation, shows a stronger warning when the compared user metadata differ, revalidates path/UUID/PDF identity before removal, and sends the selected metadata record through Obsidian's trash flow rather than permanently deleting it. Fresh automation + practical verification remain.
+   - Candidate implementation now requires confirmation, shows a stronger warning when the compared user metadata differ, revalidates path/UUID/PDF identity before removal, and sends the selected metadata record through Obsidian's trash flow rather than permanently deleting it.
+   - GitHub Actions run `37628967629` passed `npm ci`, `npm audit --audit-level=high` and the full `npm run check`. Behavioral verification confirms stale/wrong UUID deletion is rejected, the selected duplicate is trashed, the remaining record becomes the sole active record, and a second delete attempt is rejected once ambiguity is resolved.
+   - Practical verification on the observed pair remains.
 
 
 2. **PDF Document Register: current user interface needs redesign**
