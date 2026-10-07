@@ -576,6 +576,7 @@ body.pdfium-hide-document-records
   display: flex;
   flex: 0 0 auto;
   gap: 6px;
+  margin-right: 14px;
 }
 .pdfium-document-register-toolbar-actions button {
   min-height: 28px;
