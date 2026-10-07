@@ -1,0 +1,68 @@
+name: Verify 0.1.227 versioned candidate
+
+on:
+  push:
+    branches:
+      - fix/0.1.227-localized-defaults
+    paths:
+      - '.github/workflows/verify-0.1.227-versioned-candidate.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  verify-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/0.1.227-localized-defaults
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Audit dependencies
+        run: npm audit --audit-level=high
+
+      - name: Verify source and generated runtime
+        run: npm run check
+
+      - name: Run full Email Import tests
+        run: npm run test:email-import
+
+      - name: Confirm 0.1.227 version identity
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs=require('fs');
+          const manifest=require('./manifest.json');
+          const pkg=require('./package.json');
+          const versions=require('./versions.json');
+          const lock=require('./package-lock.json');
+          const header=fs.readFileSync('src/main/00-header.js','utf8');
+          if(manifest.version!=='0.1.227') throw new Error('manifest version');
+          if(pkg.version!=='0.1.227') throw new Error('package version');
+          if(lock.version!=='0.1.227'||lock.packages[''].version!=='0.1.227') throw new Error('lockfile version');
+          if(versions['0.1.227']!=='1.13.7') throw new Error('versions mapping');
+          if(!header.includes("const PLUGIN_VERSION = '0.1.227';")) throw new Error('runtime version');
+          const bytes=fs.statSync('main.js').size;
+          console.log('main.js bytes='+bytes);
+          if(bytes>=5000000) throw new Error('main.js size');
+          NODE
+
+      - name: Commit generated runtime when needed
+        shell: bash
+        run: |
+          if git diff --quiet -- main.js main-bridge.js; then
+            echo "Generated runtime is already current."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add main.js main-bridge.js
+          git commit -m "Build 0.1.227 versioned candidate [skip ci]"
+          git push
