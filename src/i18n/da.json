@@ -630,5 +630,11 @@
   "documentRegister.columns.description": "Vælg hvilke kolonner der skal vises i denne dokumentregistervisning. Dette ændrer kun visningen, ikke metadataene.",
   "documentRegister.columns.showAll": "Vis alle",
   "documentRegister.columns.apply": "Anvend",
-  "documentRegister.columns.requireOne": "Mindst én kolonne skal være synlig."
+  "documentRegister.columns.requireOne": "Mindst én kolonne skal være synlig.",
+  "documentRegister.overview.title": "Dokumentstatus",
+  "documentRegister.overview.active": "Aktive",
+  "documentRegister.overview.missing": "Mangler",
+  "documentRegister.overview.errors": "Fejl",
+  "documentRegister.overview.unregistered": "Uregistrerede",
+  "documentRegister.overview.unavailable": "Dokumentstatus er midlertidigt utilgængelig."
 }
