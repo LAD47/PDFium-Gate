@@ -13,9 +13,11 @@ This file is a running list of observations found during practical testing that 
 
 ## Open items
 
-1. **0.1.227 Document Register: final closure review**
+1. **0.1.227 Document Register: final closure action awaiting practical verification**
    - The PDF-first/column redesign, quick status filters, invalid-record diagnostics, selectable/copyable table text, duplicate-PDF comparison and guarded duplicate-metadata deletion are all automated-green and practically verified.
-   - One small UX review remains before declaring the full redesign complete: inspect the current **Missing** and **Unregistered** views and decide whether either needs another direct action in the register itself.
+   - Final review concluded that **Missing** should remain read-only in the register; the separate missing-document review flow remains the safe maintenance path.
+   - **Unregistered** now has one direct **Register all** action that reuses the established existing-PDF registration flow and creates ordinary minimal metadata records. No per-PDF opt-in was added because metadata registration is the normal product behavior.
+   - Run one focused practical test of this bulk action. If it passes, mark the overall Document Register redesign complete.
    - Do not reopen the confirmed Active/Error/duplicate behavior without a demonstrated regression.
 
 2. **PDF annotation backup: reassess `.pdfium-backup` after the independent backup solution exists**
