@@ -647,7 +647,12 @@ class PdfDocumentRegisterBasesView extends BasesViewBase {
         const pdfCell=row.createEl('td');
         if(item.pdfPath) this.createStatusPathLink(pdfCell,item.pdfPath,{sourcePath:item.recordPath,label:String(item.pdfPath).split('/').pop()});
         else pdfCell.setText('—');
-        row.createEl('td',{text:this.t(reasonKey[item.reason] || reasonKey.identity)});
+        const problemCell=row.createEl('td',{cls:'pdfium-document-register-problem-cell'});
+        problemCell.createDiv({
+          cls:'pdfium-document-register-problem-kind',
+          text:this.t(reasonKey[item.reason] || reasonKey.identity)
+        });
+        if(item.detail) problemCell.createDiv({cls:'pdfium-document-register-problem-detail',text:String(item.detail)});
       }
       return;
     }
