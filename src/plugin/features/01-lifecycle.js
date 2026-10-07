@@ -65,7 +65,7 @@ async onload() {
       pathModule:path,
       vaultReadAdapter:this.obsidianVaultReadAdapter
     });
-    this.obsidianVaultWriteAdapter = createObsidianVaultWriteAdapter({ vault:this.app.vault });
+    this.obsidianVaultWriteAdapter = createObsidianVaultWriteAdapter({ vault:this.app.vault, fileManager:this.app.fileManager });
     this.obsidianAdapterFileStore = createObsidianAdapterFileStore({ adapter:this.app.vault?.adapter });
     this.ports.registerMetadataBenchmarkCommands();
     await this.ports.ensureRootCategoryConfigInitialized();
