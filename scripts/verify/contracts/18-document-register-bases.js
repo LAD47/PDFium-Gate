@@ -127,6 +127,7 @@ module.exports=function verifyDocumentRegisterBasesContract(){
   const featureSource=read('src/plugin/features/18-document-register-bases.js');
   const lifecycleSource=read('src/plugin/features/01-lifecycle.js');
   const settingsSource=read('src/main/settings.js');
+  const stylesSource=read('styles.css');
   const headerSource=read('src/main/00-header.js');
   const contextMenuSource=read('src/plugin/features/05-context-menu.js');
   const bridgeRoutingSource=read('src/plugin/features/07-main-bridge-routing.js');
@@ -169,6 +170,8 @@ module.exports=function verifyDocumentRegisterBasesContract(){
   if(!recordFeatureSource.includes('this.state.documentRecords.invalidRecordPaths.add(path)')||!recordFeatureSource.includes('this.state.documentRecords.invalidRecordPaths.delete(path)')) fail('invalid record tracking is not maintained by live record refresh');
   if(!recordFeatureSource.includes('invalidRecordErrors.set(')||!recordFeatureSource.includes('invalidRecordErrors.delete(')||!recordFeatureSource.includes("detail:reason==='invalid'")) fail('invalid-record validation details are not maintained through index lifecycle/status summary');
   if(!viewSource.includes("cls:'pdfium-document-register-problem-detail'")||!viewSource.includes('if(item.detail)')) fail('Document Register error table does not render concrete validation detail');
+  if(!viewSource.includes('function pdfDocumentRegisterHasTextSelectionWithin(element)')||!viewSource.includes("event?.type === 'click' && pdfDocumentRegisterHasTextSelectionWithin(cell)")) fail('Document Register editable cells do not preserve drag-selected text');
+  if(!stylesSource.includes('.pdfium-document-register-table td {')||!stylesSource.includes('-webkit-user-select: text;')||!stylesSource.includes('user-select: text;')) fail('Document Register table text is not explicitly selectable/copyable');
   if(!recordFeatureSource.includes('pruneMissingInvalidDocumentRecordPaths()')||!recordFeatureSource.includes('const existsAsMarkdown=!!file')||!recordFeatureSource.includes('staleInvalidRemovedCount')) fail('Document Register does not self-heal stale invalid-record paths before status summary');
   if(!recordFeatureSource.includes("reason:'vault-lookup-unavailable'")||!recordFeatureSource.includes('uncertainPaths.push(path)')) fail('stale-invalid pruning does not fail closed on lookup uncertainty');
   if(!recordFeatureSource.includes('unregisteredPdfPaths.push(path)')||!recordFeatureSource.includes('METADATA_RECORD_STATUS_MISSING) missingCount++')) fail('Document Register status summary does not count/expose unregistered or missing documents');
@@ -286,6 +289,8 @@ module.exports=function verifyDocumentRegisterBasesContract(){
     invalidRecordTracking:true,
     staleInvalidRecordSelfHealing:true,
     invalidRecordValidationDetail:true,
+    selectableTableText:true,
+    selectionSafeInlineEdit:true,
     failClosedInvalidPathLookup:true,
     unregisteredPdfCount:true,
     headerTooltipDeduplicated:true,
