@@ -812,9 +812,9 @@ class PdfDocumentRegisterBasesView extends BasesViewBase {
         if (canOpenPdf) {
           const pdfLink=pdfCell.createEl('a',{
             cls:'internal-link pdfium-document-register-pdf-link',
-            text:fileName || 'PDF',
-            href:String(resolvedPath)
+            text:fileName || 'PDF'
           });
+          pdfLink.setAttribute('href',String(resolvedPath));
           pdfLink.setAttribute('data-href',String(resolvedPath));
           pdfLink.setAttribute('aria-label',this.t('documentRegister.openPdfAria',{name:fileName || 'PDF'}));
           pdfLink.setAttribute('title',String(resolvedPath));
