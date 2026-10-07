@@ -646,6 +646,77 @@ body.pdfium-hide-document-records
   overflow-wrap: anywhere;
 }
 
+.pdfium-document-register-error-scroll {
+  padding: 10px;
+}
+.pdfium-document-register-duplicate-group {
+  margin-bottom: 14px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m);
+  background: var(--background-primary);
+  overflow: hidden;
+}
+.pdfium-document-register-duplicate-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px 6px;
+}
+.pdfium-document-register-duplicate-heading {
+  min-width: 0;
+}
+.pdfium-document-register-duplicate-pdf {
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+}
+.pdfium-document-register-duplicate-result {
+  flex: 0 0 auto;
+  padding: 3px 7px;
+  border-radius: var(--radius-s);
+  font-size: var(--font-ui-smaller);
+  font-weight: 600;
+  background: var(--background-secondary);
+}
+.pdfium-document-register-duplicate-result.is-identical {
+  color: var(--text-success, var(--text-normal));
+}
+.pdfium-document-register-duplicate-result.is-different {
+  color: var(--text-warning, var(--text-normal));
+}
+.pdfium-document-register-duplicate-hint {
+  padding: 0 12px 9px;
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+}
+.pdfium-document-register-duplicate-table {
+  border-top: 1px solid var(--background-modifier-border);
+}
+.pdfium-document-register-duplicate-table th {
+  top: auto;
+  position: static;
+}
+.pdfium-document-register-duplicate-uuid {
+  font-family: var(--font-monospace);
+  overflow-wrap: anywhere;
+  white-space: normal !important;
+}
+.pdfium-document-register-duplicate-metadata {
+  min-width: 220px;
+}
+.pdfium-document-register-duplicate-metadata-line {
+  margin: 2px 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.pdfium-document-register-duplicate-metadata-label {
+  font-weight: 600;
+}
+.pdfium-document-register-duplicate-empty {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
 .pdfium-document-register-toolbar {
   display: flex;
   align-items: center;
