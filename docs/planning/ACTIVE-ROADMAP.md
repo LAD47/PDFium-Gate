@@ -114,6 +114,7 @@ These were established while preparing 0.1.226 and are now part of the normal re
 - `package-lock.json` is committed;
 - local/CI dependency installation uses `npm ci`;
 - generated runtime is built from canonical `src/`;
+- every Community release candidate must pass the mandatory Obsidian Community **Review branch / preview scan** before merge to `main`; scan evidence (date + candidate SHA + disposition of findings) must be recorded, and the scan must be repeated if the candidate changes afterward;
 - normal Community publishing is manual-only;
 - freeze `archive/<version>` only after the final `main` build workflow is green;
 - publish an ordinary GitHub Release from the frozen archive;
