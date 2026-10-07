@@ -82839,13 +82839,69 @@ class DocumentRecordsFeature {
       .sort((a,b)=>metadataRecordNormalizeVaultPath(a?.path).localeCompare(metadataRecordNormalizeVaultPath(b?.path),undefined,{numeric:true,sensitivity:'base'}));
   }
 
+  pruneMissingInvalidDocumentRecordPaths() {
+    const invalid=this.state.documentRecords.invalidRecordPaths;
+    if(!(invalid instanceof Set) || invalid.size===0) {
+      return {ok:true,checkedCount:0,removedCount:0,removedPaths:[],uncertainPaths:[]};
+    }
+    const lookup=this.obsidianVaultReadAdapter?.getAbstractFileByPath;
+    if(typeof lookup!=='function') {
+      return {
+        ok:false,
+        checkedCount:0,
+        removedCount:0,
+        removedPaths:[],
+        uncertainPaths:[...invalid],
+        reason:'vault-lookup-unavailable'
+      };
+    }
+
+    const removedPaths=[];
+    const uncertainPaths=[];
+    let checkedCount=0;
+    for(const rawPath of [...invalid]) {
+      const path=metadataRecordNormalizeVaultPath(rawPath);
+      if(!path) {
+        invalid.delete(rawPath);
+        removedPaths.push(path || String(rawPath || ''));
+        continue;
+      }
+      try {
+        checkedCount++;
+        const file=lookup.call(this.obsidianVaultReadAdapter,path);
+        const existsAsMarkdown=!!file && String(file.extension || '').toLowerCase()==='md';
+        if(!existsAsMarkdown) {
+          invalid.delete(rawPath);
+          invalid.delete(path);
+          removedPaths.push(path);
+        }
+      } catch(error) {
+        uncertainPaths.push(path);
+      }
+    }
+    return {
+      ok:uncertainPaths.length===0,
+      checkedCount,
+      removedCount:removedPaths.length,
+      removedPaths:removedPaths.sort((a,b)=>a.localeCompare(b)),
+      uncertainPaths:uncertainPaths.sort((a,b)=>a.localeCompare(b))
+    };
+  }
+
   async getDocumentRegisterStatusSummary() {
     await this.ensureDocumentRecordIndexReady('document-register-status');
-    return documentRecordRegisterStatusSnapshot(
+    const invalidPrune=this.pruneMissingInvalidDocumentRecordPaths();
+    const summary=documentRecordRegisterStatusSnapshot(
       this.state.documentRecords,
       this.listDocumentRegistrationPdfFiles(),
       path=>this.getDocumentMetadataRecordState(path)
     );
+    return {
+      ...summary,
+      staleInvalidRemovedCount:Number(invalidPrune?.removedCount || 0),
+      staleInvalidRemovedPaths:Array.isArray(invalidPrune?.removedPaths) ? invalidPrune.removedPaths : [],
+      invalidPruneUncertainCount:Array.isArray(invalidPrune?.uncertainPaths) ? invalidPrune.uncertainPaths.length : 0
+    };
   }
 
   async getExistingPdfRegistrationSummary() {
