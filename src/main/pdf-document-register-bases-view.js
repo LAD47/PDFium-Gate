@@ -31,6 +31,23 @@ function pdfDocumentRegisterBareProperty(property) {
   return String(property || '').replace(/^(?:note|formula|file)\./,'');
 }
 
+function pdfDocumentRegisterHasTextSelectionWithin(element) {
+  if (!element) return false;
+  try {
+    const selection = typeof window !== 'undefined' && typeof window.getSelection === 'function'
+      ? window.getSelection()
+      : null;
+    if (!selection || selection.isCollapsed || !String(selection.toString() || '').trim()) return false;
+    const belongsToElement = node => {
+      const target = node?.nodeType === 1 ? node : node?.parentElement;
+      return !!target && (target === element || element.contains(target));
+    };
+    return belongsToElement(selection.anchorNode) || belongsToElement(selection.focusNode);
+  } catch (_) {
+    return false;
+  }
+}
+
 function pdfDocumentRegisterPropertyId(property) {
   const value = String(property || '').trim();
   if (!value) return '';
@@ -767,6 +784,7 @@ class PdfDocumentRegisterBasesView extends BasesViewBase {
     cell.setAttribute('tabindex','0');
     cell.setAttribute('title',this.t('documentRegister.editAria',{label:String(field.label || field.property)}));
     const begin = event => {
+      if (event?.type === 'click' && pdfDocumentRegisterHasTextSelectionWithin(cell)) return;
       if (event?.type === 'keydown' && event.key !== 'Enter' && event.key !== 'F2') return;
       event?.preventDefault?.();
       event?.stopPropagation?.();
