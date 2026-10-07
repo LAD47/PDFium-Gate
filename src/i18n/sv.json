@@ -652,5 +652,14 @@
   "documentRegister.overview.duplicateMetadataIdentical": "Användarmetadata är identiska",
   "documentRegister.overview.duplicateMetadataDifferent": "Användarmetadata skiljer sig",
   "documentRegister.overview.duplicateNoUserMetadata": "Inga användarmetadata",
-  "documentRegister.overview.duplicateCompareHint": "Jämför posterna innan något tas bort."
+  "documentRegister.overview.duplicateCompareHint": "Jämför posterna innan något tas bort.",
+  "documentRegister.overview.duplicateDeleteButton": "Ta bort metadata",
+  "documentRegister.overview.duplicateDeleteTitle": "Ta bort duplicerad metadatapost?",
+  "documentRegister.overview.duplicateDeleteWarningIdentical": "Den här posten har samma användarmetadata som de andra posterna för denna PDF. Endast denna metadatapost tas bort, inte PDF-filen.",
+  "documentRegister.overview.duplicateDeleteWarningDifferent": "Den här posten har användarmetadata som skiljer sig från de andra posterna för denna PDF. Borttagning kan innebära permanent informationsförlust. Jämför posterna noggrant innan du fortsätter.",
+  "documentRegister.overview.duplicateDeleteRecord": "Metadatafil: {record}",
+  "documentRegister.overview.duplicateDeleteUuidValue": "UUID: {id}",
+  "documentRegister.overview.duplicateDeletePdf": "PDF: {pdf}",
+  "documentRegister.overview.duplicateDeleteConfirm": "Ta bort metadatapost",
+  "documentRegister.overview.duplicateDeleteFailed": "Metadataposten kunde inte tas bort."
 }
