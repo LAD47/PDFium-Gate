@@ -13,6 +13,21 @@ function documentRecordBenchmarkMemorySnapshot() {
   } catch(_) { return null; }
 }
 
+function documentRecordStableComparable(value) {
+  if(Array.isArray(value)) return value.map(item=>documentRecordStableComparable(item));
+  if(value && typeof value==='object') {
+    const out={};
+    for(const key of Object.keys(value).sort((a,b)=>a.localeCompare(b))) out[key]=documentRecordStableComparable(value[key]);
+    return out;
+  }
+  return value;
+}
+
+function documentRecordComparableValues(values) {
+  const source=values && typeof values==='object' && !Array.isArray(values) ? values : {};
+  return JSON.stringify(documentRecordStableComparable(source));
+}
+
 function documentRecordRegisterStatusSnapshot(documentRecords,pdfFiles,getState) {
   const state=documentRecords || {};
   const invalidRecordPaths=new Set(state.invalidRecordPaths || []);
@@ -36,6 +51,30 @@ function documentRecordRegisterStatusSnapshot(documentRecords,pdfFiles,getState)
     if(entry?.status===METADATA_RECORD_STATUS_ACTIVE) activeCount++;
     else if(entry?.status===METADATA_RECORD_STATUS_MISSING) missingCount++;
   }
+
+  const duplicatePdfGroups=[...(state.ambiguousPdfPaths || [])].map(rawPdfPath=>{
+    const pdfPath=metadataRecordNormalizeVaultPath(rawPdfPath);
+    const records=[];
+    const ids=state.idsByPdfPath?.get?.(pdfPath);
+    for(const id of ids || []) {
+      const paths=state.recordPathsById?.get?.(id);
+      for(const recordPath of paths || []) {
+        const entry=state.entryByRecordPath?.get?.(recordPath) || null;
+        if(!entry || metadataRecordNormalizeVaultPath(entry.pdfPath)!==pdfPath) continue;
+        records.push({
+          id:String(entry.id || id || ''),
+          recordPath:metadataRecordNormalizeVaultPath(entry.recordPath || recordPath),
+          pdfPath,
+          status:String(entry.status || ''),
+          values:metadataRecordClone(entry.values || {})
+        });
+      }
+    }
+    records.sort((a,b)=>a.recordPath.localeCompare(b.recordPath));
+    const signatures=records.map(record=>documentRecordComparableValues(record.values));
+    const metadataIdentical=records.length>1 && signatures.every(signature=>signature===signatures[0]);
+    return {pdfPath,metadataIdentical,records};
+  }).filter(group=>group.records.length>1).sort((a,b)=>a.pdfPath.localeCompare(b.pdfPath));
 
   const errorItems=[...problemRecordPaths].map(recordPath=>{
     const entry=state.entryByRecordPath?.get?.(recordPath) || null;
@@ -75,6 +114,7 @@ function documentRecordRegisterStatusSnapshot(documentRecords,pdfFiles,getState)
     totalRecordCount:Number(state.entryByRecordPath?.size || 0) + Number(state.invalidRecordPaths?.size || 0),
     totalPdfCount:files.length,
     errorItems,
+    duplicatePdfGroups,
     unregisteredPdfPaths,
     problemRecordPaths:errorItems.map(item=>item.recordPath),
     registrationProblemCount:registrationProblemPaths.length,
@@ -1092,4 +1132,4 @@ class DocumentRecordsFeature {
 
 }
 
-module.exports={DocumentRecordsFeature,documentRecordRegisterStatusSnapshot};
+module.exports={DocumentRecordsFeature,documentRecordRegisterStatusSnapshot,documentRecordComparableValues};
