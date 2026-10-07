@@ -560,7 +560,7 @@ body.pdfium-hide-document-records
    Presentation only; persistence still routes through DocumentRecords. */
 .pdfium-document-register-overview {
   display: grid;
-  grid-template-columns: repeat(4, minmax(90px, 1fr));
+  grid-template-columns: repeat(5, minmax(90px, 1fr));
   gap: 8px;
   padding: 10px;
   border-bottom: 1px solid var(--background-modifier-border);
@@ -568,10 +568,24 @@ body.pdfium-hide-document-records
 }
 .pdfium-document-register-overview-card {
   min-width: 0;
+  min-height: 58px;
   padding: 8px 10px;
   border: 1px solid var(--background-modifier-border);
   border-radius: var(--radius-s);
   background: var(--background-secondary);
+  box-shadow: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.pdfium-document-register-overview-card:hover,
+.pdfium-document-register-overview-card:focus-visible {
+  background: var(--background-modifier-hover);
+  border-color: var(--background-modifier-border-hover, var(--background-modifier-border));
+}
+.pdfium-document-register-overview-card.is-selected {
+  border-color: var(--interactive-accent);
+  box-shadow: inset 0 0 0 1px var(--interactive-accent);
 }
 .pdfium-document-register-overview-value {
   font-size: var(--font-ui-large);
@@ -598,6 +612,22 @@ body.pdfium-hide-document-records
   .pdfium-document-register-overview {
     grid-template-columns: repeat(2, minmax(90px, 1fr));
   }
+}
+
+.pdfium-document-register-special-host {
+  min-height: 0;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+}
+.pdfium-document-register-special-table td {
+  white-space: normal;
+}
+.pdfium-document-register-special-path {
+  margin-top: 2px;
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  overflow-wrap: anywhere;
 }
 
 .pdfium-document-register-toolbar {
