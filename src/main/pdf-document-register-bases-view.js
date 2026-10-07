@@ -412,6 +412,8 @@ class PdfDocumentRegisterBasesView extends BasesViewBase {
     this.headerFilters = new Map();
     this.headerFilterPersistenceEnabled = null;
     this.statusSummaryRequestId = 0;
+    this.statusSummary = null;
+    this.statusFilter = 'all';
   }
 
   t(key,params){ return pdfDocumentRegisterT(this.host,key,params); }
@@ -585,22 +587,145 @@ class PdfDocumentRegisterBasesView extends BasesViewBase {
     return true;
   }
 
-  renderStatusOverview() {
+  setStatusFilter(kind) {
+    const next=['active','missing','error','unregistered','all'].includes(String(kind || '')) ? String(kind) : 'all';
+    if(this.statusFilter===next) return false;
+    this.statusFilter=next;
+    this.onDataUpdated();
+    return true;
+  }
+
+  createStatusPathLink(cell,path,{sourcePath='',label=''}={}) {
+    const target=String(path || '');
+    if(!cell || !target) return null;
+    const display=String(label || target.split('/').pop() || target);
+    const link=cell.createEl('a',{cls:'internal-link pdfium-document-register-pdf-link',text:display});
+    link.setAttribute('href',target);
+    link.setAttribute('data-href',target);
+    link.setAttribute('title',target);
+    link.addEventListener('click',event=>{
+      event.preventDefault();
+      event.stopPropagation();
+      void this.host?.openLink?.(target,sourcePath || '');
+    });
+    if(target!==display) cell.createDiv({cls:'pdfium-document-register-special-path',text:target});
+    return link;
+  }
+
+  renderSpecialStatusTable(host,summary) {
+    if(!host) return;
+    host.empty();
+    if(!summary?.ok) {
+      host.createDiv({cls:'pdfium-document-register-message',text:this.t('documentRegister.overview.unavailable')});
+      return;
+    }
+
+    const mode=this.statusFilter;
+    if(mode==='error') {
+      const items=Array.isArray(summary.errorItems) ? summary.errorItems : [];
+      if(!items.length) {
+        host.createDiv({cls:'pdfium-document-register-message',text:this.t('documentRegister.overview.noErrors')});
+        return;
+      }
+      const scroll=host.createDiv({cls:'pdfium-document-register-scroll'});
+      const table=scroll.createEl('table',{cls:'pdfium-document-register-table pdfium-document-register-special-table'});
+      const head=table.createEl('thead').createEl('tr');
+      head.createEl('th',{text:this.t('documentRegister.overview.metadataFile')});
+      head.createEl('th',{text:this.t('documentRegister.pdf')});
+      head.createEl('th',{text:this.t('documentRegister.overview.problem')});
+      const body=table.createEl('tbody');
+      const reasonKey={
+        invalid:'documentRegister.overview.reasonInvalid',
+        'ambiguous-id':'documentRegister.overview.reasonAmbiguousId',
+        'ambiguous-pdf-path':'documentRegister.overview.reasonAmbiguousPdfPath',
+        identity:'documentRegister.overview.reasonIdentity'
+      };
+      for(const item of items) {
+        const row=body.createEl('tr');
+        const recordCell=row.createEl('td');
+        this.createStatusPathLink(recordCell,item.recordPath,{label:String(item.recordPath || '').split('/').pop()});
+        const pdfCell=row.createEl('td');
+        if(item.pdfPath) this.createStatusPathLink(pdfCell,item.pdfPath,{sourcePath:item.recordPath,label:String(item.pdfPath).split('/').pop()});
+        else pdfCell.setText('—');
+        row.createEl('td',{text:this.t(reasonKey[item.reason] || reasonKey.identity)});
+      }
+      return;
+    }
+
+    if(mode==='unregistered') {
+      const paths=Array.isArray(summary.unregisteredPdfPaths) ? summary.unregisteredPdfPaths : [];
+      if(!paths.length) {
+        host.createDiv({cls:'pdfium-document-register-message',text:this.t('documentRegister.overview.noUnregistered')});
+        return;
+      }
+      const scroll=host.createDiv({cls:'pdfium-document-register-scroll'});
+      const table=scroll.createEl('table',{cls:'pdfium-document-register-table pdfium-document-register-special-table'});
+      const head=table.createEl('thead').createEl('tr');
+      head.createEl('th',{text:this.t('documentRegister.pdf')});
+      head.createEl('th',{text:this.t('documentRegister.status')});
+      const body=table.createEl('tbody');
+      for(const path of paths) {
+        const row=body.createEl('tr');
+        const pdfCell=row.createEl('td',{cls:'pdfium-document-register-pdf-cell'});
+        this.createStatusPathLink(pdfCell,path,{label:String(path).split('/').pop()});
+        row.createEl('td',{text:this.t('documentRegister.overview.unregistered')});
+      }
+    }
+  }
+
+  renderStatusOverview(onSummary=null) {
     const overview=this.containerEl.createDiv({cls:'pdfium-document-register-overview'});
     overview.setAttribute('aria-label',this.t('documentRegister.overview.title'));
     const specs=[
       ['active','documentRegister.overview.active','activeCount'],
       ['missing','documentRegister.overview.missing','missingCount'],
       ['error','documentRegister.overview.errors','errorCount'],
-      ['unregistered','documentRegister.overview.unregistered','unregisteredCount']
+      ['unregistered','documentRegister.overview.unregistered','unregisteredCount'],
+      ['all','documentRegister.overview.all','allCount']
     ];
     const valueEls=new Map();
     for(const [kind,labelKey] of specs) {
-      const card=overview.createDiv({cls:`pdfium-document-register-overview-card is-${kind}`});
+      const card=overview.createEl('button',{cls:`pdfium-document-register-overview-card is-${kind}`});
+      card.setAttribute('type','button');
+      card.setAttribute('aria-pressed',this.statusFilter===kind ? 'true' : 'false');
+      card.setAttribute('aria-label',this.t('documentRegister.overview.filterAria',{label:this.t(labelKey)}));
+      if(this.statusFilter===kind) card.classList.add('is-selected');
       const valueEl=card.createDiv({cls:'pdfium-document-register-overview-value',text:'…'});
       card.createDiv({cls:'pdfium-document-register-overview-label',text:this.t(labelKey)});
       valueEls.set(kind,valueEl);
+      card.addEventListener('click',event=>{
+        event.preventDefault();
+        event.stopPropagation();
+        this.setStatusFilter(kind);
+      });
     }
+
+    const applySummary=summary=>{
+      if(!summary?.ok) {
+        for(const valueEl of valueEls.values()) valueEl.setText('—');
+        overview.classList.add('has-error');
+        overview.setAttribute('title',summary?.error || this.t('documentRegister.overview.unavailable'));
+        if(typeof onSummary==='function') onSummary(summary);
+        return;
+      }
+      this.statusSummary=summary;
+      const values={
+        active:Number(summary.activeCount || 0),
+        missing:Number(summary.missingCount || 0),
+        error:Number(summary.errorCount || 0),
+        unregistered:Number(summary.unregisteredCount || 0),
+        all:Number(summary.allCount ?? (Number(summary.activeCount || 0)+Number(summary.missingCount || 0)))
+      };
+      for(const [kind,value] of Object.entries(values)) {
+        const valueEl=valueEls.get(kind);
+        if(valueEl) valueEl.setText(String(value));
+        const card=valueEl?.parentElement;
+        if(card && !['active','all'].includes(kind) && value>0) card.classList.add('has-attention');
+      }
+      if(typeof onSummary==='function') onSummary(summary);
+    };
+
+    if(this.statusSummary?.ok) applySummary(this.statusSummary);
 
     const requestId=++this.statusSummaryRequestId;
     const load=typeof this.host?.getStatusSummary === 'function'
@@ -609,29 +734,10 @@ class PdfDocumentRegisterBasesView extends BasesViewBase {
 
     void load.then(summary=>{
       if(requestId!==this.statusSummaryRequestId || overview.isConnected===false) return;
-      if(!summary?.ok) {
-        for(const valueEl of valueEls.values()) valueEl.setText('—');
-        overview.classList.add('has-error');
-        overview.setAttribute('title',summary?.error || this.t('documentRegister.overview.unavailable'));
-        return;
-      }
-      const values={
-        active:Number(summary.activeCount || 0),
-        missing:Number(summary.missingCount || 0),
-        error:Number(summary.errorCount || 0),
-        unregistered:Number(summary.unregisteredCount || 0)
-      };
-      for(const [kind,value] of Object.entries(values)) {
-        const valueEl=valueEls.get(kind);
-        if(valueEl) valueEl.setText(String(value));
-        const card=valueEl?.parentElement;
-        if(card && kind!=='active' && value>0) card.classList.add('has-attention');
-      }
+      applySummary(summary);
     }).catch(error=>{
       if(requestId!==this.statusSummaryRequestId || overview.isConnected===false) return;
-      for(const valueEl of valueEls.values()) valueEl.setText('—');
-      overview.classList.add('has-error');
-      overview.setAttribute('title',error instanceof Error ? error.message : String(error));
+      applySummary({ok:false,error:error instanceof Error ? error.message : String(error)});
     });
     return overview;
   }
@@ -779,6 +885,15 @@ class PdfDocumentRegisterBasesView extends BasesViewBase {
     const showStatus=!hiddenColumns.has('filemeta_status');
     const showPdf=!hiddenColumns.has('filemeta_file');
     const entries = pdfDocumentRegisterEntries(this.data);
+
+    if(this.statusFilter==='error' || this.statusFilter==='unregistered') {
+      const specialHost=this.containerEl.createDiv({cls:'pdfium-document-register-special-host'});
+      specialHost.createDiv({cls:'pdfium-document-register-message',text:this.t('common.loading')});
+      this.renderStatusOverview(summary=>this.renderSpecialStatusTable(specialHost,summary));
+      if(this.statusSummary?.ok) this.renderSpecialStatusTable(specialHost,this.statusSummary);
+      return;
+    }
+
     this.renderStatusOverview();
     if (!entries.length) {
       this.containerEl.createDiv({ cls:'pdfium-document-register-message', text:this.t('documentRegister.noDocuments') });
@@ -833,6 +948,8 @@ class PdfDocumentRegisterBasesView extends BasesViewBase {
       }
       filterValues.filemeta_status = { raw:activeRecord ? 'active' : 'missing', display:activeRecord ? this.t('common.active') : this.t('common.missing') };
       filterValues.filemeta_file = { raw:resolvedPath || linkTarget || '', display:resolvedPath || linkTarget || this.t('documentRegister.pdfMissing') };
+      if(this.statusFilter==='active' && !activeRecord) continue;
+      if(this.statusFilter==='missing' && activeRecord) continue;
       if (!this.matchesHeaderFilters(filterValues)) continue;
       visibleRows += 1;
       const row = tbody.createEl('tr');
@@ -883,7 +1000,7 @@ class PdfDocumentRegisterBasesView extends BasesViewBase {
       }
 
     }
-    if (!visibleRows && this.headerFilters.size) {
+    if (!visibleRows && (this.headerFilters.size || this.statusFilter!=='all')) {
       const emptyRow = tbody.createEl('tr');
       const emptyCell = emptyRow.createEl('td', { cls:'pdfium-document-register-filter-empty', text:this.t('documentRegister.noFilterMatches') });
       emptyCell.setAttribute('colspan',String(fields.length + (showStatus?1:0) + (showPdf?1:0)));
