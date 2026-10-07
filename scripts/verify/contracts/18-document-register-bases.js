@@ -11,6 +11,11 @@ module.exports=function verifyDocumentRegisterBasesContract(){
   const presentation=require(path.join(ROOT,'src/metadata/base-presentation.js'));
   const baseConfig=require(path.join(ROOT,'src/metadata/document-register-base-config.js'));
   const registrationApi=require(path.join(ROOT,'src/platform/obsidian-plugin-registration.js'));
+  const recordContract=require(path.join(ROOT,'src/metadata/record-contract.js'));
+  global.metadataRecordNormalizeVaultPath=recordContract.metadataRecordNormalizeVaultPath;
+  global.METADATA_RECORD_STATUS_ACTIVE=recordContract.METADATA_RECORD_STATUS_ACTIVE;
+  global.METADATA_RECORD_STATUS_MISSING=recordContract.METADATA_RECORD_STATUS_MISSING;
+  const {documentRecordRegisterStatusSnapshot}=require(path.join(ROOT,'src/plugin/features/16-document-records.js'));
 
   const schema=schemaApi.metadataDefaultSchema();
   const registry=registryApi.createMetadataFieldTypeRegistry();
@@ -77,6 +82,31 @@ module.exports=function verifyDocumentRegisterBasesContract(){
   const hiddenBaseYaml=baseConfig.metadataDocumentRegisterStandardBaseYaml(hidden);
   if(hiddenBaseYaml.includes('  sender:')||hiddenBaseYaml.includes('      - sender')) fail('standard Dokumentregister Base ignores show_in_default_base=false');
 
+  {
+    const documentRecords={
+      invalidRecordPaths:new Set(['File Metadata/ff/invalid.md']),
+      ambiguousIds:new Set(['dup-id']),
+      ambiguousPdfPaths:new Set(),
+      recordPathsById:new Map([['dup-id',new Set(['File Metadata/aa/dup-a.md','File Metadata/bb/dup-b.md'])]]),
+      idsByPdfPath:new Map(),
+      entryByRecordPath:new Map([
+        ['File Metadata/01/active.md',{status:'active'}],
+        ['File Metadata/02/missing.md',{status:'missing'}],
+        ['File Metadata/aa/dup-a.md',{status:'active'}],
+        ['File Metadata/bb/dup-b.md',{status:'active'}]
+      ])
+    };
+    const pdfFiles=[{path:'Docs/active.pdf'},{path:'Docs/unregistered.pdf'},{path:'Docs/problem.pdf'}];
+    const registrationStates={
+      'Docs/active.pdf':{ok:true,registered:true},
+      'Docs/unregistered.pdf':{ok:true,registered:false},
+      'Docs/problem.pdf':{ok:false,registered:false}
+    };
+    const summary=documentRecordRegisterStatusSnapshot(documentRecords,pdfFiles,path=>registrationStates[path]);
+    if(summary.activeCount!==1||summary.missingCount!==1||summary.errorCount!==3||summary.unregisteredCount!==1) fail('Document Register status snapshot produced incorrect category counts');
+    if(summary.totalRecordCount!==5||summary.totalPdfCount!==3||summary.registrationProblemCount!==1) fail('Document Register status snapshot produced incorrect totals/problem count');
+  }
+
   const registrations=[];
   const adapter=registrationApi.createObsidianPluginRegistrationAdapter({plugin:{
     registerBasesView(type,registration){ registrations.push({type,registration}); return true; }
@@ -130,7 +160,7 @@ module.exports=function verifyDocumentRegisterBasesContract(){
   if(!viewSource.includes("cls:'internal-link pdfium-document-register-pdf-link'")||!viewSource.includes("text:fileName || 'PDF'")||!viewSource.includes("this.host?.openLink?.(resolvedPath")) fail('PDF column does not render the filename as a clickable internal link');
   if(!viewSource.includes("if(showStatus)")||!viewSource.includes("if(showPdf)")||!viewSource.includes("fields=allFields.filter")) fail('column visibility is not applied to metadata and system columns');
   if(!pluginStateSource.includes('invalidRecordPaths: new Set()')) fail('document record state does not track invalid record paths');
-  if(!recordFeatureSource.includes('async getDocumentRegisterStatusSummary()')||!recordFeatureSource.includes('problemRecordPaths=new Set(this.state.documentRecords.invalidRecordPaths)')) fail('Document Register status summary is missing or does not include invalid records');
+  if(!recordFeatureSource.includes('async getDocumentRegisterStatusSummary()')||!recordFeatureSource.includes('function documentRecordRegisterStatusSnapshot(')||!recordFeatureSource.includes('problemRecordPaths=new Set(state.invalidRecordPaths')) fail('Document Register status summary is missing or does not include invalid records');
   if(!recordFeatureSource.includes('this.state.documentRecords.invalidRecordPaths.add(path)')||!recordFeatureSource.includes('this.state.documentRecords.invalidRecordPaths.delete(path)')) fail('invalid record tracking is not maintained by live record refresh');
   if(!recordFeatureSource.includes('unregisteredCount++')||!recordFeatureSource.includes('METADATA_RECORD_STATUS_MISSING) missingCount++')) fail('Document Register status summary does not count unregistered/missing documents');
   if(!featureSource.includes('getStatusSummary:() => this.ports.getDocumentRegisterStatusSummary()')) fail('Document Register view host does not expose canonical status summary');
@@ -195,6 +225,9 @@ module.exports=function verifyDocumentRegisterBasesContract(){
   delete global.metadataRegionalSettings;
   delete global.metadataValidateCanonicalValue;
   delete global.metadataClone;
+  delete global.metadataRecordNormalizeVaultPath;
+  delete global.METADATA_RECORD_STATUS_ACTIVE;
+  delete global.METADATA_RECORD_STATUS_MISSING;
 
   return {
     customViewType:'pdfium-document-register',
