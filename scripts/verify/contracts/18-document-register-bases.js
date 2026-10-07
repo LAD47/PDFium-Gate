@@ -103,8 +103,10 @@ module.exports=function verifyDocumentRegisterBasesContract(){
       'Docs/problem.pdf':{ok:false,registered:false}
     };
     const summary=documentRecordRegisterStatusSnapshot(documentRecords,pdfFiles,path=>registrationStates[path]);
-    if(summary.activeCount!==1||summary.missingCount!==1||summary.errorCount!==3||summary.unregisteredCount!==1) fail('Document Register status snapshot produced incorrect category counts');
+    if(summary.activeCount!==1||summary.missingCount!==1||summary.errorCount!==3||summary.unregisteredCount!==1||summary.allCount!==2) fail('Document Register status snapshot produced incorrect category counts');
     if(summary.totalRecordCount!==5||summary.totalPdfCount!==3||summary.registrationProblemCount!==1) fail('Document Register status snapshot produced incorrect totals/problem count');
+    if(summary.errorItems.length!==3||summary.errorItems.filter(item=>item.reason==='ambiguous-id').length!==2||summary.errorItems.filter(item=>item.reason==='invalid').length!==1) fail('Document Register status snapshot did not expose concrete error items/reasons');
+    if(JSON.stringify(summary.unregisteredPdfPaths)!==JSON.stringify(['Docs/unregistered.pdf'])) fail('Document Register status snapshot did not expose concrete unregistered PDF paths');
   }
 
   const registrations=[];
@@ -162,9 +164,19 @@ module.exports=function verifyDocumentRegisterBasesContract(){
   if(!pluginStateSource.includes('invalidRecordPaths: new Set()')) fail('document record state does not track invalid record paths');
   if(!recordFeatureSource.includes('async getDocumentRegisterStatusSummary()')||!recordFeatureSource.includes('function documentRecordRegisterStatusSnapshot(')||!recordFeatureSource.includes('problemRecordPaths=new Set(state.invalidRecordPaths')) fail('Document Register status summary is missing or does not include invalid records');
   if(!recordFeatureSource.includes('this.state.documentRecords.invalidRecordPaths.add(path)')||!recordFeatureSource.includes('this.state.documentRecords.invalidRecordPaths.delete(path)')) fail('invalid record tracking is not maintained by live record refresh');
-  if(!recordFeatureSource.includes('unregisteredCount++')||!recordFeatureSource.includes('METADATA_RECORD_STATUS_MISSING) missingCount++')) fail('Document Register status summary does not count unregistered/missing documents');
+  if(!recordFeatureSource.includes('unregisteredPdfPaths.push(path)')||!recordFeatureSource.includes('METADATA_RECORD_STATUS_MISSING) missingCount++')) fail('Document Register status summary does not count/expose unregistered or missing documents');
+  if(!recordFeatureSource.includes('errorItems')||!recordFeatureSource.includes("reason='ambiguous-id'")||!recordFeatureSource.includes("reason='ambiguous-pdf-path'")) fail('Document Register status summary does not expose problem rows/reasons');
   if(!featureSource.includes('getStatusSummary:() => this.ports.getDocumentRegisterStatusSummary()')) fail('Document Register view host does not expose canonical status summary');
-  if(!viewSource.includes('renderStatusOverview()')||!viewSource.includes("documentRegister.overview.active")||!viewSource.includes("documentRegister.overview.unregistered")) fail('Document Register status overview UI missing');
+  if(!viewSource.includes('renderStatusOverview(')||!viewSource.includes("documentRegister.overview.active")||!viewSource.includes("documentRegister.overview.unregistered")||!viewSource.includes("documentRegister.overview.all")) fail('Document Register status overview/filter UI missing');
+  if(!viewSource.includes("this.statusFilter = 'all'")||!viewSource.includes("setStatusFilter(kind)")||!viewSource.includes("this.statusFilter==='active' && !activeRecord")||!viewSource.includes("this.statusFilter==='missing' && activeRecord")) fail('Active/Missing/All status filtering is not wired into normal register rows');
+  if(!viewSource.includes("this.statusFilter==='error' || this.statusFilter==='unregistered'")||!viewSource.includes('renderSpecialStatusTable(')||!viewSource.includes('summary.errorItems')||!viewSource.includes('summary.unregisteredPdfPaths')) fail('Error/Unregistered status filtering does not render concrete special result lists');
+  const activeSpecIndex=viewSource.indexOf("['active','documentRegister.overview.active','activeCount']");
+  const missingSpecIndex=viewSource.indexOf("['missing','documentRegister.overview.missing','missingCount']");
+  const errorSpecIndex=viewSource.indexOf("['error','documentRegister.overview.errors','errorCount']");
+  const unregisteredSpecIndex=viewSource.indexOf("['unregistered','documentRegister.overview.unregistered','unregisteredCount']");
+  const allSpecIndex=viewSource.indexOf("['all','documentRegister.overview.all','allCount']");
+  if([activeSpecIndex,missingSpecIndex,errorSpecIndex,unregisteredSpecIndex,allSpecIndex].some(index=>index<0) || !(activeSpecIndex<missingSpecIndex&&missingSpecIndex<errorSpecIndex&&errorSpecIndex<unregisteredSpecIndex&&unregisteredSpecIndex<allSpecIndex)) fail('status-filter order must be Active, Missing, Errors, Unregistered, All');
+  if(!viewSource.includes("card.setAttribute('aria-pressed'")||!viewSource.includes("card.classList.add('is-selected')")) fail('selected status filter is not visibly/accessibly marked');
   const overviewIndex=viewSource.indexOf('this.renderStatusOverview();');
   const emptyIndex=viewSource.indexOf('if (!entries.length)');
   if(overviewIndex<0||emptyIndex<0||overviewIndex>emptyIndex) fail('Document Register status overview is not rendered when the table has no valid rows');
@@ -261,6 +273,9 @@ module.exports=function verifyDocumentRegisterBasesContract(){
     compactStandardColumns:true,
     pdfFilenameIsClickableLink:true,
     statusOverview:true,
+    clickableStatusFilters:true,
+    allStatusFilterLast:true,
+    specialErrorAndUnregisteredLists:true,
     invalidRecordTracking:true,
     unregisteredPdfCount:true,
     headerTooltipDeduplicated:true,
