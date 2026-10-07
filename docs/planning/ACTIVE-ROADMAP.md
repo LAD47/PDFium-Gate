@@ -64,6 +64,7 @@ Already resolved — do not reopen as planning questions:
 - **CSS review warnings addressed:** active `styles.css` contains no `!important`, `:has()` or `text-decoration-style`; the visibility verifier was updated to the new exact-root selectors.
 - **Privileged desktop behavior documented:** README now explains filesystem access, vault enumeration, clipboard use and the bundled dynamic-code dependency.
 - Full source/runtime verification, dependency audit and the complete Email Import test suite are green in runs `37656502583` and `37656591061`.
+- **0.1.227 is now a versioned release candidate:** `manifest.json`, `package.json`, `package-lock.json`, `versions.json` and the runtime version constant are aligned on `0.1.227`; release-candidate notes exist at `docs/releases/0.1.227.md`. Run `37659496179` is green and generated the matching 0.1.227 runtime; `main.js` remains **4,570,242 bytes**.
 - Remaining scanner recommendations for vault enumeration and clipboard access are intentional product behavior. The `new Function(...)` finding comes from `source-map-js` via `sanitize-html -> postcss -> source-map-js`; dependency replacement can be reviewed later, but there is no current vulnerable-dependency finding.
 - Before any 0.1.227 merge/release decision, run the Community **Review branch / preview scan** against the candidate branch if available.
 
