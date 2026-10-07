@@ -142,7 +142,7 @@ Deferred while core PDFium Gate functionality is completed:
 
 - [ ] Complete and stabilize deferred core functions and practical test observations.
 - [x] Automatic minimal system records for newly detected PDFs and the explicit **Register existing PDFs** flow are implemented and practically confirmed; preserve this as the current registration model.
-- [ ] Redesign the PDF Document Register UI/interaction model. The final **Unregistered → Register all** closure slice is implemented on the 0.1.227 candidate branch; practical verification is still required before this item is closed.
+- [x] Redesign the PDF Document Register UI/interaction model. Final **Unregistered → Register all** closure test 1–6 passed on 2026-10-07; the overall 0.1.227 Document Register redesign is complete.
 - [ ] Implement the Document register maintenance report without enabling unsafe destructive cleanup prematurely.
 - [ ] Define any future integration boundary with the independent backup project only after the generic backup design is stable.
 - [ ] Gate any broader/permanent destructive maintenance of durable metadata behind a validated backup/rollback capability before exposing that maintenance to normal users.
