@@ -13,6 +13,56 @@ function documentRecordBenchmarkMemorySnapshot() {
   } catch(_) { return null; }
 }
 
+function documentRecordRegisterStatusSnapshot(documentRecords,pdfFiles,getState) {
+  const state=documentRecords || {};
+  const problemRecordPaths=new Set(state.invalidRecordPaths || []);
+  for(const id of state.ambiguousIds || []) {
+    const paths=state.recordPathsById?.get?.(id);
+    for(const path of paths || []) problemRecordPaths.add(metadataRecordNormalizeVaultPath(path));
+  }
+  for(const pdfPath of state.ambiguousPdfPaths || []) {
+    const ids=state.idsByPdfPath?.get?.(pdfPath);
+    for(const id of ids || []) {
+      const paths=state.recordPathsById?.get?.(id);
+      for(const path of paths || []) problemRecordPaths.add(metadataRecordNormalizeVaultPath(path));
+    }
+  }
+
+  let activeCount=0;
+  let missingCount=0;
+  for(const [recordPath,entry] of state.entryByRecordPath?.entries?.() || []) {
+    if(problemRecordPaths.has(recordPath)) continue;
+    if(entry?.status===METADATA_RECORD_STATUS_ACTIVE) activeCount++;
+    else if(entry?.status===METADATA_RECORD_STATUS_MISSING) missingCount++;
+  }
+
+  let unregisteredCount=0;
+  const registrationProblemPaths=[];
+  const files=Array.isArray(pdfFiles) ? pdfFiles : [];
+  for(const file of files) {
+    const path=metadataRecordNormalizeVaultPath(file?.path);
+    const registrationState=typeof getState === 'function' ? getState(path) : {ok:false};
+    if(!registrationState?.ok) {
+      registrationProblemPaths.push(path);
+      continue;
+    }
+    if(!registrationState.registered) unregisteredCount++;
+  }
+
+  return {
+    ok:true,
+    activeCount,
+    missingCount,
+    errorCount:problemRecordPaths.size,
+    unregisteredCount,
+    totalRecordCount:Number(state.entryByRecordPath?.size || 0) + Number(state.invalidRecordPaths?.size || 0),
+    totalPdfCount:files.length,
+    problemRecordPaths:[...problemRecordPaths].sort((a,b)=>a.localeCompare(b)),
+    registrationProblemCount:registrationProblemPaths.length,
+    registrationProblemPaths
+  };
+}
+
 class DocumentRecordsFeature {
   getDocumentRecordIndexCache() {
     if(this.metadataRecordIndexCache) return this.metadataRecordIndexCache;
@@ -573,52 +623,11 @@ class DocumentRecordsFeature {
 
   async getDocumentRegisterStatusSummary() {
     await this.ensureDocumentRecordIndexReady('document-register-status');
-    const problemRecordPaths=new Set(this.state.documentRecords.invalidRecordPaths);
-    for(const id of this.state.documentRecords.ambiguousIds) {
-      const paths=this.state.documentRecords.recordPathsById.get(id);
-      for(const path of paths || []) problemRecordPaths.add(metadataRecordNormalizeVaultPath(path));
-    }
-    for(const pdfPath of this.state.documentRecords.ambiguousPdfPaths) {
-      const ids=this.state.documentRecords.idsByPdfPath.get(pdfPath);
-      for(const id of ids || []) {
-        const paths=this.state.documentRecords.recordPathsById.get(id);
-        for(const path of paths || []) problemRecordPaths.add(metadataRecordNormalizeVaultPath(path));
-      }
-    }
-
-    let activeCount=0;
-    let missingCount=0;
-    for(const [recordPath,entry] of this.state.documentRecords.entryByRecordPath.entries()) {
-      if(problemRecordPaths.has(recordPath)) continue;
-      if(entry?.status===METADATA_RECORD_STATUS_ACTIVE) activeCount++;
-      else if(entry?.status===METADATA_RECORD_STATUS_MISSING) missingCount++;
-    }
-
-    const pdfFiles=this.listDocumentRegistrationPdfFiles();
-    let unregisteredCount=0;
-    const registrationProblemPaths=[];
-    for(const file of pdfFiles) {
-      const path=metadataRecordNormalizeVaultPath(file?.path);
-      const state=this.getDocumentMetadataRecordState(path);
-      if(!state.ok) {
-        registrationProblemPaths.push(path);
-        continue;
-      }
-      if(!state.registered) unregisteredCount++;
-    }
-
-    return {
-      ok:true,
-      activeCount,
-      missingCount,
-      errorCount:problemRecordPaths.size,
-      unregisteredCount,
-      totalRecordCount:this.state.documentRecords.entryByRecordPath.size + this.state.documentRecords.invalidRecordPaths.size,
-      totalPdfCount:pdfFiles.length,
-      problemRecordPaths:[...problemRecordPaths].sort((a,b)=>a.localeCompare(b)),
-      registrationProblemCount:registrationProblemPaths.length,
-      registrationProblemPaths
-    };
+    return documentRecordRegisterStatusSnapshot(
+      this.state.documentRecords,
+      this.listDocumentRegistrationPdfFiles(),
+      path=>this.getDocumentMetadataRecordState(path)
+    );
   }
 
   async getExistingPdfRegistrationSummary() {
@@ -995,4 +1004,4 @@ class DocumentRecordsFeature {
 
 }
 
-module.exports={DocumentRecordsFeature};
+module.exports={DocumentRecordsFeature,documentRecordRegisterStatusSnapshot};
