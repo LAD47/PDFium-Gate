@@ -144,8 +144,8 @@
 
 
 /* 0.1.112: advanced diagnostics chrome is opt-in. */
-.pdfium-gate-diagnostics-hidden {
-  display: none !important;
+body .pdfium-gate-diagnostics-hidden {
+  display: none;
 }
 
 
@@ -363,8 +363,8 @@
   background: var(--background-primary);
   overflow: hidden;
 }
-.pdfium-document-info-panel-hidden {
-  display: none !important;
+body .pdfium-document-info-panel-hidden {
+  display: none;
 }
 .pdfium-document-info-header {
   flex: 0 0 auto;
@@ -499,8 +499,11 @@
    folder becomes visible again, while storage/indexing remain untouched. */
 body.pdfium-hide-document-records
 .workspace-leaf-content[data-type="file-explorer"]
-.nav-folder:has(> .nav-folder-title[data-path="File Metadata"]) {
-  display: none !important;
+.nav-folder-title[data-path="File Metadata"],
+body.pdfium-hide-document-records
+.workspace-leaf-content[data-type="file-explorer"]
+.nav-folder-title[data-path="File Metadata"] + .nav-folder-children {
+  display: none;
 }
 
 /* 0.1.196: schema-aware custom Bases document-register view.
@@ -696,10 +699,10 @@ body.pdfium-hide-document-records
   top: auto;
   position: static;
 }
-.pdfium-document-register-duplicate-uuid {
+.pdfium-document-register-table td.pdfium-document-register-duplicate-uuid {
   font-family: var(--font-monospace);
   overflow-wrap: anywhere;
-  white-space: normal !important;
+  white-space: normal;
 }
 .pdfium-document-register-duplicate-metadata {
   min-width: 220px;
@@ -779,9 +782,7 @@ body.pdfium-hide-document-records
 }
 .pdfium-document-register-table td.is-editable:hover .pdfium-document-register-cell-value,
 .pdfium-document-register-table td.is-editable:focus .pdfium-document-register-cell-value {
-  text-decoration: underline;
-  text-decoration-style: dotted;
-  text-underline-offset: 3px;
+  border-bottom: 1px dotted currentColor;
 }
 .pdfium-document-register-table td.is-editing {
   min-width: 170px;
@@ -921,10 +922,10 @@ body.pdfium-hide-document-records
   justify-content: flex-end;
   margin-top: 14px;
 }
-.pdfium-document-register-filter-empty {
-  padding: 18px 10px !important;
+.pdfium-document-register-table td.pdfium-document-register-filter-empty {
+  padding: 18px 10px;
   color: var(--text-muted);
-  text-align: center !important;
+  text-align: center;
 }
 
 /* 0.1.206 test: schema-aware Dokumentregister header filters. */
