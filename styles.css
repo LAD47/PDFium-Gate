@@ -558,6 +558,48 @@ body.pdfium-hide-document-records
 
 /* 0.1.197: inline editing for the schema-aware PDF document register.
    Presentation only; persistence still routes through DocumentRecords. */
+.pdfium-document-register-overview {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(90px, 1fr));
+  gap: 8px;
+  padding: 10px;
+  border-bottom: 1px solid var(--background-modifier-border);
+  background: var(--background-primary);
+}
+.pdfium-document-register-overview-card {
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s);
+  background: var(--background-secondary);
+}
+.pdfium-document-register-overview-value {
+  font-size: var(--font-ui-large);
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--text-normal);
+}
+.pdfium-document-register-overview-label {
+  margin-top: 2px;
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pdfium-document-register-overview-card.has-attention .pdfium-document-register-overview-value {
+  color: var(--text-warning, var(--text-normal));
+}
+.pdfium-document-register-overview-card.is-error.has-attention .pdfium-document-register-overview-value,
+.pdfium-document-register-overview.has-error .pdfium-document-register-overview-value {
+  color: var(--text-error);
+}
+@media (max-width: 650px) {
+  .pdfium-document-register-overview {
+    grid-template-columns: repeat(2, minmax(90px, 1fr));
+  }
+}
+
 .pdfium-document-register-toolbar {
   display: flex;
   align-items: center;
