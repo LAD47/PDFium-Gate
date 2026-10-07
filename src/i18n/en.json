@@ -636,5 +636,15 @@
   "documentRegister.overview.missing": "Missing",
   "documentRegister.overview.errors": "Errors",
   "documentRegister.overview.unregistered": "Unregistered",
-  "documentRegister.overview.unavailable": "Document status is temporarily unavailable."
+  "documentRegister.overview.unavailable": "Document status is temporarily unavailable.",
+  "documentRegister.overview.all": "All",
+  "documentRegister.overview.filterAria": "Show {label}",
+  "documentRegister.overview.metadataFile": "Metadata file",
+  "documentRegister.overview.problem": "Problem",
+  "documentRegister.overview.reasonInvalid": "Invalid metadata record",
+  "documentRegister.overview.reasonAmbiguousId": "Duplicate metadata ID",
+  "documentRegister.overview.reasonAmbiguousPdfPath": "Multiple records point to the same PDF",
+  "documentRegister.overview.reasonIdentity": "Document identity conflict",
+  "documentRegister.overview.noErrors": "No document-record errors.",
+  "documentRegister.overview.noUnregistered": "No unregistered PDFs."
 }
