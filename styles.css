@@ -533,6 +533,10 @@ body.pdfium-hide-document-records
   vertical-align: top;
   white-space: nowrap;
 }
+.pdfium-document-register-table td {
+  -webkit-user-select: text;
+  user-select: text;
+}
 .pdfium-document-register-table th {
   position: sticky;
   top: 0;
