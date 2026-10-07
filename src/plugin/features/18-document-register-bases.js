@@ -64,6 +64,7 @@ class DocumentRegisterBasesFeature {
         getSchema:() => this.ports.getMetadataSchemaPresentationSnapshot(),
         getSettings:() => this.settings || {},
         getI18n:() => this.i18n || null,
+        getStatusSummary:() => this.ports.getDocumentRegisterStatusSummary(),
         getFrontmatter:file => this.obsidianMetadataCacheAdapter?.getFrontmatter?.(file) || null,
         resolvePdfPath:(linkTarget, recordPath) => this.ports.resolveDocumentRecordPdfPath(linkTarget, recordPath),
         saveValues:(pdfPath, updates) => this.ports.saveDocumentMetadataRecordValues(pdfPath, updates),
