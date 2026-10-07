@@ -652,5 +652,14 @@
   "documentRegister.overview.duplicateMetadataIdentical": "User metadata are identical",
   "documentRegister.overview.duplicateMetadataDifferent": "User metadata differ",
   "documentRegister.overview.duplicateNoUserMetadata": "No user metadata",
-  "documentRegister.overview.duplicateCompareHint": "Compare the records before deleting anything."
+  "documentRegister.overview.duplicateCompareHint": "Compare the records before deleting anything.",
+  "documentRegister.overview.duplicateDeleteButton": "Delete metadata",
+  "documentRegister.overview.duplicateDeleteTitle": "Delete duplicate metadata record?",
+  "documentRegister.overview.duplicateDeleteWarningIdentical": "This record has the same user metadata as the other record(s) for this PDF. Deleting removes only this metadata record, not the PDF.",
+  "documentRegister.overview.duplicateDeleteWarningDifferent": "This record has user metadata that differ from the other record(s) for this PDF. Deleting it may permanently remove information. Compare the records carefully before continuing.",
+  "documentRegister.overview.duplicateDeleteRecord": "Metadata file: {record}",
+  "documentRegister.overview.duplicateDeleteUuidValue": "UUID: {id}",
+  "documentRegister.overview.duplicateDeletePdf": "PDF: {pdf}",
+  "documentRegister.overview.duplicateDeleteConfirm": "Delete metadata record",
+  "documentRegister.overview.duplicateDeleteFailed": "The metadata record could not be deleted."
 }
