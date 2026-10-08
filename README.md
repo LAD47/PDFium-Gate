@@ -1,23 +1,24 @@
 # PDFium Gate
 
-**PDFium Gate** is a desktop plugin for [Obsidian](https://obsidian.md/) that turns PDFs into durable, traceable source documents inside an Obsidian workflow.
+**Turn PDFs, email, and archives into a traceable source library inside Obsidian.**
 
-It combines PDF reading and annotation with source links, structured Markdown/YAML metadata, DocumentInfo, document registers, email import and archive-aware attachments — while keeping the original PDF as the primary source document.
+PDFium Gate brings PDF reading, annotation, source linking, structured metadata, document registers, email import, and archive handling into one desktop workflow — while keeping the original PDF as the source of record and durable metadata in ordinary Markdown/YAML.
+
+## What you can do
+
+- **Read and annotate PDFs** — select text with mouse or keyboard, create highlights, copy quotes, and create Obsidian links back to exact pages and selections.
+- **Add structured metadata beside the PDF** — use **Document information** to capture dates, senders, document types, links, yes/no fields, select lists, and your own custom fields while reading.
+- **Manage large document collections** — use the **PDF Document register** to sort, filter, choose columns, edit metadata inline, find missing or unregistered documents, and register PDFs in bulk.
+- **Turn email into source documents** — import EML/MSG as PDF, keep attachments linked, detect duplicate source mail, and preserve provenance.
+- **Import ZIP archives safely** — preserve archive relationships, register contained PDFs, and roll back partial imports if something fails.
+- **Keep your collection portable** — PDFs remain normal PDF files and metadata remains readable Markdown/YAML instead of being locked in a proprietary database.
+
+**Built for document-heavy work:** research, journalism and investigations, public records, administration, source collections, and long-term archives.
+
+Desktop only · Obsidian 1.13.7+ · UI in English, Norwegian Bokmål, German, Spanish, Swedish, Danish and French · no client-side telemetry.
 
 > [!WARNING]
-> **This is pre-release software.** It is still under active development and has not yet completed broad platform and real-world testing. Make a complete backup of your Obsidian Vault before installing or updating the plugin, especially if the Vault contains important or irreplaceable material.
-
-## At a glance
-
-- Read and annotate PDFs inside Obsidian with selection links back to exact source locations.
-- Add structured document metadata and edit it beside the active PDF through **Document information**.
-- Organize registered PDFs through the Obsidian Bases-powered **PDF Document register**.
-- Import EML/MSG email as PDF with attachments, duplicate detection and provenance.
-- Import ZIP archives transactionally while preserving archive relationships and registering contained PDFs.
-- Keep durable metadata in ordinary Markdown/YAML rather than a proprietary plugin database.
-- Use the interface in English, Norwegian Bokmål, German, Spanish, Swedish, Danish or French.
-
-PDFium Gate is desktop-only. The current compatibility baseline is **Obsidian 1.13.7**. The current Community Plugins release is **0.1.226**, published and user-confirmed through Obsidian on 2026-10-06.
+> **PDFium Gate is still pre-release software.** It is under active development and has not yet completed broad platform and real-world testing. Make a complete backup of your Vault before installing or updating it, especially if the Vault contains important or irreplaceable material.
 
 ## Why this project exists
 
