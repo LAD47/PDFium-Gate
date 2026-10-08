@@ -20,48 +20,63 @@ Desktop only · Obsidian 1.13.7+ · UI in English, Norwegian Bokmål, German, Sp
 > [!WARNING]
 > **PDFium Gate is still pre-release software.** It is under active development and has not yet completed broad platform and real-world testing. Make a complete backup of your Vault before installing or updating it, especially if the Vault contains important or irreplaceable material.
 
-## Why this project exists
+## Why PDFium Gate?
 
-PDFs are central to journalism, research, public-record work, investigations, administration, and archival projects. A useful long-term workflow needs more than a PDF viewer: it should make it easy to preserve the source, extract and cite evidence, organize documents, add structured information, and return to the exact place where a finding came from.
+Many PDF tools stop at reading and highlighting. PDFium Gate is built for document collections where you also need to know **where information came from**, preserve the original source, add structured information, and find the document again months or years later.
 
-PDFium Gate aims to keep that work inside one Obsidian interface while avoiding unnecessary lock-in. Important metadata is stored as ordinary Markdown/YAML rather than in a proprietary plugin database, and the original PDF remains the primary source document.
+The design follows a few simple principles:
 
-The project is guided by a few principles:
+- **Source first.** The original PDF remains the document of record.
+- **Traceable.** Quotes, selections, highlights, notes, attachments, and imported sources should lead back to their origin.
+- **Structured.** Important document information should be sortable, filterable, and editable — not buried in filenames or free-form notes.
+- **Portable.** Durable metadata is stored as ordinary Markdown/YAML rather than in a proprietary plugin database.
+- **Conservative with identity.** PDFium Gate uses stable UUID-based records and fails safely rather than guessing when a document relationship is ambiguous.
+- **User-owned.** Your labels, categories, metadata, and Bases are not silently rewritten when you change interface language.
 
-- **Source first.** The PDF remains the document of record.
-- **Traceability.** Quotes, selections, highlights, and notes should lead back to the source location.
-- **Portable metadata.** Document metadata should remain readable and usable without the plugin.
-- **Explicit identity.** The plugin should fail safely rather than guess which document or annotation a destructive action belongs to.
-- **User ownership.** User-created labels, categories, metadata, and Bases remain user data and are not silently rewritten by UI-language changes.
-- **One workspace.** PDF reading, annotation, metadata, and document management should feel like parts of the same Obsidian workflow.
-- **Long-term maintainability.** Architecture, verification, rollback points, and migration decisions are treated as part of the product, not as afterthoughts.
+## Feature tour
 
-## Current capabilities
+### Read, select, annotate, and link PDFs
 
-The current 0.1.x Community releases include:
+- Integrated Chromium/PDFium PDF reading inside Obsidian.
+- Mouse and keyboard text selection, including multi-page workflows.
+- Copy selected text or quotes directly into your notes.
+- Create Obsidian links back to exact PDF pages and selections.
+- Optionally exclude marked headers and footers when copying text.
+- Create, recolor, recategorize, and remove PDF highlights.
+- Define highlight categories with colors and keyboard shortcuts.
+- Optionally create an original-PDF backup before PDFium Gate makes its first modification to a PDF.
 
-- an integrated Chromium/PDFium-based PDF view inside Obsidian;
-- mouse and keyboard text selection, including multi-page workflows;
-- copying selected text, quotes, and Obsidian links back to PDF selections/pages;
-- configurable exclusion of PDF text marked as headers/footers when copying;
-- PDF highlight categories with colors and keyboard shortcuts;
-- creation, category changes, and removal of PDF highlights;
-- optional automatic backup before the plugin makes its first change to a PDF that does not already have a backup;
-- a configurable metadata schema with text, date, time, integer, decimal, yes/no, select, multi-select, and link fields;
-- **Document information** directly beside the active PDF;
-- one Markdown/YAML metadata record per registered PDF, with automatic minimal records for newly detected PDFs and an explicit **Register existing PDFs** flow;
-- stable UUID-based document metadata identity across normal PDF rename/move operations;
-- conservative handling of deleted/missing PDFs: records become `missing`, are never automatically rebound, and ordinary PDF relinking/SHA recovery is intentionally unsupported;
-- an Obsidian Bases-powered **PDF Document register** with schema-driven columns, sorting, datatype-aware filtering, inline editing, and missing-PDF actions;
-- an optional synthetic example package with six metadata records and two native Obsidian Bases, demonstrating both a full table and a practical filtered workflow without touching real registered PDFs;
-- scalable metadata indexing with a disposable cache while Markdown/YAML remains the source of truth;
-- EML/MSG import to normal PDFium Gate PDFs with exact-source SHA-256 duplicate detection;
-- one localized email-attachment folder containing direct attachments and flattened members from multiple ZIP attachments;
-- transactional attachment import with read-back verification and rollback;
-- ZIP/archive provenance and related-file presentation in DocumentInfo without requiring successful source ZIPs to remain in the Vault;
-- generic manual Archive Import with ZIP safety preflight, preserved archive directory structure, rollback on failure, source-ZIP cleanup after success, and startup/focus reconciliation for ZIPs copied with the operating-system file manager;
-- diagnostics and benchmark tools for testing large document collections;
-- a multilingual interface with live language switching.
+### Build a document register around your PDFs
+
+- Define your own metadata fields: text, date, time, integer, decimal, yes/no, select, multi-select, and links.
+- Edit metadata beside the PDF through **Document information**.
+- Automatically create minimal records for newly detected PDFs, or register existing PDF collections in bulk.
+- Keep stable UUID-based document identity across normal rename and move operations.
+- Use the Obsidian Bases-powered **PDF Document register** with configurable columns, sorting, datatype-aware filtering, and inline editing.
+- Switch quickly between **Active**, **Missing**, **Errors**, **Unregistered**, and **All** views.
+- Diagnose invalid or duplicate metadata records without losing sight of the underlying PDF.
+- Scale to large collections with a disposable index/cache while Markdown/YAML remains the source of truth.
+- Install an optional synthetic example package to explore the register and native Bases without touching your real documents.
+
+### Preserve email and archive sources
+
+- Import EML and MSG email as normal PDFium Gate PDFs.
+- Preserve sender/recipient/date/subject context and attachment relationships.
+- Detect exact duplicate email sources with SHA-256.
+- Export ordinary email attachments beside the generated email PDF and link them back to the parent document.
+- Handle PDF attachments as registered source documents with provenance.
+- Import ZIP attachments transactionally with verification and rollback.
+- Import standalone ZIP archives with safety preflight, preserved directory structure, rollback on failure, and source/archive provenance.
+- Show archive and attachment relationships in **Document information**.
+
+### Keep control of your collection
+
+- PDFs stay normal PDF files in your Vault.
+- Durable document metadata stays readable as Markdown/YAML.
+- User-created metadata labels and categories remain yours.
+- Missing PDFs are treated conservatively and are never silently rebound to another file.
+- Ordinary PDF identity does not depend on file hashes or proprietary database state.
+- PDFium Gate includes no client-side telemetry.
 
 ## Languages
 
