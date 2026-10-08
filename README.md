@@ -15,7 +15,7 @@ PDFium Gate brings PDF reading, annotation, source linking, structured metadata,
 
 **Built for document-heavy work:** research, journalism and investigations, public records, administration, source collections, and long-term archives.
 
-Desktop only · Obsidian 1.13.7+ · UI in English, Norwegian Bokmål, German, Spanish, Swedish, Danish and French · no client-side telemetry.
+**Desktop plugin · Available in 7 languages · Designed for research, investigations, and long-term document collections.**
 
 > [!WARNING]
 > **PDFium Gate is still pre-release software.** It is under active development and has not yet completed broad platform and real-world testing. Make a complete backup of your Vault before installing or updating it, especially if the Vault contains important or irreplaceable material.
