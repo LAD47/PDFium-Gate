@@ -2,6 +2,32 @@
 
 This file contains reusable public-facing copy for PDFium Gate. It is intentionally separate from technical release evidence and architecture documentation.
 
+## Recommended Community listing fields
+
+The Community directory supports a separate short and long description. Keep these focused on user value rather than implementation details.
+
+### Short description
+
+> Read, annotate, link, register, and archive PDFs, email, and ZIP sources with structured metadata and traceable source locations.
+
+### Long description
+
+> Turn document collections into a traceable source library. PDFium Gate combines PDF reading and annotation with exact source links, structured Markdown/YAML metadata, a sortable document register, EML/MSG email import, and safe ZIP/archive handling.
+>
+> Built for research, journalism, public records, administration, and long-term archives. PDFs remain normal files, and durable metadata remains readable outside the plugin.
+
+### Categories
+
+Keep the current categories unless practical discovery data suggests otherwise:
+
+- PDF
+- Annotation
+- Research
+
+These describe the core use case more accurately than broader productivity categories.
+
+---
+
 ## Short Community pitch
 
 **Turn PDFs, email, and archives into a traceable source library inside Obsidian.**
