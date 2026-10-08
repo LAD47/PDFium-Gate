@@ -156,15 +156,15 @@ The project deliberately separates durable user data from disposable acceleratio
 
 The exact internal structures may still evolve before the project reaches a stable 1.0 release. Changes to persisted formats or file layouts require an explicit migration/backward-compatibility review before a public stable release.
 
-## Pre-release limitations
+## Pre-release status and limitations
 
-This project should currently be treated as a serious test build rather than finished production software.
+PDFium Gate is in active pre-1.0 development. Its core PDF, metadata, document-register, email-import, and archive workflows have been repeatedly regression-tested, with the primary practical test environment currently being Windows 11 and the documented Obsidian compatibility baseline. Broader cross-platform and real-world coverage is still growing.
 
 Known boundaries include:
 
 - Command Palette labels require a plugin reload/restart after changing UI language.
 - Chromium PDF internals are outside the plugin's control and may change with Obsidian/Electron updates.
-- Cross-platform testing is not yet complete.
+- macOS and Linux have not yet received the same level of practical testing as Windows.
 - Pre-1.0 builds may still change workflows, configuration, or persisted structures when testing shows that a better long-term design is needed.
 
 If you find a reproducible problem, please [open a GitHub Issue](https://github.com/LAD47/PDFium-Gate/issues) and include the PDFium Gate version, Obsidian version, operating system, what you expected, what happened, and any relevant diagnostics.
