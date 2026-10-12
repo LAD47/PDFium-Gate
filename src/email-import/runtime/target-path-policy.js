@@ -15,12 +15,14 @@ function safeFilenamePart(value, fallback = 'email') {
   return text.slice(0, 120).trim() || fallback;
 }
 
-function pairedEmailAttachmentFolderPath(parentPdfPath,folderLabel='') {
+// Every NEW imported email lives in its own self-contained folder.
+// The parent PDF and every extracted attachment are siblings.
+function emailBundleFolderPath(parentPdfPath) {
   const parent=normalizeVaultPath(parentPdfPath);
   if(!/\.pdf$/i.test(parent)) throw new Error('Parent email PDF path must end in .pdf.');
-  const rawLabel=String(folderLabel||'').replace(/[<>:"/\\|?*\x00-\x1f]/g,' ').replace(/\s+/g,' ').trim();
-  const suffix=rawLabel ? ` ${rawLabel}` : '';
-  return parent.replace(/\.pdf$/i,'')+suffix;
+  const slash=parent.lastIndexOf('/');
+  if(slash<0) throw new Error('Imported email PDF needs a dedicated parent folder.');
+  return parent.slice(0,slash);
 }
 
 function requirePathExistsProbe(pathExists) {
@@ -31,22 +33,22 @@ function requirePathExistsProbe(pathExists) {
 }
 
 function suggestedEmailPdfPathInFolder(document, folderPath, pathExists, attachmentFolderLabel = '') {
-  const exists = requirePathExistsProbe(pathExists);
-  const subject = safeFilenamePart(document?.message?.subject, 'email');
-  const iso = String(document?.message?.dateTime?.iso || '');
-  const date = /^\d{4}-\d{2}-\d{2}/.test(iso) ? iso.slice(0, 10) : '';
-  const base = safeFilenamePart(`${date ? `${date} - ` : ''}${subject}`, 'email');
-  const folder = normalizeVaultPath(folderPath);
+  const exists=requirePathExistsProbe(pathExists);
+  const subject=safeFilenamePart(document?.message?.subject,'email');
+  const iso=String(document?.message?.dateTime?.iso || '');
+  const date=/^\d{4}-\d{2}-\d{2}/.test(iso) ? iso.slice(0,10) : '';
+  const base=safeFilenamePart(`${date ? `${date} - ` : ''}EPOST- ${subject}`,'EPOST- email');
+  const root=normalizeVaultPath(folderPath);
 
-  for (let index = 1; index < 10000; index++) {
-    const suffix = index === 1 ? '' : ` (${index})`;
-    const name = `${base}${suffix}.pdf`;
-    const candidate = folder ? `${folder}/${name}` : name;
-    const attachmentFolder = pairedEmailAttachmentFolderPath(candidate,attachmentFolderLabel);
-    if (!exists(candidate) && !exists(attachmentFolder)) return candidate;
+  for(let index=1;index<10000;index++){
+    const suffix=index===1 ? '' : ` (${index})`;
+    const name=`${base}${suffix}`;
+    const bundleFolder=root ? `${root}/${name}` : name;
+    const candidate=`${bundleFolder}/${name}.pdf`;
+    // Never reuse an existing folder: it might contain unrelated files.
+    if(!exists(bundleFolder) && !exists(candidate)) return candidate;
   }
-
-  throw new Error('Could not allocate a unique Email Import PDF path.');
+  throw new Error('Could not allocate a unique email bundle folder.');
 }
 
 function suggestedEmailPdfPath(document, pathExists, attachmentFolderLabel = '') {
@@ -72,36 +74,41 @@ function suggestedAttachmentPdfPath(parentPdfPath, attachment, pathExists) {
   throw new Error('Could not allocate a unique attachment PDF path.');
 }
 
-function validateTargetPdfPath(value, pathExists, attachmentFolderLabel = '') {
-  const exists = requirePathExistsProbe(pathExists);
-  const target = normalizeVaultPath(value);
-  if (!target || !/\.pdf$/i.test(target)) {
-    return { ok: false, error: 'Target must be a vault-relative .pdf path.' };
+function validateTargetPdfPath(value,pathExists,attachmentFolderLabel='') {
+  const exists=requirePathExistsProbe(pathExists);
+  const target=normalizeVaultPath(value);
+  if(!target || !/\.pdf$/i.test(target)) {
+    return {ok:false,error:'Target must be a vault-relative .pdf path.'};
   }
-
-  const parts = target.split('/');
-  if (parts.some(part => !part || part === '.' || part === '..')) {
-    return { ok: false, error: 'Target path contains an unsafe segment.' };
+  const parts=target.split('/');
+  if(parts.some(part=>!part || part==='.' || part==='..')) {
+    return {ok:false,error:'Target path contains an unsafe segment.'};
   }
-
-  const lower = target.toLowerCase();
-  if (lower === '.pdf-metadata'
-    || lower.startsWith('.pdf-metadata/')
-    || lower === 'file metadata'
-    || lower.startsWith('file metadata/')) {
-    return { ok: false, error: 'Target PDF cannot be stored in plugin metadata areas.' };
+  const lower=target.toLowerCase();
+  if(lower==='.pdf-metadata' || lower.startsWith('.pdf-metadata/')
+    || lower==='file metadata' || lower.startsWith('file metadata/')) {
+    return {ok:false,error:'Target PDF cannot be stored in plugin metadata areas.'};
   }
-
-  if (exists(target)) return { ok: false, error: 'Target path already exists.' };
-  const attachmentFolder=pairedEmailAttachmentFolderPath(target,attachmentFolderLabel);
-  if (exists(attachmentFolder)) return { ok:false, error:'The matching email attachment folder already exists.' };
-  return { ok: true, path: target, attachmentFolder };
+  if(parts.length<2) {
+    return {ok:false,error:'Email PDF must be stored inside its own folder.'};
+  }
+  const bundleFolder=emailBundleFolderPath(target);
+  const folderName=parts[parts.length-2];
+  const pdfName=parts[parts.length-1].slice(0,-4);
+  if(folderName!==pdfName) {
+    return {ok:false,error:'Email PDF filename must match its dedicated folder name.'};
+  }
+  if(exists(target)) return {ok:false,error:'Target path already exists.'};
+  if(exists(bundleFolder)) {
+    return {ok:false,error:'The email bundle folder already exists. Choose a new name.'};
+  }
+  return {ok:true,path:target,bundleFolder,attachmentFolder:bundleFolder};
 }
 
 module.exports = {
   normalizeVaultPath,
   safeFilenamePart,
-  pairedEmailAttachmentFolderPath,
+  emailBundleFolderPath,
   suggestedEmailPdfPath,
   suggestedEmailPdfPathInFolder,
   suggestedAttachmentPdfPath,
