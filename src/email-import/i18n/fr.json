@@ -10,7 +10,7 @@
   "emailImport.modal.duplicateWarning": "Une source strictement identique a été trouvée ({{count}}).",
   "emailImport.modal.noDuplicates": "Aucune source strictement identique n’a été trouvée.",
   "emailImport.modal.targetPath": "Chemin du PDF dans le coffre",
-  "emailImport.modal.targetPathDesc": "Le chemin proposé peut être modifié avant l’importation.",
+  "emailImport.modal.targetPathDesc": "Le PDF de l’e-mail et ses pièces jointes sont enregistrés dans un seul dossier. Le PDF doit porter le même nom que le dossier.",
   "emailImport.modal.retention": "Source originale",
   "emailImport.modal.retentionDesc": "Choisissez explicitement si les octets .eml/.msg d’origine doivent être conservés.",
   "emailImport.modal.retentionChoose": "Choisir...",
