@@ -2,7 +2,7 @@ name: Email Import verification
 
 on:
   push:
-    branches: [feature/email-import, feature/missing-sha256-recovery, fix/0.1.228-email-zip-relations]
+    branches: [feature/email-import, feature/missing-sha256-recovery, fix/0.1.228-email-zip-relations, feature/0.1.228-email-bundles]
     paths:
       - 'src/email-import/**'
       - 'src/archive-import/**'
