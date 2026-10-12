@@ -19,6 +19,7 @@ const existingSet=values=>{
 assert.equal(normalizeVaultPath('\\Folder\\Mail.pdf'),'Folder/Mail.pdf');
 assert.equal(safeFilenamePart('  A:B?C  ','email'),'A B C');
 assert.equal(safeFilenamePart('CON','email'),'_CON');
+assert.equal(safeFilenamePart('A]]B','email'),'A] ]B','sanitized EPOST folder must support Markdown wikilinks');
 assert.equal(safeFilenamePart('...','fallback'),'fallback');
 
 const document={
