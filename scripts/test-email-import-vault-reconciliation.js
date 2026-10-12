@@ -148,8 +148,12 @@ async function run() {
 
     const offline=mail('Inbox/offline-copied.msg',800,130);
     files.push(offline);
+    // Vault create and startup scan are scheduled without blocking the UI.
+    // Allow their persistence/import microtasks to complete before checking.
+    await new Promise(resolve=>setImmediate(resolve));
     const restarted=makeFeature();
     restarted.installEmailImportVaultTrigger();
+    await new Promise(resolve=>setImmediate(resolve));
     await restarted.reconcileEmailImportVaultFiles();
     assert.equal(processed.filter(v=>v===offline.path).length,1,
       'plugin restart processes previously unseen offline-copied MSG');
