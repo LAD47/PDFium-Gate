@@ -82,7 +82,7 @@ async function run() {
     h.index.observeCreate(mail('Cases/live.eml',150,11));
     await h.index.reconcile([mail('Cases/live.eml',150,11)]);
     assert.equal(h.arrivals.length,0,'onCreate arrival tracked so focus scan does not double-import');
-    assert.equal(h.getStored().files['Cases/live.eml'],'150:11');
+    assert.equal(h.index.snapshot().files['Cases/live.eml'],'150:11');
     const same=h.index.observeCreate(mail('Cases/live.eml',150,11));
     assert.equal(same.reason,'already-observed');
     const changed=h.index.observeCreate(mail('Cases/live.eml',200,12));
