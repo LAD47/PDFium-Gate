@@ -10,7 +10,7 @@
   "emailImport.modal.duplicateWarning": "Se encontró una fuente exactamente duplicada ({{count}}).",
   "emailImport.modal.noDuplicates": "No se encontró una fuente exactamente duplicada.",
   "emailImport.modal.targetPath": "Ruta del PDF en el vault",
-  "emailImport.modal.targetPathDesc": "La ruta sugerida puede cambiarse antes de importar.",
+  "emailImport.modal.targetPathDesc": "El PDF del correo y sus archivos adjuntos se guardan en una misma carpeta. El PDF debe tener el mismo nombre que la carpeta.",
   "emailImport.modal.retention": "Fuente original",
   "emailImport.modal.retentionDesc": "Elija explícitamente si desea conservar los bytes originales .eml/.msg.",
   "emailImport.modal.retentionChoose": "Elegir...",
