@@ -91,3 +91,17 @@ The Email Import workflow additionally runs parser, renderer, duplicate, attachm
 ## Current layout test status (October 12, 2026)
 
 The source ZIP relationship and parent-link read-back fixes were practically confirmed against a previously failing 12-file EML/ZIP import. The consolidated EPOST folder layout is a **new, unmerged test-branch candidate** (`feature/0.1.228-email-bundles`) and still needs practical confirmation in the Obsidian vault. Existing imports retain their old file paths; no automatic migration or moves are performed.
+
+## Windows File Explorer / offline import (October 12, 2026 candidate)
+
+New EML/MSG files copied into the vault through Windows File Explorer are handled in three ways:
+
+1. Vault `create` events while Obsidian is running, including drag/drop.
+2. A startup reconciliation after Obsidian loads, for files added while the application was closed.
+3. Reconciliation when the Obsidian window regains focus, for files missed by vault create events.
+
+The plugin keeps a **local-only** per-path size/mtime inventory in its existing plugin settings data. The **first run** seeds that inventory with existing EML/MSG files without importing them, to avoid unexpected mass import of historical emails. Subsequent appearances or changed file signatures are processed through the existing serialized staging queue. Failed or cancelled files are not retried at every focus event; a changed file signature or a new create event permits a new attempt. Disabling automatic email import prevents reconciliation imports as well.
+
+The source EML/MSG is removed only after all required attachment/link operations succeed and the staging bytes still match the original. The new EPOST bundle naming is the same regardless of whether the source arrived via drag/drop or Explorer. No automatic migration of older imported PDFs or folders takes place.
+
+**Practical tests:** run a direct drag/drop import; copy a new EML while Obsidian runs, then return focus; close Obsidian, copy a new MSG/EML to `00_Innboks`, restart; repeat with a broken source and verify no repeated dialog on focus; confirm old unrelated EML/MSG files remain untouched. Do not publish until verified in Obsidian.
