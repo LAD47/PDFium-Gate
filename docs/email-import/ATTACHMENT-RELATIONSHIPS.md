@@ -6,34 +6,26 @@ This document records the current relationship model between an imported email P
 
 The design uses ordinary vault files and Obsidian links wherever possible. EML, MSG and ZIP are treated as import/transport sources rather than normal documents users must manage after a successful import.
 
-## Current attachment layout
+## Current attachment layout — EPOST bundle (test candidate)
 
-A generated email PDF and its attachment folder share the same base name:
-
-```text
-Cases/2026-10-05 - Subject.pdf
-Cases/2026-10-05 - Subject Vedlegg/
-```
-
-The suffix is localized. In Norwegian Bokmål the folder ends in ` Vedlegg`; in English it ends in ` Attachments`, with equivalent labels in the remaining supported UI languages.
-
-All ordinary user-facing attachments belong below that one folder.
-
-Direct attachments are placed there directly. Members of every ZIP attachment in the same email are flattened into that same folder. ZIP-internal directories are not reproduced in the user-facing email attachment layout; the original member path is retained as provenance.
-
-One collision allocator covers the complete attachment plan. It prevents silent overwrite across direct attachments and across multiple ZIPs.
-
-Example:
+All newly imported EML/MSG documents live in a **dedicated email folder**, not alongside unrelated vault files. The email PDF and all extracted ordinary attachments are siblings:
 
 ```text
-2026-10-05 - Subject.pdf
-2026-10-05 - Subject Vedlegg/
-├── cover.pdf
-├── rapport.pdf
-├── vedtak.pdf
-├── notat.txt
-└── notat (2).txt
+00_Innboks/
+└── 2026-10-08 - EPOST- Innsyn juridisk vurdering Fredrikstad kommune/
+    ├── 2026-10-08 - EPOST- Innsyn juridisk vurdering Fredrikstad kommune.pdf
+    ├── cover.pdf
+    ├── rapport.pdf
+    ├── vedtak.pdf
+    ├── notat.txt
+    └── notat (2).txt
 ```
+
+The naming policy is `[date] - EPOST- [subject]`, with filesystem-safe normalization of the subject. The PDF has the exact folder name plus `.pdf`. Duplicate/colliding imports allocate ` (2)`, ` (3)`, etc. to **both** names, leaving existing folders untouched. Even email without attachments gets its own bundle folder.
+
+ZIP member directories are flattened only for **email import**, with the original member path retained as provenance. All ordinary attachments from direct MIME parts and all ZIPs share a single collision allocator, which also reserves the email PDF's own filename to avoid accidental overwrite. The ZIP transport itself is not a visible file in the bundle.
+
+This supersedes the earlier layout with an email PDF beside a separate localized ` Vedlegg`/` Attachments` folder. The previous files and their references continue to work: **this change does not migrate existing imports**.
 
 ## Email PDF attachment presentation
 
@@ -69,11 +61,11 @@ It contains the actual imported attachment paths in the same stable order used b
 
 ```markdown
 <!-- pdfium-gate:email-attachments:start -->
-- [[Cases/2026-10-05 - Subject Vedlegg/cover.pdf]]
-- [[Cases/2026-10-05 - Subject Vedlegg/rapport.pdf]]
-- [[Cases/2026-10-05 - Subject Vedlegg/notat.txt]]
-- [[Cases/2026-10-05 - Subject Vedlegg/vedtak.pdf]]
-- [[Cases/2026-10-05 - Subject Vedlegg/notat (2).txt]]
+- [[Cases/2026-10-05 - EPOST- Subject/cover.pdf]]
+- [[Cases/2026-10-05 - EPOST- Subject/rapport.pdf]]
+- [[Cases/2026-10-05 - EPOST- Subject/notat.txt]]
+- [[Cases/2026-10-05 - EPOST- Subject/vedtak.pdf]]
+- [[Cases/2026-10-05 - EPOST- Subject/notat (2).txt]]
 <!-- pdfium-gate:email-attachments:end -->
 ```
 
@@ -172,7 +164,7 @@ The sequence is:
 5. persist Archive Relationships;
 6. persist parent email attachment links.
 
-If a downstream step fails, the attachment exporter rolls back newly registered attachment metadata and files it created. It never recursively deletes the paired attachment folder: the folder may contain unrelated user files and is safe to leave empty.
+If a downstream step fails, the attachment exporter rolls back newly registered attachment metadata and files it created. It never recursively deletes the EPOST bundle folder: partial output or unrelated files could be present, so the folder is safe to leave behind.
 
 If the parent email attachment-link writer has already modified its managed block before a read-back failure, rollback also attempts to clear those incomplete links. Rollback failures are reported explicitly.
 
@@ -197,7 +189,7 @@ Legacy generated email PDFs and metadata records that still reference a live ZIP
 The new model has complete automated regression coverage, including:
 
 - multiple ZIP attachments in one email;
-- one sibling attachment folder;
+- one shared EPOST bundle folder containing the parent PDF and attachments;
 - cross-ZIP path collision suffixes;
 - no persisted email ZIP transport files;
 - direct and nested PDF registration;
@@ -219,3 +211,7 @@ A real user EML import with one ZIP attachment failed in two successive stages; 
 Candidate `fix/0.1.228-email-zip-relations` corrects both managed-block parsers, adds a synthetic twelve-PDF ZIP regression, makes rollback file-scoped rather than recursive-folder-scoped, restores/clears a partially written parent link block on rollback, and reports the first mismatched parent link on future read-back failures.
 
 Important: These are *identified code defects* and regression tests, not yet confirmation that the user's original archive succeeds. A fresh practical Obsidian EML import is required. If it fails again, inspect `lastEmailAttachmentExport.result.failureStage`, `failedPath`, `error`, `rollbackComplete`, and `rollbackErrors`. Preserve the original EML and unrelated vault files. Do not merge to main without explicit approval.
+
+## New layout decision — October 12, 2026
+
+The owner requested one self-contained directory per email, named `YYYY-MM-DD - EPOST- Subject` and containing a namesake PDF plus all attachments. This improves discoverability, folder-level movement and sharing. Implemented on `feature/0.1.228-email-bundles` for EML and MSG, with collision-safe names and parent/attachment metadata relations unchanged. Existing imported email documents are deliberately **not migrated**. The layout must be verified practically before merging.
