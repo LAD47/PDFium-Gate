@@ -10,7 +10,7 @@
   "emailImport.modal.duplicateWarning": "Identisches Quellduplikat gefunden ({{count}}).",
   "emailImport.modal.noDuplicates": "Kein identisches Quellduplikat gefunden.",
   "emailImport.modal.targetPath": "PDF-Pfad im Vault",
-  "emailImport.modal.targetPathDesc": "Der vorgeschlagene Pfad kann vor dem Import geändert werden.",
+  "emailImport.modal.targetPathDesc": "Das E-Mail-PDF und die Anhänge werden in einem Ordner gespeichert. Die PDF-Datei muss genauso heißen wie der Ordner.",
   "emailImport.modal.retention": "Originalquelle",
   "emailImport.modal.retentionDesc": "Wählen Sie ausdrücklich, ob die ursprünglichen .eml/.msg-Bytes aufbewahrt werden sollen.",
   "emailImport.modal.retentionChoose": "Auswählen...",
