@@ -389,10 +389,6 @@ class EmailImportFeature {
       createBinary:adapter.createBinary,
       readBinary:file=>this.obsidianVaultReadAdapter.readBinary(file),
       deleteFile:adapter.deleteFile,
-      deleteFolder:async folderPath=>{
-        const folder=this.obsidianVaultReadAdapter.getAbstractFileByPath(folderPath);
-        if(folder) await this.obsidianVaultWriteAdapter.deleteFile(folder,true);
-      },
       deleteDocumentMetadataRecordForPdf:pdfPath=>this.ports.deleteDocumentMetadataRecordForPdf(pdfPath),
       saveDocumentMetadataRecordValues:adapter.saveDocumentMetadataRecordValues,
       updateParentAttachmentLinks:model=>this.updateEmailAttachmentLinks(model),
@@ -480,6 +476,16 @@ class EmailImportFeature {
           parentPdfPath:result.pdfPath,
           result:deepClone(attachmentResult)
         };
+        if(attachmentResult?.ok===false) {
+          console.warn('[PDFium Gate] Email attachment transaction failed', {
+            parentPdfPath:result.pdfPath,
+            stage:attachmentResult.failureStage,
+            failedPath:attachmentResult.failedPath,
+            error:attachmentResult.error,
+            rollbackComplete:attachmentResult.rollbackComplete,
+            rollbackErrors:attachmentResult.rollbackErrors
+          });
+        }
         if(Array.isArray(attachmentResult?.failures) && attachmentResult.failures.length) {
           for(const failure of attachmentResult.failures) {
             console.warn('[PDFium Gate] Automatic email attachment item failed',result.pdfPath,failure);
@@ -535,7 +541,10 @@ class EmailImportFeature {
       new Notice(t('emailImport.notice.dragDropExisting',{path:result.pdfPath}),6000);
     } else if(result?.ok && result.pdfPath) {
       const exported=Number(attachmentResult?.exportedCount || 0);
-      const failed=Number(attachmentResult?.failureCount || 0) + (attachmentResult?.relationError ? 1 : 0);
+      const failed=Math.max(
+        attachmentResult?.ok===false ? 1 : 0,
+        Number(attachmentResult?.failureCount || 0) + (attachmentResult?.relationError ? 1 : 0)
+      );
       if(failed>0) {
         new Notice(t('emailImport.notice.dragDropImportedWithAttachmentErrors',{path:result.pdfPath,count:exported,failed}),9000);
       } else {
