@@ -6,6 +6,18 @@ The purpose is to keep the reasoning stable while still allowing deliberate revi
 
 ## Accepted decisions
 
+### D-037 — Conservative startup/focus reconciliation for email files (2026-10-12 test candidate)
+
+`EML` and `MSG` files introduced via Windows File Explorer must be discoverable even when no Obsidian vault `create` callback is delivered. Startup and window-focus checks scan only eligible vault files, using `vault.getFiles()` and the same import queue as drag/drop.
+
+A persisted, local-only staging-arrival index records each source's path and stat signature (size and modification time). On first use, the index captures the existing vault collection without importing historical mail files. Thereafter, only previously unseen or changed signatures are import candidates. Failures, user cancellation, duplicate decisions and unchanged sources must never trigger repeated dialogs at every focus. Replacing or updating a source permits an explicit new attempt; disabled automatic import never processes a file.
+
+The existing byte-verified staging deletion remains authoritative: it removes an EML/MSG source only on a fully successful import, and never deletes a source whose bytes changed during import. All archive safety/preflight, metadata relationships and EPOST bundle naming remain the same regardless of file arrival channel.
+
+This candidate is being tested on `feature/0.1.228-email-bundles`; do not merge without explicit owner approval.
+
+
+
 ### D-036 — New email imports use a self-contained EPOST folder (2026-10-12; test candidate)
 
 A new EML/MSG import creates one folder beneath the chosen destination, named `YYYY-MM-DD - EPOST- Subject` using the sanitized source date and email subject. It writes the generated parent PDF with exactly the folder name plus `.pdf` **inside that folder**, and exports direct attachments and flattened ZIP members into that same folder. ZIP originals remain nonvisible transport sources; provenance and all parent/child/archive relationships stay in File Metadata.
