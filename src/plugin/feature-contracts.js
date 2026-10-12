@@ -23,6 +23,7 @@ const PLUGIN_FEATURE_CONTRACTS = Object.freeze({
       "registerEmailImportCommand",
       "handleArchiveImportVaultCreate",
       "reconcileArchiveImportVaultFiles",
+      "reconcileEmailImportVaultFiles",
       "markDocumentRecordLayoutReady",
       "markDocumentRecordMetadataResolved",
       "cancelDocumentRecordIndexWarmup",
