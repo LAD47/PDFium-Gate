@@ -278,7 +278,6 @@ async function runPlannedEmailAttachmentExport({
   const create=requireFunction('createBinary',createBinary);
   const read=requireFunction('readBinary',readBinary);
   const remove=requireFunction('deleteFile',deleteFile);
-  const removeFolder=typeof deleteFolder==='function'?deleteFolder:null;
   const removeRecord=typeof deleteDocumentMetadataRecordForPdf==='function'?deleteDocumentMetadataRecordForPdf:null;
   const saveMetadata=requireFunction('saveDocumentMetadataRecordValues',saveDocumentMetadataRecordValues);
   const updateLinks=requireFunction('updateParentAttachmentLinks',updateParentAttachmentLinks);
@@ -296,30 +295,50 @@ async function runPlannedEmailAttachmentExport({
   const registeredPdfPaths=[];
   const relationPaths=[];
   let relationWritten=false;
+  let failureStage='prepare';
+  let failedPath=null;
 
   async function rollback(primaryError) {
+    const rollbackErrors=[];
+    async function cleanup(task, targetPath) {
+      try {
+        await task();
+      } catch(error) {
+        const detail={path:targetPath,error:error instanceof Error?error.message:String(error)};
+        rollbackErrors.push(detail);
+        if(typeof onRollbackError==='function') onRollbackError(error,targetPath);
+      }
+    }
+
     if(relationWritten) {
-      try { await updateLinks({parentPdfPath,parentRecordPath:parentState.recordPath,attachmentPaths:[]}); }
-      catch(error){ if(typeof onRollbackError==='function') onRollbackError(error,'parent-attachment-links'); }
+      await cleanup(
+        ()=>updateLinks({parentPdfPath,parentRecordPath:parentState.recordPath,attachmentPaths:[]}),
+        'parent-attachment-links'
+      );
     }
     for(const pdfPath of registeredPdfPaths.slice().reverse()) {
-      if(!removeRecord) continue;
-      try { await removeRecord(pdfPath); }
-      catch(error){ if(typeof onRollbackError==='function') onRollbackError(error,pdfPath); }
+      if(removeRecord) await cleanup(()=>removeRecord(pdfPath),pdfPath);
     }
+    // Only remove files returned by createBinary() during THIS transaction.
+    // Never recursively delete an attachment folder: another file may have
+    // appeared in that folder during an asynchronous Obsidian import.
     for(const item of created.slice().reverse()) {
-      try { await remove(item.file); }
-      catch(error){ if(typeof onRollbackError==='function') onRollbackError(error,item.path); }
+      await cleanup(()=>remove(item.file),item.path);
     }
-    if(removeFolder && plan.folderPath) {
-      try { await removeFolder(plan.folderPath); }
-      catch(error){ if(typeof onRollbackError==='function') onRollbackError(error,plan.folderPath); }
-    }
+
+    const message=primaryError instanceof Error?primaryError.message:String(primaryError);
     return {
       ok:false,
       reason:'attachment-transaction-failed',
-      error:primaryError instanceof Error?primaryError.message:String(primaryError),
-      rolledBack:true,
+      error:message,
+      failureStage,
+      failedPath,
+      failureCount:1,
+      failures:[{stage:failureStage,path:failedPath,error:message}],
+      rolledBack:rollbackErrors.length===0,
+      rollbackComplete:rollbackErrors.length===0,
+      rollbackErrors,
+      folderRetained:true,
       parentPdfPath,
       folderPath:plan.folderPath,
       exported:[],
@@ -332,25 +351,27 @@ async function runPlannedEmailAttachmentExport({
   try {
     for(const entry of plan.entries) {
       const targetPath=normalizeVaultPath(`${plan.folderPath}/${entry.relativePath}`);
+      failedPath=targetPath;
+      failureStage='create-attachment';
       await ensureFolders(targetPath);
       const file=await create(targetPath,entry.bytes);
       if(!file) throw new Error(`Attachment write returned no vault file: ${targetPath}`);
+      // Track ownership immediately. Read-back verification can itself fail,
+      // in which case the file still needs individual cleanup.
+      created.push({path:targetPath,file,entry});
+      if(entry.support==='pdf') registeredPdfPaths.push(targetPath);
+      failureStage='verify-attachment';
       const readBack=Buffer.from(await read(file));
       const expected=Buffer.from(entry.bytes||[]);
       if(!readBack.equals(expected)) throw new Error(`Attachment read-back mismatch: ${targetPath}`);
-      created.push({path:targetPath,file,entry});
       relationPaths.push(targetPath);
-    }
-
-    for(const item of created) {
-      if(item.entry.support==='pdf' && !registeredPdfPaths.includes(item.path)) {
-        registeredPdfPaths.push(item.path);
-      }
     }
 
     for(const item of created) {
       const entry=item.entry;
       if(entry.support!=='pdf') continue;
+      failedPath=item.path;
+      failureStage='register-attachment-metadata';
       const targetState=getRecordState(item.path);
       if(targetState?.ok===false) throw new Error(targetState.error||targetState.reason||`Unsafe metadata state: ${item.path}`);
 
@@ -380,6 +401,8 @@ async function runPlannedEmailAttachmentExport({
       for(const item of created) {
         const entry=item.entry;
         if(entry.support!=='pdf' || !entry.archiveName) continue;
+        failedPath=item.path;
+        failureStage='write-archive-relationship';
         const siblingPaths=created
           .filter(candidate=>candidate.entry.sourceAttachmentIndex===entry.sourceAttachmentIndex)
           .map(candidate=>candidate.path);
@@ -392,10 +415,12 @@ async function runPlannedEmailAttachmentExport({
           },
           memberPaths:siblingPaths
         });
-        if(relationship?.ok===false) throw new Error(relationship.error||`Archive relationship failed: ${item.path}`);
+        if(relationship?.ok===false) throw new Error(`Archive relationship failed for ${item.path}: ${relationship.error||'read-back verification failed'}`);
       }
     }
 
+    failedPath=parentPdfPath;
+    failureStage='update-parent-links';
     const relation=await updateLinks({
       parentPdfPath,
       parentRecordPath:parentState.recordPath,
