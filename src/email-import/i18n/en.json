@@ -10,7 +10,7 @@
   "emailImport.modal.duplicateWarning": "Exact source duplicate found ({{count}}).",
   "emailImport.modal.noDuplicates": "No exact source duplicate was found.",
   "emailImport.modal.targetPath": "PDF path in vault",
-  "emailImport.modal.targetPathDesc": "The suggested path can be changed before import.",
+  "emailImport.modal.targetPathDesc": "The email PDF and attachments are stored in one folder. The PDF filename must match the folder name.",
   "emailImport.modal.retention": "Original source",
   "emailImport.modal.retentionDesc": "Choose explicitly whether the original .eml/.msg bytes should be retained.",
   "emailImport.modal.retentionChoose": "Choose...",
