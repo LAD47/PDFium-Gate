@@ -215,3 +215,9 @@ Important: These are *identified code defects* and regression tests, not yet con
 ## New layout decision — October 12, 2026
 
 The owner requested one self-contained directory per email, named `YYYY-MM-DD - EPOST- Subject` and containing a namesake PDF plus all attachments. This improves discoverability, folder-level movement and sharing. Implemented on `feature/0.1.228-email-bundles` for EML and MSG, with collision-safe names and parent/attachment metadata relations unchanged. Existing imported email documents are deliberately **not migrated**. The layout must be verified practically before merging.
+
+## Email staging source arrival channels (October 12, 2026 candidate)
+
+Automatic EML/MSG import now handles vault `create`, startup scan and window-focus scan through a shared serialized staging queue. A local-only per-file size/mtime inventory records previously seen staging sources and is stored with plugin settings. The first run seeds existing files without importing them. A failed import is not retried repeatedly until the source changes; the original source is kept upon failure. User disabling of automatic import also disables reconciliation imports. The new EPOST bundle structure and existing archive relationships are unchanged.
+
+Practical validation remains required for Explorer copy while Obsidian is running and while it is closed, as well as failed-import retention. Older email PDFs are not migrated.
