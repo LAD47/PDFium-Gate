@@ -281,6 +281,60 @@ function multipartEml({zipOne,zipTwo,directPdf}){
   assert.deepEqual(removedFiles,[`${plan.folderPath}/cover.pdf`]);
   assert.deepEqual([...ownedFiles.keys()],[externalPath],'unrelated vault file must survive rollback');
 
+  // The parent block may have been written before read-back verification fails.
+  // A rollback must remove those partial links before removing their targets.
+  const partialFiles=new Map();
+  const partialRegistered=new Set();
+  const partialLinks=[];
+  const partialUpdateCalls=[];
+  const partial=await runPlannedEmailAttachmentExport({
+    parentPdfPath,
+    plan,
+    ensureDocumentRecordIndexReady:async()=>({ok:true}),
+    getDocumentMetadataRecordState:path=>path===parentPdfPath
+      ? {
+          ready:true,ok:true,registered:true,id:'parent-id',
+          recordPath:'File Metadata/aa/parent-id.md',
+          values:{email_import_source_sha256:sourceSha}
+        }
+      : {ready:true,ok:true,registered:partialRegistered.has(path),values:{}},
+    getMetadataSchemaSnapshot:()=>({fields:[]}),
+    ensureTargetFolders:async()=>{},
+    createBinary:async(path,bytes)=>{
+      const file={path,extension:(path.split('.').pop()||'').toLowerCase(),bytes:Buffer.from(bytes)};
+      partialFiles.set(path,file);
+      return file;
+    },
+    readBinary:async file=>Buffer.from(file.bytes),
+    deleteFile:async file=>{ partialFiles.delete(file.path); },
+    deleteDocumentMetadataRecordForPdf:async path=>{
+      partialRegistered.delete(path);
+      return {ok:true,deleted:true};
+    },
+    saveDocumentMetadataRecordValues:async path=>{
+      partialRegistered.add(path);
+      return {ok:true};
+    },
+    updateParentAttachmentLinks:async model=>{
+      partialUpdateCalls.push([...model.attachmentPaths]);
+      partialLinks.splice(0,partialLinks.length,...model.attachmentPaths);
+      if(model.attachmentPaths.length) {
+        throw new Error('synthetic parent wikilink read-back failure');
+      }
+      return {ok:true,linkedCount:0};
+    },
+    writeArchiveRelationshipForPdf:async()=>({ok:true,linked:true})
+  });
+  assert.equal(partial.ok,false);
+  assert.equal(partial.failureStage,'update-parent-links');
+  assert.equal(partial.rollbackComplete,true);
+  assert.equal(partialUpdateCalls.length,2,'rollback must clear parent links even after a throw');
+  assert.equal(partialUpdateCalls[0].length,plan.entries.length);
+  assert.deepEqual(partialUpdateCalls[1],[]);
+  assert.deepEqual(partialLinks,[],'no stale links to deleted attachments');
+  assert.equal(partialFiles.size,0,'only transaction-owned attachment files are removed');
+  assert.equal(partialRegistered.size,0,'transaction-owned PDF metadata is removed');
+
   console.log('Email Import multi-ZIP attachment model OK: complete preflight plan, one localized flat sibling attachment folder, multiple ZIP contents merged safely with collision suffixes, no ZIP transport files persisted, PDFs registered, parent links ordered to match the email PDF, and archive provenance retained on nested PDFs.');
 })().catch(error=>{
   console.error('Email Import multi-ZIP attachment model check failed.');
