@@ -5,7 +5,8 @@ const {zipSync,strToU8}=require('fflate');
 const {parseEml}=require('../src/email-import/parsers/eml-parser');
 const {
   buildEmailAttachmentPlan,
-  finalizeEmailAttachmentPlan
+  finalizeEmailAttachmentPlan,
+  uniqueRelativePath
 }=require('../src/email-import/runtime/email-attachment-plan');
 const {
   runPlannedEmailAttachmentExport
@@ -95,6 +96,19 @@ function multipartEml({zipOne,zipTwo,directPdf}){
   assert.equal(plan.attachmentCount,3);
   assert.equal(plan.archiveCount,2);
   assert.equal(plan.outputCount,5);
+  // The namesake PDF already occupies the bundle folder; even a ZIP member
+  // with the same name (or different case) must never overwrite that PDF.
+  const parentName=parentPdfPath.split('/').pop();
+  const usedNames=new Set([parentName.toLowerCase()]);
+  assert.equal(
+    uniqueRelativePath(parentName,usedNames),
+    parentName.slice(0,-4)+' (2).pdf'
+  );
+  assert.equal(
+    uniqueRelativePath(parentName.toUpperCase(),usedNames),
+    parentName.toUpperCase().slice(0,-4)+' (3).PDF'
+  );
+
   assert.equal(plan.folderPath,parentPdfPath.slice(0,parentPdfPath.lastIndexOf('/')));
   assert.ok(plan.entries.every(entry=>`${plan.folderPath}/${entry.relativePath}`!==parentPdfPath));
   assert.deepEqual(plan.entries.map(entry=>entry.relativePath),[
