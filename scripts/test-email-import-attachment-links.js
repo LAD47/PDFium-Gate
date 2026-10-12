@@ -250,8 +250,56 @@ async function verifyDuplicateSourceParentDisambiguation() {
   assert.deepEqual(opened,[]);
 }
 
+async function verifyParentMetadataReadback() {
+  const recordPath='File Metadata/11/parent.md';
+  const file={path:recordPath,extension:'md'};
+  const {EmailImportFeature}=require('../src/plugin/features/20-email-import');
+  const feature=new EmailImportFeature();
+  global.EMAIL_IMPORT_RUNTIME={
+    normalizeVaultPath:value=>String(value||'').replace(/\\/g,'/').replace(/^\\/+|\\/+$/g,'').trim(),
+    upsertEmailAttachmentLinkBlock,
+    extractEmailAttachmentLinkPaths
+  };
+  let text=original;
+  let modifyCount=0;
+  feature.obsidianVaultReadAdapter={
+    getAbstractFileByPath:path=>path===recordPath?file:null,
+    async readText(){return text;}
+  };
+  feature.obsidianVaultWriteAdapter={
+    async modifyText(_,next){text=next;modifyCount++;}
+  };
+  const result=await feature.updateEmailAttachmentLinks({
+    parentRecordPath:recordPath,
+    attachmentPaths:zipMemberPaths
+  });
+  assert.equal(result.ok,true);
+  assert.equal(result.linkedCount,12);
+  assert.equal(modifyCount,1);
+  assert.deepEqual(extractEmailAttachmentLinkPaths(text),zipMemberPaths);
+
+  // Obsidian can rewrite a link independently. If so, the diagnostic must
+  // show the first different target rather than concealing the cause.
+  text=original;
+  feature.obsidianVaultReadAdapter.readText=async()=>text.replace(
+    'Vedtak [1].pdf','Vedtak renamed.pdf'
+  );
+  await assert.rejects(
+    feature.updateEmailAttachmentLinks({
+      parentRecordPath:recordPath,
+      attachmentPaths:zipMemberPaths
+    }),
+    error=>error.code==='EMAIL_ATTACHMENT_LINK_READBACK_FAILED'
+      && error.details.expectedCount===12
+      && error.details.actualCount===12
+      && error.details.firstDifference===0
+      && /Vedtak renamed/.test(error.message)
+  );
+}
+
 verifyMutableLiveAttachmentResolution()
   .then(()=>verifyDuplicateSourceParentDisambiguation())
+  .then(()=>verifyParentMetadataReadback())
   .then(()=>{
     console.log('Email Import attachment wikilink block OK: native links remain deterministic, mutable exported attachments open without SHA revalidation, and duplicate source imports resolve against the exact clicked parent PDF.');
   })
