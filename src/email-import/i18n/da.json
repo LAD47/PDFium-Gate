@@ -10,7 +10,7 @@
   "emailImport.modal.duplicateWarning": "Der blev fundet en identisk kildedublet ({{count}}).",
   "emailImport.modal.noDuplicates": "Der blev ikke fundet en identisk kildedublet.",
   "emailImport.modal.targetPath": "PDF-sti i vault",
-  "emailImport.modal.targetPathDesc": "Den foreslåede sti kan ændres før import.",
+  "emailImport.modal.targetPathDesc": "E-mailens PDF og vedhæftede filer gemmes i én mappe. PDF-filen skal have samme navn som mappen.",
   "emailImport.modal.retention": "Original kilde",
   "emailImport.modal.retentionDesc": "Vælg udtrykkeligt, om de oprindelige .eml/.msg-bytes skal gemmes.",
   "emailImport.modal.retentionChoose": "Vælg...",
