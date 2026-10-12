@@ -172,9 +172,11 @@ The sequence is:
 5. persist Archive Relationships;
 6. persist parent email attachment links.
 
-If a downstream step fails, newly registered attachment metadata and newly created attachment files/folders are removed.
+If a downstream step fails, the attachment exporter rolls back newly registered attachment metadata and files it created. It never recursively deletes the paired attachment folder: the folder may contain unrelated user files and is safe to leave empty.
 
-This prevents partially imported ZIP contents from remaining as apparently valid documents.
+If the parent email attachment-link writer has already modified its managed block before a read-back failure, rollback also attempts to clear those incomplete links. Rollback failures are reported explicitly.
+
+This prevents partially imported ZIP contents from remaining as apparently valid documents while preserving unrelated vault content.
 
 ## Legacy compatibility
 
@@ -206,3 +208,14 @@ The new model has complete automated regression coverage, including:
 - external ZIP reconciliation.
 
 Practical Obsidian verification of this replacement model is still required before release.
+
+## Practical diagnostic: October 12, 2026 (candidate 0.1.228)
+
+A real user EML import with one ZIP attachment failed in two successive stages; neither report by itself proves that ZIP decompression failed:
+
+1. On 0.1.227, `Archive relationship block failed read-back verification`. The archive member Markdown parser rejected legitimate paths containing a single closing bracket (e.g. `Vedtak [1].pdf`).
+2. After the first test-branch patch, the same import proceeded to `failureStage: update-parent-links` and failed with `Attachment wikilink block failed read-back verification.` The email parent-link parser and its normalization routine had the same bracket-handling defect.
+
+Candidate `fix/0.1.228-email-zip-relations` corrects both managed-block parsers, adds a synthetic twelve-PDF ZIP regression, makes rollback file-scoped rather than recursive-folder-scoped, restores/clears a partially written parent link block on rollback, and reports the first mismatched parent link on future read-back failures.
+
+Important: These are *identified code defects* and regression tests, not yet confirmation that the user's original archive succeeds. A fresh practical Obsidian EML import is required. If it fails again, inspect `lastEmailAttachmentExport.result.failureStage`, `failedPath`, `error`, `rollbackComplete`, and `rollbackErrors`. Preserve the original EML and unrelated vault files. Do not merge to main without explicit approval.
