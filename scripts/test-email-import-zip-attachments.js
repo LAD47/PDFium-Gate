@@ -84,17 +84,19 @@ function multipartEml({zipOne,zipTwo,directPdf}){
   });
   assert.equal(parsed.attachments.length,3);
 
-  const parentPdfPath='05 test/2026-10-05 - Multi ZIP attachment model.pdf';
+  const parentPdfPath='05 test/2026-10-05 - EPOST- Multi ZIP attachment model/2026-10-05 - EPOST- Multi ZIP attachment model.pdf';
   const plan=finalizeEmailAttachmentPlan(buildEmailAttachmentPlan({
     document:parsed,
     parentPdfPath,
     folderLabel:'Vedlegg'
   }));
 
-  assert.equal(plan.folderPath,'05 test/2026-10-05 - Multi ZIP attachment model Vedlegg');
+  assert.equal(plan.folderPath,'05 test/2026-10-05 - EPOST- Multi ZIP attachment model');
   assert.equal(plan.attachmentCount,3);
   assert.equal(plan.archiveCount,2);
   assert.equal(plan.outputCount,5);
+  assert.equal(plan.folderPath,parentPdfPath.slice(0,parentPdfPath.lastIndexOf('/')));
+  assert.ok(plan.entries.every(entry=>`${plan.folderPath}/${entry.relativePath}`!==parentPdfPath));
   assert.deepEqual(plan.entries.map(entry=>entry.relativePath),[
     'cover.pdf',
     'rapport.pdf',
