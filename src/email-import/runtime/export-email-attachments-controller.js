@@ -294,7 +294,7 @@ async function runPlannedEmailAttachmentExport({
   const created=[];
   const registeredPdfPaths=[];
   const relationPaths=[];
-  let relationWritten=false;
+  let relationUpdateAttempted=false;
   let failureStage='prepare';
   let failedPath=null;
 
@@ -310,7 +310,9 @@ async function runPlannedEmailAttachmentExport({
       }
     }
 
-    if(relationWritten) {
+    // The callback may write the parent block and THEN fail read-back validation.
+    // Clear the managed links even when the callback never returned success.
+    if(relationUpdateAttempted) {
       await cleanup(
         ()=>updateLinks({parentPdfPath,parentRecordPath:parentState.recordPath,attachmentPaths:[]}),
         'parent-attachment-links'
@@ -421,13 +423,13 @@ async function runPlannedEmailAttachmentExport({
 
     failedPath=parentPdfPath;
     failureStage='update-parent-links';
+    relationUpdateAttempted=true;
     const relation=await updateLinks({
       parentPdfPath,
       parentRecordPath:parentState.recordPath,
       attachmentPaths:relationPaths
     });
     if(relation?.ok===false) throw new Error(relation.error||'Attachment link relation update failed.');
-    relationWritten=true;
 
     return {
       ok:true,
