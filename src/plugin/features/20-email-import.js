@@ -20,8 +20,27 @@ class EmailImportFeature {
       onError:(error,file)=>console.error('[PDFium Gate] Vault email staging import failed',file?.path,error)
     });
     this.emailImportVaultTrigger=trigger;
+    this.emailVaultArrivalIndex=createEmailVaultArrivalIndex({
+      savedIndex:this.settings?.emailImportObservedStagingIndex || null,
+      isEligible:isEmailStagingFile,
+      onDiscovered:file=>trigger.handleCreate(file),
+      persistIndex:async index=>{
+        this.settings.emailImportObservedStagingIndex=index;
+        await this.obsidianPluginDataAdapter.saveData(this.settings);
+      }
+    });
+    // Capture the initial vault inventory BEFORE registering new create
+    // events, to avoid interpreting historical EML files as new arrivals.
+    void this.reconcileEmailImportVaultFiles().catch(error=>
+      console.warn('[PDFium Gate] Email Import startup reconciliation failed',error)
+    );
     this.obsidianPluginRegistrationAdapter.registerEvent(
-      this.obsidianVaultLifecycleAdapter.onCreate(file=>{ void trigger.handleCreate(file); })
+      this.obsidianVaultLifecycleAdapter.onCreate(file=>{
+        if(!isEmailStagingFile(file)) return;
+        const observed=this.emailVaultArrivalIndex?.observeCreate(file);
+        if(observed?.reason==='already-observed') return;
+        void trigger.handleCreate(file);
+      })
     );
     this.obsidianPluginRegistrationAdapter.registerEvent(
       this.obsidianVaultLifecycleAdapter.onModify(file=>{
@@ -30,6 +49,15 @@ class EmailImportFeature {
         );
       })
     );
+  }
+
+  async reconcileEmailImportVaultFiles() {
+    const index=this.emailVaultArrivalIndex;
+    if(!index) return {ok:true,handled:false,reason:'not-initialized'};
+    // The same user setting governs drag/drop and Explorer reconciliation.
+    return await index.reconcile(this.obsidianVaultReadAdapter.listFiles(),{
+      importEnabled:this.settings?.emailDragDropAutomaticImport!==false
+    });
   }
 
   async normalizeManagedEmailAttachmentLinks(file) {
