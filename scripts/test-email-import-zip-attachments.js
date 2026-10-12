@@ -212,7 +212,7 @@ function multipartEml({zipOne,zipTwo,directPdf}){
     },
     readBinary:async file=>Buffer.from(file.bytes),
     deleteFile:async file=>{ failedCreated.delete(file.path); },
-    deleteFolder:async()=>{ failedCreated.clear(); },
+    deleteFolder:async()=>{ throw new Error('Must not recursively delete folders on rollback'); },
     deleteDocumentMetadataRecordForPdf:async path=>{
       rollbackRecords.push(path);
       failedRegistered.delete(path);
@@ -239,6 +239,47 @@ function multipartEml({zipOne,zipTwo,directPdf}){
   assert.equal(failedAutoRegistered.size,0,'all auto-registered PDF records created by the failed transaction are rolled back');
   assert.equal(rollbackRecords.length,3,'rollback owns every PDF path created by the transaction, including PDFs not yet metadata-processed');
   assert.equal(failedLinksCalled,false);
+
+  // Read-back can fail AFTER createBinary has created a real vault file.
+  // The transaction must delete only that owned file and preserve unrelated
+  // files which another operation may have placed in the same folder.
+  const externalPath=`${plan.folderPath}/unrelated-user-file.txt`;
+  const ownedFiles=new Map([[externalPath,{path:externalPath,bytes:Buffer.from('keep me')}]]);
+  const removedFiles=[];
+  const readbackFailure=await runPlannedEmailAttachmentExport({
+    parentPdfPath,
+    plan,
+    ensureDocumentRecordIndexReady:async()=>({ok:true}),
+    getDocumentMetadataRecordState:path=>path===parentPdfPath
+      ? {
+          ready:true,ok:true,registered:true,id:'parent-id',
+          recordPath:'File Metadata/aa/parent-id.md',
+          values:{email_import_source_sha256:sourceSha}
+        }
+      : {ready:true,ok:true,registered:false,values:{}},
+    getMetadataSchemaSnapshot:()=>({fields:[]}),
+    ensureTargetFolders:async()=>{},
+    createBinary:async(path,bytes)=>{
+      const file={path,extension:(path.split('.').pop()||'').toLowerCase(),bytes:Buffer.from(bytes)};
+      ownedFiles.set(path,file);
+      return file;
+    },
+    readBinary:async()=>{ throw new Error('synthetic read-back failure'); },
+    deleteFile:async file=>{
+      removedFiles.push(file.path);
+      ownedFiles.delete(file.path);
+    },
+    deleteFolder:async()=>{ throw new Error('Recursive delete is forbidden'); },
+    deleteDocumentMetadataRecordForPdf:async()=>({ok:true,deleted:false}),
+    saveDocumentMetadataRecordValues:async()=>{ throw new Error('Unexpected metadata save'); },
+    updateParentAttachmentLinks:async()=>{ throw new Error('Unexpected link update'); }
+  });
+  assert.equal(readbackFailure.ok,false);
+  assert.equal(readbackFailure.failureStage,'verify-attachment');
+  assert.match(readbackFailure.error,/synthetic read-back failure/);
+  assert.equal(readbackFailure.rollbackComplete,true);
+  assert.deepEqual(removedFiles,[`${plan.folderPath}/cover.pdf`]);
+  assert.deepEqual([...ownedFiles.keys()],[externalPath],'unrelated vault file must survive rollback');
 
   console.log('Email Import multi-ZIP attachment model OK: complete preflight plan, one localized flat sibling attachment folder, multiple ZIP contents merged safely with collision suffixes, no ZIP transport files persisted, PDFs registered, parent links ordered to match the email PDF, and archive provenance retained on nested PDFs.');
 })().catch(error=>{
