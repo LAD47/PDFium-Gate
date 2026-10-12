@@ -55,7 +55,9 @@ function extractEmailAttachmentLinkPaths(markdown) {
   if (!match) return [];
   const result = [];
   const seen = new Set();
-  const re = /\[\[([^\]\r\n]+)\]\]/g;
+  // A valid filename may contain a single ']' (e.g. 'Vedtak [1].pdf').
+  // Parse one managed list item per line and use the final ']]' as its closing delimiter.
+  const re = /^[ \t]*-[ \t]*\[\[([^\r\n]+)\]\][ \t]*$/gm;
   let link;
   while ((link = re.exec(match[0])) !== null) {
     const path = normalizeVaultPath(String(link[1] || '').split('|', 1)[0]);
@@ -73,13 +75,13 @@ function normalizeResolvedEmailAttachmentLinkTargets(markdown, sourcePath, resol
   const match = attachmentBlockPattern().exec(source);
   if (!match) return source;
   const normalizedSourcePath = normalizeVaultPath(sourcePath);
-  const normalizedBlock = match[0].replace(/\[\[([^\]\r\n]+)\]\]/g, (whole, inner) => {
+  const normalizedBlock = match[0].replace(/^([ \t]*-[ \t]*)\[\[([^\r\n]+)\]\]([ \t]*)$/gm, (whole, prefix, inner, suffix) => {
     const linkPath = normalizeVaultPath(String(inner || '').split('|', 1)[0]);
     if (!linkPath) return whole;
     try {
       const resolvedPath = normalizeVaultPath(resolveLinkPath(linkPath, normalizedSourcePath));
       if (!resolvedPath) return whole;
-      return attachmentWikilink(resolvedPath);
+      return `${prefix}${attachmentWikilink(resolvedPath)}${suffix}`;
     } catch (_) {
       return whole;
     }
