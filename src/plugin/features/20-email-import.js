@@ -372,7 +372,17 @@ class EmailImportFeature {
       if(path && !seen.has(path)) { seen.add(path); expected.push(path); }
     }
     if(JSON.stringify(actual)!==JSON.stringify(expected)) {
-      throw new Error('Attachment wikilink block failed read-back verification.');
+      let firstDifference=0;
+      while(firstDifference<Math.min(actual.length,expected.length)
+        && actual[firstDifference]===expected[firstDifference]) firstDifference++;
+      const expectedPath=expected[firstDifference]||null;
+      const actualPath=actual[firstDifference]||null;
+      const error=new Error(
+        `Attachment wikilink block failed read-back verification: expected ${expected.length} links, read ${actual.length}; first mismatch at #${firstDifference+1} (expected: ${JSON.stringify(expectedPath)}, actual: ${JSON.stringify(actualPath)}).`
+      );
+      error.code='EMAIL_ATTACHMENT_LINK_READBACK_FAILED';
+      error.details={recordPath,expectedCount:expected.length,actualCount:actual.length,firstDifference,expectedPath,actualPath};
+      throw error;
     }
     return {ok:true,recordPath,linkedCount:actual.length,attachmentPaths:actual};
   }
