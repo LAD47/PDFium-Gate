@@ -28,7 +28,7 @@ function createHarness(overrides = {}) {
       return document;
     },
     parseMsg: async () => { throw new Error('MSG parser should not run'); },
-    suggestedEmailPdfPath: () => 'Email Imports/2026-09-29 - Test subject.pdf',
+    suggestedEmailPdfPath: () => 'Email Imports/2026-09-29 - EPOST- Test subject/2026-09-29 - EPOST- Test subject.pdf',
     validateTargetPdfPath: value => ({ ok: true, path: value }),
     retainOriginalSource: async ({ document: input, enabled }) => {
       calls.push(`retain:${enabled}`);
@@ -41,7 +41,7 @@ function createHarness(overrides = {}) {
     },
     generateEmailPdf: async ({ document: input, attachmentManifest, printHtmlToPdf }) => {
       assert.equal(input, document);
-      assert.deepEqual(attachmentManifest,{folderPath:'Email Imports/2026-09-29 - Test subject Vedlegg',groups:[]});
+      assert.deepEqual(attachmentManifest,{folderPath:'Email Imports/2026-09-29 - EPOST- Test subject',groups:[]});
       await printHtmlToPdf({ html: '<html>controlled</html>' });
       return Buffer.from('%PDF-test');
     }
@@ -64,7 +64,7 @@ function createHarness(overrides = {}) {
       return {
         action: 'import',
         retainSource: true,
-        pdfPath: 'Email Imports/2026-09-29 - Test subject.pdf'
+        pdfPath: 'Email Imports/2026-09-29 - EPOST- Test subject/2026-09-29 - EPOST- Test subject.pdf'
       };
     },
     pathExists: () => false,
@@ -110,15 +110,15 @@ async function run() {
     const { calls, options } = createHarness();
     const result = await runEmailImport(options);
     assert.equal(result.ok, true);
-    assert.equal(result.pdfPath, 'Email Imports/2026-09-29 - Test subject.pdf');
+    assert.equal(result.pdfPath, 'Email Imports/2026-09-29 - EPOST- Test subject/2026-09-29 - EPOST- Test subject.pdf');
     assert.equal(result.duplicate, false);
     assert.equal(result.openError, null);
     assert.ok(calls.includes(`find:${SOURCE_SHA}`));
     assert.ok(calls.includes('retain:true'));
     assert.ok(calls.includes('print:true'));
-    assert.ok(calls.includes('create:Email Imports/2026-09-29 - Test subject.pdf:%PDF-test'));
-    assert.ok(calls.includes(`save:Email Imports/2026-09-29 - Test subject.pdf:${SOURCE_SHA}`));
-    assert.ok(calls.includes('open:Email Imports/2026-09-29 - Test subject.pdf'));
+    assert.ok(calls.includes('create:Email Imports/2026-09-29 - EPOST- Test subject/2026-09-29 - EPOST- Test subject.pdf:%PDF-test'));
+    assert.ok(calls.includes(`save:Email Imports/2026-09-29 - EPOST- Test subject/2026-09-29 - EPOST- Test subject.pdf:${SOURCE_SHA}`));
+    assert.ok(calls.includes('open:Email Imports/2026-09-29 - EPOST- Test subject/2026-09-29 - EPOST- Test subject.pdf'));
   }
 
   {
@@ -179,7 +179,7 @@ async function run() {
       saveDocumentMetadataRecordValues: async () => ({ ok: false, error: 'metadata failed' })
     });
     await assert.rejects(() => runEmailImport(options), /metadata failed/);
-    assert.ok(calls.includes('delete:Email Imports/2026-09-29 - Test subject.pdf'));
+    assert.ok(calls.includes('delete:Email Imports/2026-09-29 - EPOST- Test subject/2026-09-29 - EPOST- Test subject.pdf'));
     assert.ok(calls.includes('remove-retained'));
   }
 
