@@ -256,7 +256,7 @@ async function verifyParentMetadataReadback() {
   const {EmailImportFeature}=require('../src/plugin/features/20-email-import');
   const feature=new EmailImportFeature();
   global.EMAIL_IMPORT_RUNTIME={
-    normalizeVaultPath:value=>String(value||'').replace(/\\/g,'/').replace(/^\\/+|\\/+$/g,'').trim(),
+    normalizeVaultPath:value=>String(value||'').trim(),
     upsertEmailAttachmentLinkBlock,
     extractEmailAttachmentLinkPaths
   };
