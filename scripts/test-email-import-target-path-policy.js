@@ -16,7 +16,7 @@ const existingSet=values=>{
   return path=>entries.has(path);
 };
 
-assert.equal(normalizeVaultPath('\\\\Folder\\\\Mail.pdf'),'Folder/Mail.pdf');
+assert.equal(normalizeVaultPath('\\Folder\\Mail.pdf'),'Folder/Mail.pdf');
 assert.equal(safeFilenamePart('  A:B?C  ','email'),'A B C');
 assert.equal(safeFilenamePart('CON','email'),'_CON');
 assert.equal(safeFilenamePart('...','fallback'),'fallback');
