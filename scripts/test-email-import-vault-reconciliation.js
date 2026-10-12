@@ -101,6 +101,64 @@ async function run() {
     assert.deepEqual(subsequent.arrivals,['Inbox/copied-while-closed.EML']);
   }
 
+  // Verify the actual plugin feature wires a startup scan and real Vault
+  // create callbacks into the same serialized import queue.
+  {
+    global.createVaultEmailCreateTrigger=createVaultEmailCreateTrigger;
+    global.createEmailVaultArrivalIndex=createEmailVaultArrivalIndex;
+    global.isEmailStagingFile=isEmailStagingFile;
+    const {EmailImportFeature}=require('../src/plugin/features/20-email-import');
+    let files=[mail('Old/keep.eml')];
+    let saved=null;
+    const processed=[];
+    let createCallback=null;
+    const makeFeature=()=>{
+      const feature=new EmailImportFeature();
+      feature.settings={
+        emailDragDropAutomaticImport:true,
+        emailImportObservedStagingIndex:saved
+      };
+      feature.startEmailImportFromVaultFile=async file=>{
+        processed.push(file.path);
+        return {ok:true};
+      };
+      feature.obsidianPluginRegistrationAdapter={registerEvent:()=>{}};
+      feature.obsidianVaultLifecycleAdapter={
+        onCreate:callback=>{createCallback=callback;return {};},
+        onModify:()=>({})
+      };
+      feature.obsidianVaultReadAdapter={listFiles:()=>files.slice()};
+      feature.obsidianPluginDataAdapter={
+        saveData:async data=>{saved=JSON.parse(JSON.stringify(data.emailImportObservedStagingIndex));}
+      };
+      return feature;
+    };
+    const start=makeFeature();
+    start.installEmailImportVaultTrigger();
+    await start.reconcileEmailImportVaultFiles();
+    assert.deepEqual(processed,[],'startup baseline leaves existing vault mail untouched');
+    assert.ok(saved?.files?.['Old/keep.eml']);
+    const direct=mail('Inbox/from-explorer.eml',560,102);
+    files.push(direct);
+    createCallback(direct);
+    await start.reconcileEmailImportVaultFiles();
+    assert.deepEqual(processed,['Inbox/from-explorer.eml']);
+    await start.reconcileEmailImportVaultFiles();
+    assert.equal(processed.length,1,'onCreate and focus cannot duplicate a staging import');
+
+    const offline=mail('Inbox/offline-copied.msg',800,130);
+    files.push(offline);
+    const restarted=makeFeature();
+    restarted.installEmailImportVaultTrigger();
+    await restarted.reconcileEmailImportVaultFiles();
+    assert.equal(processed.filter(v=>v===offline.path).length,1,
+      'plugin restart processes previously unseen offline-copied MSG');
+    await restarted.reconcileEmailImportVaultFiles();
+    assert.equal(processed.filter(v=>v===offline.path).length,1,
+      'focus after restart does not process unchanged source again');
+    assert.ok(saved.files[offline.path]);
+  }
+
   console.log('Email Vault arrival index OK: safe first-run baseline, offline startup import, focus detection, changed-file retries, no repeated failed dialogs, disabled policy, create dedup and preserved historical EML/MSG.');
 }
 
