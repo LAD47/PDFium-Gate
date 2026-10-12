@@ -25,7 +25,8 @@ function attachmentFolderPath(parentPdfPath,folderLabel=''){
 function uniqueRelativePath(candidate,used){
   let rel=normalizeVaultPath(candidate);
   if(!rel) rel='attachment';
-  if(!used.has(rel)){ used.add(rel); return rel; }
+  const key=rel.toLowerCase();
+  if(!used.has(key)){ used.add(key); return rel; }
   const slash=rel.lastIndexOf('/');
   const folder=slash>=0?rel.slice(0,slash+1):'';
   const name=slash>=0?rel.slice(slash+1):rel;
@@ -33,7 +34,8 @@ function uniqueRelativePath(candidate,used){
   const stem=ext?name.slice(0,-ext.length):name;
   for(let index=2;index<10000;index++){
     const next=`${folder}${stem} (${index})${ext}`;
-    if(!used.has(next)){ used.add(next); return next; }
+    const nextKey=next.toLowerCase();
+    if(!used.has(nextKey)){ used.add(nextKey); return next; }
   }
   throw new Error('Could not allocate a unique attachment path.');
 }
@@ -93,7 +95,7 @@ function buildEmailAttachmentPlan({document,parentPdfPath,folderLabel=''}){
   const items=(analysis.attachments||[]).filter(item=>item?.extractable===true && item?.attachment);
   // The mail PDF is a sibling of the attachments. Reserve its filename,
   // so an attached PDF with the same name gets a deterministic suffix.
-  const used=new Set([path.posix.basename(normalizeVaultPath(parentPdfPath))]);
+  const used=new Set([path.posix.basename(normalizeVaultPath(parentPdfPath)).toLowerCase()]);
   const entries=[];
   const groups=[];
   let relationIndex=0;
