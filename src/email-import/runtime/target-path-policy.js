@@ -9,6 +9,8 @@ function safeFilenamePart(value, fallback = 'email') {
     .replace(/[<>:"/\\|?*\x00-\x1f]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
+  // Double closing brackets cannot be represented as an Obsidian wikilink target.
+  text = text.replace(/\]\]/g, '] ]');
   text = text.replace(/[. ]+$/g, '').trim();
   if (!text) text = fallback;
   if (/^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])$/i.test(text)) text = `_${text}`;
