@@ -60,7 +60,7 @@ assert.deepEqual(
   validateTargetPdfPath(expectedPdf,existingSet([])),
   {ok:true,path:expectedPdf,bundleFolder:bundle,attachmentFolder:bundle}
 );
-assert.equal(validateTargetPdfPath(expectedPdf.replace(/\\.pdf$/,' .txt'),existingSet([])).ok,false);
+assert.equal(validateTargetPdfPath(expectedPdf.slice(0,-4)+'.txt',existingSet([])).ok,false);
 assert.equal(validateTargetPdfPath('../mail.pdf',existingSet([])).ok,false);
 assert.equal(validateTargetPdfPath('.pdf-metadata/mail/mail.pdf',existingSet([])).ok,false);
 assert.equal(validateTargetPdfPath('File Metadata/mail/mail.pdf',existingSet([])).ok,false);
