@@ -7,7 +7,7 @@ const {
   verifiedAttachmentBytes,
   verifiedPdfAttachmentBytes
 }=require('../attachments/attachment-extraction');
-const {pairedEmailAttachmentFolderPath}=require('./target-path-policy');
+const {emailBundleFolderPath}=require('./target-path-policy');
 const {
   isZipAttachment,
   inspectZipAttachment,
@@ -19,7 +19,7 @@ function normalizeVaultPath(value){
 }
 
 function attachmentFolderPath(parentPdfPath,folderLabel=''){
-  return pairedEmailAttachmentFolderPath(parentPdfPath,folderLabel);
+  return emailBundleFolderPath(parentPdfPath);
 }
 
 function uniqueRelativePath(candidate,used){
@@ -91,7 +91,9 @@ function buildEmailAttachmentPlan({document,parentPdfPath,folderLabel=''}){
   const folderPath=attachmentFolderPath(parentPdfPath,folderLabel);
   const analysis=analyzeEmailAttachments(document);
   const items=(analysis.attachments||[]).filter(item=>item?.extractable===true && item?.attachment);
-  const used=new Set();
+  // The mail PDF is a sibling of the attachments. Reserve its filename,
+  // so an attached PDF with the same name gets a deterministic suffix.
+  const used=new Set([path.posix.basename(normalizeVaultPath(parentPdfPath))]);
   const entries=[];
   const groups=[];
   let relationIndex=0;
@@ -123,7 +125,7 @@ function buildEmailAttachmentPlan({document,parentPdfPath,folderLabel=''}){
       const extracted=extractZipAttachment(attachment,inspection,{includeUnsupported:true});
       const group={type:'archive',label:sourceFilename,entries:[]};
       for(const member of extracted){
-        // Email attachments use one flat, user-facing attachment folder.
+        // Email attachments share one flat, user-facing folder with the email PDF.
         // Preserve the original archive member path separately as provenance.
         const flatName=path.posix.basename(String(member.safePath || member.originalPath || 'attachment'));
         const relativePath=uniqueRelativePath(flatName,used);
