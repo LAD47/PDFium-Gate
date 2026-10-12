@@ -223,6 +223,31 @@ function createHost({zipBytes,zipPath='05 test/archive.zip',existing=[],failCrea
   assert.equal(rapportRelation.parentDocumentPath,null);
   assert.deepEqual(rapportRelation.memberPaths,[vedtakPath,readmePath]);
 
+  // Real ZIP import: bracketed filenames previously failed the relationship
+  // Markdown round-trip and caused the whole EML attachment transaction to fail.
+  const bracketFiles={};
+  for(let i=1;i<=12;i++) {
+    const filename=i===1 ? 'Vedtak [1].pdf'
+      : i===2 ? 'Notat ] del 2.pdf'
+      : `Dokument ${i}.pdf`;
+    bracketFiles[filename]=`%PDF-1.4\\nSynthetic document ${i}\\n%%EOF`;
+  }
+  const bracket=createHost({
+    zipBytes:zip(bracketFiles),
+    zipPath:'05 test/zip-bracket-relations.zip'
+  });
+  const bracketResult=await bracket.host.handleArchiveImportVaultCreate(bracket.sourceFile);
+  assert.equal(bracketResult.ok,true,'12 documents with bracketed filenames must import');
+  assert.equal(bracketResult.linkedPdfCount,12);
+  const bracketParent='05 test/zip-bracket-relations';
+  const bracketState=bracket.recordsByPdf.get(`${bracketParent}/Vedtak [1].pdf`);
+  assert.ok(bracketState);
+  const bracketRecord=bracket.nodes.get(bracketState.recordPath);
+  const bracketRelation=archiveRuntime.extractArchiveRelationship(bracketRecord.text);
+  assert.ok(bracketRelation,'relationship Markdown must be readable');
+  assert.equal(bracketRelation.memberPaths.length,11);
+  assert.ok(bracketRelation.memberPaths.includes(`${bracketParent}/Notat ] del 2.pdf`));
+
   const openedLinks=[];
   const documentInfo=new DocumentInfoFeature();
   documentInfo.app={workspace:{async openLinkText(linktext,sourcePath,newLeaf){
