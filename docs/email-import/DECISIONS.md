@@ -6,6 +6,16 @@ The purpose is to keep the reasoning stable while still allowing deliberate revi
 
 ## Accepted decisions
 
+### D-036 — New email imports use a self-contained EPOST folder (2026-10-12; test candidate)
+
+A new EML/MSG import creates one folder beneath the chosen destination, named `YYYY-MM-DD - EPOST- Subject` using the sanitized source date and email subject. It writes the generated parent PDF with exactly the folder name plus `.pdf` **inside that folder**, and exports direct attachments and flattened ZIP members into that same folder. ZIP originals remain nonvisible transport sources; provenance and all parent/child/archive relationships stay in File Metadata.
+
+If a candidate bundle folder or parent PDF already exists, a deterministic suffix ` (2)`, ` (3)`, etc. applies to both the folder and PDF, without reusing or deleting pre-existing folders. The import plan reserves the parent PDF filename when allocating attachment names. This is valid even when an email has no attachments.
+
+This **supersedes only the user-facing folder placement and suffix policy** previously described in D-031, D-033 and D-034. The atomic transaction, flattening within the bundle, ZIP safety checks, SHA-256 provenance and link behavior remain unchanged. Existing mail imports and their document links are not migrated automatically; older layouts remain readable. The dedicated EPOST layout is being tested on `feature/0.1.228-email-bundles`, and merging requires explicit approval after practical tests.
+
+
+
 ### D-001 — Email is an import source, not a permanent working document type
 
 `.eml` and `.msg` are treated as source formats for import.
