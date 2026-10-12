@@ -38,6 +38,38 @@ assert.deepEqual(extractEmailAttachmentLinkPaths(withLinks),[
 ]);
 assert.ok(withLinks.includes('- [[Cases/brev.docx]]'));
 
+// Regression: each member of a twelve-PDF ZIP can contain a literal closing
+// bracket. Parent attachment links must round-trip and normalize correctly.
+const zipMemberNames=[
+  'Vedtak [1].pdf',
+  'Notat ] del 2.pdf',
+  'Journal [3].pdf',
+  ...Array.from({length:9},(_,i)=>`Dokument ${i+4}.pdf`)
+];
+const zipMemberPaths=zipMemberNames.map(name=>`00_Innboks/EML Vedlegg/${name}`);
+const zipMarkdown=upsertEmailAttachmentLinkBlock(original,zipMemberPaths);
+assert.deepEqual(
+  extractEmailAttachmentLinkPaths(zipMarkdown),
+  zipMemberPaths,
+  'all twelve bracket-bearing attachment wikilinks survive Markdown read-back'
+);
+const movedTargets=new Map(zipMemberPaths.map(path=>[path,`Arkiv/${path.split('/').pop()}`]));
+const zipNormalized=normalizeResolvedEmailAttachmentLinkTargets(
+  zipMarkdown,
+  'File Metadata/11/11111111-1111-4111-8111-111111111111.md',
+  linkPath=>movedTargets.get(linkPath)||null
+);
+assert.deepEqual(
+  extractEmailAttachmentLinkPaths(zipNormalized),
+  zipMemberPaths.map(path=>movedTargets.get(path)),
+  'managed links containing brackets are also normalized after a path move'
+);
+assert.throws(
+  ()=>attachmentWikilink('Cases/ambiguous]]file.pdf'),
+  /cannot be represented safely/,
+  'double-closing bracket remains forbidden'
+);
+
 const renamedByObsidian = withLinks.replace('[[Cases/brev.docx]]','[[brev-renamed.docx]]');
 assert.deepEqual(extractEmailAttachmentLinkPaths(renamedByObsidian),[
   'Cases/report.pdf',
