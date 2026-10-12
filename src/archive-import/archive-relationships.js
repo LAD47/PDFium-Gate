@@ -101,7 +101,9 @@ function extractArchiveRelationship(markdown){
   const seen=new Set();
   for(const line of lines){
     const trimmed=line.trim();
-    let m=/^-\s+(archive|parent|member):\s+\[\[([^\]\r\n]+)\]\]\s*$/.exec(trimmed);
+    let // A vault filename may contain a single ']' (e.g. "Vedtak [1].pdf").
+    // Match the final closing ']]' rather than rejecting ']' inside the path.
+    m=/^-\s+(archive|parent|member):\s+\[\[([^\r\n]+)\]\]\s*$/.exec(trimmed);
     if(m){
       const path=normalizeVaultPath(String(m[2]||'').split('|',1)[0]);
       if(!path) continue;
