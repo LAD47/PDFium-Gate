@@ -24,6 +24,10 @@ properties:
     displayName: "Response sent date"
   response_sent_link:
     displayName: "Sent response"
+  author:
+    displayName: "Author"
+  source_url:
+    displayName: "Published online"
   filemeta_status:
     displayName: "Status"
   filemeta_file:
@@ -43,6 +47,8 @@ views:
       - response_sent
       - response_sent_date
       - response_sent_link
+      - author
+      - source_url
       - filemeta_status
       - filemeta_file
       - filemeta_id

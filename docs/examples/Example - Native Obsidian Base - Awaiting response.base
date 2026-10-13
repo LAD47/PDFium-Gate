@@ -26,6 +26,10 @@ properties:
     displayName: "Response sent date"
   response_sent_link:
     displayName: "Sent response"
+  author:
+    displayName: "Author"
+  source_url:
+    displayName: "Published online"
   filemeta_status:
     displayName: "Status"
   filemeta_file:

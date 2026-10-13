@@ -8,6 +8,8 @@ filemeta_status: "active"
 document_date: 2016-03-17
 document_time: "14:35"
 sender: "Example Municipality"
+author: "A. Example"
+source_url: "https://example.org/publications/example-letter"
 document_type: "letter"
 response_received: true
 response_received_date: 2016-03-24
@@ -18,4 +20,4 @@ response_sent_link: "[[Example Documents/example-response.md]]"
 
 # Example active PDF metadata record
 
-This complete example uses all current factory metadata fields.
+This example uses the nine original fields plus Author and Published online.

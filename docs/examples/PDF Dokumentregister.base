@@ -1,0 +1,62 @@
+# PDFium Gate — standard Document Register
+# Created by the plugin. After creation this is a normal user-owned Obsidian Base.
+# The plugin will not overwrite later changes to this file.
+filters:
+  and:
+    - "file.inFolder(\"File Metadata\")"
+    - "filemeta_type == \"pdf\""
+    - "filemeta_profile == \"document\""
+properties:
+  document_date:
+    displayName: "Document date"
+  document_time:
+    displayName: "Document time"
+  sender:
+    displayName: "Sender"
+  document_type:
+    displayName: "Document type"
+  response_received:
+    displayName: "Response received"
+  response_received_date:
+    displayName: "Response received date"
+  response_sent:
+    displayName: "Response sent"
+  response_sent_date:
+    displayName: "Response sent date"
+  response_sent_link:
+    displayName: "Sent response"
+  author:
+    displayName: "Author"
+  source_url:
+    displayName: "Published online"
+  filemeta_status:
+    displayName: "Status"
+  filemeta_file:
+    displayName: "PDF"
+views:
+  - type: pdfium-document-register
+    name: "Document Register"
+    pdfiumHiddenColumns:
+      - document_time
+      - response_received
+      - response_received_date
+      - response_sent
+      - response_sent_date
+      - response_sent_link
+    order:
+      - filemeta_file
+      - document_date
+      - document_time
+      - sender
+      - document_type
+      - response_received
+      - response_received_date
+      - response_sent
+      - response_sent_date
+      - response_sent_link
+      - author
+      - source_url
+      - filemeta_status
+    sort:
+      - property: document_date
+        direction: DESC

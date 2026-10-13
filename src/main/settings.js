@@ -219,7 +219,7 @@ class PdfiumGateSettingsTab extends PluginSettingTab {
         if(!confirmed) return;
         button.setDisabled(true);
         try {
-          const result=await installMetadataExampleFiles(this.plugin.obsidianVaultReadAdapter,this.plugin.obsidianVaultWriteAdapter);
+          const result=await installMetadataExampleFiles(this.plugin.obsidianVaultReadAdapter,this.plugin.obsidianVaultWriteAdapter,metadataStatus.presentationSchema || metadataStatus.schema);
           if(!result?.ok) throw new Error(result?.error || 'Unknown error');
           new Notice(exampleText('success',{
             path:PDFIUM_EXAMPLES_ROOT,
@@ -227,7 +227,7 @@ class PdfiumGateSettingsTab extends PluginSettingTab {
             overwritten:result.overwritten.length,
             legacyRemoved:result.legacyRemoved?.length || 0,
             legacyPreserved:result.legacyPreserved?.length || 0
-          }),8000);
+          }) + ' ' + exampleText(result.registerCreated ? 'registerCreated' : 'registerPreserved'),8000);
         } catch(error) {
           const message=error instanceof Error ? error.message : String(error);
           new Notice(exampleText('failed',{error:message}),10000);

@@ -9,7 +9,7 @@ PDFium Gate intentionally exposes two different Bases concepts and the UI/docume
 - the optional files under `Examples-Obsidian-PDFium-Gate/` use Obsidian's built-in `table` view over synthetic Markdown/YAML records; they exist only to teach the portable metadata model and normal Bases filtering/sorting;
 - `PDF Dokumentregister.base` is the real register for user documents. It is created on demand, queries real records under `File Metadata/`, and uses the custom `pdfium-document-register` view.
 
-The example package must never query or mutate real registered PDFs. The real register remains create-once/user-owned after creation. Example-package reinstall is a separate explicit Settings action: it may overwrite the known canonical example files after confirmation, but it must preserve unrelated files and any modified legacy example Base.
+The two native example Bases never query real registered documents. The example folder also includes a working **copy** of `PDF Dokumentregister.base`, which intentionally queries real metadata. Explicit example installation creates the Vault-root register only if missing. The root register remains user-owned and is never overwritten; only canonical files inside the example folder may be replaced after confirmation. Unrelated files and customized legacy examples remain untouched.
 
 ## Current missing-document policy
 
@@ -79,7 +79,7 @@ the feature branch must not be merged without explicit user approval.
 
 Creation rules:
 
-- creation is lazy and happens only through **PDF: Åpne Dokumentregister**;
+- creation is lazy through **PDF: Åpne Dokumentregister**, or explicitly through **Install example files** when the register is missing;
 - if the canonical Base file already exists, it is reused and never modified by the plugin;
 - generated membership is constrained to `File Metadata` + `filemeta_type == "pdf"`;
 - generated property labels come from the current metadata schema and respect `show_in_default_base`;
