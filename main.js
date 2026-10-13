@@ -4401,64 +4401,78 @@ const PDFIUM_EXAMPLE_INSTALLER_TEXT = Object.freeze({
   en:Object.freeze({
     section:'Examples and learning',
     name:'Install PDFium Gate example package',
-    description:'Copies synthetic metadata records and native Obsidian Base examples to {{path}}. These examples demonstrate how ordinary Bases can use PDFium Gate metadata; they are not the PDFium Gate document register and do not use your real registered PDFs.',
+    description:"Installs synthetic metadata examples and native Bases in {{path}}, plus a copy of PDF Dokumentregister.base. Creates the working Vault-root register only if it is missing; existing registers are preserved.",
     button:'Install example files…',
     confirm:'Install the canonical example package in {{path}}? Existing canonical example files in that folder will be overwritten. An unchanged legacy example Base may be removed during the upgrade; modified legacy files and all unrelated files are left untouched.',
     success:'Installed {{count}} example files in {{path}}. {{overwritten}} canonical file(s) were overwritten, {{legacyRemoved}} unchanged legacy file(s) were removed, and {{legacyPreserved}} modified legacy file(s) were preserved.',
+    registerCreated:"Created PDF Dokumentregister.base at the Vault root. A copy is included with the examples.",
+    registerPreserved:"Existing Vault-root PDF Dokumentregister.base was preserved unchanged. A copy is included with the examples.",
     failed:'Could not install example files: {{error}}'
   }),
   nb:Object.freeze({
     section:'Eksempler og læring',
     name:'Installer PDFium Gate-eksempelpakke',
-    description:'Kopierer syntetiske metadataposter og eksempler med vanlige Obsidian Bases til {{path}}. Eksemplene viser hvordan vanlige Bases kan bruke PDFium Gate-metadata; de er ikke PDFium Gate-dokumentregisteret og bruker ikke dine virkelige registrerte PDF-er.',
+    description:"Installerer syntetiske metadataeksempler og vanlige Bases i {{path}}, med kopi av PDF Dokumentregister.base. Oppretter dokumentregisteret i Vault-roten bare hvis det mangler; eksisterende registre beholdes.",
     button:'Installer eksempelfiler…',
     confirm:'Installere den kanoniske eksempelpakken i {{path}}? Eksisterende kanoniske eksempelfiler i mappen blir overskrevet. En uendret gammel eksempel-Base kan bli fjernet ved oppgraderingen; endrede gamle eksempelfiler og alle andre filer beholdes.',
     success:'Installerte {{count}} eksempelfiler i {{path}}. {{overwritten}} kanoniske fil(er) ble overskrevet, {{legacyRemoved}} uendret gammel eksempelfil(er) ble fjernet, og {{legacyPreserved}} endret gammel eksempelfil(er) ble beholdt.',
+    registerCreated:"Opprettet PDF Dokumentregister.base i Vault-roten. En kopi følger med eksemplene.",
+    registerPreserved:"Eksisterende PDF Dokumentregister.base i Vault-roten ble beholdt uendret. En kopi følger med eksemplene.",
     failed:'Kunne ikke installere eksempelfiler: {{error}}'
   }),
   de:Object.freeze({
     section:'Beispiele und Lernen',
     name:'PDFium-Gate-Beispielpaket installieren',
-    description:'Kopiert synthetische Metadatensätze und Beispiele mit normalen Obsidian Bases nach {{path}}. Die Beispiele zeigen, wie normale Bases PDFium-Gate-Metadaten nutzen können; sie sind nicht das PDFium-Gate-Dokumentregister und verwenden keine echten registrierten PDFs.',
+    description:"Installiert synthetische Metadatenbeispiele und native Bases in {{path}}, mit einer Kopie von PDF Dokumentregister.base. Das echte Register wird nur angelegt, wenn es im Vault-Stammverzeichnis fehlt.",
     button:'Beispieldateien installieren…',
     confirm:'Das kanonische Beispielpaket in {{path}} installieren? Vorhandene kanonische Beispieldateien werden überschrieben. Eine unveränderte alte Beispiel-Base kann beim Upgrade entfernt werden; geänderte alte Beispieldateien und alle anderen Dateien bleiben erhalten.',
     success:'{{count}} Beispieldateien in {{path}} installiert. {{overwritten}} kanonische Datei(en) wurden überschrieben, {{legacyRemoved}} unveränderte alte Datei(en) entfernt und {{legacyPreserved}} geänderte alte Datei(en) beibehalten.',
+    registerCreated:"PDF Dokumentregister.base wurde im Vault-Stammverzeichnis erstellt; eine Kopie liegt in den Beispielen.",
+    registerPreserved:"Die bestehende PDF Dokumentregister.base blieb unverändert; eine Kopie liegt in den Beispielen.",
     failed:'Beispieldateien konnten nicht installiert werden: {{error}}'
   }),
   es:Object.freeze({
     section:'Ejemplos y aprendizaje',
     name:'Instalar paquete de ejemplos de PDFium Gate',
-    description:'Copia registros de metadatos sintéticos y ejemplos con Bases nativas de Obsidian en {{path}}. Los ejemplos muestran cómo Bases normales pueden usar los metadatos de PDFium Gate; no son el registro de documentos de PDFium Gate ni usan sus PDF registrados reales.',
+    description:"Instala metadatos sintéticos y Bases nativas en {{path}}, con una copia de PDF Dokumentregister.base. Crea el registro real en la raíz solo si no existe.",
     button:'Instalar archivos de ejemplo…',
     confirm:'¿Instalar el paquete de ejemplos canónico en {{path}}? Los archivos de ejemplo canónicos existentes se sobrescribirán. Una Base de ejemplo antigua sin modificar puede eliminarse durante la actualización; los archivos antiguos modificados y los demás archivos se conservarán.',
     success:'Se instalaron {{count}} archivos de ejemplo en {{path}}. Se sobrescribieron {{overwritten}} archivo(s) canónico(s), se eliminaron {{legacyRemoved}} archivo(s) antiguo(s) sin modificar y se conservaron {{legacyPreserved}} archivo(s) antiguo(s) modificado(s).',
+    registerCreated:"Se creó PDF Dokumentregister.base en la raíz; los ejemplos incluyen una copia.",
+    registerPreserved:"Se conservó el PDF Dokumentregister.base existente sin cambios; los ejemplos incluyen una copia.",
     failed:'No se pudieron instalar los archivos de ejemplo: {{error}}'
   }),
   sv:Object.freeze({
     section:'Exempel och lärande',
     name:'Installera PDFium Gate-exempelpaket',
-    description:'Kopierar syntetiska metadataposter och exempel med vanliga Obsidian Bases till {{path}}. Exemplen visar hur vanliga Bases kan använda PDFium Gate-metadata; de är inte PDFium Gates dokumentregister och använder inte dina verkliga registrerade PDF-filer.',
+    description:"Installerar syntetiska metadataexempel och vanliga Bases i {{path}}, inklusive en kopia av PDF Dokumentregister.base. Skapar registret i valvets rot endast om det saknas.",
     button:'Installera exempelfiler…',
     confirm:'Installera det kanoniska exempelpaketet i {{path}}? Befintliga kanoniska exempelfiler skrivs över. En oförändrad äldre exempel-Base kan tas bort vid uppgraderingen; ändrade äldre exempelfiler och alla andra filer lämnas orörda.',
     success:'Installerade {{count}} exempelfiler i {{path}}. {{overwritten}} kanoniska fil(er) skrevs över, {{legacyRemoved}} oförändrade äldre fil(er) togs bort och {{legacyPreserved}} ändrade äldre fil(er) bevarades.',
+    registerCreated:"PDF Dokumentregister.base skapades i valvets rot; en kopia finns bland exemplen.",
+    registerPreserved:"Befintlig PDF Dokumentregister.base bevarades oförändrad; en kopia finns bland exemplen.",
     failed:'Det gick inte att installera exempelfilerna: {{error}}'
   }),
   da:Object.freeze({
     section:'Eksempler og læring',
     name:'Installer PDFium Gate-eksempelpakke',
-    description:'Kopierer syntetiske metadataposter og eksempler med almindelige Obsidian Bases til {{path}}. Eksemplerne viser, hvordan almindelige Bases kan bruge PDFium Gate-metadata; de er ikke PDFium Gates dokumentregister og bruger ikke dine virkelige registrerede PDF-filer.',
+    description:"Installerer syntetiske metadataeksempler og almindelige Bases i {{path}}, inklusive en kopi af PDF Dokumentregister.base. Opretter kun registret i Vault-roden, hvis det mangler.",
     button:'Installer eksempelfiler…',
     confirm:'Installere den kanoniske eksempelpakke i {{path}}? Eksisterende kanoniske eksempelfiler overskrives. En uændret ældre eksempel-Base kan blive fjernet under opgraderingen; ændrede ældre eksempelfiler og alle andre filer bevares.',
     success:'Installerede {{count}} eksempelfiler i {{path}}. {{overwritten}} kanoniske fil(er) blev overskrevet, {{legacyRemoved}} uændrede ældre fil(er) blev fjernet, og {{legacyPreserved}} ændrede ældre fil(er) blev bevaret.',
+    registerCreated:"PDF Dokumentregister.base blev oprettet i Vault-roden; en kopi findes blandt eksemplerne.",
+    registerPreserved:"Eksisterende PDF Dokumentregister.base blev bevaret uændret; en kopi findes blandt eksemplerne.",
     failed:'Eksempelfilerne kunne ikke installeres: {{error}}'
   }),
   fr:Object.freeze({
     section:'Exemples et apprentissage',
     name:'Installer le paquet d’exemples PDFium Gate',
-    description:'Copie des enregistrements de métadonnées synthétiques et des exemples utilisant les Bases natives d’Obsidian dans {{path}}. Ils montrent comment des Bases ordinaires peuvent utiliser les métadonnées PDFium Gate ; ils ne constituent pas le registre de documents PDFium Gate et n’utilisent pas vos vrais PDF enregistrés.',
+    description:"Installe des exemples de métadonnées et des Bases natives dans {{path}}, avec une copie de PDF Dokumentregister.base. Ne crée le registre réel à la racine que s’il manque.",
     button:'Installer les fichiers d’exemple…',
     confirm:'Installer le paquet d’exemples canonique dans {{path}} ? Les fichiers d’exemple canoniques existants seront remplacés. Une ancienne Base d’exemple non modifiée peut être supprimée lors de la mise à niveau ; les anciens fichiers modifiés et tous les autres fichiers sont conservés.',
     success:'{{count}} fichiers d’exemple installés dans {{path}}. {{overwritten}} fichier(s) canonique(s) ont été remplacés, {{legacyRemoved}} ancien(s) fichier(s) non modifié(s) supprimé(s) et {{legacyPreserved}} ancien(s) fichier(s) modifié(s) conservé(s).',
+    registerCreated:"PDF Dokumentregister.base a été créé à la racine ; une copie figure dans les exemples.",
+    registerPreserved:"Le fichier PDF Dokumentregister.base existant a été préservé ; une copie figure dans les exemples.",
     failed:'Impossible d’installer les fichiers d’exemple : {{error}}'
   })
 });
@@ -4485,6 +4499,7 @@ function metadataExampleReadmeMarkdown() {
     '',
     '- The Base files in this folder use Obsidian\'s built-in ' + tick + 'table' + tick + ' view. They demonstrate that PDFium Gate metadata remains ordinary Markdown/YAML that you can reuse in your own Bases.',
     '- The real PDFium Gate document register is different: ' + tick + 'PDF Dokumentregister.base' + tick + ' reads real records from ' + tick + 'File Metadata/' + tick + ' and uses PDFium Gate\'s dedicated ' + tick + 'pdfium-document-register' + tick + ' view.',
+    '- A copy of ' + tick + 'PDF Dokumentregister.base' + tick + ' is included here. It shows real registered PDFs, unlike the two synthetic native Bases. Installing examples creates the root register only if missing, without overwriting user changes.',
     '',
     '## Included files',
     '',
@@ -4496,6 +4511,7 @@ function metadataExampleReadmeMarkdown() {
     '- ' + tick + 'Example - Missing PDF record.md' + tick + ' — preserved metadata whose PDF is missing; missing records remain historical/read-only until explicitly deleted or a future backup restore path is used.',
     '- ' + tick + 'Example - Native Obsidian Base - All documents.base' + tick + ' — native table showing the whole synthetic example set.',
     '- ' + tick + 'Example - Native Obsidian Base - Awaiting response.base' + tick + ' — native filtered table showing one practical workflow.',
+    '- ' + tick + 'PDF Dokumentregister.base' + tick + ' — copyable register for real registered PDF metadata.',
     '',
     '## Important',
     '',
@@ -4507,7 +4523,7 @@ function metadataExampleReadmeMarkdown() {
 }
 
 function metadataExampleRecordMarkdown({id,filePath,status=METADATA_RECORD_STATUS_ACTIVE,values,title,body}) {
-  const schema=metadataDefaultSchema();
+  const schema=metadataUpgradeAuthorSourceUrl(metadataDefaultSchema()).schema;
   return metadataRecordSerializeMarkdown({id,filePath,status,values},schema)
     + '# ' + title + '\n\n'
     + body + '\n';
@@ -4521,6 +4537,8 @@ function metadataExampleActiveRecordMarkdown() {
       document_date:'2016-03-17',
       document_time:'14:35',
       sender:'Example Municipality',
+      author:'A. Example',
+      source_url:'https://example.org/publications/example-letter',
       document_type:'letter',
       response_received:true,
       response_received_date:'2016-03-24',
@@ -4529,7 +4547,7 @@ function metadataExampleActiveRecordMarkdown() {
       response_sent_link:'[[Example Documents/example-response.md]]'
     },
     title:'Example active PDF metadata record',
-    body:'This complete example uses all current factory metadata fields.'
+    body:'This example uses the nine original fields plus Author and Published online.'
   });
 }
 
@@ -4607,7 +4625,7 @@ function metadataExampleNativeBaseOrder(lines,fields) {
 }
 
 function metadataExampleNativeAllBaseYaml() {
-  const schema=metadataDefaultSchema();
+  const schema=metadataUpgradeAuthorSourceUrl(metadataDefaultSchema()).schema;
   const fields=metadataDocumentRegisterBaseFields(schema);
   const q=value=>JSON.stringify(String(value));
   const lines=[
@@ -4631,7 +4649,7 @@ function metadataExampleNativeAllBaseYaml() {
 }
 
 function metadataExampleNativeAwaitingResponseBaseYaml() {
-  const schema=metadataDefaultSchema();
+  const schema=metadataUpgradeAuthorSourceUrl(metadataDefaultSchema()).schema;
   const fields=metadataDocumentRegisterBaseFields(schema);
   const q=value=>JSON.stringify(String(value));
   const lines=[
@@ -4681,7 +4699,7 @@ function metadataExampleLegacyNativeBaseYaml() {
   return lines.join('\n') + '\n';
 }
 
-function metadataExampleFiles() {
+function metadataExampleFiles(schema = metadataUpgradeAuthorSourceUrl(metadataDefaultSchema()).schema) {
   return Object.freeze([
     Object.freeze({path:PDFIUM_EXAMPLES_ROOT + '/README.md',content:metadataExampleReadmeMarkdown()}),
     Object.freeze({path:PDFIUM_EXAMPLES_ROOT + '/Example - Active PDF record.md',content:metadataExampleActiveRecordMarkdown()}),
@@ -4691,7 +4709,8 @@ function metadataExampleFiles() {
     Object.freeze({path:PDFIUM_EXAMPLES_ROOT + '/Example - Awaiting response.md',content:metadataExampleAwaitingRecordMarkdown()}),
     Object.freeze({path:PDFIUM_EXAMPLES_ROOT + '/Example - Missing PDF record.md',content:metadataExampleMissingRecordMarkdown()}),
     Object.freeze({path:PDFIUM_EXAMPLES_ROOT + '/Example - Native Obsidian Base - All documents.base',content:metadataExampleNativeAllBaseYaml()}),
-    Object.freeze({path:PDFIUM_EXAMPLES_ROOT + '/Example - Native Obsidian Base - Awaiting response.base',content:metadataExampleNativeAwaitingResponseBaseYaml()})
+    Object.freeze({path:PDFIUM_EXAMPLES_ROOT + '/Example - Native Obsidian Base - Awaiting response.base',content:metadataExampleNativeAwaitingResponseBaseYaml()}),
+    Object.freeze({path:PDFIUM_EXAMPLES_ROOT + '/PDF Dokumentregister.base',content:metadataDocumentRegisterStandardBaseYaml(schema)})
   ]);
 }
 
@@ -7845,10 +7864,14 @@ class PdfDocumentRegisterBasesView extends BasesViewBase {
 
 'use strict';
 
-async function installMetadataExampleFiles(read, write) {
+async function installMetadataExampleFiles(read, write, schema = null) {
   if (!read || !write) return {ok:false,error:'Vault adapters are unavailable.'};
 
   try {
+    const effectiveSchema=schema || metadataUpgradeAuthorSourceUrl(metadataDefaultSchema()).schema;
+    const registerPath=PDF_DOCUMENT_REGISTER_STANDARD_BASE_PATH;
+    const rootRegister=read.getAbstractFileByPath(registerPath);
+    if(rootRegister && Array.isArray(rootRegister.children)) throw new Error(`${registerPath} exists but is a folder`);
     const rootEntry = read.getAbstractFileByPath(PDFIUM_EXAMPLES_ROOT);
     if (rootEntry && !Array.isArray(rootEntry.children)) {
       throw new Error(`${PDFIUM_EXAMPLES_ROOT} exists but is not a folder`);
@@ -7871,7 +7894,7 @@ async function installMetadataExampleFiles(read, write) {
       }
     }
 
-    for (const example of metadataExampleFiles()) {
+    for (const example of metadataExampleFiles(effectiveSchema)) {
       const existing = read.getAbstractFileByPath(example.path);
       if (existing && Array.isArray(existing.children)) {
         throw new Error(`${example.path} exists but is a folder`);
@@ -7884,8 +7907,19 @@ async function installMetadataExampleFiles(read, write) {
         created.push(example.path);
       }
     }
+    // Create the root register only if missing; never replace a user-owned Base.
+    const existingRegister=read.getAbstractFileByPath(registerPath);
+    let registerCreated=false;
+    if(!existingRegister) {
+      const createdFile=await write.createText(registerPath,metadataDocumentRegisterStandardBaseYaml(effectiveSchema));
+      if(!createdFile || String(createdFile.path || '')!==registerPath) throw new Error(`Register creation read-back failed: ${registerPath}`);
+      registerCreated=true;
+    }
     return {
       ok:true,
+      registerCreated,
+      registerPreserved:!registerCreated,
+      registerPath,
       created,
       overwritten,
       legacyRemoved,
@@ -8604,7 +8638,7 @@ class PdfiumGateSettingsTab extends PluginSettingTab {
         if(!confirmed) return;
         button.setDisabled(true);
         try {
-          const result=await installMetadataExampleFiles(this.plugin.obsidianVaultReadAdapter,this.plugin.obsidianVaultWriteAdapter);
+          const result=await installMetadataExampleFiles(this.plugin.obsidianVaultReadAdapter,this.plugin.obsidianVaultWriteAdapter,metadataStatus.presentationSchema || metadataStatus.schema);
           if(!result?.ok) throw new Error(result?.error || 'Unknown error');
           new Notice(exampleText('success',{
             path:PDFIUM_EXAMPLES_ROOT,
@@ -8612,7 +8646,7 @@ class PdfiumGateSettingsTab extends PluginSettingTab {
             overwritten:result.overwritten.length,
             legacyRemoved:result.legacyRemoved?.length || 0,
             legacyPreserved:result.legacyPreserved?.length || 0
-          }),8000);
+          }) + ' ' + exampleText(result.registerCreated ? 'registerCreated' : 'registerPreserved'),8000);
         } catch(error) {
           const message=error instanceof Error ? error.message : String(error);
           new Notice(exampleText('failed',{error:message}),10000);
