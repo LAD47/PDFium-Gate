@@ -90,7 +90,7 @@ The Email Import workflow additionally runs parser, renderer, duplicate, attachm
 
 ## Current layout test status (October 12, 2026)
 
-The source ZIP relationship and parent-link read-back fixes were practically confirmed against a previously failing 12-file EML/ZIP import. The consolidated EPOST folder layout is a **new, unmerged test-branch candidate** (`feature/0.1.228-email-bundles`) and still needs practical confirmation in the Obsidian vault. Existing imports retain their old file paths; no automatic migration or moves are performed.
+The source ZIP relationship and parent-link read-back fixes were practically confirmed against a previously failing 12-file EML/ZIP import. The consolidated EPOST folder layout is a **new, unmerged test-branch candidate** (`feature/0.1.228-email-bundles`) with functionality previously confirmed by the owner and covered by passing automated controls. Whole-candidate practical testing is not exhaustive; no additional manual repetition is required in this preparation. Existing imports retain their old file paths; no automatic migration or moves are performed.
 
 ## Windows File Explorer / offline import (October 12, 2026 candidate)
 

@@ -24,7 +24,7 @@ A new EML/MSG import creates one folder beneath the chosen destination, named `Y
 
 If a candidate bundle folder or parent PDF already exists, a deterministic suffix ` (2)`, ` (3)`, etc. applies to both the folder and PDF, without reusing or deleting pre-existing folders. The import plan reserves the parent PDF filename when allocating attachment names. This is valid even when an email has no attachments.
 
-This **supersedes only the user-facing folder placement and suffix policy** previously described in D-031, D-033 and D-034. The atomic transaction, flattening within the bundle, ZIP safety checks, SHA-256 provenance and link behavior remain unchanged. Existing mail imports and their document links are not migrated automatically; older layouts remain readable. The dedicated EPOST layout is being tested on `feature/0.1.228-email-bundles`, and merging requires explicit approval after practical tests.
+This **supersedes only the user-facing folder placement and suffix policy** previously described in D-031, D-033 and D-034. The atomic transaction, flattening within the bundle, ZIP safety checks, SHA-256 provenance and link behavior remain unchanged. Existing mail imports and their document links are not migrated automatically; older layouts remain readable. The dedicated EPOST layout is being tested on `feature/0.1.228-email-bundles`, with previously confirmed functionality covered by passing automated controls; merging requires explicit approval after the exact-candidate Community preview scan.
 
 
 

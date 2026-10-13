@@ -13,6 +13,8 @@ Please read:
 - [docs/architecture/](docs/architecture/) for detailed technical contracts;
 - [RELEASE.md](RELEASE.md) for the authoritative build/archive/Community Plugins release procedure;
 - [TRANSLATING.md](TRANSLATING.md) for translation work.
+- [AGENTS.md](AGENTS.md) for project-specific Codex rules supplementing the global working rules;
+- [docs/development/CODEX-WORKFLOW.md](docs/development/CODEX-WORKFLOW.md) for local Windows/Codex permissions, sandbox observations and verification precautions.
 
 The current practical compatibility baseline is Obsidian 1.13.7. Most regression testing has been performed on Windows 11. macOS and Linux testing is especially useful.
 

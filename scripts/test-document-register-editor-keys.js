@@ -4,6 +4,10 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
 const vm=require('node:vm');
+const schema=require('../src/metadata/schema-contract');
+global.metadataClone=schema.metadataClone;
+global.metadataValidateCanonicalValue=schema.metadataValidateCanonicalValue;
+const realRegistry=require('../src/metadata/field-type-registry').metadataFieldTypeRegistry;
 
 class FakeElement {
   constructor(tag='div',parent=null,opts={}) {
@@ -83,7 +87,10 @@ const sandbox={
   metadataFieldTypeRegistry:registry,
   metadataPresentationSettings:(settings)=>settings,
   metadataBaseFormatFieldValue:(_registry,_field,value)=>String(value??''),
-  metadataBasePrepareFieldUpdate:(field,raw)=>raw==='INVALID'
+  metadataBasePrepareFieldUpdate:(field,raw)=>field.type==='link'
+    ? (()=>{const parsed=realRegistry.parseNormalizeValidate(field,raw,{});
+      return {...parsed,property:field.property};})()
+    : raw==='INVALID'
     ? {ok:false,errors:['Invalid value']}
     : {ok:true,property:field.property,value:raw},
   console
@@ -101,7 +108,7 @@ function makeEditor(type='text',value='old',saveValues=async(_,patch)=>({ok:true
     getI18n:()=>({t:key=>key})
   });
   const cell=root.createEl('td');
-  const field={property:'sender',type,label:'Sender'};
+  const field={property:'sender',type,label:'Sender',...(type==='link'?{config:{kind:'url'}}:{})};
   view.renderDisplayCell(cell,{field,value,pdfPath:'Docs/one.pdf',editable:true});
   const begin=cell.dispatch('keydown',{key:'F2'});
   assert.equal(begin.defaultPrevented,true);
@@ -117,31 +124,31 @@ function makeEditor(type='text',value='old',saveValues=async(_,patch)=>({ok:true
 const flush=()=>new Promise(resolve=>setImmediate(resolve));
 
 (async()=>{
-  {
+  for(const fieldType of ['text','link']) {
     const updates=[];
-    const e=makeEditor('text','before',async(path,patch)=>{
+    const e=makeEditor(fieldType,fieldType==='link'?'https://example.invalid/before':'before',async(path,patch)=>{
       updates.push({path,patch});
       return {ok:true,values:patch};
     });
-    e.input.value='after';
+    e.input.value=fieldType==='link'?'https://example.invalid/after':'after';
     const action=e.input.dispatch('keydown',{key:'Enter'});
     assert.equal(action.defaultPrevented,true);
     await flush();
     assert.equal(updates.length,1);
     assert.equal(updates[0].path,'Docs/one.pdf');
-    assert.equal(updates[0].patch.sender,'after');
+    assert.equal(updates[0].patch.sender,fieldType==='link'?'https://example.invalid/after':'after');
     assert.equal(e.cell.classList.contains('is-editing'),false);
-    assert.equal(e.cell.dataset.rawValue,'after');
+    assert.equal(e.cell.dataset.rawValue,fieldType==='link'?'https://example.invalid/after':'after');
     assert.equal(e.cell.focused,true,'keyboard focus returns to the edited cell');
   }
-  {
+  for(const fieldType of ['text','link']) {
     const updates=[];
-    const e=makeEditor('text','original',async()=>{updates.push('write');return {ok:true};});
+    const e=makeEditor(fieldType,fieldType==='link'?'https://example.invalid/original':'original',async()=>{updates.push('write');return {ok:true};});
     e.input.value='draft';
     const action=e.input.dispatch('keydown',{key:'Escape'});
     assert.equal(action.defaultPrevented,true);
     assert.equal(updates.length,0,'Escape never saves');
-    assert.equal(e.cell.dataset.rawValue,'original');
+    assert.equal(e.cell.dataset.rawValue,fieldType==='link'?'https://example.invalid/original':'original');
     assert.equal(e.cell.focused,true);
   }
   for(const type of ['select','boolean','multiselect']){

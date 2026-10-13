@@ -13,6 +13,8 @@ This file is a running list of observations found during practical testing that 
 
 ## Open items
 
+- **0.1.228 release gate remaining:** mandatory Community Review branch / preview scan of the exact pushed candidate before merge. Earlier full verification passed 19/19, integrated disk migration passed 10/10 and deterministic build passed; practical points 1–6 are user-confirmed OK. Whole-candidate practical testing is not exhaustive. No manual repetition tests are requested.
+
 1. **PDF annotation backup: reassess `.pdfium-backup` after the independent backup solution exists**
    - Keep the current `backupOriginalPdf` safety function for now: it stores one original PDF copy before PDFium Gate first modifies the file and never overwrites an existing copy.
    - Reassess whether this separate per-PDF original-copy mechanism is still needed once the independent backup project provides a validated backup/restore workflow.
@@ -26,6 +28,39 @@ This file is a running list of observations found during practical testing that 
    - Do not patch vendored third-party code locally merely to silence the recommendation; evaluate an upstream dependency update or alternative sanitizer in a separate contained task.
 
 ## Completed items
+
+- **0.1.228 final post-version check (2026-10-13)**
+   - `npm.cmd --logs-max=0 run check`: exit 0 outside the sandbox; 19/19 pipeline steps passed, 10/10 disk scenarios passed, deterministic build passed.
+   - Initial sandbox attempt was blocked at main.js writing with EPERM before tests started. The subsequent single complete execution regenerated runtime from canonical source.
+   - Runtime version 0.1.228; main.js 4,589,563 bytes. Six injected disk failures produced expected diagnostics and successful recovery checks.
+   - No new manual Obsidian testing was performed. Prior practical confirmations remain unchanged.
+
+- **0.1.228 consolidated status (user-confirmed 2026-10-13)**
+   - Previously completed full automated verification: 19/19 passed; integrated disk migration: 10/10 scenarios; deterministic build: passed.
+   - Practical isolated test points 1–6: OK; author and source_url: practically approved.
+   - Email import, ZIP handling and other functions were previously confirmed and are covered by passing automated controls; no new manual repetition is recorded.
+   - Practical testing of the entire candidate is not exhaustive. Returning to 0.1.227 after migration is not guaranteed and may require a compatible schema backup.
+   - Earlier entries below retain their original chronology and scope; later integrated verification and practical points supersede their then-pending status.
+
+- **0.1.228 disk migration regression: 10/10 passed (2026-10-13)**
+   - Production schema feature, repository, Adapter-file-store wrapper and safe-config writer were used with a synthetic disk adapter. Physical backup matched original bytes before replacement; repeated startup, UUID/custom-label preservation, deletion and deactivation passed.
+   - Six injected failures were detected: backup write/read-back, temporary write/read-back, replacement rename and final read-back. Original canonical bytes were unchanged and readable after each case. Expected error diagnostics are not failed tests.
+   - A compatible older schema was restored through the real repository and validated by the actual older contract. This is synthetic schema recovery, not confirmed plugin downgrade.
+   - The confirmed 20-file workspace, including 10 backups, is preserved at `.codex-test-workspaces/metadata-migration-48101c48-89ce-41d5-9e0e-5043b8375abb/`.
+   - Process crashes, concurrent faults, failure of recovery itself and practical whole-plugin downgrade remain untested.
+   - The older production contract is now frozen locally with [origin and checksum](../../test/fixtures/metadata/0.1.227/README.md), removing runtime HEAD/network dependence. Future runs use fresh retained OS-temp areas. `test:metadata:migration-disk` is integrated into check; at that recording point the refactored integration had not been executed; the later consolidated result above records its completion.
+
+- **0.1.228 metadata fixes: targeted automated regression passed (2026-10-13)**
+   - `node scripts/test-metadata-author-source-url.js` and `npm.cmd run test:document-register:editor-keys` both exited 0 in the sandbox; no project files changed during that run. The initial PowerShell npm launcher failed its authorization check before execution; npm.cmd ran the same script successfully.
+   - Synthetic in-memory coverage includes first upgrade, unchanged repeated startup, UUID preservation, deletion/deactivation, Bokm?l ? English ? Bokm?l, custom/legacy label ownership, seven-language URL errors and preserving an unchanged legacy URL while saving another field. The keyboard suite covers URL Enter/Escape with the production URL validator.
+   - `test:metadata:author-source-url` is now integrated into `npm run check`; all existing gates remain. The full pipeline subsequently passed 17 steps, including deterministic build; at that recording point the later disk-test integration had not run; see the later consolidated result above.
+   - Physical repository backup, six single-fault cases and synthetic compatible-schema restore subsequently passed; practical confirmation was pending at that recording point; later practical points 1–6 are recorded above. 0.1.227 rejects the added `migrations` property; rollback may require a compatible schema backup; whole-plugin downgrade remains untested and not guaranteed.
+
+- **0.1.228 metadata fields: practically user-confirmed (2026-10-13)**
+   - The user explicitly tested and approved `author` (Forfatter, text) and `source_url` (Publisert på nettet, URL) in Obsidian; both worked excellently in that practical test.
+   - This records user-confirmed functionality, not an automated test result or confirmation of the whole 0.1.228 candidate.
+   - Language switching, field deletion/restart behavior and preservation of legacy URL values are not covered by this confirmation.
+   - Preserve the working implementation; changes require a concrete demonstrated defect.
 
 - **0.1.227 versioned release candidate: automated verification passed**
    - Version identity is aligned across `manifest.json`, `package.json`, `package-lock.json`, `versions.json` and `src/main/00-header.js`.

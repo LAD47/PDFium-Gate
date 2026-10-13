@@ -100,6 +100,32 @@ const METADATA_FACTORY_FIELD_DEFINITIONS = Object.freeze([
   Object.freeze({ id:'b28899d7-dbb1-42bd-bd30-509c0f5e0a27', property:'response_sent_date', label:'Response sent date', labelKey:'factory.metadata.responseSentDate', type:'date' }),
   Object.freeze({ id:'69606cae-7fd5-447f-b715-00b71a70a66a', property:'response_sent_link', label:'Sent response', labelKey:'factory.metadata.responseSentLink', type:'link' })
 ]);
+const METADATA_ADDITIONAL_FACTORY_FIELDS = Object.freeze([
+  Object.freeze({id:'c0c2c41f-b146-4eed-82d9-8f7a417e5501',property:'author',label:'Author',labelKey:'localTest.metadata.author',type:'text'}),
+  Object.freeze({id:'c0c2c41f-b146-4eed-82d9-8f7a417e5502',property:'source_url',label:'Published online',labelKey:'localTest.metadata.sourceUrl',type:'link',config:{kind:'url'}})
+]);
+// The marker records an upgrade, not evidence about historical deletions.
+function metadataUpgradeAuthorSourceUrl(schema) {
+  const next=metadataClone(schema);
+  if(next.migrations?.author_source_url_v1) return {schema:next,changed:false};
+  const identities={};
+  for(const definition of METADATA_ADDITIONAL_FACTORY_FIELDS) {
+    let field=next.fields.find(item=>item.property===definition.property);
+    if(!field) {
+      // Fail closed if the permanent factory ID is already used by another field.
+      if(next.fields.some(item=>item.id===definition.id)) throw new Error('Metadata factory field identity collision');
+      field=metadataMakeField({...definition,labelSource:'factory'});
+      next.fields.push(field);
+    } else {
+      // Legacy LOCAL-TEST fields did not record factory ownership reliably.
+      // Preserve explicit/unknown user ownership even if the label looks standard.
+      if(field.label_source!=='factory') field.label_source='user';
+    }
+    identities[definition.property]=field.id;
+  }
+  next.migrations={...(next.migrations || {}),author_source_url_v1:identities};
+  return {schema:next,changed:true};
+}
 function metadataFactoryText(translate,key,fallback) {
   const translated=typeof translate==='function' ? String(translate(key) ?? '').trim() : '';
   return translated && translated!==key ? translated : fallback;
@@ -112,10 +138,12 @@ function metadataFactoryKnownTexts(getKnownTranslations,key,fallback) {
   }
   return values;
 }
-function metadataFactoryFieldDefinitionFor(field) {
+function metadataFactoryFieldDefinitionFor(field,schema = null) {
   const id=String(field?.id || '');
   const property=String(field?.property || '');
-  return METADATA_FACTORY_FIELD_DEFINITIONS.find(item=>item.id===id && item.property===property) || null;
+  return METADATA_FACTORY_FIELD_DEFINITIONS.find(item=>item.id===id && item.property===property)
+    || (schema?.migrations?.author_source_url_v1?.[property]===id
+      ? METADATA_ADDITIONAL_FACTORY_FIELDS.find(item=>item.property===property) : null) || null;
 }
 function metadataFactoryOptionDefinitionFor(fieldDefinition,option) {
   if(!fieldDefinition || !Array.isArray(fieldDefinition.options)) return null;
@@ -129,7 +157,7 @@ function metadataNormalizeFactoryLabelOwnership(schema,getKnownTranslations = nu
   let changed=false;
   for(const field of next.fields) {
     if(!field || typeof field!=='object') continue;
-    const definition=metadataFactoryFieldDefinitionFor(field);
+    const definition=metadataFactoryFieldDefinitionFor(field,next);
     if(definition) {
       const current=String(field.label || '').trim();
       const known=metadataFactoryKnownTexts(getKnownTranslations,definition.labelKey,definition.label);
@@ -169,7 +197,7 @@ function metadataSchemaForPresentation(schema,translate = null) {
   const next=metadataClone(schema);
   if(!next || !Array.isArray(next.fields)) return next;
   for(const field of next.fields) {
-    const definition=metadataFactoryFieldDefinitionFor(field);
+    const definition=metadataFactoryFieldDefinitionFor(field,next);
     if(!definition) continue;
     if(field.label_source==='factory') field.label=metadataFactoryText(translate,definition.labelKey,definition.label);
     if(!Array.isArray(field.config?.options)) continue;
@@ -339,7 +367,23 @@ function metadataValidateCanonicalValue(field, value, path, errors) {
 function metadataValidateSchema(schema) {
   const errors=[];
   if (!schema || typeof schema !== 'object' || Array.isArray(schema)) return {ok:false,errors:['schema: must be an object']};
-  for (const key of Object.keys(schema)) if (!['format_version','revision','fields'].includes(key)) errors.push(`schema: unknown property ${key}`);
+  for (const key of Object.keys(schema)) if (!['format_version','revision','fields','migrations'].includes(key)) errors.push(`schema: unknown property ${key}`);
+  if(schema.migrations!==undefined) {
+    const migrations=schema.migrations;
+    if(!migrations || typeof migrations!=='object' || Array.isArray(migrations)) errors.push('migrations: must be object');
+    else {
+      for(const key of Object.keys(migrations)) if(key!=='author_source_url_v1') errors.push(`migrations: unknown key ${key}`);
+      const marker=migrations.author_source_url_v1;
+      if(marker!==undefined) {
+        if(!marker || typeof marker!=='object' || Array.isArray(marker)) errors.push('author_source_url_v1: must be object');
+        else {
+          for(const key of Object.keys(marker)) if(!['author','source_url'].includes(key)) errors.push(`author_source_url_v1: unknown key ${key}`);
+          for(const key of ['author','source_url']) if(!metadataIsUuidV4(marker[key])) errors.push(`author_source_url_v1.${key}: must be UUID v4`);
+          if(marker.author===marker.source_url) errors.push('author_source_url_v1: duplicate field identity');
+        }
+      }
+    }
+  }
   if (schema.format_version !== METADATA_SCHEMA_FORMAT_VERSION) errors.push(`format_version: expected ${METADATA_SCHEMA_FORMAT_VERSION}`);
   if (!Number.isInteger(schema.revision) || schema.revision < 1) errors.push('revision: must be integer >= 1');
   if (!Array.isArray(schema.fields)) errors.push('fields: must be array');
@@ -393,6 +437,7 @@ const metadataSchemaContract = Object.freeze({
   metadataMakeOption,
   metadataMakeField,
   METADATA_FACTORY_FIELD_DEFINITIONS,
+  metadataUpgradeAuthorSourceUrl,
   metadataFactoryFieldDefinitionFor,
   metadataFactoryOptionDefinitionFor,
   metadataNormalizeFactoryLabelOwnership,

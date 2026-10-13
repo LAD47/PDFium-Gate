@@ -949,7 +949,28 @@ class PdfDocumentRegisterBasesView extends BasesViewBase {
     cell.dataset.rawValue = value == null ? '' : (Array.isArray(value) ? JSON.stringify(value) : String(value));
     const display = metadataBaseFormatFieldValue(metadataFieldTypeRegistry, field, value, this.presentationSettings());
     const text = display || '—';
-    const valueEl = cell.createSpan({ cls:'pdfium-document-register-cell-value', text });
+    // LOCAL-TEST register URL metadata display: link click must not open inline editor.
+    const webCandidate=field?.type==='link' && field?.config?.kind==='url' ? String(value ?? '').trim() : '';
+    let webUrl='';
+    if(/^https?:\/\//i.test(webCandidate)) {
+      try {
+        const parsed=new URL(webCandidate);
+        if(['https:','http:'].includes(parsed.protocol) && parsed.hostname) webUrl=parsed.href;
+      } catch (_) {}
+    }
+    const valueEl = webUrl
+      ? cell.createEl('a',{cls:'external-link pdfium-document-register-cell-value',text})
+      : cell.createSpan({ cls:'pdfium-document-register-cell-value', text });
+    if(webUrl) {
+      valueEl.setAttribute('href',webUrl);
+      valueEl.setAttribute('title',webUrl);
+      valueEl.setAttribute('target','_blank');
+      valueEl.setAttribute('rel','noopener noreferrer');
+      valueEl.addEventListener('click',event=>event.stopPropagation());
+      valueEl.addEventListener('keydown',event=>{
+        if(event.key==='Enter' || event.key===' ') event.stopPropagation();
+      });
+    }
     if (!editable) return;
     cell.classList.add('is-editable');
     cell.setAttribute('tabindex','0');

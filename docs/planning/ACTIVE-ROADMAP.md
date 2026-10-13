@@ -20,9 +20,22 @@ Confirmed on 2026-10-06:
 
 The completed cleanup record is [0.1.226 Community release cleanup](0.1.226-COMMUNITY-RELEASE-CLEANUP.md).
 
-## Next development line: 0.1.227
+## Active 0.1.228 release candidate: email bundles and metadata enhancements
 
-No single feature scope is frozen yet. Start from the open items below and choose one contained task at a time. Do not reopen resolved 0.1.226 release work unless a regression is demonstrated.
+Branch: `feature/0.1.228-email-bundles`. Manifest, package, lockfile, versions register and canonical runtime version are aligned on **0.1.228**. See [release notes](../releases/0.1.228.md).
+
+- **Previously completed automated verification:** 19/19 passed, including deterministic build; integrated disk migration regression: 10/10 scenarios passed. These are earlier results, not a new run in this documentation update.
+- **Practical confirmation (2026-10-13):** isolated candidate test points 1–6 are user-confirmed OK. `author` / Forfatter and `source_url` / Publisert på nettet are practically approved. Whole-candidate practical testing is not exhaustive.
+- **Email/ZIP and other approved functions:** previously confirmed and covered by passing automated controls. No further manual repetition tests are planned for this candidate.
+- **Email bundle layout:** new EML/MSG imports create one `YYYY-MM-DD - EPOST- Subject` folder containing its namesake PDF, direct attachments and flattened email ZIP members. Folder/PDF collisions share the same suffix. Existing imports are not migrated; manual ZIP import still preserves archive directories.
+- **Metadata:** controlled `migrations.author_source_url_v1` upgrade; stable UUIDs and disabled states; no resurrection after marked deletion; factory/user label ownership; localized URL validation and preservation of unchanged legacy URLs.
+- **Test integration:** author/source URL and disk migration tests remain in check alongside every previous gate. Disk tests use the frozen checksummed 0.1.227 contract and fresh retained OS-temp workspaces.
+- **Compatibility:** returning to 0.1.227 after schema migration is not guaranteed and may require a compatible schema backup plus separate preservation of later edits. Synthetic schema restore passed; whole-plugin downgrade, process crashes, concurrent faults and recovery failure are not tested.
+- **Final post-version check (2026-10-13):** 19/19 passed, disk migration 10/10, deterministic build passed; exit 0. **Remaining release gates:** candidate commit/push, then mandatory Community Review branch / preview scan of the exact pushed SHA before any explicit merge decision. Preserve local checkpoints and test workspaces. No merge or publication is authorized in this preparation task.
+
+## Earlier 0.1.227 candidate work
+
+The following records preserve earlier completed candidate work incorporated into 0.1.228. Do not reopen resolved 0.1.226 release work unless a regression is demonstrated.
 
 ### DocumentInfo
 
@@ -38,7 +51,7 @@ No single feature scope is frozen yet. Start from the open items below and choos
 
 ### PDF Document Register
 
-This is the largest confirmed UX backlog item.
+The register redesign below is completed and practically confirmed.
 
 - **Preparation complete (0.1.227):** native example Bases versus the real PDFium Gate register are explicitly separated, the synthetic example package is expanded, and Settings is reorganized into collapsible groups. Automated verification is green (run `37510815842`) and practical test 1–9 passed on 2026-10-07.
 
@@ -87,7 +100,7 @@ Keep these boundaries:
 
 ### Email Import / Archive Import deferred product decisions
 
-The 0.1.226 transport-source/attachment model is confirmed. Do not reopen its flat attachment layout, source-ZIP cleanup, direct PDF links or external-ZIP focus reconciliation without a demonstrated regression.
+The transport-source/attachment model is confirmed. In 0.1.228, the EPOST bundle supersedes the older sibling attachment-folder placement; ZIP members remain flat within the bundle. Preserve source-ZIP cleanup, direct PDF links and external-ZIP focus reconciliation without a demonstrated regression.
 
 Legitimate future questions remain:
 

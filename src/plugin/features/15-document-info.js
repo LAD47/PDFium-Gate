@@ -180,7 +180,13 @@ class DocumentInfoFeature {
         errors[field.property]=[this.i18n.t('documentInfo.error.missingControl')];
         continue;
       }
-      const result=metadataFieldTypeRegistry.parseNormalizeValidate(field,control.readRaw(),this.settings || {});
+      const raw=control.readRaw();
+      const result=metadataFieldTypeRegistry.parseNormalizeValidate(field,raw,metadataPresentationSettings(this.settings || {},this.i18n));
+      // Preserve an unchanged legacy URL by omitting it from the canonical patch.
+      // The original editor value is captured before edits, not inferred from new input.
+      if(!result.ok && field.type==='link' && field.config?.kind==='url'
+        && typeof control.originalValue==='string' && control.originalValue.trim()
+        && raw===control.originalRaw) continue;
       if(!result.ok) errors[field.property]=result.errors;
       else values[field.property]=result.value;
     }
@@ -292,7 +298,7 @@ class DocumentInfoFeature {
           control.inputEl.id=id;
           label.setAttribute('for',id);
         }
-        editControls.set(field.property,{...control,errorEl});
+        editControls.set(field.property,{...control,errorEl,originalValue:documentInfoCurrentValue(values,field,false),originalRaw:control?.readRaw?.()});
       }
     } else {
       showReadEditActions=true;

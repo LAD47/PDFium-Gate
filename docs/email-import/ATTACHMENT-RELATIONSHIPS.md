@@ -214,7 +214,7 @@ Important: These are *identified code defects* and regression tests, not yet con
 
 ## New layout decision — October 12, 2026
 
-The owner requested one self-contained directory per email, named `YYYY-MM-DD - EPOST- Subject` and containing a namesake PDF plus all attachments. This improves discoverability, folder-level movement and sharing. Implemented on `feature/0.1.228-email-bundles` for EML and MSG, with collision-safe names and parent/attachment metadata relations unchanged. Existing imported email documents are deliberately **not migrated**. The layout must be verified practically before merging.
+The owner requested one self-contained directory per email, named `YYYY-MM-DD - EPOST- Subject` and containing a namesake PDF plus all attachments. This improves discoverability, folder-level movement and sharing. Implemented on `feature/0.1.228-email-bundles` for EML and MSG, with collision-safe names and parent/attachment metadata relations unchanged. Existing imported email documents are deliberately **not migrated**. The owner has previously confirmed email/ZIP functionality, now covered by passing automated controls; no further manual repetition is required for this candidate. The exact-candidate Community preview scan remains mandatory before merge.
 
 ## Email staging source arrival channels (October 12, 2026 candidate)
 
