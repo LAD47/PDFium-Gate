@@ -13,6 +13,7 @@ on:
       - 'manifest.json'
       - 'scripts/verify/**'
       - 'scripts/check-*.js'
+      - 'scripts/test-example-register-installation.js'
       - 'docs/architecture/**'
       - 'ARCHITECTURE.md'
 
