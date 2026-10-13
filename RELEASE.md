@@ -117,7 +117,7 @@ Promotion requires:
 1. repository verification succeeds;
 2. the build has been explicitly tested in the target Obsidian environment;
 3. required regression tests are accepted;
-4. the exact candidate passes the mandatory Obsidian Community Review branch / preview scan and all findings are reviewed;
+4. any optional Obsidian Community Review branch / preview scan findings have been reviewed; running this scan is not required for promotion;
 5. no known blocker remains for the release;
 6. the exact stable candidate is frozen under `archive/<stable-version>`;
 7. a normal (non-prerelease) GitHub Release is created with the approved stable version;
@@ -273,27 +273,20 @@ npm run check
 
 Do not commit if the check fails or if `git status` contains unexpected files.
 
-## Mandatory Community preview scan before merge
+## Optional Community preview scan
 
-Every future Community Plugins release must pass an Obsidian Community **Review branch / preview scan** before the release candidate is merged to `main`.
+By explicit owner decision on 2026-10-13, Obsidian Community **Review branch / preview scan** is optional. It is not a prerequisite for merge, archive freezing or publication. Version 0.1.229 skips this scan under that decision.
 
-Run this gate only after the candidate has the intended release version, generated runtime is current, and `npm run check` is green.
+All existing automated quality gates remain required: full `npm run check`, successful **Build generated runtime**, synchronization of any generated-runtime commit, reproducible frozen archive verification and the existing **Publish Community Plugin release** workflow. Practical Obsidian confirmation remains a separate milestone; automated success must not be described as practical runtime approval.
 
-Procedure:
+When a preview scan is chosen:
 
-1. Open the plugin entry in the Obsidian Community portal.
-2. Choose **Review branch** / **Run preview scan**.
-3. Scan the exact release candidate. Prefer the candidate commit SHA when the portal accepts it; otherwise scan the candidate branch and record its current SHA.
-4. Review the complete report:
-   - every **Error** is release-blocking and must be fixed;
-   - every **Warning** or **Recommendation** must be reviewed and either fixed or explicitly accepted/documented;
-   - confirm that manifest, release-asset size, CSS, dependency, behavior, obfuscation and build-verification sections have no unexplained regressions.
-5. Record the scan date, scanned branch/commit SHA, result, and disposition of any remaining findings in the active release handoff or release notes.
-6. If the candidate changes after the scan in source code, generated runtime, `manifest.json`, `styles.css`, dependencies/lockfile, build configuration, or release workflow, rerun the preview scan before merge.
+1. Scan the exact versioned candidate after generated runtime is current and `npm run check` is green. Prefer its commit SHA; otherwise record the branch and current SHA.
+2. Review the complete report. Fix genuine release-blocking defects; review warnings and recommendations and record their disposition.
+3. Record the scan date, candidate SHA, result and finding dispositions in the active release notes or handoff.
+4. If relevant candidate files change after the scan, the earlier report is no longer evidence for the new candidate. Repeat the optional scan if a current report is desired.
 
-A green local/CI build does not replace this external Community-directory scan. Likewise, a preview scan does not replace the project's own tests.
-
-Do not merge a Community release candidate to `main` until this gate has been completed and its result has been reviewed.
+A preview scan does not replace the project's automated controls. Omitting the optional scan alone does not block publication.
 
 ## Commit and push to main
 
