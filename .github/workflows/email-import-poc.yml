@@ -58,13 +58,8 @@ jobs:
         run: npm run check
       - name: Verify bundled Email Import runtime integration
         run: node scripts/check-email-import-runtime-integration.js
-      - name: Verify generated runtime changes are intentional and scoped
-        run: |
-          if git diff --quiet -- main.js; then
-            echo 'Expected main.js to change after Email Import runtime integration.'
-            exit 1
-          fi
-          git diff --exit-code -- . ':(exclude)main.js' ':(exclude)main-bridge.js'
+      - name: Verify committed runtime and tracked project files remain unchanged
+        run: git diff --exit-code HEAD -- .
       - name: Upload generated runtime for practical testing
         uses: actions/upload-artifact@v4
         with:
