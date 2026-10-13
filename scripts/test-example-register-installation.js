@@ -6,7 +6,12 @@ const base=require('../src/metadata/document-register-base-config');
 Object.assign(global,schema,records,base);
 const examples=require('../src/metadata/example-files');
 Object.assign(global,examples);
-const {installMetadataExampleFiles}=require('../src/main/example-files-installer');
+const fs=require('node:fs');
+const path=require('node:path');
+const vm=require('node:vm');
+// The installer is intentionally bundled as a script rather than exported as a Node module.
+const installerSource=fs.readFileSync(path.join(__dirname,'../src/main/example-files-installer.js'),'utf8');
+const installMetadataExampleFiles=vm.runInThisContext('(function(){\n'+installerSource+'\nreturn installMetadataExampleFiles;\n})()', {filename:'src/main/example-files-installer.js'});
 
 function vault() {
   const entries=new Map();
