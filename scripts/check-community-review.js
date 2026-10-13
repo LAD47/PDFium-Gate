@@ -42,8 +42,8 @@ const readme = read('README.md');
 if (!readme.includes('## Privileged desktop access')) fail('README is missing privileged desktop access documentation');
 
 const releaseDoc = read('RELEASE.md');
-if (!releaseDoc.includes('## Mandatory Community preview scan before merge')) fail('RELEASE.md is missing the mandatory Community preview scan gate');
-if (!releaseDoc.includes('rerun the preview scan before merge')) fail('RELEASE.md is missing the preview-scan rerun rule');
+if (!releaseDoc.includes('## Optional Community preview scan')) fail('RELEASE.md is missing the optional Community preview scan policy');
+if (!releaseDoc.includes('All existing automated quality gates remain required:')) fail('RELEASE.md must preserve required automated quality gates');
 
 console.log(JSON.stringify({
   ok: true,

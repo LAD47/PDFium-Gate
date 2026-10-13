@@ -396,3 +396,9 @@ A release may be described as a **clean GitHub/release baseline** after the chec
 ## Recovery rule
 
 If anything in the transfer, build, archive, or publish sequence is uncertain, stop before creating or changing a release. Return to the last known-good clean `main`, inspect `git status`, and repeat the documented procedure. Do not repair a release by ad-hoc per-file uploads.
+
+## Authorized one-time archive correction for 0.1.229
+
+Before publication, the owner explicitly authorized one correction of archive/0.1.229 from original commit 3c83cdd4a354fbfd5061b5223d549b7870969b60 to the final verified main commit. The reason is to include the subsequent owner decision making Community preview optional and this exception's audit record. The release and tag were confirmed absent before preparation. Production source, generated runtime and automated controls remain unchanged.
+
+The move must compare the remote ref against that exact original SHA and fail if it differs. This authorization permits exactly one move; it does not authorize later archive rewrites. Once corrected, and permanently after publication, archive/0.1.229 is immutable. The published 0.1.228 release is unaffected.
