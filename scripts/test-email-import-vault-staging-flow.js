@@ -22,7 +22,10 @@ global.EMAIL_IMPORT_RUNTIME = {
     return `${folder ? `${folder}/` : ''}mail.pdf`;
   }
 };
-global.Notice = class Notice {};
+global.Notice = class Notice {
+  constructor(message){ Notice.messages.push(String(message)); }
+};
+global.Notice.messages=[];
 
 const { EmailImportFeature } = require('../src/plugin/features/20-email-import');
 
@@ -186,6 +189,29 @@ async function run() {
     const result=await feature.startEmailImportFromVaultFile(file);
     assert.equal(result.reason,'automatic-import-disabled');
     assert.deepEqual(deleted,[]);
+  }
+
+  {
+    // A rolled-back attachment transaction must never be announced as success.
+    const { feature, file, deleted } = createFeature({
+      result:{ok:true,pdfPath:'Cases/mail.pdf',sourceRetained:false,retainedPath:null},
+      reads:['original-bytes','original-bytes']
+    });
+    feature.exportPlannedEmailAttachments=async()=>({
+      ok:false,
+      reason:'attachment-transaction-failed',
+      error:'Archive relationship block failed read-back verification',
+      failureStage:'write-archive-relationship',
+      failedPath:'Cases/mail Vedlegg/Vedtak [1].pdf',
+      exportedCount:0
+    });
+    Notice.messages.length=0;
+    const failedImport=await feature.startEmailImportFromVaultFile(file);
+    assert.equal(failedImport.attachmentResult.ok,false);
+    assert.equal(failedImport.stagingRemoved,false,'EML must survive failed import');
+    assert.deepEqual(deleted,[]);
+    assert.ok(Notice.messages.some(message=>message.includes('dragDropImportedWithAttachmentErrors')));
+    assert.equal(Notice.messages.some(message=>message==='emailImport.notice.dragDropImported'),false);
   }
 
   console.log('Email Import vault staging flow OK: same-folder import, mandatory attachment transaction, source-retention off by default, exact-byte staging cleanup after verified success, exact-duplicate cleanup, changed-file safety, cancel preservation and disable setting verified.');

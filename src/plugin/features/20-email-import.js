@@ -20,8 +20,27 @@ class EmailImportFeature {
       onError:(error,file)=>console.error('[PDFium Gate] Vault email staging import failed',file?.path,error)
     });
     this.emailImportVaultTrigger=trigger;
+    this.emailVaultArrivalIndex=createEmailVaultArrivalIndex({
+      savedIndex:this.settings?.emailImportObservedStagingIndex || null,
+      isEligible:isEmailStagingFile,
+      onDiscovered:file=>trigger.handleCreate(file),
+      persistIndex:async index=>{
+        this.settings.emailImportObservedStagingIndex=index;
+        await this.obsidianPluginDataAdapter.saveData(this.settings);
+      }
+    });
+    // Capture the initial vault inventory BEFORE registering new create
+    // events, to avoid interpreting historical EML files as new arrivals.
+    void this.reconcileEmailImportVaultFiles().catch(error=>
+      console.warn('[PDFium Gate] Email Import startup reconciliation failed',error)
+    );
     this.obsidianPluginRegistrationAdapter.registerEvent(
-      this.obsidianVaultLifecycleAdapter.onCreate(file=>{ void trigger.handleCreate(file); })
+      this.obsidianVaultLifecycleAdapter.onCreate(file=>{
+        if(!isEmailStagingFile(file)) return;
+        const observed=this.emailVaultArrivalIndex?.observeCreate(file);
+        if(observed?.reason==='already-observed') return;
+        void trigger.handleCreate(file);
+      })
     );
     this.obsidianPluginRegistrationAdapter.registerEvent(
       this.obsidianVaultLifecycleAdapter.onModify(file=>{
@@ -30,6 +49,15 @@ class EmailImportFeature {
         );
       })
     );
+  }
+
+  async reconcileEmailImportVaultFiles() {
+    const index=this.emailVaultArrivalIndex;
+    if(!index) return {ok:true,handled:false,reason:'not-initialized'};
+    // The same user setting governs drag/drop and Explorer reconciliation.
+    return await index.reconcile(this.obsidianVaultReadAdapter.listFiles(),{
+      importEnabled:this.settings?.emailDragDropAutomaticImport!==false
+    });
   }
 
   async normalizeManagedEmailAttachmentLinks(file) {
@@ -372,7 +400,17 @@ class EmailImportFeature {
       if(path && !seen.has(path)) { seen.add(path); expected.push(path); }
     }
     if(JSON.stringify(actual)!==JSON.stringify(expected)) {
-      throw new Error('Attachment wikilink block failed read-back verification.');
+      let firstDifference=0;
+      while(firstDifference<Math.min(actual.length,expected.length)
+        && actual[firstDifference]===expected[firstDifference]) firstDifference++;
+      const expectedPath=expected[firstDifference]||null;
+      const actualPath=actual[firstDifference]||null;
+      const error=new Error(
+        `Attachment wikilink block failed read-back verification: expected ${expected.length} links, read ${actual.length}; first mismatch at #${firstDifference+1} (expected: ${JSON.stringify(expectedPath)}, actual: ${JSON.stringify(actualPath)}).`
+      );
+      error.code='EMAIL_ATTACHMENT_LINK_READBACK_FAILED';
+      error.details={recordPath,expectedCount:expected.length,actualCount:actual.length,firstDifference,expectedPath,actualPath};
+      throw error;
     }
     return {ok:true,recordPath,linkedCount:actual.length,attachmentPaths:actual};
   }
@@ -389,10 +427,6 @@ class EmailImportFeature {
       createBinary:adapter.createBinary,
       readBinary:file=>this.obsidianVaultReadAdapter.readBinary(file),
       deleteFile:adapter.deleteFile,
-      deleteFolder:async folderPath=>{
-        const folder=this.obsidianVaultReadAdapter.getAbstractFileByPath(folderPath);
-        if(folder) await this.obsidianVaultWriteAdapter.deleteFile(folder,true);
-      },
       deleteDocumentMetadataRecordForPdf:pdfPath=>this.ports.deleteDocumentMetadataRecordForPdf(pdfPath),
       saveDocumentMetadataRecordValues:adapter.saveDocumentMetadataRecordValues,
       updateParentAttachmentLinks:model=>this.updateEmailAttachmentLinks(model),
@@ -480,6 +514,16 @@ class EmailImportFeature {
           parentPdfPath:result.pdfPath,
           result:deepClone(attachmentResult)
         };
+        if(attachmentResult?.ok===false) {
+          console.warn('[PDFium Gate] Email attachment transaction failed', {
+            parentPdfPath:result.pdfPath,
+            stage:attachmentResult.failureStage,
+            failedPath:attachmentResult.failedPath,
+            error:attachmentResult.error,
+            rollbackComplete:attachmentResult.rollbackComplete,
+            rollbackErrors:attachmentResult.rollbackErrors
+          });
+        }
         if(Array.isArray(attachmentResult?.failures) && attachmentResult.failures.length) {
           for(const failure of attachmentResult.failures) {
             console.warn('[PDFium Gate] Automatic email attachment item failed',result.pdfPath,failure);
@@ -535,7 +579,10 @@ class EmailImportFeature {
       new Notice(t('emailImport.notice.dragDropExisting',{path:result.pdfPath}),6000);
     } else if(result?.ok && result.pdfPath) {
       const exported=Number(attachmentResult?.exportedCount || 0);
-      const failed=Number(attachmentResult?.failureCount || 0) + (attachmentResult?.relationError ? 1 : 0);
+      const failed=Math.max(
+        attachmentResult?.ok===false ? 1 : 0,
+        Number(attachmentResult?.failureCount || 0) + (attachmentResult?.relationError ? 1 : 0)
+      );
       if(failed>0) {
         new Notice(t('emailImport.notice.dragDropImportedWithAttachmentErrors',{path:result.pdfPath,count:exported,failed}),9000);
       } else {

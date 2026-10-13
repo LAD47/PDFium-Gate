@@ -5,7 +5,8 @@ const {zipSync,strToU8}=require('fflate');
 const {parseEml}=require('../src/email-import/parsers/eml-parser');
 const {
   buildEmailAttachmentPlan,
-  finalizeEmailAttachmentPlan
+  finalizeEmailAttachmentPlan,
+  uniqueRelativePath
 }=require('../src/email-import/runtime/email-attachment-plan');
 const {
   runPlannedEmailAttachmentExport
@@ -84,17 +85,32 @@ function multipartEml({zipOne,zipTwo,directPdf}){
   });
   assert.equal(parsed.attachments.length,3);
 
-  const parentPdfPath='05 test/2026-10-05 - Multi ZIP attachment model.pdf';
+  const parentPdfPath='05 test/2026-10-05 - EPOST- Multi ZIP attachment model/2026-10-05 - EPOST- Multi ZIP attachment model.pdf';
   const plan=finalizeEmailAttachmentPlan(buildEmailAttachmentPlan({
     document:parsed,
     parentPdfPath,
     folderLabel:'Vedlegg'
   }));
 
-  assert.equal(plan.folderPath,'05 test/2026-10-05 - Multi ZIP attachment model Vedlegg');
+  assert.equal(plan.folderPath,'05 test/2026-10-05 - EPOST- Multi ZIP attachment model');
   assert.equal(plan.attachmentCount,3);
   assert.equal(plan.archiveCount,2);
   assert.equal(plan.outputCount,5);
+  // The namesake PDF already occupies the bundle folder; even a ZIP member
+  // with the same name (or different case) must never overwrite that PDF.
+  const parentName=parentPdfPath.split('/').pop();
+  const usedNames=new Set([parentName.toLowerCase()]);
+  assert.equal(
+    uniqueRelativePath(parentName,usedNames),
+    parentName.slice(0,-4)+' (2).pdf'
+  );
+  assert.equal(
+    uniqueRelativePath(parentName.toUpperCase(),usedNames),
+    parentName.toUpperCase().slice(0,-4)+' (3).PDF'
+  );
+
+  assert.equal(plan.folderPath,parentPdfPath.slice(0,parentPdfPath.lastIndexOf('/')));
+  assert.ok(plan.entries.every(entry=>`${plan.folderPath}/${entry.relativePath}`!==parentPdfPath));
   assert.deepEqual(plan.entries.map(entry=>entry.relativePath),[
     'cover.pdf',
     'rapport.pdf',
@@ -212,7 +228,7 @@ function multipartEml({zipOne,zipTwo,directPdf}){
     },
     readBinary:async file=>Buffer.from(file.bytes),
     deleteFile:async file=>{ failedCreated.delete(file.path); },
-    deleteFolder:async()=>{ failedCreated.clear(); },
+    deleteFolder:async()=>{ throw new Error('Must not recursively delete folders on rollback'); },
     deleteDocumentMetadataRecordForPdf:async path=>{
       rollbackRecords.push(path);
       failedRegistered.delete(path);
@@ -239,6 +255,101 @@ function multipartEml({zipOne,zipTwo,directPdf}){
   assert.equal(failedAutoRegistered.size,0,'all auto-registered PDF records created by the failed transaction are rolled back');
   assert.equal(rollbackRecords.length,3,'rollback owns every PDF path created by the transaction, including PDFs not yet metadata-processed');
   assert.equal(failedLinksCalled,false);
+
+  // Read-back can fail AFTER createBinary has created a real vault file.
+  // The transaction must delete only that owned file and preserve unrelated
+  // files which another operation may have placed in the same folder.
+  const externalPath=`${plan.folderPath}/unrelated-user-file.txt`;
+  const ownedFiles=new Map([[externalPath,{path:externalPath,bytes:Buffer.from('keep me')}]]);
+  const removedFiles=[];
+  const readbackFailure=await runPlannedEmailAttachmentExport({
+    parentPdfPath,
+    plan,
+    ensureDocumentRecordIndexReady:async()=>({ok:true}),
+    getDocumentMetadataRecordState:path=>path===parentPdfPath
+      ? {
+          ready:true,ok:true,registered:true,id:'parent-id',
+          recordPath:'File Metadata/aa/parent-id.md',
+          values:{email_import_source_sha256:sourceSha}
+        }
+      : {ready:true,ok:true,registered:false,values:{}},
+    getMetadataSchemaSnapshot:()=>({fields:[]}),
+    ensureTargetFolders:async()=>{},
+    createBinary:async(path,bytes)=>{
+      const file={path,extension:(path.split('.').pop()||'').toLowerCase(),bytes:Buffer.from(bytes)};
+      ownedFiles.set(path,file);
+      return file;
+    },
+    readBinary:async()=>{ throw new Error('synthetic read-back failure'); },
+    deleteFile:async file=>{
+      removedFiles.push(file.path);
+      ownedFiles.delete(file.path);
+    },
+    deleteFolder:async()=>{ throw new Error('Recursive delete is forbidden'); },
+    deleteDocumentMetadataRecordForPdf:async()=>({ok:true,deleted:false}),
+    saveDocumentMetadataRecordValues:async()=>{ throw new Error('Unexpected metadata save'); },
+    updateParentAttachmentLinks:async()=>{ throw new Error('Unexpected link update'); }
+  });
+  assert.equal(readbackFailure.ok,false);
+  assert.equal(readbackFailure.failureStage,'verify-attachment');
+  assert.match(readbackFailure.error,/synthetic read-back failure/);
+  assert.equal(readbackFailure.rollbackComplete,true);
+  assert.deepEqual(removedFiles,[`${plan.folderPath}/cover.pdf`]);
+  assert.deepEqual([...ownedFiles.keys()],[externalPath],'unrelated vault file must survive rollback');
+
+  // The parent block may have been written before read-back verification fails.
+  // A rollback must remove those partial links before removing their targets.
+  const partialFiles=new Map();
+  const partialRegistered=new Set();
+  const partialLinks=[];
+  const partialUpdateCalls=[];
+  const partial=await runPlannedEmailAttachmentExport({
+    parentPdfPath,
+    plan,
+    ensureDocumentRecordIndexReady:async()=>({ok:true}),
+    getDocumentMetadataRecordState:path=>path===parentPdfPath
+      ? {
+          ready:true,ok:true,registered:true,id:'parent-id',
+          recordPath:'File Metadata/aa/parent-id.md',
+          values:{email_import_source_sha256:sourceSha}
+        }
+      : {ready:true,ok:true,registered:partialRegistered.has(path),values:{}},
+    getMetadataSchemaSnapshot:()=>({fields:[]}),
+    ensureTargetFolders:async()=>{},
+    createBinary:async(path,bytes)=>{
+      const file={path,extension:(path.split('.').pop()||'').toLowerCase(),bytes:Buffer.from(bytes)};
+      partialFiles.set(path,file);
+      return file;
+    },
+    readBinary:async file=>Buffer.from(file.bytes),
+    deleteFile:async file=>{ partialFiles.delete(file.path); },
+    deleteDocumentMetadataRecordForPdf:async path=>{
+      partialRegistered.delete(path);
+      return {ok:true,deleted:true};
+    },
+    saveDocumentMetadataRecordValues:async path=>{
+      partialRegistered.add(path);
+      return {ok:true};
+    },
+    updateParentAttachmentLinks:async model=>{
+      partialUpdateCalls.push([...model.attachmentPaths]);
+      partialLinks.splice(0,partialLinks.length,...model.attachmentPaths);
+      if(model.attachmentPaths.length) {
+        throw new Error('synthetic parent wikilink read-back failure');
+      }
+      return {ok:true,linkedCount:0};
+    },
+    writeArchiveRelationshipForPdf:async()=>({ok:true,linked:true})
+  });
+  assert.equal(partial.ok,false);
+  assert.equal(partial.failureStage,'update-parent-links');
+  assert.equal(partial.rollbackComplete,true);
+  assert.equal(partialUpdateCalls.length,2,'rollback must clear parent links even after a throw');
+  assert.equal(partialUpdateCalls[0].length,plan.entries.length);
+  assert.deepEqual(partialUpdateCalls[1],[]);
+  assert.deepEqual(partialLinks,[],'no stale links to deleted attachments');
+  assert.equal(partialFiles.size,0,'only transaction-owned attachment files are removed');
+  assert.equal(partialRegistered.size,0,'transaction-owned PDF metadata is removed');
 
   console.log('Email Import multi-ZIP attachment model OK: complete preflight plan, one localized flat sibling attachment folder, multiple ZIP contents merged safely with collision suffixes, no ZIP transport files persisted, PDFs registered, parent links ordered to match the email PDF, and archive provenance retained on nested PDFs.');
 })().catch(error=>{

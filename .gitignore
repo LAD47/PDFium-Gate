@@ -1,1 +1,5 @@
 node_modules/
+
+# Local verification evidence; never ordinary project sources.
+/.codex-test-workspaces/
+/.codex-checkpoints/

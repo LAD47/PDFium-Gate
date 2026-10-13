@@ -20,6 +20,7 @@ function metadataPresentationSettings(settings = {}, i18n = null) {
   };
   return {
     ...source,
+    uiUrlValidationError:translate('validation.expectedHttpUrl','Enter a valid web address beginning with https:// or http://'),
     uiBooleanLabels:{
       yes:translate('common.yes','Yes'),
       no:translate('common.no','No')
@@ -134,6 +135,19 @@ function metadataSelectOptionLabel(field, value) {
   return option?.label || String(value || '');
 }
 
+// LOCAL-TEST clickable HTTP(S) metadata URLs. Reject dangerous/non-web schemes.
+function pdfiumGateSafeMetadataHttpUrl(field,value) {
+  if(field?.type!=='link' || field?.config?.kind!=='url') return '';
+  const text=String(value ?? '').trim();
+  if(!/^https?:\/\//i.test(text)) return '';
+  try {
+    const url=new URL(text);
+    return (url.protocol==='https:' || url.protocol==='http:') && !!url.hostname ? url.href : '';
+  } catch (_) {
+    return '';
+  }
+}
+
 function metadataMakeDescriptor({parse,normalize,format,renderEdit}) {
   return Object.freeze({
     parse,
@@ -141,7 +155,18 @@ function metadataMakeDescriptor({parse,normalize,format,renderEdit}) {
     validate:metadataValidateFieldValue,
     serialize:value=>metadataClone(value),
     format,
-    renderRead(parent,{value,field,settings}) { return metadataReadText(parent,format(value,settings,field)); },
+    renderRead(parent,{value,field,settings}) {
+      const formatted=format(value,settings,field);
+      const webUrl=pdfiumGateSafeMetadataHttpUrl(field,value);
+      if(!webUrl) return metadataReadText(parent,formatted);
+      const holder=parent.createDiv({cls:'pdfium-document-info-value'});
+      const link=holder.createEl('a',{cls:'external-link',text:String(formatted)});
+      link.setAttribute('href',webUrl);
+      link.setAttribute('target','_blank');
+      link.setAttribute('rel','noopener noreferrer');
+      link.setAttribute('title',webUrl);
+      return holder;
+    },
     renderEdit
   });
 }
@@ -216,7 +241,13 @@ function createMetadataFieldTypeRegistry() {
       }
     }),
     link:metadataMakeDescriptor({
-      parse:raw=>{const text=String(raw ?? '').trim();return text||null;},
+      parse:(raw,{field,settings})=>{
+        const text=String(raw ?? '').trim();
+        if(text && field?.config?.kind==='url' && !pdfiumGateSafeMetadataHttpUrl(field,text)) {
+          throw new Error(settings?.uiUrlValidationError || 'Enter a valid web address beginning with https:// or http://');
+        }
+        return text||null;
+      },
       normalize:value=>value,
       format:value=>value==null?'':String(value),
       renderEdit:(parent,{value,field})=>metadataTextInput(parent,value,field?.config?.kind==='url'?'https://…':'[[note]]')

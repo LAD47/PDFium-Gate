@@ -122,6 +122,7 @@ const MAIN_BRIDGE_FEATURE_ORDER = Object.freeze([
 
 const PLUGIN_SUPPORT_ORDER = Object.freeze([
   'email-import/vault-email-create-trigger.js',
+  'email-import/vault-email-arrival-index.js',
   'email-import/obsidian-email-import-adapter.js',
   'email-import/email-attachment-link-controller.js'
 ]);

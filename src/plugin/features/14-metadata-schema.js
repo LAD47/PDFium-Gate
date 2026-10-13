@@ -4,23 +4,24 @@ class MetadataSchemaFeature {
   async initializeMetadataSchema() {
     this.metadataSchemaRepository = createMetadataSchemaRepository({
       fileStore:this.obsidianAdapterFileStore,
-      defaultSchemaFactory:() => metadataDefaultSchema()
+      defaultSchemaFactory:() => metadataUpgradeAuthorSourceUrl(metadataDefaultSchema()).schema
     });
     try {
       const loaded = await this.metadataSchemaRepository.loadOrCreateDefault();
       let activeSchema=metadataClone(loaded.schema);
       let backupPath=loaded.backupPath || null;
       let migratedLabelOwnership=false;
+      const upgrade=metadataUpgradeAuthorSourceUrl(activeSchema);
       const normalized=metadataNormalizeFactoryLabelOwnership(
-        activeSchema,
+        upgrade.schema,
         key=>this.i18n?.getKnownTranslations?.(key) || []
       );
-      if(normalized.changed) {
+      if(upgrade.changed || normalized.changed) {
         normalized.schema.revision=Math.max(1,Number(activeSchema?.revision || 0)+1);
         const migrated=await this.metadataSchemaRepository.writeSchema(normalized.schema);
         activeSchema=metadataClone(migrated.schema);
         backupPath=migrated.backupPath || backupPath;
-        migratedLabelOwnership=true;
+        migratedLabelOwnership=normalized.changed;
       }
       this.state.metadata.schema = metadataClone(activeSchema);
       this.state.metadata.loaded = true;
@@ -147,7 +148,7 @@ class MetadataSchemaFeature {
 
   async resetMetadataSchemaToTestDefaults() {
     const current = this.getMetadataSchemaSnapshot();
-    const next = metadataDefaultSchema();
+    const next = metadataUpgradeAuthorSourceUrl(metadataDefaultSchema()).schema;
     if (current && current.format_version === next.format_version && JSON.stringify(current.fields) === JSON.stringify(next.fields)) return current;
     next.revision = Math.max(1, Number(current?.revision || 0) + 1);
     return await this._persistMetadataSchemaCandidate(next);

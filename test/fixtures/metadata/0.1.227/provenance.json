@@ -1,0 +1,8 @@
+{
+  "version": "0.1.227",
+  "baseline": "development candidate, not a claim of released plugin compatibility",
+  "repository": "LAD47/PDFium-Gate",
+  "commit": "ca2ca22804c7689764cab6095a4f3b59e03f154b",
+  "sourcePath": "src/metadata/schema-contract.js",
+  "sha256": "25e37e23db2b3f791c63f89ef05cad67edd88a8b93da3c95d1ff3874d17c6926"
+}

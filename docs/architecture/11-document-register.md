@@ -45,6 +45,34 @@ Rules:
 
 This keeps DocumentInfo and the document register on one metadata write path and prevents UI-specific storage behavior from becoming a second source of truth.
 
+## Inline-edit keyboard controls (October 12, 2026 test candidate)
+
+The `PDF Dokumentregister.base` custom register editor uses explicit keyboard
+commit/cancel behavior for all metadata types, in addition to the existing buttons:
+
+- Focus an editable table cell and press **Enter** or **F2** to edit it.
+- While editing, **Enter** (or the ✓ button) validates and persists one canonical
+  metadata field patch through `saveDocumentMetadataRecordValues`.
+- **Escape** (or the × button) discards the uncommitted editor value, leaving
+  the stored metadata untouched.
+- Select and boolean fields no longer auto-save on `change`, so Escape can
+  genuinely cancel before a write. In multiselect controls, **Space** can still
+  toggle a choice and **Enter** saves the completed choice set.
+- Should a future editor be multiline, ordinary Enter inserts a newline and
+  **Ctrl+Enter / Cmd+Enter** saves.
+- Enter from a button must retain its native button action. Composing IME text
+  must not trigger an accidental save. While a save is in flight, Escape cannot
+  undo that pending write.
+- On validation/persistence failure, keep the editor open and display the
+  failure rather than silently saving or losing the original value. Return
+  keyboard focus to the table cell after successful save/cancel.
+
+The keyboard handler belongs to the editor container rather than relying on
+one particular native control. The existing ✓ and × controls remain available.
+This interaction is regression-tested by `npm run test:document-register:editor-keys`
+and included in `npm run check`. Practical Obsidian testing is still required;
+the feature branch must not be merged without explicit user approval.
+
 ## 0.1.204 standard Dokumentregister ownership
 
 `DocumentRegisterBasesFeature` owns the end-user entry point to the document register and the **create-once** standard Base file `PDF Dokumentregister.base`. The Base file is not metadata source of truth; it is a user-facing query/view configuration over ordinary indexed Markdown records.

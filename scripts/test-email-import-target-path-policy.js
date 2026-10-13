@@ -1,93 +1,82 @@
 'use strict';
 
-const assert = require('assert/strict');
+const assert=require('assert/strict');
 const {
   normalizeVaultPath,
   safeFilenamePart,
-  pairedEmailAttachmentFolderPath,
+  emailBundleFolderPath,
   suggestedEmailPdfPath,
   suggestedEmailPdfPathInFolder,
   suggestedAttachmentPdfPath,
   validateTargetPdfPath
-} = require('../src/email-import/runtime/target-path-policy');
+}=require('../src/email-import/runtime/target-path-policy');
 
-function existingSet(values) {
-  const set = new Set(values || []);
-  return path => set.has(path);
-}
+const existingSet=values=>{
+  const entries=new Set(values||[]);
+  return path=>entries.has(path);
+};
 
-assert.equal(normalizeVaultPath('\\Folder\\Mail.pdf'), 'Folder/Mail.pdf');
-assert.equal(normalizeVaultPath('/Folder/Mail.pdf/'), 'Folder/Mail.pdf');
+assert.equal(normalizeVaultPath('\\Folder\\Mail.pdf'),'Folder/Mail.pdf');
+assert.equal(safeFilenamePart('  A:B?C  ','email'),'A B C');
+assert.equal(safeFilenamePart('CON','email'),'_CON');
+assert.equal(safeFilenamePart('A]]B','email'),'A] ]B','sanitized EPOST folder must support Markdown wikilinks');
+assert.equal(safeFilenamePart('...','fallback'),'fallback');
 
-assert.equal(safeFilenamePart('  A:B?C  ', 'email'), 'A B C');
-assert.equal(safeFilenamePart('CON', 'email'), '_CON');
-assert.equal(safeFilenamePart('...', 'fallback'), 'fallback');
-assert.equal(pairedEmailAttachmentFolderPath('Cases/mail.pdf','Vedlegg'),'Cases/mail Vedlegg');
-assert.equal(pairedEmailAttachmentFolderPath('Cases/mail.pdf','Attachments'),'Cases/mail Attachments');
-
-const emailDocument = {
-  message: {
-    subject: 'Quarterly report',
-    dateTime: { iso: '2026-09-29T07:00:00.000Z' }
+const document={
+  message:{
+    subject:'Innsyn juridisk vurdering Fredrikstad kommune',
+    dateTime:{iso:'2026-10-08T07:00:00.000Z'}
   }
 };
+const base='2026-10-08 - EPOST- Innsyn juridisk vurdering Fredrikstad kommune';
+const bundle=`00_Innboks/${base}`;
+const expectedPdf=`${bundle}/${base}.pdf`;
 assert.equal(
-  suggestedEmailPdfPath(emailDocument, existingSet([])),
-  'Email Imports/2026-09-29 - Quarterly report.pdf'
+  suggestedEmailPdfPathInFolder(document,'00_Innboks',existingSet([])),
+  expectedPdf
+);
+assert.equal(emailBundleFolderPath(expectedPdf),bundle);
+assert.equal(suggestedEmailPdfPath(document,existingSet([])),`Email Imports/${base}/${base}.pdf`);
+assert.equal(
+  suggestedEmailPdfPathInFolder(document,'',existingSet([])),
+  `${base}/${base}.pdf`
+);
+const next=`${base} (2)`;
+assert.equal(
+  suggestedEmailPdfPathInFolder(document,'00_Innboks',existingSet([bundle])),
+  `00_Innboks/${next}/${next}.pdf`
 );
 assert.equal(
-  suggestedEmailPdfPath(emailDocument, existingSet([
-    'Email Imports/2026-09-29 - Quarterly report.pdf',
-    'Email Imports/2026-09-29 - Quarterly report (2).pdf'
+  suggestedEmailPdfPathInFolder(document,'00_Innboks',existingSet([
+    bundle,`00_Innboks/${next}`
   ])),
-  'Email Imports/2026-09-29 - Quarterly report (3).pdf'
+  `00_Innboks/${base} (3)/${base} (3).pdf`
 );
 assert.equal(
-  suggestedEmailPdfPathInFolder(emailDocument, 'Cases/2026', existingSet([])),
-  'Cases/2026/2026-09-29 - Quarterly report.pdf'
-);
-assert.equal(
-  suggestedEmailPdfPathInFolder(emailDocument, '', existingSet([])),
-  '2026-09-29 - Quarterly report.pdf'
-);
-assert.equal(
-  suggestedEmailPdfPathInFolder(emailDocument, 'Cases/2026', existingSet([
-    'Cases/2026/2026-09-29 - Quarterly report Vedlegg'
-  ]),'Vedlegg'),
-  'Cases/2026/2026-09-29 - Quarterly report (2).pdf'
-);
-assert.equal(
-  suggestedEmailPdfPathInFolder(emailDocument, 'Cases/2026', existingSet([
-    'Cases/2026/2026-09-29 - Quarterly report.pdf'
-  ])),
-  'Cases/2026/2026-09-29 - Quarterly report (2).pdf'
-);
-
-const attachment = { filename: 'supporting-document.pdf' };
-assert.equal(
-  suggestedAttachmentPdfPath('Email Imports/parent.pdf', attachment, existingSet([])),
-  'Email Imports/supporting-document.pdf'
-);
-assert.equal(
-  suggestedAttachmentPdfPath('Email Imports/parent.pdf', attachment, existingSet([
-    'Email Imports/supporting-document.pdf'
-  ])),
-  'Email Imports/supporting-document (2).pdf'
-);
-assert.equal(
-  suggestedAttachmentPdfPath('parent.pdf', { filename: 'appendix' }, existingSet([])),
-  'appendix.pdf'
+  suggestedEmailPdfPathInFolder(document,'00_Innboks',existingSet([expectedPdf])),
+  `00_Innboks/${next}/${next}.pdf`
 );
 
 assert.deepEqual(
-  validateTargetPdfPath('Email Imports/new.pdf', existingSet([]),'Vedlegg'),
-  { ok: true, path: 'Email Imports/new.pdf', attachmentFolder:'Email Imports/new Vedlegg' }
+  validateTargetPdfPath(expectedPdf,existingSet([])),
+  {ok:true,path:expectedPdf,bundleFolder:bundle,attachmentFolder:bundle}
 );
-assert.equal(validateTargetPdfPath('Email Imports/new.txt', existingSet([])).ok, false);
-assert.equal(validateTargetPdfPath('../new.pdf', existingSet([])).ok, false);
-assert.equal(validateTargetPdfPath('.pdf-metadata/new.pdf', existingSet([])).ok, false);
-assert.equal(validateTargetPdfPath('File Metadata/new.pdf', existingSet([])).ok, false);
-assert.equal(validateTargetPdfPath('Email Imports/existing.pdf', existingSet(['Email Imports/existing.pdf'])).ok, false);
-assert.equal(validateTargetPdfPath('Email Imports/new.pdf', existingSet(['Email Imports/new Vedlegg']),'Vedlegg').ok, false);
+assert.equal(validateTargetPdfPath(expectedPdf.slice(0,-4)+'.txt',existingSet([])).ok,false);
+assert.equal(validateTargetPdfPath('../mail.pdf',existingSet([])).ok,false);
+assert.equal(validateTargetPdfPath('.pdf-metadata/mail/mail.pdf',existingSet([])).ok,false);
+assert.equal(validateTargetPdfPath('File Metadata/mail/mail.pdf',existingSet([])).ok,false);
+assert.equal(validateTargetPdfPath(expectedPdf,existingSet([expectedPdf])).ok,false);
+assert.equal(validateTargetPdfPath(expectedPdf,existingSet([bundle])).ok,false);
+assert.equal(validateTargetPdfPath('00_Innboks/mail.pdf',existingSet([])).ok,false,'no loose email PDF allowed');
+assert.equal(validateTargetPdfPath('00_Innboks/mail/other.pdf',existingSet([])).ok,false,'PDF name must match folder');
+assert.equal(validateTargetPdfPath('mail.pdf',existingSet([])).ok,false,'email needs its own folder');
 
-console.log('Email Import target-path policy OK: normalization, localized paired attachment folders, same-folder drop suggestions, safe filenames, deterministic unique allocation and fail-closed target validation verified.');
+// The standalone "import PDF attachment" command continues to put its target
+// next to the active parent; it is not the bulk EML/MSG bundling workflow.
+const attachment={filename:'supporting-document.pdf'};
+assert.equal(
+  suggestedAttachmentPdfPath(expectedPdf,attachment,existingSet([])),
+  `${bundle}/supporting-document.pdf`
+);
+
+console.log('Email Import bundle path policy OK: one EPOST folder containing its namesake PDF, collision-safe folder numbering, no shared-folder overwrite, safe naming and legacy manual PDF attachment target policy.');

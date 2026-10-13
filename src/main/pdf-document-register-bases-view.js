@@ -949,7 +949,28 @@ class PdfDocumentRegisterBasesView extends BasesViewBase {
     cell.dataset.rawValue = value == null ? '' : (Array.isArray(value) ? JSON.stringify(value) : String(value));
     const display = metadataBaseFormatFieldValue(metadataFieldTypeRegistry, field, value, this.presentationSettings());
     const text = display || '—';
-    const valueEl = cell.createSpan({ cls:'pdfium-document-register-cell-value', text });
+    // LOCAL-TEST register URL metadata display: link click must not open inline editor.
+    const webCandidate=field?.type==='link' && field?.config?.kind==='url' ? String(value ?? '').trim() : '';
+    let webUrl='';
+    if(/^https?:\/\//i.test(webCandidate)) {
+      try {
+        const parsed=new URL(webCandidate);
+        if(['https:','http:'].includes(parsed.protocol) && parsed.hostname) webUrl=parsed.href;
+      } catch (_) {}
+    }
+    const valueEl = webUrl
+      ? cell.createEl('a',{cls:'external-link pdfium-document-register-cell-value',text})
+      : cell.createSpan({ cls:'pdfium-document-register-cell-value', text });
+    if(webUrl) {
+      valueEl.setAttribute('href',webUrl);
+      valueEl.setAttribute('title',webUrl);
+      valueEl.setAttribute('target','_blank');
+      valueEl.setAttribute('rel','noopener noreferrer');
+      valueEl.addEventListener('click',event=>event.stopPropagation());
+      valueEl.addEventListener('keydown',event=>{
+        if(event.key==='Enter' || event.key===' ') event.stopPropagation();
+      });
+    }
     if (!editable) return;
     cell.classList.add('is-editable');
     cell.setAttribute('tabindex','0');
@@ -987,13 +1008,16 @@ class PdfDocumentRegisterBasesView extends BasesViewBase {
     const cancelButton = actions.createEl('button',{ cls:'pdfium-document-register-cell-cancel', text:'×' });
     saveButton.setAttribute('aria-label',this.t('documentRegister.saveValueAria'));
     cancelButton.setAttribute('aria-label',this.t('documentRegister.cancelEditAria'));
+    saveButton.setAttribute('title',`${this.t('documentRegister.saveValueAria')} (Enter)`);
+    cancelButton.setAttribute('title',`${this.t('documentRegister.cancelEditAria')} (Esc)`);
     const errorEl = cell.createDiv({ cls:'pdfium-document-register-cell-error' });
     errorEl.setAttribute('aria-live','polite');
 
     let finished = false;
     let saving = false;
     const cancel = () => {
-      if (finished) return;
+      // A persistence write that is already in flight cannot be undone by Esc.
+      if (finished || saving) return;
       finished = true;
       if (this.activeEditCancel === cancel) this.activeEditCancel = null;
       this.renderDisplayCell(cell,{ field, value, pdfPath, editable:true });
@@ -1016,7 +1040,12 @@ class PdfDocumentRegisterBasesView extends BasesViewBase {
       errorEl.setText('');
       saveButton.disabled = true;
       cancelButton.disabled = true;
-      const persisted = await this.host?.saveValues?.(pdfPath,{ [prepared.property]:prepared.value });
+      let persisted;
+      try {
+        persisted = await this.host?.saveValues?.(pdfPath,{ [prepared.property]:prepared.value });
+      } catch (error) {
+        persisted = {ok:false,error:error instanceof Error ? error.message : String(error)};
+      }
       saving = false;
       if (!persisted?.ok) {
         cell.classList.remove('is-saving');
@@ -1032,30 +1061,38 @@ class PdfDocumentRegisterBasesView extends BasesViewBase {
       const stored = Object.prototype.hasOwnProperty.call(persisted.values || {}, prepared.property)
         ? persisted.values[prepared.property]
         : prepared.value;
-      if (cell.isConnected !== false) this.renderDisplayCell(cell,{ field, value:stored, pdfPath, editable:true });
+      if (cell.isConnected !== false) {
+        this.renderDisplayCell(cell,{ field, value:stored, pdfPath, editable:true });
+        cell.focus?.();
+      }
       return true;
     };
 
     saveButton.addEventListener('click',event=>{ event.preventDefault(); event.stopPropagation(); void commit(); });
     cancelButton.addEventListener('click',event=>{ event.preventDefault(); event.stopPropagation(); cancel(); });
+    // Delegate at the editor container, so nested select/checkbox controls
+    // and multi-selects follow the same keyboard rules as text inputs.
+    // Buttons retain their native keyboard behavior (Enter/Space activates them).
+    editor.addEventListener('keydown',event=>{
+      if (finished || saving || event.isComposing || event.keyCode===229) return;
+      if (event.target === saveButton || event.target === cancelButton) return;
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        event.stopPropagation();
+        cancel();
+      } else if (event.key === 'Enter') {
+        const tag=String(event.target?.tagName || '').toUpperCase();
+        // Future multiline editors: Enter inserts a newline; Ctrl+Enter saves.
+        if (tag === 'TEXTAREA' && !event.ctrlKey && !event.metaKey) return;
+        event.preventDefault();
+        event.stopPropagation();
+        void commit();
+      }
+    });
     const inputEl = control?.inputEl || null;
     if (inputEl) {
-      inputEl.addEventListener('keydown',event=>{
-        if (event.key === 'Escape') {
-          event.preventDefault();
-          event.stopPropagation();
-          cancel();
-          return;
-        }
-        if (event.key === 'Enter' && field.type !== 'multiselect') {
-          event.preventDefault();
-          event.stopPropagation();
-          void commit();
-        }
-      });
-      if (field.type === 'boolean' || field.type === 'select') {
-        inputEl.addEventListener('change',()=>{ void commit(); });
-      }
+      // Do not persist automatically on select/checkbox change. Esc must
+      // always be able to discard an uncommitted edit on every field type.
       inputEl.focus?.();
       if (typeof inputEl.select === 'function' && !['select','boolean','multiselect'].includes(field.type)) inputEl.select();
     }

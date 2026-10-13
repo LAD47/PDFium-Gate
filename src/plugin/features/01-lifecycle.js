@@ -19,6 +19,7 @@ async onload() {
       rememberDocumentRegisterFilters:persistedSettings.rememberDocumentRegisterFilters === true,
       autoRegisterNewPdfs:persistedSettings.autoRegisterNewPdfs !== false,
       emailDragDropAutomaticImport:persistedSettings.emailDragDropAutomaticImport !== false,
+      emailImportObservedStagingIndex:persistedSettings.emailImportObservedStagingIndex || null,
       emailDragDropExtractAttachments:persistedSettings.emailDragDropExtractAttachments !== false
     };
     this.i18n = createPdfiumI18n({
@@ -80,6 +81,9 @@ async onload() {
       this.obsidianPluginRegistrationAdapter.registerDomEvent(window,'focus',()=>{
         void this.ports.reconcileArchiveImportVaultFiles().catch(error=>
           console.warn('[PDFium Gate] Archive Import focus reconciliation failed',error)
+        );
+        void this.ports.reconcileEmailImportVaultFiles().catch(error=>
+          console.warn('[PDFium Gate] Email Import focus reconciliation failed',error)
         );
       });
     }

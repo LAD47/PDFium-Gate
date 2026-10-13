@@ -10,7 +10,7 @@
   "emailImport.modal.duplicateWarning": "En exakt källdubblett hittades ({{count}}).",
   "emailImport.modal.noDuplicates": "Ingen exakt källdubblett hittades.",
   "emailImport.modal.targetPath": "PDF-sökväg i valvet",
-  "emailImport.modal.targetPathDesc": "Den föreslagna sökvägen kan ändras före importen.",
+  "emailImport.modal.targetPathDesc": "E-postens PDF och bilagor sparas i samma mapp. PDF-filen måste ha samma namn som mappen.",
   "emailImport.modal.retention": "Originalkälla",
   "emailImport.modal.retentionDesc": "Välj uttryckligen om de ursprungliga .eml/.msg-byten ska sparas.",
   "emailImport.modal.retentionChoose": "Välj...",

@@ -63,7 +63,7 @@ The design follows a few simple principles:
 - Import EML and MSG email as normal PDFium Gate PDFs.
 - Preserve sender/recipient/date/subject context and attachment relationships.
 - Detect exact duplicate email sources with SHA-256.
-- Export ordinary email attachments beside the generated email PDF and link them back to the parent document.
+- Export an email PDF and its ordinary attachments together in a dedicated EPOST-named folder, with links back to the parent document.
 - Handle PDF attachments as registered source documents with provenance.
 - Import ZIP attachments transactionally with verification and rollback.
 - Import standalone ZIP archives with safety preflight, preserved directory structure, rollback on failure, and source/archive provenance.
@@ -151,7 +151,7 @@ The project deliberately separates durable user data from disposable acceleratio
   It reads real records from `File Metadata/` through PDFium Gate's dedicated `pdfium-document-register` Bases view; the native Base files in the example package are learning examples, not alternate production registers.
 - `Examples-Obsidian-PDFium-Gate/` contains an optional synthetic learning package. The example Bases use Obsidian's built-in table view and are intentionally different from the real PDFium Gate document register. The package is installed or restored only through an explicit Settings action with confirmation; unrelated files and modified legacy examples are preserved.
 - PDFs remain normal PDF files in the Vault.
-- Imported email attachments remain ordinary Vault files under one localized sibling attachment folder (for example `Subject Vedlegg/` in Norwegian Bokmål).
+- New email imports place the email PDF and ordinary attachments together in a dedicated `YYYY-MM-DD - EPOST- Subject/` folder. Existing imported emails are not moved automatically.
 - EML/MSG and ZIP are normally treated as transport sources: successful imports do not require them to remain as visible Vault documents. Exact EML/MSG retention is available only as an advanced opt-in.
 
 The exact internal structures may still evolve before the project reaches a stable 1.0 release. Changes to persisted formats or file layouts require an explicit migration/backward-compatibility review before a public stable release.

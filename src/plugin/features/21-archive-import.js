@@ -78,12 +78,33 @@ class ArchiveImportFeature {
     const relation=ARCHIVE_IMPORT_RUNTIME.extractArchiveRelationship(verified);
     const expectedMembers=ARCHIVE_IMPORT_RUNTIME.normalizeArchiveRelationshipPaths(memberPaths)
       .filter(path=>path!==pdfPath && path!==model.parentDocumentPath);
-    if(!relation
-      || relation.sourceArchiveName!==model.sourceArchiveName
-      || relation.sourceArchiveSha256!==model.sourceArchiveSha256
-      || (relation.parentDocumentPath||'')!==(model.parentDocumentPath||'')
-      || JSON.stringify(relation.memberPaths)!==JSON.stringify(expectedMembers)) {
-      return {ok:false,pdfPath,error:'Archive relationship block failed read-back verification'};
+    // Report the mismatched field, not merely a generic read-back error.
+    // This distinguishes filename parsing, Obsidian link rewriting and
+    // truncated/incomplete writes in real-world failed imports.
+    const mismatches=[];
+    if(!relation) {
+      mismatches.push('missing-relation-block');
+    } else {
+      if(relation.sourceArchiveName!==model.sourceArchiveName) mismatches.push('archive-name');
+      if(relation.sourceArchiveSha256!==model.sourceArchiveSha256) mismatches.push('archive-sha256');
+      if((relation.parentDocumentPath||'')!==(model.parentDocumentPath||'')) mismatches.push('parent-path');
+      if(JSON.stringify(relation.memberPaths)!==JSON.stringify(expectedMembers)) mismatches.push('member-paths');
+    }
+    if(mismatches.length) {
+      const actualMembers=relation?.memberPaths||[];
+      const differingIndex=expectedMembers.findIndex((value,index)=>value!==actualMembers[index]);
+      return {
+        ok:false,
+        pdfPath,
+        error:`Archive relationship block failed read-back verification (${mismatches.join(', ')})`,
+        mismatches,
+        expectedMemberCount:expectedMembers.length,
+        actualMemberCount:actualMembers.length,
+        firstDifferentMember:differingIndex<0?null:{
+          expected:expectedMembers[differingIndex],
+          actual:actualMembers[differingIndex]||null
+        }
+      };
     }
     return {
       ok:true,

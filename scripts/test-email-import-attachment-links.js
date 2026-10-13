@@ -38,6 +38,38 @@ assert.deepEqual(extractEmailAttachmentLinkPaths(withLinks),[
 ]);
 assert.ok(withLinks.includes('- [[Cases/brev.docx]]'));
 
+// Regression: each member of a twelve-PDF ZIP can contain a literal closing
+// bracket. Parent attachment links must round-trip and normalize correctly.
+const zipMemberNames=[
+  'Vedtak [1].pdf',
+  'Notat ] del 2.pdf',
+  'Journal [3].pdf',
+  ...Array.from({length:9},(_,i)=>`Dokument ${i+4}.pdf`)
+];
+const zipMemberPaths=zipMemberNames.map(name=>`00_Innboks/EML Vedlegg/${name}`);
+const zipMarkdown=upsertEmailAttachmentLinkBlock(original,zipMemberPaths);
+assert.deepEqual(
+  extractEmailAttachmentLinkPaths(zipMarkdown),
+  zipMemberPaths,
+  'all twelve bracket-bearing attachment wikilinks survive Markdown read-back'
+);
+const movedTargets=new Map(zipMemberPaths.map(path=>[path,`Arkiv/${path.split('/').pop()}`]));
+const zipNormalized=normalizeResolvedEmailAttachmentLinkTargets(
+  zipMarkdown,
+  'File Metadata/11/11111111-1111-4111-8111-111111111111.md',
+  linkPath=>movedTargets.get(linkPath)||null
+);
+assert.deepEqual(
+  extractEmailAttachmentLinkPaths(zipNormalized),
+  zipMemberPaths.map(path=>movedTargets.get(path)),
+  'managed links containing brackets are also normalized after a path move'
+);
+assert.throws(
+  ()=>attachmentWikilink('Cases/ambiguous]]file.pdf'),
+  /cannot be represented safely/,
+  'double-closing bracket remains forbidden'
+);
+
 const renamedByObsidian = withLinks.replace('[[Cases/brev.docx]]','[[brev-renamed.docx]]');
 assert.deepEqual(extractEmailAttachmentLinkPaths(renamedByObsidian),[
   'Cases/report.pdf',
@@ -218,8 +250,56 @@ async function verifyDuplicateSourceParentDisambiguation() {
   assert.deepEqual(opened,[]);
 }
 
+async function verifyParentMetadataReadback() {
+  const recordPath='File Metadata/11/parent.md';
+  const file={path:recordPath,extension:'md'};
+  const {EmailImportFeature}=require('../src/plugin/features/20-email-import');
+  const feature=new EmailImportFeature();
+  global.EMAIL_IMPORT_RUNTIME={
+    normalizeVaultPath:value=>String(value||'').trim(),
+    upsertEmailAttachmentLinkBlock,
+    extractEmailAttachmentLinkPaths
+  };
+  let text=original;
+  let modifyCount=0;
+  feature.obsidianVaultReadAdapter={
+    getAbstractFileByPath:path=>path===recordPath?file:null,
+    async readText(){return text;}
+  };
+  feature.obsidianVaultWriteAdapter={
+    async modifyText(_,next){text=next;modifyCount++;}
+  };
+  const result=await feature.updateEmailAttachmentLinks({
+    parentRecordPath:recordPath,
+    attachmentPaths:zipMemberPaths
+  });
+  assert.equal(result.ok,true);
+  assert.equal(result.linkedCount,12);
+  assert.equal(modifyCount,1);
+  assert.deepEqual(extractEmailAttachmentLinkPaths(text),zipMemberPaths);
+
+  // Obsidian can rewrite a link independently. If so, the diagnostic must
+  // show the first different target rather than concealing the cause.
+  text=original;
+  feature.obsidianVaultReadAdapter.readText=async()=>text.replace(
+    'Vedtak [1].pdf','Vedtak renamed.pdf'
+  );
+  await assert.rejects(
+    feature.updateEmailAttachmentLinks({
+      parentRecordPath:recordPath,
+      attachmentPaths:zipMemberPaths
+    }),
+    error=>error.code==='EMAIL_ATTACHMENT_LINK_READBACK_FAILED'
+      && error.details.expectedCount===12
+      && error.details.actualCount===12
+      && error.details.firstDifference===0
+      && /Vedtak renamed/.test(error.message)
+  );
+}
+
 verifyMutableLiveAttachmentResolution()
   .then(()=>verifyDuplicateSourceParentDisambiguation())
+  .then(()=>verifyParentMetadataReadback())
   .then(()=>{
     console.log('Email Import attachment wikilink block OK: native links remain deterministic, mutable exported attachments open without SHA revalidation, and duplicate source imports resolve against the exact clicked parent PDF.');
   })
