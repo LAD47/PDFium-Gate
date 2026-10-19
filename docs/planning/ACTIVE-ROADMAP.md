@@ -4,26 +4,25 @@
 
 This file is the entry point for current planning. Historical handoffs, superseded experiments and completed release checklists must not be treated as active TODO items.
 
-## Current release baseline
+## Current published release: 0.1.230
 
-**0.1.226** is the current user-confirmed Obsidian Community Plugins baseline.
+[0.1.230](https://github.com/LAD47/PDFium-Gate/releases/tag/0.1.230) was published
+as an ordinary GitHub Release on 19 October 2026. Required assets
+`main.js`, `manifest.json` and `styles.css` are present.
 
-Confirmed on 2026-10-06:
+- Immutable `archive/0.1.230` and tag `0.1.230` point to
+  `ee5b7950a08477c1ad65cd1d474325e4b6b6b50b`.
+- [Build generated runtime 39298734216](https://github.com/LAD47/PDFium-Gate/actions/runs/39298734216)
+  and [publication 39305773758](https://github.com/LAD47/PDFium-Gate/actions/runs/39305773758)
+  succeeded for that release commit.
+- Reviewed `main` is `92c1f4ce2632f80b281ed8adc770308b6098fe33`, which adds
+  only the later `AGENTS.md` synchronization. Do not move the release archive
+  or tag to include this later documentation commit.
+- The published version's installation through Obsidian Community Plugins is
+  **not yet separately user-confirmed**. Keep that distribution confirmation
+  separate from the final local candidate's practical results below.
 
-- exact release candidate merged to `main`;
-- **Build generated runtime** succeeded on the merge commit;
-- immutable `archive/0.1.226` created from the verified commit;
-- ordinary GitHub Release `0.1.226` published, not marked Pre-release;
-- release assets contain `main.js`, `manifest.json` and `styles.css`;
-- tag, archive branch and release-time `main` all pointed to commit `e57192fa376e0e9d89c60676cd668e9b852944f8`;
-- Obsidian Community Plugins offered and installed 0.1.226 successfully.
-
-The completed cleanup record is [0.1.226 Community release cleanup](0.1.226-COMMUNITY-RELEASE-CLEANUP.md).
-
-## Current local candidate: 0.1.230 Document Register cleanup
-
-Prepared locally on `main` on 2026-10-19; see [release notes](../releases/0.1.230.md).
-Manifest, package/lockfile, versions register and renderer version target 0.1.230.
+### Practical evidence for the released candidate
 
 On 19 October 2026, the user confirmed **all seven practical tests passed**
 for the final local 0.1.230 candidate:
@@ -36,34 +35,47 @@ for the final local 0.1.230 candidate:
 6. Other Bases views retain their **Properties** button.
 7. The register works after switching between Bases views.
 
-The earlier six checks of the local 0.1.229 register-cleanup build remain
-separate historical evidence in
-[test observations](../testing/TEST-OBSERVATIONS.md); they are not counted as
-the final 0.1.230 tests. Temporary UI reporting is removed for this candidate.
+The earlier six checks of the local 0.1.229 cleanup build remain separate
+historical evidence in [test observations](../testing/TEST-OBSERVATIONS.md).
+Previously reported local automated verification passed **21/21** with exit 0;
+this maintenance task does not rerun it. GitHub verification is now recorded above.
 
-- The reported local automated pipeline passed **21/21** with exit 0, including
-  deterministic runtime verification. This documentation update does not rerun
-  it. No GitHub Actions verification for 0.1.230 has been performed or claimed
-  at this point.
-- Preserve the confirmed view-content/header ownership checks, local observation,
-  marker cleanup and the register's own localized column picker.
-- Example installation creates one working register at the Vault root only if
-  absent. Two synthetic native Bases and six records remain; historical register
-  copies and legacy files are never automatically migrated or removed.
-- Permanent native Properties/column regression and example-installation tests
-  remain in the complete check pipeline. No persistence format, identity or
-  dependency update is included. The
-  [regression contract](../architecture/13-testing-and-verification.md) covers
-  future DOM, lifecycle, column/language and example-installation checks;
-  synthetic DOM tests do not replace practical Obsidian testing.
-- Later release staging must use explicit file selection, not `git add -A`.
-  Preserve and exclude `AGENTS.md` and
-  `pdfium-gate-register-ryddig-ui-bevar-agents.cjs`; including `AGENTS.md`
-  requires separate approval.
-- This is local preparation only. Commit/push, GitHub runtime verification,
-  archive freezing and publication remain separate, explicitly authorized steps
-  under [RELEASE.md](../../RELEASE.md). No remote release status is asserted.
-  Community preview remains optional under that authoritative procedure.
+The release preserves local view-content/header ownership, observer/marker
+cleanup, schema-aware localized columns and one root-only standard register.
+Historical register copies/legacy files are not automatically migrated or deleted.
+The [regression contract](../architecture/13-testing-and-verification.md) remains
+applicable; synthetic DOM checks do not replace practical Obsidian testing.
+The old local patch script has been removed, and `AGENTS.md` was subsequently
+synced to `main`; earlier staging instructions for those files are historical.
+
+### Current maintenance follow-up
+
+- Record a separate user confirmation when published 0.1.230 has been installed
+  through Community Plugins.
+- Retarget/preserve the additional Email Import Node, runtime-integration and
+  real Electron PDF coverage before retiring old development-branch CI.
+- The five reviewed development branches have no commits outside `main`.
+  See [GitHub maintenance review](GITHUB-MAINTENANCE-0.1.230.md) for exact tips,
+  recommendations and conditional cleanup order. No branch/workflow/settings
+  change is performed by this documentation update.
+- Community preview is optional under [RELEASE.md](../../RELEASE.md).
+  No release/publication task remains open merely because an old handoff says so.
+
+## Historical 0.1.226 Community installation confirmation
+
+**0.1.226** is the earlier user-confirmed Obsidian Community Plugins installation, not the latest published release.
+
+Confirmed on 2026-10-06:
+
+- exact release candidate merged to `main`;
+- **Build generated runtime** succeeded on the merge commit;
+- immutable `archive/0.1.226` created from the verified commit;
+- ordinary GitHub Release `0.1.226` published, not marked Pre-release;
+- release assets contain `main.js`, `manifest.json` and `styles.css`;
+- tag, archive branch and release-time `main` all pointed to commit `e57192fa376e0e9d89c60676cd668e9b852944f8`;
+- Obsidian Community Plugins offered and installed 0.1.226 successfully.
+
+The completed cleanup record is [0.1.226 Community release cleanup](0.1.226-COMMUNITY-RELEASE-CLEANUP.md).
 
 ## Earlier 0.1.228 candidate preparation (historical)
 
@@ -80,7 +92,7 @@ Branch: `feature/0.1.228-email-bundles`. Manifest, package, lockfile, versions r
 
 ## Earlier 0.1.227 candidate work
 
-The following records preserve earlier completed candidate work incorporated into 0.1.228. Do not reopen resolved 0.1.226 release work unless a regression is demonstrated.
+The following records preserve earlier completed candidate work incorporated into 0.1.228. Candidate/merge/preview wording in these historical records describes its then-current state; current [RELEASE.md](../../RELEASE.md) governs. Do not reopen resolved 0.1.226 release work unless a regression is demonstrated.
 
 ### DocumentInfo
 
@@ -126,7 +138,7 @@ Already resolved — do not reopen as planning questions:
 - Remaining scanner recommendations for vault enumeration and clipboard access are intentional product behavior. The `new Function(...)` finding comes from `source-map-js` via `sanitize-html -> postcss -> source-map-js`; dependency replacement can be reviewed later, but there is no current vulnerable-dependency finding.
 - Before any 0.1.227 merge/release decision, run the Community **Review branch / preview scan** against the candidate branch if available.
 
-### Backup and destructive maintenance
+## Backup and destructive maintenance
 
 Authoritative PDFium Gate-side requirements:
 
@@ -143,7 +155,7 @@ Keep these boundaries:
 - reassess the existing per-PDF `.pdfium-backup` / `backupOriginalPdf` safeguard only after the independent backup solution exists and its protection scope can be compared properly;
 - a future **Restore from backup** action belongs naturally in the missing-document review once a validated restore path exists.
 
-### Email Import / Archive Import deferred product decisions
+## Email Import / Archive Import deferred product decisions
 
 The transport-source/attachment model is confirmed. In 0.1.228, the EPOST bundle supersedes the older sibling attachment-folder placement; ZIP members remain flat within the bundle. Preserve source-ZIP cleanup, direct PDF links and external-ZIP focus reconciliation without a demonstrated regression.
 
@@ -173,7 +185,7 @@ These were established while preparing 0.1.226 and are now part of the normal re
 - `package-lock.json` is committed;
 - local/CI dependency installation uses `npm ci`;
 - generated runtime is built from canonical `src/`;
-- every Community release candidate must pass the mandatory Obsidian Community **Review branch / preview scan** before merge to `main`; scan evidence (date + candidate SHA + disposition of findings) must be recorded, and the scan must be repeated if the candidate changes afterward;
+- Community **Review branch / preview scan** is optional under the owner decision recorded in [RELEASE.md](../../RELEASE.md). If chosen, scan the exact candidate, record date/SHA/findings and repeat after relevant candidate changes; all automated quality gates remain required;
 - normal Community publishing is manual-only;
 - freeze `archive/<version>` only after the final `main` build workflow is green;
 - publish an ordinary GitHub Release from the frozen archive;

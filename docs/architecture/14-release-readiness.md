@@ -53,6 +53,16 @@ BRAT was used during an earlier test phase and is no longer part of the active i
 
 The public product name and plugin ID were frozen in 0.1.224 as **PDFium Gate** / `pdfium-gate`, and the active GitHub repository is `LAD47/PDFium-Gate`. The public `manifest.json` author metadata is `LAD47`.
 
-## Current confirmed Community baseline
+## Published release and installation confirmation
 
-Version **0.1.226** was published through the normal Community Plugins release path on 2026-10-06 and was subsequently offered and installed successfully through Obsidian Community Plugins. Its frozen release evidence is `archive/0.1.226`; the release-time commit is `e57192fa376e0e9d89c60676cd668e9b852944f8`.
+The latest published ordinary GitHub Release is **0.1.230** (2026-10-19).
+Its immutable `archive/0.1.230` and tag `0.1.230` point to
+`ee5b7950a08477c1ad65cd1d474325e4b6b6b50b`. The release build and publication
+workflows succeeded, and all seven practical tests of the final local candidate
+were user-confirmed. Installation of the published 0.1.230 version through
+Obsidian Community Plugins has not yet been separately user-confirmed.
+
+Version **0.1.226** was published through the normal Community Plugins release path on 2026-10-06 and was subsequently offered and installed successfully through Obsidian Community Plugins. Its frozen release evidence is `archive/0.1.226`; the release-time commit is `e57192fa376e0e9d89c60676cd668e9b852944f8`. This is preserved historical installation evidence, not the latest published release.
+
+Current release status and procedure are maintained in [RELEASE.md](../../RELEASE.md)
+and the [active roadmap](../planning/ACTIVE-ROADMAP.md).

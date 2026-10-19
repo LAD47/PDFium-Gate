@@ -51,12 +51,12 @@ Exact EML/MSG retention remains available as an advanced opt-in setting and is o
 - [EMAIL-DOCUMENT-MODEL.md](EMAIL-DOCUMENT-MODEL.md) — Canonical Email Document v1 runtime contract.
 - [METADATA-INTEGRATION.md](METADATA-INTEGRATION.md) — document-record/provenance integration.
 - [RUNTIME-INTEGRATION.md](RUNTIME-INTEGRATION.md) — current Obsidian/runtime integration flow.
-- [REFACTORING-AND-SHARED-SERVICES.md](REFACTORING-AND-SHARED-SERVICES.md) — earlier refactor rationale; retained for architectural history and reusable-service reasoning.
 
 ## Historical documents
 
 These files preserve why earlier designs were tried and rejected. They are **not current implementation instructions**:
 
+- [REFACTORING-AND-SHARED-SERVICES.md](REFACTORING-AND-SHARED-SERVICES.md) — earlier refactor rationale and reusable-service reasoning, retained as history.
 - [HANDOFF-2026-09-29.md](HANDOFF-2026-09-29.md)
 - [DECISIONS-2026-09-29.md](DECISIONS-2026-09-29.md)
 - [DECISIONS-2026-09-30.md](DECISIONS-2026-09-30.md)
@@ -86,13 +86,33 @@ Run the complete repository check with:
 npm run check
 ```
 
-The Email Import workflow additionally runs parser, renderer, duplicate, attachment, ZIP, link, Electron PDF generation and runtime-integration checks in GitHub Actions.
+The separate Email Import workflow runs 22 Node test groups, a real Electron
+PDF-generation test, the full repository check, a bundled runtime-integration
+check and a tracked-file cleanliness check. At the reviewed `main` commit,
+18 of those Node groups, the Electron test and the runtime-integration script
+are not invoked by `npm run check`.
 
-## Current layout test status (October 12, 2026)
+Its push trigger still names old development branches and does not follow
+`main` or pull requests. Preserve the additional coverage when retargeting CI;
+see the [workflow review](../planning/GITHUB-MAINTENANCE-0.1.230.md). No workflow
+is changed by this documentation update.
 
-The source ZIP relationship and parent-link read-back fixes were practically confirmed against a previously failing 12-file EML/ZIP import. The consolidated EPOST folder layout is a **new, unmerged test-branch candidate** (`feature/0.1.228-email-bundles`) with functionality previously confirmed by the owner and covered by passing automated controls. Whole-candidate practical testing is not exhaustive; no additional manual repetition is required in this preparation. Existing imports retain their old file paths; no automatic migration or moves are performed.
+## Released layout status (0.1.228 through 0.1.230)
 
-## Windows File Explorer / offline import (October 12, 2026 candidate)
+The source ZIP relationship and parent-link read-back fixes were practically
+confirmed against a previously failing 12-file EML/ZIP import. The consolidated
+EPOST folder work was later merged into `main` with 0.1.228
+(`b93c0bc0dfdffda9ed6febca52d65d70998c7626`) and is part of published 0.1.230;
+`feature/0.1.228-email-bundles` is no longer an unmerged candidate.
+
+Earlier owner-confirmed behavior and automated results are preserved evidence,
+not a claim of exhaustive whole-plugin testing. The seven final local 0.1.230
+checks specifically concern the released Document Register fix. Installation of
+published 0.1.230 through Community Plugins is not yet separately user-confirmed.
+Existing imports retain their old file paths; no automatic migration or moves
+are performed.
+
+## Windows File Explorer / offline import
 
 New EML/MSG files copied into the vault through Windows File Explorer are handled in three ways:
 
@@ -104,4 +124,4 @@ The plugin keeps a **local-only** per-path size/mtime inventory in its existing 
 
 The source EML/MSG is removed only after all required attachment/link operations succeed and the staging bytes still match the original. The new EPOST bundle naming is the same regardless of whether the source arrived via drag/drop or Explorer. No automatic migration of older imported PDFs or folders takes place.
 
-**Practical tests:** run a direct drag/drop import; copy a new EML while Obsidian runs, then return focus; close Obsidian, copy a new MSG/EML to `00_Innboks`, restart; repeat with a broken source and verify no repeated dialog on focus; confirm old unrelated EML/MSG files remain untouched. Do not publish until verified in Obsidian.
+**Future practical regression checklist:** run a direct drag/drop import; copy a new EML while Obsidian runs, then return focus; close Obsidian, copy a new MSG/EML to `00_Innboks`, restart; repeat with a broken source and verify no repeated dialog on focus; confirm old unrelated EML/MSG files remain untouched. Record results separately. This maintenance review does not claim a new run of these cases or turn the earlier candidate checklist into an open publication gate for the already published 0.1.230 release.

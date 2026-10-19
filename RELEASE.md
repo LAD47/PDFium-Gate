@@ -142,7 +142,30 @@ For the current Community release path:
 - any future opt-in test channel must be designed separately so it cannot silently advance ordinary Community Plugins users to test code.
 
 
-## Latest completed Community release: 0.1.226
+## Latest published GitHub release: 0.1.230
+
+[0.1.230](https://github.com/LAD47/PDFium-Gate/releases/tag/0.1.230) was published
+on 2026-10-19 as an ordinary GitHub Release, not a prerelease.
+
+- Release commit, immutable `archive/0.1.230` and tag `0.1.230`:
+  `ee5b7950a08477c1ad65cd1d474325e4b6b6b50b`.
+- [Build generated runtime 39298734216](https://github.com/LAD47/PDFium-Gate/actions/runs/39298734216)
+  and [Publish Community Plugin release 39305773758](https://github.com/LAD47/PDFium-Gate/actions/runs/39305773758)
+  completed successfully for the release commit.
+- Published assets are `main.js`, `manifest.json` and `styles.css`.
+- All seven practical tests of the final local 0.1.230 candidate were
+  user-confirmed; installation of the published version through Community
+  Plugins has not yet been separately user-confirmed.
+- Reviewed `main` additionally contains `92c1f4ce2632f80b281ed8adc770308b6098fe33`
+  (`docs: sync project instructions`). The release tag/archive stay at the
+  verified release commit; later documentation commits do not reopen them.
+
+See [release notes](docs/releases/0.1.230.md) for preparation/test history and
+[the active roadmap](docs/planning/ACTIVE-ROADMAP.md) for current follow-up.
+Publication evidence, local practical confirmation and Community installation
+confirmation are separate milestones.
+
+## Historical completed Community release: 0.1.226
 
 0.1.226 completed the Community-release infrastructure cleanup and was published on 2026-10-06.
 
