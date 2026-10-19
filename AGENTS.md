@@ -33,6 +33,6 @@ Disse reglene supplerer de globale arbeidsreglene i `C:\Users\leifd\.codex\AGENT
 
 ## Release og sluttkontroll
 
-- Ikke commit, push, merge, rebase, tag, release eller publiser til GitHub/Community Plugins uten uttrykkelig godkjenning. Ingen eksterne API-kall eller kostnadsbelagte tjenester uten godkjenning.
-- [RELEASE.md](RELEASE.md) er autoritativ for release. Bevar repository-verifikasjon, praktisk Obsidian-testing, obligatorisk Community **Review branch / preview scan** av nøyaktig kandidat, vurdering av alle funn, ny scan etter relevante kandidatendringer, grønn runtime-build og uforanderlig `archive/<version>`.
+- Ikke commit, push, merge, rebase, tag, release eller publiser til GitHub/Community Plugins uten godkjenning. Ingen eksterne API-kall eller kostnadsbelagte tjenester uten godkjenning.
+- [RELEASE.md](RELEASE.md) er autoritativ for release. Bevar repository-verifikasjon, praktisk Obsidian-testing, grønn runtime-build og uforanderlig `archive/<version>`.
 - Sammenlign status før/etter, kontroller diff og staging, og rapporter faktisk kjørte kontroller. Ved godkjent arbeid i en uren arbeidskopi: kontroller også at tidligere endringer er bevart. Nye usporede dokumenter må kontrolleres separat fra vanlig `git diff`.
