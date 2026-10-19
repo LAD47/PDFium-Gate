@@ -9,7 +9,7 @@ PDFium Gate intentionally exposes two different Bases concepts and the UI/docume
 - the optional files under `Examples-Obsidian-PDFium-Gate/` use Obsidian's built-in `table` view over synthetic Markdown/YAML records; they exist only to teach the portable metadata model and normal Bases filtering/sorting;
 - `PDF Dokumentregister.base` is the real register for user documents. It is created on demand, queries real records under `File Metadata/`, and uses the custom `pdfium-document-register` view.
 
-The two native example Bases never query real registered documents. The example folder also includes a working **copy** of `PDF Dokumentregister.base`, which intentionally queries real metadata. Explicit example installation creates the Vault-root register only if missing. The root register remains user-owned and is never overwritten; only canonical files inside the example folder may be replaced after confirmation. Unrelated files and customized legacy examples remain untouched.
+The two native example Bases never query real registered documents. Explicit example installation creates one `PDF Dokumentregister.base` at the Vault root only if missing; it never installs a register copy in the example folder. The root register and any historical copies remain user-owned and are never overwritten, moved or deleted. Only the nine canonical synthetic example files may be replaced after confirmation. Legacy Bases are preserved even when unchanged. The duplicate static register file was removed from `docs/examples/`; its canonical generator remains in `src/metadata/document-register-base-config.js`.
 
 ## Current missing-document policy
 
@@ -164,3 +164,111 @@ The second contained Document Register redesign slice turns the health overview 
 - Before the Errors summary is returned, the in-memory invalid-record set is self-healed against the live Obsidian vault: an invalid-record path that is confirmed to no longer exist as a Markdown file is removed from RAM state automatically. This does **not** delete or modify any file. If vault lookup is unavailable or throws, the path is retained (fail closed) rather than being silently discarded.
 - The custom Bases view consumes the summary through an explicit host port; it does not scan/write metadata itself.
 
+## 0.1.230 – Obsidian Bases DOM og egenskapsvelger
+
+### Observed host DOM and the original failure
+
+Practical diagnostics on 19 October 2026 showed this structure in the tested
+Obsidian version:
+
+```text
+.workspace-leaf.mod-active
+  .workspace-leaf-content[data-type=bases]
+    .view-content
+      .bases-header
+        .bases-toolbar
+          .bases-toolbar-properties-menu
+      .bases-view
+        .pdfium-document-register-base-view
+```
+
+Obsidian's general Properties chooser is outside `.bases-view`, in its sibling
+`.bases-header`. The original implementation searched only inside the register's
+nearest `.bases-view` and therefore could not reach the actual control.
+Earlier automatic checks could pass because their synthetic/source assumptions
+did not establish that the real Obsidian toolbar was in the searched container.
+A passing synthetic test did not demonstrate working suppression in Obsidian.
+
+This hierarchy is an observation from the version used in that practical test,
+not a guaranteed DOM contract for future Obsidian versions. The observed
+`.mod-active` class is context, not a filename, translated label or global
+workspace selector used to determine register ownership.
+
+### Local ownership, observation and cleanup
+
+Starting from the loaded `pdfium-document-register` instance, the final solution
+identifies its enclosing Bases `.view-content` and corresponding `.bases-header`.
+It requires one direct current `.bases-view` containing only this register, one
+direct header, one toolbar and one Properties control. Only that instance's
+control receives the `pdfium-register-native-properties-hidden` marker.
+Hidden, detached, wrong-type, ambiguous or unsupported layouts leave the
+native control visible. Other Bases views must retain their Properties chooser.
+
+A local `MutationObserver` watches this `.view-content` and its immediate
+Bases content wrapper; wrapper observation covers attributes and direct child
+replacement only. It reconciles delayed/replaced chrome and view switching.
+There is no document/workspace-wide observer. View switching reconciles obsolete
+markers and observation ownership; component cleanup and `onunload` disconnect
+observers, invalidate queued synchronization and remove owned markers.
+If cleanup or local observation is unavailable, the native control stays visible.
+
+This is presentation-only suppression. No metadata, native `file.*` properties,
+document UUIDs or schema fields are deleted or globally renamed to tidy the UI.
+
+### PDFium Gate's schema-aware column chooser
+
+**Choose columns** (**Velg Kolonner** in Norwegian Bokmål) uses the canonical
+metadata schema through `metadataBaseVisibleFields`, plus the PDF
+(`filemeta_file`) and Status (`filemeta_status`) system columns. It does not
+present the Vault-wide general property catalogue. The chooser is available
+when the register is empty and in the alternative status views; when the
+schema is unavailable, its button remains visible but disabled.
+
+Column visibility is retained in the existing `pdfiumHiddenColumns` Base view
+preference across redraw and reopening. Changing visibility does not rewrite
+metadata or native Bases query/filter configuration. UI and schema presentation
+labels are localized where supported; user-owned labels stay user-owned.
+Permanent `filemeta_id` UUIDs, schema `property` names, system identifiers and
+stored option machine values remain language-independent.
+
+Newly generated register view names use `documentRegister.viewName` in the
+selected UI language. Existing user-owned `.base` configurations, labels,
+filters, sorting and visibility choices are not automatically reset or renamed.
+
+### One standard register and preserved user files
+
+The standard `PDF Dokumentregister.base` is created at the Vault root only when
+missing. The example installer does not install or restore another real
+register in `Examples-Obsidian-PDFium-Gate/`. Historical register copies and
+legacy Bases in existing Vaults are not automatically read for migration,
+overwritten, moved or deleted. The two pedagogical native Bases, six synthetic
+records and their README remain installable after confirmation.
+
+The custom register is identified by the `pdfium-document-register` view type
+and proven local DOM ownership, never by its `.base` filename. Existing
+user-defined Base customizations remain intact.
+
+### Practical evidence and future regression checks
+
+On 19 October 2026, the user reported all six practical Obsidian checks passed
+for the earlier local 0.1.229 register-cleanup build. The correct Properties
+control was identified and marked, the local observer belonged to the nearest
+view-content, and other Bases views retained their normal chooser. This remains
+historical evidence for that build.
+
+Later the same day, the user separately confirmed all seven practical tests of
+the final local 0.1.230 candidate, including removal of **Copy UI diagnostics**
+and operation after switching Bases views. The complete seven-point record is
+in [test observations](../testing/TEST-OBSERVATIONS.md). Codex did not access
+the Vault to obtain either user-reported result.
+
+0.1.230 removes the temporary report generator, copy button, clipboard handling
+and associated translation keys while preserving the confirmed synchronizer.
+The permanent regression test
+[`scripts/test-document-register-native-properties.js`](../../scripts/test-document-register-native-properties.js)
+covers the observed hierarchy, delayed/replaced chrome, view switching,
+independent/nested views, cleanup, ambiguous/unsupported hosts and seven-language
+schema-aware column selection. It also checks `pdfiumHiddenColumns` retention.
+The [testing contract](13-testing-and-verification.md) defines the follow-up
+checks for changes and Obsidian upgrades. Synthetic DOM tests do not replace
+practical testing against the actual Obsidian DOM.

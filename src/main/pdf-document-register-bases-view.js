@@ -479,12 +479,151 @@ class PdfDocumentRegisterBasesView extends BasesViewBase {
     this.type = PDF_DOCUMENT_REGISTER_BASE_VIEW_TYPE;
     this.host = host || {};
     this.containerEl = parentEl.createDiv('pdfium-document-register-base-view');
+    this.nativePropertiesButtons = new Set();
+    this.nativePropertiesLoaded = false;
+    this.nativePropertiesObserver = null;
+    this.nativePropertiesObserverRoot = null;
+    this.nativePropertiesObserverOwner = null;
+    this.nativePropertiesSyncQueued = false;
+    this.nativePropertiesGeneration = 0;
+    if (typeof this.register === 'function') {
+      this.register(() => this.stopNativePropertiesSync());
+    }
     this.activeEditCancel = null;
     this.headerFilters = new Map();
     this.headerFilterPersistenceEnabled = null;
     this.statusSummaryRequestId = 0;
     this.statusSummary = null;
     this.statusFilter = 'all';
+  }
+
+  clearNativePropertiesButtons() {
+    for (const button of this.nativePropertiesButtons) {
+      button.classList.remove('pdfium-register-native-properties-hidden');
+    }
+    this.nativePropertiesButtons.clear();
+  }
+
+  nativePropertiesContent() {
+    const content=this.containerEl.closest?.('.view-content') || null;
+    const owner=content?.closest?.('.workspace-leaf-content');
+    return owner ? content : null;
+  }
+
+  observeNativePropertiesContent(content) {
+    const owner=content?.closest('.workspace-leaf-content') || null;
+    if(this.nativePropertiesObserverRoot===content && this.nativePropertiesObserverOwner===owner) return;
+    this.nativePropertiesObserver?.disconnect();
+    this.nativePropertiesObserver=null;
+    this.nativePropertiesObserverRoot=null;
+    this.nativePropertiesObserverOwner=null;
+    this.nativePropertiesGeneration++;
+    this.nativePropertiesSyncQueued=false;
+    if(!content) return;
+    // Use the owning window for popouts; never observe the document or workspace.
+    const Observer=this.containerEl.ownerDocument?.defaultView?.MutationObserver
+      || (typeof MutationObserver==='function' ? MutationObserver : null);
+    if(typeof Observer!=='function') return;
+    let observer=null;
+    try {
+      observer=new Observer(()=>{
+        if(!this.nativePropertiesLoaded || this.nativePropertiesSyncQueued) return;
+        this.nativePropertiesSyncQueued=true;
+        const generation=this.nativePropertiesGeneration;
+        void Promise.resolve().then(()=>{
+          if(generation!==this.nativePropertiesGeneration || !this.nativePropertiesLoaded) return;
+          this.nativePropertiesSyncQueued=false;
+          this.syncNativePropertiesButtons();
+        });
+      });
+      observer.observe(content,{
+        childList:true,
+        subtree:true,
+        attributes:true,
+        attributeFilter:['class','style','hidden','aria-hidden','data-type']
+      });
+      // Also watch only the owning content wrapper for host type/replacement changes.
+      observer.observe(owner,{
+        childList:true,
+        attributes:true,
+        attributeFilter:['class','style','hidden','aria-hidden','data-type']
+      });
+      this.nativePropertiesObserver=observer;
+      this.nativePropertiesObserverRoot=content;
+      this.nativePropertiesObserverOwner=owner;
+    } catch (_) {
+      observer?.disconnect();
+      // Without local lifecycle observation, leave native controls visible.
+    }
+  }
+
+  nativePropertiesButton(content) {
+    if(this.type!==PDF_DOCUMENT_REGISTER_BASE_VIEW_TYPE || !this.containerEl.isConnected) return null;
+    const bases=this.containerEl.closest?.('.bases-view');
+    const owner=content.closest('.workspace-leaf-content');
+    if(owner?.getAttribute('data-type')!=='bases') return null;
+    // The observed host shape has exactly one current view and one header.
+    // An extra view, wrapper or header makes ownership uncertain; fail open.
+    const direct=(parent,cls)=>Array.from(parent.children).filter(el=>el.classList.contains(cls));
+    const views=direct(content,'bases-view');
+    const headers=direct(content,'bases-header');
+    if(views.length!==1 || views[0]!==bases || headers.length!==1) return null;
+    if(bases.children.length!==1 || bases.children[0]!==this.containerEl) return null;
+    for(let el=this.containerEl;el;el=el.parentElement) {
+      if(el.hidden || el.getAttribute('aria-hidden')==='true' || el.classList.contains('is-hidden')
+        || el.style?.display==='none' || el.style?.visibility==='hidden') return null;
+      if(el===owner) break;
+    }
+    const header=headers[0];
+    const toolbars=direct(header,'bases-toolbar');
+    if(toolbars.length!==1) return null;
+    const buttons=Array.from(toolbars[0].querySelectorAll('.bases-toolbar-properties-menu'))
+      .filter(el=>el.closest('.bases-toolbar')===toolbars[0]
+        && el.closest('.bases-header')===header && el.closest('.view-content')===content);
+    return buttons.length===1 ? buttons[0] : null;
+  }
+
+  syncNativePropertiesButtons() {
+    if(!this.nativePropertiesLoaded || typeof this.register!=='function') {
+      this.clearNativePropertiesButtons();
+      return;
+    }
+    const content=this.nativePropertiesContent();
+    this.observeNativePropertiesContent(content);
+    const button=content && this.nativePropertiesObserverRoot===content
+      ? this.nativePropertiesButton(content) : null;
+    // Reconcile only changed markers; our own observer then settles without a loop.
+    for(const previous of this.nativePropertiesButtons) {
+      if(previous===button) continue;
+      previous.classList.remove('pdfium-register-native-properties-hidden');
+      this.nativePropertiesButtons.delete(previous);
+    }
+    if(button) {
+      if(!button.classList.contains('pdfium-register-native-properties-hidden')) {
+        button.classList.add('pdfium-register-native-properties-hidden');
+      }
+      this.nativePropertiesButtons.add(button);
+    }
+  }
+
+  stopNativePropertiesSync() {
+    this.nativePropertiesLoaded=false;
+    this.nativePropertiesGeneration++;
+    this.nativePropertiesSyncQueued=false;
+    this.nativePropertiesObserver?.disconnect();
+    this.nativePropertiesObserver=null;
+    this.nativePropertiesObserverRoot=null;
+    this.nativePropertiesObserverOwner=null;
+    this.clearNativePropertiesButtons();
+  }
+
+  onload() {
+    this.nativePropertiesLoaded=true;
+    this.syncNativePropertiesButtons();
+  }
+
+  onunload() {
+    this.stopNativePropertiesSync();
   }
 
   t(key,params){ return pdfDocumentRegisterT(this.host,key,params); }
@@ -1099,44 +1238,11 @@ class PdfDocumentRegisterBasesView extends BasesViewBase {
     return true;
   }
 
-  onDataUpdated() {
-    this.activeEditCancel = null;
-    this.containerEl.empty();
-    const schema = this.host?.getSchema?.() || null;
-    if (!schema) {
-      this.containerEl.createDiv({ cls:'pdfium-document-register-message', text:this.t('documentRegister.schemaUnavailable') });
-      return;
-    }
-
-    this.syncHeaderFilterPersistenceState();
-    const allFields = metadataBaseVisibleFields(schema);
-    const columns=this.documentRegisterColumns(allFields);
-    const hiddenColumns=this.getHiddenColumns(columns);
-    const fields=allFields.filter(field=>!hiddenColumns.has(String(field.property || '')));
-    const showStatus=!hiddenColumns.has('filemeta_status');
-    const showPdf=!hiddenColumns.has('filemeta_file');
-    const entries = pdfDocumentRegisterEntries(this.data);
-
-    if(this.statusFilter==='error' || this.statusFilter==='unregistered') {
-      let specialHost=null;
-      this.renderStatusOverview(summary=>{
-        if(specialHost) this.renderSpecialStatusTable(specialHost,summary);
-      });
-      specialHost=this.containerEl.createDiv({cls:'pdfium-document-register-special-host'});
-      specialHost.createDiv({cls:'pdfium-document-register-message',text:'…'});
-      if(this.statusSummary?.ok) this.renderSpecialStatusTable(specialHost,this.statusSummary);
-      return;
-    }
-
-    this.renderStatusOverview();
-    if (!entries.length) {
-      this.containerEl.createDiv({ cls:'pdfium-document-register-message', text:this.t('documentRegister.noDocuments') });
-      return;
-    }
-
+  renderRegisterToolbar(columns,hiddenColumns,schemaAvailable) {
     const toolbar=this.containerEl.createDiv({cls:'pdfium-document-register-toolbar'});
     const toolbarActions=toolbar.createDiv({cls:'pdfium-document-register-toolbar-actions'});
     const columnsButton=toolbarActions.createEl('button',{text:this.t('documentRegister.columns.button')});
+    columnsButton.disabled=!schemaAvailable;
     columnsButton.setAttribute('aria-label',this.t('documentRegister.columns.buttonAria'));
     columnsButton.addEventListener('click',event=>{
       event.preventDefault();
@@ -1150,6 +1256,47 @@ class PdfDocumentRegisterBasesView extends BasesViewBase {
     help.setText(filterCount
       ? this.t('documentRegister.helpActive',{count:filterCount,persistence:rememberFilters ? this.t('documentRegister.filtersSaved') : this.t('documentRegister.filtersTemporary')})
       : this.t('documentRegister.helpIdle',{persistence:rememberFilters ? this.t('documentRegister.filtersSaved') : this.t('documentRegister.filtersTemporary')}));
+  }
+
+  onDataUpdated() {
+    this.syncNativePropertiesButtons();
+    this.activeEditCancel = null;
+    this.containerEl.empty();
+    const schema = this.host?.getSchema?.() || null;
+    const allFields = schema ? metadataBaseVisibleFields(schema) : [];
+    const columns=this.documentRegisterColumns(allFields);
+    const hiddenColumns=this.getHiddenColumns(columns);
+    if (!schema) {
+      this.renderRegisterToolbar(columns,hiddenColumns,false);
+      this.containerEl.createDiv({ cls:'pdfium-document-register-message', text:this.t('documentRegister.schemaUnavailable') });
+      return;
+    }
+
+    this.syncHeaderFilterPersistenceState();
+    const fields=allFields.filter(field=>!hiddenColumns.has(String(field.property || '')));
+    const showStatus=!hiddenColumns.has('filemeta_status');
+    const showPdf=!hiddenColumns.has('filemeta_file');
+    const entries = pdfDocumentRegisterEntries(this.data);
+
+    if(this.statusFilter==='error' || this.statusFilter==='unregistered') {
+      let specialHost=null;
+      this.renderStatusOverview(summary=>{
+        if(specialHost) this.renderSpecialStatusTable(specialHost,summary);
+      });
+      this.renderRegisterToolbar(columns,hiddenColumns,true);
+      specialHost=this.containerEl.createDiv({cls:'pdfium-document-register-special-host'});
+      specialHost.createDiv({cls:'pdfium-document-register-message',text:'…'});
+      if(this.statusSummary?.ok) this.renderSpecialStatusTable(specialHost,this.statusSummary);
+      return;
+    }
+
+    this.renderStatusOverview();
+    this.renderRegisterToolbar(columns,hiddenColumns,true);
+
+    if (!entries.length) {
+      this.containerEl.createDiv({ cls:'pdfium-document-register-message', text:this.t('documentRegister.noDocuments') });
+      return;
+    }
 
     const scroll = this.containerEl.createDiv({ cls:'pdfium-document-register-scroll' });
     const table = scroll.createEl('table', { cls:'pdfium-document-register-table' });

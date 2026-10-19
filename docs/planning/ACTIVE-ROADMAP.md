@@ -20,7 +20,52 @@ Confirmed on 2026-10-06:
 
 The completed cleanup record is [0.1.226 Community release cleanup](0.1.226-COMMUNITY-RELEASE-CLEANUP.md).
 
-## Active 0.1.228 release candidate: email bundles and metadata enhancements
+## Current local candidate: 0.1.230 Document Register cleanup
+
+Prepared locally on `main` on 2026-10-19; see [release notes](../releases/0.1.230.md).
+Manifest, package/lockfile, versions register and renderer version target 0.1.230.
+
+On 19 October 2026, the user confirmed **all seven practical tests passed**
+for the final local 0.1.230 candidate:
+
+1. Obsidian displays PDFium Gate **0.1.230**.
+2. The Vault-root Document Register opens normally.
+3. Obsidian's general **Properties** (**Egenskaper**) chooser is hidden in the register.
+4. PDFium Gate's **Choose columns** (**Velg Kolonner**) works.
+5. **Copy UI diagnostics** (**Kopier UI-diagnose**) has been removed.
+6. Other Bases views retain their **Properties** button.
+7. The register works after switching between Bases views.
+
+The earlier six checks of the local 0.1.229 register-cleanup build remain
+separate historical evidence in
+[test observations](../testing/TEST-OBSERVATIONS.md); they are not counted as
+the final 0.1.230 tests. Temporary UI reporting is removed for this candidate.
+
+- The reported local automated pipeline passed **21/21** with exit 0, including
+  deterministic runtime verification. This documentation update does not rerun
+  it. No GitHub Actions verification for 0.1.230 has been performed or claimed
+  at this point.
+- Preserve the confirmed view-content/header ownership checks, local observation,
+  marker cleanup and the register's own localized column picker.
+- Example installation creates one working register at the Vault root only if
+  absent. Two synthetic native Bases and six records remain; historical register
+  copies and legacy files are never automatically migrated or removed.
+- Permanent native Properties/column regression and example-installation tests
+  remain in the complete check pipeline. No persistence format, identity or
+  dependency update is included. The
+  [regression contract](../architecture/13-testing-and-verification.md) covers
+  future DOM, lifecycle, column/language and example-installation checks;
+  synthetic DOM tests do not replace practical Obsidian testing.
+- Later release staging must use explicit file selection, not `git add -A`.
+  Preserve and exclude `AGENTS.md` and
+  `pdfium-gate-register-ryddig-ui-bevar-agents.cjs`; including `AGENTS.md`
+  requires separate approval.
+- This is local preparation only. Commit/push, GitHub runtime verification,
+  archive freezing and publication remain separate, explicitly authorized steps
+  under [RELEASE.md](../../RELEASE.md). No remote release status is asserted.
+  Community preview remains optional under that authoritative procedure.
+
+## Earlier 0.1.228 candidate preparation (historical)
 
 Branch: `feature/0.1.228-email-bundles`. Manifest, package, lockfile, versions register and canonical runtime version are aligned on **0.1.228**. See [release notes](../releases/0.1.228.md).
 

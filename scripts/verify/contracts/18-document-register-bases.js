@@ -77,8 +77,10 @@ module.exports=function verifyDocumentRegisterBasesContract(){
   const orderBlock=standardBaseYaml.split('    order:')[1]?.split('    sort:')[0] || '';
   if(!orderBlock.trimStart().startsWith('- filemeta_file')) fail('standard Document Register Base does not put PDF first in column order');
   if(standardBaseYaml.includes('      - document_date\n')===false||standardBaseYaml.includes('      - sender\n')===false||standardBaseYaml.includes('      - document_type\n')===false) fail('standard Document Register Base compact defaults hid primary columns');
-  const ignoredLocalizedBase=baseConfig.metadataDocumentRegisterStandardBaseYaml(schema,()=> 'SHOULD NOT BE USED');
-  if(ignoredLocalizedBase!==standardBaseYaml) fail('standard Base factory unexpectedly depends on UI language');
+  const localizedBase=baseConfig.metadataDocumentRegisterStandardBaseYaml(schema,'PDF Dokumentregister');
+  const defaultName='    name: '+JSON.stringify(baseConfig.PDF_DOCUMENT_REGISTER_STANDARD_VIEW_NAME);
+  if(localizedBase!==standardBaseYaml.replace(defaultName,'    name: "PDF Dokumentregister"')) fail('localized Base name changed query, fields or machine configuration');
+  if(baseConfig.metadataDocumentRegisterStandardBaseYaml(schema)!==standardBaseYaml) fail('default Base generation is not deterministic');
   if(standardBaseYaml.includes('filemeta_id')||standardBaseYaml.includes('record filename')) fail('standard Dokumentregister Base exposes technical identity fields');
   const hiddenBaseYaml=baseConfig.metadataDocumentRegisterStandardBaseYaml(hidden);
   if(hiddenBaseYaml.includes('  sender:')||hiddenBaseYaml.includes('      - sender')) fail('standard Dokumentregister Base ignores show_in_default_base=false');
@@ -249,7 +251,7 @@ module.exports=function verifyDocumentRegisterBasesContract(){
   if(!featureSource.includes('registerExistingPdfs:() => this.ports.registerExistingPdfRecords()')) fail('Document Register bulk registration does not reuse the canonical existing-PDF registration flow');
   if(/recoverMissingDocumentRecordByExactSha|relinkMissingDocumentRecord|listPdfFiles:/.test(featureSource)) fail('custom Bases feature must not expose missing-PDF recovery or manual relink');
   if(featureSource.includes('obsidianFrontmatterAdapter')||featureSource.includes('processFrontMatter(')||featureSource.includes('modifyText(')) fail('custom Bases feature unexpectedly mutates metadata or overwrites Base files');
-  if(!featureSource.includes('metadataDocumentRegisterStandardBaseYaml(schema)')||!featureSource.includes('this.obsidianVaultWriteAdapter.createText(path, yaml)')) fail('standard Document Register Base create-only path missing');
+  if(!featureSource.includes("metadataDocumentRegisterStandardBaseYaml(schema,this.i18n.t('documentRegister.viewName'))")||!featureSource.includes('this.obsidianVaultWriteAdapter.createText(path, yaml)')) fail('standard Document Register Base create-only path missing');
   if(!featureSource.includes("name:this.i18n.t('commands.openDocumentRegister')")||!featureSource.includes("getLeaf?.('tab')")||!featureSource.includes('await leaf.openFile(ensured.file)')) fail('standard Dokumentregister open command missing');
   const existingGuard=featureSource.indexOf('if (existing)');
   const createBase=featureSource.indexOf('this.obsidianVaultWriteAdapter.createText(path, yaml)');

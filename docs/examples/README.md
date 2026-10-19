@@ -12,7 +12,7 @@ The two native Base examples in this folder use Obsidian's built-in `table` view
 
 They are **not** the PDFium Gate document register.
 
-The real register is `PDF Dokumentregister.base`. It reads real registered PDF metadata from `File Metadata/` and uses the PDFium Gate custom view type `pdfium-document-register`. A copy of `PDF Dokumentregister.base` is now included in the example folder, and can be copied manually. It shows **real** registered PDFs rather than the synthetic examples. The Settings action also creates the working register in the Vault root if it is missing. An existing root register is always preserved unchanged.
+The real register is `PDF Dokumentregister.base`. It reads real registered PDF metadata from `File Metadata/` and uses the PDFium Gate custom view type `pdfium-document-register`. The Settings action creates this working register only at the Vault root if it is missing. No register copy is installed in the example folder. Existing root registers and historical copies remain untouched.
 
 ## Included examples
 
@@ -25,9 +25,10 @@ The real register is `PDF Dokumentregister.base`. It reads real registered PDF m
 - `Example - Missing PDF record.md` — preserved metadata for a missing PDF; the record is historical/read-only until explicitly deleted or a future backup restore path is used.
 - `Example - Native Obsidian Base - All documents.base` — ordinary Obsidian table showing the complete synthetic set.
 - `Example - Native Obsidian Base - Awaiting response.base` — ordinary Obsidian table demonstrating a practical filter.
-- `PDF Dokumentregister.base` — copyable custom-view register of real PDFs, not a synthetic example.
 
-Running the Settings action again restores these canonical example files after an explicit warning. Existing canonical example files are overwritten, including the register **copy** in the example folder. The working Vault-root register is never overwritten. The old `Example PDF Document Register.base` filename is removed only when its content is still byte-for-byte equal to the old canonical example; a modified legacy file is preserved. Unrelated files are never changed.
+Running the Settings action again restores only the nine canonical synthetic example files after an explicit warning. The working Vault-root register is never overwritten. Historical `PDF Dokumentregister.base` copies and `Example PDF Document Register.base` files are not read, overwritten, moved or deleted, even if they still match old templates. Reinstallation does not recreate a register copy. Unrelated files are never changed.
+
+The duplicate real-register snapshot has been removed from this example set. The canonical register generator remains in `src/metadata/document-register-base-config.js`; use the plugin's standard register action rather than copying an example.
 
 The canonical factory field names used here are:
 

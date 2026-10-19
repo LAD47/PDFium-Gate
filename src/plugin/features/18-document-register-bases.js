@@ -18,7 +18,7 @@ class DocumentRegisterBasesFeature {
     }
 
     try {
-      const yaml = metadataDocumentRegisterStandardBaseYaml(schema);
+      const yaml = metadataDocumentRegisterStandardBaseYaml(schema,this.i18n.t('documentRegister.viewName'));
       const file = await this.obsidianVaultWriteAdapter.createText(path, yaml);
       if (!file || String(file?.path || '') !== path) {
         return { ok:false, created:false, path, error:this.i18n.t('documentRegister.createReadbackFailed') };

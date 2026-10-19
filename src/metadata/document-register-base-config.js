@@ -25,7 +25,7 @@ function metadataDocumentRegisterBaseFields(schema) {
     }));
 }
 
-function metadataDocumentRegisterStandardBaseYaml(schema) {
+function metadataDocumentRegisterStandardBaseYaml(schema, viewName = PDF_DOCUMENT_REGISTER_STANDARD_VIEW_NAME) {
   const fields = metadataDocumentRegisterBaseFields(schema);
   const lines = [
     '# PDFium Gate — standard Document Register',
@@ -49,7 +49,7 @@ function metadataDocumentRegisterStandardBaseYaml(schema) {
   lines.push(`    displayName: ${metadataDocumentRegisterYamlString('PDF')}`);
   lines.push('views:');
   lines.push(`  - type: ${PDF_DOCUMENT_REGISTER_BASE_VIEW_TYPE}`);
-  lines.push(`    name: ${metadataDocumentRegisterYamlString(PDF_DOCUMENT_REGISTER_STANDARD_VIEW_NAME)}`);
+  lines.push(`    name: ${metadataDocumentRegisterYamlString(viewName)}`);
   const hiddenColumns=fields
     .map(field=>field.property)
     .filter(property=>PDF_DOCUMENT_REGISTER_STANDARD_HIDDEN_COLUMNS.includes(property));

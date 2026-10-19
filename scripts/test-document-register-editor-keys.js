@@ -100,6 +100,28 @@ const source=fs.readFileSync(path.join(__dirname,'../src/main/pdf-document-regis
 vm.runInContext(source,sandbox,{filename:'pdf-document-register-bases-view.js'});
 const View=vm.runInContext('PdfDocumentRegisterBasesView',sandbox);
 
+// No native mutation before load or without a provable host/observer boundary.
+// The complete observed DOM and lifecycle regression lives in test-document-register-native-properties.js.
+{
+  const own=new FakeElement('button');
+  const view=new View({},new FakeElement(),{});
+  view.nativePropertiesButtons.add(own);
+  own.classList.add('pdfium-register-native-properties-hidden');
+  view.syncNativePropertiesButtons();
+  assert.ok(!own.classList.contains('pdfium-register-native-properties-hidden'));
+
+  const cleanup=[];
+  View.prototype.register=callback=>cleanup.push(callback);
+  const owned=new View({},new FakeElement(),{});
+  delete View.prototype.register;
+  assert.equal(cleanup.length,1);
+  own.classList.add('pdfium-register-native-properties-hidden');
+  owned.nativePropertiesButtons.add(own);
+  cleanup[0]();
+  assert.ok(!own.classList.contains('pdfium-register-native-properties-hidden'));
+  assert.equal(owned.nativePropertiesLoaded,false);
+}
+
 function makeEditor(type='text',value='old',saveValues=async(_,patch)=>({ok:true,values:patch})){
   const root=new FakeElement();
   const view=new View({},root,{

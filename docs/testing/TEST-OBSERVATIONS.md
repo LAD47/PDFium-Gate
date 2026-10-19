@@ -11,9 +11,56 @@ This file is a running list of observations found during practical testing that 
 - New test documents should be added manually so each test case has known provenance.
 - This list is for observations and deferred fixes; adding an item here does not mean the behavior has been reproduced, diagnosed, or fixed.
 
+## Final local 0.1.230 practical confirmation — 2026-10-19
+
+The user confirmed **all seven practical tests passed** for the final local
+0.1.230 candidate on 19 October 2026:
+
+1. Obsidian displays PDFium Gate **0.1.230**.
+2. The Vault-root Document Register opens normally.
+3. Obsidian's general **Properties** (**Egenskaper**) chooser is hidden in the register.
+4. PDFium Gate's **Choose columns** (**Velg Kolonner**) works.
+5. **Copy UI diagnostics** (**Kopier UI-diagnose**) has been removed.
+6. Other Bases views retain their **Properties** button.
+7. The register works after switching between Bases views.
+
+These are user-reported results for the final local 0.1.230 candidate, recorded
+separately from the earlier six checks of 0.1.229 below. Codex did not access
+the Vault or repeat the practical tests.
+
+The reported local candidate also passed **21/21 automated pipeline stages**
+with exit 0, including the permanent native Properties/column regression,
+example installation and deterministic runtime verification. This documentation
+update does not rerun those checks. No GitHub Actions verification for 0.1.230
+has been performed or claimed at this point.
+
+The actual sibling-header DOM, the original wrong-container search, local
+ownership/cleanup, schema-aware columns and root-only standard register are
+documented in [Document Register architecture](../architecture/11-document-register.md).
+The [regression contract](../architecture/13-testing-and-verification.md) retains
+the future checks. Synthetic DOM tests do not replace practical Obsidian testing.
+
+## Earlier local 0.1.229 practical confirmation — 2026-10-19 (historical)
+
+The user reported all six practical Obsidian checks passed for the local 0.1.229
+register-cleanup build. The native Properties control was identified and marked
+once, the local observer was connected to the nearest view-content, and other
+Bases views retained their ordinary Properties chooser. This supersedes the
+earlier search limited to the sibling `.bases-view`.
+
+The confirmed structure and lifetime contract are documented in
+[Document Register architecture](../architecture/11-document-register.md).
+0.1.230 removes the temporary reporting UI and keeps the functional synchronizer.
+Permanent automated coverage uses
+`npm run test:document-register:native-properties` and
+`npm run test:example-register-installation`, both included in the full check.
+At that earlier recording point, no final 0.1.230 installation or additional
+Vault access was claimed. The later seven-point 0.1.230 confirmation above is
+a separate result; automated success remains separate from practical evidence.
+
 ## Open items
 
-- **0.1.228 release gate remaining:** mandatory Community Review branch / preview scan of the exact pushed candidate before merge. Earlier full verification passed 19/19, integrated disk migration passed 10/10 and deterministic build passed; practical points 1–6 are user-confirmed OK. Whole-candidate practical testing is not exhaustive. No manual repetition tests are requested.
+- **0.1.230 local release follow-up:** final-candidate practical testing is user-confirmed 7/7; the reported local automated pipeline passed 21/21. Temporary reporting is removed. See [0.1.230 release notes](../releases/0.1.230.md). Commit/push, GitHub runtime verification, archive freezing and publication remain separate authorized steps under [RELEASE.md](../../RELEASE.md); none is performed here. Community preview is optional. Preserve and exclude `AGENTS.md` and the old patch script from the proposed release commit; use explicit file selection for later staging.
 
 1. **PDF annotation backup: reassess `.pdfium-backup` after the independent backup solution exists**
    - Keep the current `backupOriginalPdf` safety function for now: it stores one original PDF copy before PDFium Gate first modifies the file and never overwrites an existing copy.

@@ -55,6 +55,41 @@ Cleanup is fail-closed: the dedicated root is only recursively removed when a va
 
 The benchmark layer must remain removable without changing record format, schema, DocumentInfo, Bases editing, PDF identity, RuntimeDriver, selection or annotation behavior.
 
+## Document Register DOM and practical regression contract (0.1.230)
+
+The actual host hierarchy and ownership rules are documented in
+[Document Register architecture](11-document-register.md). Changes to the
+register, Bases integration or Obsidian version must retain these checks:
+
+| Area | Required check |
+| --- | --- |
+| Actual toolbar DOM | Inspect the tested Obsidian version: the Properties chooser is in the sibling `.bases-header`, outside `.bases-view`, under the same `.view-content`. Do not assume a future host has this exact shape. |
+| Local suppression | Hide only the control owned by the loaded `pdfium-document-register` view. Ambiguous, unsupported, hidden or detached hosts leave it visible; native `file.*` properties and metadata remain intact. |
+| Other Bases | Native table views, independent leaves and nested views retain their own Properties controls. |
+| Switching and cleanup | Delayed/replaced chrome and view switching reconcile correctly. Rebind/disconnect local observation as needed, remove stale markers and ignore queued work after unload. |
+| Empty and alternative views | An empty register and each status view keep the schema-aware column chooser; missing schema leaves the chooser disabled. |
+| Columns and language | Preserve `pdfiumHiddenColumns` across redraw/reopening, localized UI/schema labels and user-owned names in all seven official locales. Keep UUIDs, schema properties and stored machine values unchanged. |
+| Existing Base files | Preserve user-defined `.base` columns, sorting, filters and labels; opening or reinstalling examples does not reset an existing root register or historical copy. |
+| Example installation | Create the root register only when missing; initial install/reinstall never creates a second register in the examples folder. Keep historical/legacy files and the two pedagogical native Bases. |
+
+The permanent synthetic DOM/lifecycle and column-picker regression is
+[`scripts/test-document-register-native-properties.js`](../../scripts/test-document-register-native-properties.js)
+(`npm run test:document-register:native-properties`). Example installation
+and file-preservation behavior are covered by
+[`scripts/test-example-register-installation.js`](../../scripts/test-example-register-installation.js)
+(`npm run test:example-register-installation`); editor keyboard behavior remains
+covered by `npm run test:document-register:editor-keys`. All are in
+`npm run check`.
+
+Synthetic DOM tests must represent the observed sibling header/view structure,
+including ambiguity and lifecycle failures. They do not establish that a new
+Obsidian build still uses that structure, and cannot replace practical testing
+in Obsidian. The earlier wrong-container implementation passed automated checks
+without hiding the real native control. Record host observations, user-reported
+practical results, local automated results and GitHub Actions results separately.
+The seven practical checks confirmed for the final local 0.1.230 candidate are
+recorded in [test observations](../testing/TEST-OBSERVATIONS.md).
+
 ## Documentation integrity gate
 
 `scripts/check-architecture-docs.js` verifies that the root architecture index links to the complete canonical document set and that every linked Markdown file exists. It is part of `npm run check`. This gate protects documentation navigation only; it does not replace runtime architecture verification.

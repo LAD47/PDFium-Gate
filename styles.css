@@ -1012,3 +1012,13 @@ body.pdfium-hide-document-records
   color: var(--text-error);
   font-size: var(--font-ui-small);
 }
+
+/* pdfium-register-native-properties-picker
+   The native Bases Properties menu lists unrelated file.* properties.
+   PDFium Gate provides its own schema-aware "Choose columns" button instead.
+   Scope strictly to leaves containing the custom register; do not change the
+   standard Bases experience, global properties, or stored YAML/metadata.
+   Review selector compatibility if Obsidian changes its toolbar DOM. */
+.bases-toolbar-properties-menu.pdfium-register-native-properties-hidden {
+  display: none;
+}

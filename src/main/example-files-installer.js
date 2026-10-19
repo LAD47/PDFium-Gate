@@ -1,6 +1,6 @@
 'use strict';
 
-async function installMetadataExampleFiles(read, write, schema = null) {
+async function installMetadataExampleFiles(read, write, schema = null, viewName = PDF_DOCUMENT_REGISTER_STANDARD_VIEW_NAME) {
   if (!read || !write) return {ok:false,error:'Vault adapters are unavailable.'};
 
   try {
@@ -16,21 +16,15 @@ async function installMetadataExampleFiles(read, write, schema = null) {
 
     const created=[];
     const overwritten=[];
+    // Historical Bases are user-owned, even if their content matches an old template.
+    // Retain the result shape; this installer never deletes or resets old registers.
     const legacyRemoved=[];
-    const legacyPreserved=[];
-    const legacyPath=`${PDFIUM_EXAMPLES_ROOT}/Example PDF Document Register.base`;
-    const legacy=read.getAbstractFileByPath(legacyPath);
-    if(legacy && !Array.isArray(legacy.children)) {
-      const current=String(await read.readText(legacy));
-      if(current===metadataExampleLegacyNativeBaseYaml()) {
-        await write.deleteFile(legacy,true);
-        legacyRemoved.push(legacyPath);
-      } else {
-        legacyPreserved.push(legacyPath);
-      }
-    }
+    const legacyPreserved=[
+      `${PDFIUM_EXAMPLES_ROOT}/Example PDF Document Register.base`,
+      `${PDFIUM_EXAMPLES_ROOT}/PDF Dokumentregister.base`
+    ].filter(path=>!!read.getAbstractFileByPath(path));
 
-    for (const example of metadataExampleFiles(effectiveSchema)) {
+    for (const example of metadataExampleFiles(effectiveSchema,viewName)) {
       const existing = read.getAbstractFileByPath(example.path);
       if (existing && Array.isArray(existing.children)) {
         throw new Error(`${example.path} exists but is a folder`);
@@ -47,7 +41,7 @@ async function installMetadataExampleFiles(read, write, schema = null) {
     const existingRegister=read.getAbstractFileByPath(registerPath);
     let registerCreated=false;
     if(!existingRegister) {
-      const createdFile=await write.createText(registerPath,metadataDocumentRegisterStandardBaseYaml(effectiveSchema));
+      const createdFile=await write.createText(registerPath,metadataDocumentRegisterStandardBaseYaml(effectiveSchema,viewName));
       if(!createdFile || String(createdFile.path || '')!==registerPath) throw new Error(`Register creation read-back failed: ${registerPath}`);
       registerCreated=true;
     }
