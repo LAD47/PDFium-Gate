@@ -1,2 +1,5 @@
 # Preserve exact bytes of the checksummed historical contract fixture.
 test/fixtures/metadata/0.1.227/schema-contract.js -text
+
+# Preserve exact bytes of every checksummed email attachment reference.
+test/fixtures/email/attachments/* -text

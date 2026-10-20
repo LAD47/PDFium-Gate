@@ -2,6 +2,7 @@
 
 const assert = require('assert/strict');
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const electron = require('electron');
 const { parseEml } = require('../src/email-import/parsers/eml-parser');
@@ -10,6 +11,7 @@ const { printHtmlToPdfWithElectron } = require('../src/email-import/render/elect
 
 const root = path.resolve(__dirname, '..');
 const fixtureRoot = path.join(root, 'test', 'fixtures', 'email');
+let completed = false;
 
 async function parseFixture(filename) {
   return parseEml({
@@ -37,6 +39,20 @@ async function generate(document, capture) {
 
 async function run() {
   assert.ok(process.versions.electron, 'test must run inside Electron');
+
+  // Each PDF job destroys its hidden window. Keep this standalone test alive
+  // between awaited jobs instead of accepting Electron's default clean quit.
+  electron.app.on('window-all-closed', () => {});
+  electron.app.on('before-quit', event => {
+    if (!completed) {
+      event.preventDefault();
+      console.error('Email Import Electron PDF test quit before all three fixtures completed.');
+      electron.app.exit(1);
+    }
+  });
+
+  const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'pdfium-email-pdf-electron-'));
+  electron.app.setPath('userData', userData);
 
   const htmlDocument = await parseFixture('html.eml');
   htmlDocument.source.retained = true;
@@ -92,6 +108,7 @@ async function run() {
 }
 
 run().then(() => {
+  completed = true;
   electron.app.exit(0);
 }).catch(error => {
   console.error('Email Import Electron PDF generation check failed.');
