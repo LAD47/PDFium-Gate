@@ -445,3 +445,135 @@ SHA-256 comparison of all 332 project files confirmed that every other byte
 is preserved from task start, including the existing package changes.
 All 332 index mode/blob/path entries still equal HEAD. No index restoration
 or staging was used to clear the reported reference-file status.
+
+## Email Import CI modernization and reference status refresh (20 October 2026)
+
+This follow-up starts on `main` at
+`b24b948e30620193b084cc7bc55716ad3eecccdc`, also the local `origin/main`
+reference. The Electron upgrade/test-stabilization commit is already pushed;
+the workflow update described here is local and has not been pushed or run
+on GitHub. Earlier dated maintenance decisions above remain historical records.
+
+### Reference-file status: stale index stat cache
+
+Before work, only these paths were marked ` M`: the two PDF references and
+`notes.txt` under `test/fixtures/email/attachments/`. All three had raw bytes
+identical to both HEAD and the staged index blobs. Their existing SHA-256
+values were correct, and `git diff --raw`, `git diff --numstat` and
+`git diff HEAD` were empty.
+
+The committed and working `.gitattributes` both applied `text: unset` (`-text`).
+No `filter`, `ident` or `working-tree-encoding` attribute was set.
+The PDF `diff=astextplain` presentation driver is not a checkout data filter.
+All three working files were already LF, not CRLF. The remaining discrepancy
+was cached filesystem metadata left from the previous CRLF-sized checkout:
+
+| Reference | Cached size before | Actual and HEAD bytes |
+| --- | --- | --- |
+| `notes.txt` | 51 | 49 |
+| `test-attachment-1.pdf` | 1981 | 1896 |
+| `test-attachment-2.pdf` | 1975 | 1890 |
+
+The only index maintenance command was:
+
+```text
+git update-index --refresh -- test/fixtures/email/attachments/notes.txt test/fixtures/email/attachments/test-attachment-1.pdf test/fixtures/email/attachments/test-attachment-2.pdf
+```
+
+It returned **1** and initially printed `needs update` for the three paths.
+That exit code is recorded rather than described as success. Immediate
+after-checks nevertheless showed refreshed stat sizes/times and an empty
+`git status --short`. The raw index checksum changed, while the SHA-256 of
+all 332 indexed mode/blob/stage/path entries remained exactly the same.
+All three file hashes remained unchanged, staging stayed empty, and entry
+flags stayed 0. Later test/status checks confirmed the reference markers
+did not return. No staging, assume-unchanged, skip-worktree, checkout, reset,
+restoration or reference-file rewrite was used.
+
+### New CI triggers and preserved coverage
+
+`.github/workflows/email-import-poc.yml` now responds to matching changes on:
+
+- `push` to **main**;
+- `pull_request` targeting **main**, using the normal PR event rather than
+  `pull_request_target`.
+
+Both events have the same 20 positive path filters. They cover all `src/**`,
+`scripts/**`, `test/**` and `docs/**`, plus `.gitattributes`, this workflow,
+the release workflow read by the Community check, the root README/contributor/
+translation/architecture/release documents, build/generated runtime/style
+files, manifest/versions and package/lock files.
+The full source tree includes Email/Archive Import, Metadata, shared integrity,
+PDF printing, i18n, platform and plugin integration. The full documentation
+tree is included because architecture verification also checks linked targets
+outside `docs/architecture`. Historical feature/fix branch names no longer
+control push execution; PR source branches can have any name when the base
+is main and a relevant path changes.
+
+All **ten existing steps** are retained. Local YAML comparison confirmed that
+the only semantic changes are event/path configuration and
+`checkout.with.persist-credentials: false`. Coverage remains:
+
+- Node 24, `npm ci`, explicit `node node_modules/electron/install.js` and
+  the existing Linux SUID sandbox ownership/mode setup;
+- all **22 Email Import Node groups**;
+- the real Electron/Chromium PDF test under Xvfb, with its existing three-minute
+  timeout and all three HTML/CID/hostile-source cases;
+- full `npm run check`, bundled runtime integration, and
+  `git diff --exit-code HEAD -- .` in the clean CI checkout;
+- the existing runtime artifact upload: `main.js`, `main-bridge.js`,
+  `manifest.json` and `styles.css`, using the existing artifact name.
+
+`permissions: contents: read` is unchanged. The PR job requires no custom
+repository secrets or repository write permission; checkout credentials are
+not persisted for test code. Other workflows are untouched.
+
+The Electron test remains separate from Node-only checks because it must
+start a real desktop/browser process with the native Electron binary, a
+display server and Linux sandbox setup. It verifies Chromium printToPDF and
+clickable PDF attachment URIs that Node simulations do not establish.
+No test was removed or shortened.
+
+### Local validation and Linux boundary
+
+| Control | Actual result |
+| --- | --- |
+| YAML and workflow configuration | Existing PyYAML 6.0.2 parsed the workflow with GitHub-compatible `on` handling and duplicate-key rejection; 20 paths/event, 328 covered existing inputs and **44 trigger cases passed**. All ten previous steps and read permissions were preserved. |
+| Checkout filters | **8/8 cases passed**: all four checksummed references retained exact SHA-256/size under process-local Linux (`core.autocrlf=false`, LF) and Windows (`core.autocrlf=true`, CRLF) settings. No Git configuration was saved. |
+| `npm run check` | **21/21 stages passed**, exit 0; `deterministicBuild: true`, `rootOnlyLoad: true`. Disk migration 10/10, Properties/columns nine groups and 730 keys in seven locales passed. |
+| `npm run test:email-import` | **22/22 groups passed**, exit 0, including source hashes, PDF/reference byte identity, attachment integrity and extraction/collision checks. |
+| `npm run test:email-import:pdf-electron` | Ordinary command passed, exit 0, with its final three-case success message: **Electron 43.7.5 / Chromium 150.0.7871.250**. Real PDFs and clickable attachment URIs were verified. |
+| Runtime integration | `node scripts/check-email-import-runtime-integration.js` passed; bundled dependencies, import wiring and controlled printer verified. |
+
+The native PDF command used no diagnostic runner or extra test arguments.
+Only its inherited `ELECTRON_RUN_AS_NODE` was removed in the command child;
+`npm_config_logs_max=0` suppressed npm log files. Tests used isolated
+synthetic OS-temp workspaces, not an Obsidian installation/Vault.
+The retained migration workspace is
+`C:\Users\leifd\AppData\Local\Temp\metadata-migration-0787ca05-d2f1-4259-aca0-1f066a81299b`.
+Injected migration/transaction failure diagnostics are expected negative cases.
+
+These are Windows local results. Checkout-filter validation models the relevant
+Linux line-ending settings; it does not run Linux, Xvfb or Electron's SUID
+sandbox. `actionlint` was unavailable and was not installed; YAML/configuration
+checks do not execute GitHub event delivery or artifact services.
+**GitHub CI is not yet confirmed green for this workflow change.** A previous
+green runtime build for the base commit does not verify the new triggers,
+PR permissions or Linux Email Import run.
+
+### Final scope and next gate
+
+After refresh, status was clean before implementation. After implementation,
+only `.github/workflows/email-import-poc.yml` and this report are modified.
+SHA-256 checks of all 332 project files verify that the tests did not change
+production source, generated runtime, dependencies, reference fixtures,
+`AGENTS.md` or either other workflow. The report preserves all earlier bytes.
+Staging is empty; HEAD/origin-main references remain at the starting commit.
+Plugin **0.1.230**, minimum Obsidian **1.13.7** and Electron **43.7.5**
+are unchanged. No branches, archives, tags or releases were changed.
+
+**Locally ready for commit and push, with GitHub execution still pending.**
+Keep all five previously reviewed historical development branches until the
+new workflow has been exercised successfully on GitHub; verify both push
+and PR behavior before any separately approved branch retirement.
+No staging, commit or push is performed in this task.

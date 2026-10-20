@@ -2,34 +2,51 @@ name: Email Import verification
 
 on:
   push:
-    branches: [feature/email-import, feature/missing-sha256-recovery, fix/0.1.228-email-zip-relations, feature/0.1.228-email-bundles]
+    branches: [main]
     paths:
-      - 'src/email-import/**'
-      - 'src/archive-import/**'
-      - 'src/metadata/**'
-      - 'src/core/integrity/**'
-      - 'src/main/email-import-modal.js'
-      - 'src/main/00-header.js'
-      - 'src/plugin/**'
-      - 'src/main-bridge/**'
-      - 'src/platform/**'
-      - 'test/fixtures/email/**'
-      - 'scripts/test-core-integrity.js'
-      - 'scripts/test-email-import-*.js'
-      - 'scripts/test-archive-import.js'
-      - 'scripts/test-metadata-record-repository.js'
-      - 'scripts/test-obsidian-vault-write.js'
-      - 'scripts/check-email-import-runtime-integration.js'
-      - 'scripts/check-i18n*.js'
-      - 'scripts/verify/**'
-      - 'scripts/source-bundle.js'
+      - '.gitattributes'
+      - '.github/workflows/email-import-poc.yml'
+      - '.github/workflows/publish-community-release.yml'
+      - 'src/**'
+      - 'scripts/**'
+      - 'test/**'
+      - 'docs/**'
+      - 'README.md'
+      - 'CONTRIBUTING.md'
+      - 'TRANSLATING.md'
+      - 'ARCHITECTURE.md'
+      - 'RELEASE.md'
       - 'build.js'
-      - 'package.json'
-      - 'package-lock.json'
+      - 'main.js'
+      - 'main-bridge.js'
+      - 'styles.css'
       - 'manifest.json'
       - 'versions.json'
+      - 'package.json'
+      - 'package-lock.json'
+  pull_request:
+    branches: [main]
+    paths:
+      - '.gitattributes'
       - '.github/workflows/email-import-poc.yml'
-      - 'docs/email-import/**'
+      - '.github/workflows/publish-community-release.yml'
+      - 'src/**'
+      - 'scripts/**'
+      - 'test/**'
+      - 'docs/**'
+      - 'README.md'
+      - 'CONTRIBUTING.md'
+      - 'TRANSLATING.md'
+      - 'ARCHITECTURE.md'
+      - 'RELEASE.md'
+      - 'build.js'
+      - 'main.js'
+      - 'main-bridge.js'
+      - 'styles.css'
+      - 'manifest.json'
+      - 'versions.json'
+      - 'package.json'
+      - 'package-lock.json'
 
 permissions:
   contents: read
@@ -39,6 +56,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
