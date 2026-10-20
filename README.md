@@ -4,6 +4,8 @@
 
 PDFium Gate brings PDF reading, annotation, source linking, structured metadata, document registers, email import, and archive handling into one desktop workflow — while keeping the original PDF as the source of record and durable metadata in ordinary Markdown/YAML.
 
+Available for **Obsidian Desktop** through [Obsidian Community Plugins](https://community.obsidian.md/plugins/pdfium-gate). See [Installation](#installation) for setup and [GitHub Releases](https://github.com/LAD47/PDFium-Gate/releases) for published versions and downloads.
+
 ## What you can do
 
 - **Read and annotate PDFs** — select text with mouse or keyboard, create highlights, copy quotes, and create Obsidian links back to exact pages and selections.
@@ -15,7 +17,7 @@ PDFium Gate brings PDF reading, annotation, source linking, structured metadata,
 
 **Built for document-heavy work:** research, journalism and investigations, public records, administration, source collections, and long-term archives.
 
-**Desktop plugin · Available in 7 languages · Designed for research, investigations, and long-term document collections.**
+**Available in 7 languages · Designed for research, investigations, and long-term document collections.**
 
 > [!WARNING]
 > **PDFium Gate is still pre-release software.** It is under active development and has not yet completed broad platform and real-world testing. Make a complete backup of your Vault before installing or updating it, especially if the Vault contains important or irreplaceable material.
@@ -112,7 +114,7 @@ The plugin's automatic PDF-backup feature is an additional safeguard for PDF mod
 
 ## Installation
 
-PDFium Gate is distributed through **Obsidian Community Plugins**.
+After [backing up your Vault](#before-you-install-back-up-your-vault), install the plugin:
 
 1. In Obsidian, open **Settings → Community plugins**.
 2. Select **Browse**.

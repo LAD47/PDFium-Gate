@@ -1,5 +1,68 @@
 # GitHub maintenance review after 0.1.230
 
+## Confirmed cleanup completion (20 October 2026)
+
+GitHub `main` points to **`fa7907e72b8e65a5ca8f526d1a63c5542a17fb32`**.
+The Email Import workflow and its maintenance record were committed and pushed
+in that commit. The following cleanup is confirmed complete; the older audit
+and local preparation records below retain their historical context.
+
+### Approved branch cleanup completed
+
+All five named remote branches were deleted after the owner's explicit approval:
+
+- `chore/0.1.226-community-cleanup`
+- `feature/missing-sha256-recovery`
+- `feature/0.1.228-email-bundles`
+- `fix/0.1.227-localized-defaults`
+- `fix/0.1.228-email-zip-relations`
+
+Before deletion, each remote tip matched its approved SHA, was an ancestor of
+`origin/main` and had **zero commits outside main**. There were no open PR
+dependencies (the repository had no open PRs). The approved deletion used
+one atomic push. Local branches were retained.
+
+Direct GitHub after-checks confirmed **seven remote branches**: `main` and
+`archive/0.1.225`, `archive/0.1.226`, `archive/0.1.227`, `archive/0.1.228`,
+`archive/0.1.229`, `archive/0.1.230`. All six archives retained their original
+commits. **All 34 historical tags and 12 published releases, including release
+assets, were preserved.** No additional branch was removed.
+
+### GitHub Email Import verification completed
+
+[Email Import verification 39377476920](https://github.com/LAD47/PDFium-Gate/actions/runs/39377476920)
+was automatically triggered by the push to `main` at the commit above and
+completed with **success** on Ubuntu 24.04.
+
+| GitHub CI control | Confirmed result |
+| --- | --- |
+| Email Import Node tests | **22/22 groups passed**. |
+| Full `npm run check` | **21/21 stages passed**; deterministic build and root-only load verified. |
+| Real Electron PDF test | **3/3 HTML/CID/hostile-source cases passed**, including valid PDF output and clickable attachment URIs. Electron **43.7.5**, Chromium **150.0.7871.250**. |
+| Bundled runtime integration | Passed. |
+| Unchanged tracked project files | Passed. |
+| Runtime artifact upload | Completed successfully. |
+
+This is confirmed automated Linux/CI evidence. The previously reported
+practical Obsidian tests remain separate. Installation of published **0.1.230**
+through Community Plugins is **not separately user-confirmed**.
+
+### Presentation work and remaining proposals
+
+The local README update makes Obsidian Desktop support, Community distribution,
+installation instructions, the official plugin listing and GitHub Releases
+visible near the top. The feature tour, active-development notice and Vault
+backup warning are retained. No screenshots are added.
+
+The repository description and Topics recommended in the presentation section
+below remain **proposals, not applied settings**. Optional consolidation of
+Email Import Node/runtime checks into the main check chain is also future work.
+The branch-deletion recommendations and pending-CI statements in the dated
+records below describe earlier stages and are superseded by this completion
+record; their historical test results and decisions are preserved.
+
+## Original maintenance review (19 October 2026)
+
 Review date: 19 October 2026. Repository: `LAD47/PDFium-Gate`.
 Reviewed `main`: `92c1f4ce2632f80b281ed8adc770308b6098fe33`.
 
@@ -28,7 +91,7 @@ changes, commit/push or publication. No production or version changes are includ
   Plugins has not yet been separately user-confirmed. Historical successful
   installation of 0.1.226 is not evidence of that later installation.
 
-## Five development branches
+## Five development branches (historical review)
 
 The tips below were read live from GitHub. Their commit objects already existed
 locally, so no fetch, checkout, synchronization or GitHub ref update was needed.
@@ -74,7 +137,7 @@ git --no-optional-locks merge-base <main-sha> <tip-sha>
 git --no-optional-locks log --format=%H%x09%s <main-sha>..<tip-sha>
 ```
 
-## Three GitHub Actions workflows
+## Three GitHub Actions workflows (historical review)
 
 | Workflow | Current trigger and role | Recommendation |
 | --- | --- | --- |
@@ -156,7 +219,7 @@ printer isolation. It is not currently a check-chain entry point. The workflow
 also runs `git diff --exit-code HEAD -- .` after the build and uploads generated
 runtime files for manual practical testing.
 
-### Proposed integration order (not implemented here)
+### Original integration proposal (historical)
 
 1. With separate approval, give the existing Email workflow `push: main` and
    `pull_request` into `main` with relevant source/test/fixture/workflow paths;
@@ -174,8 +237,9 @@ runtime files for manual practical testing.
 
 ## GitHub presentation proposals (not applied)
 
-The current repository description begins `xperimental Obsidian plugin...`;
-Topics are empty. Proposed replacement description:
+On 20 October 2026, the repository description was `xperimental Obsidian plugin with an integrated PDFium-based PDF workflow.`
+and Topics were empty. Repository settings are unchanged in this documentation
+task. Recommended replacement description:
 
 > PDFium Gate – Obsidian plugin for PDF reading, annotations, document metadata, registers, email import, and source archiving.
 
@@ -183,14 +247,21 @@ Suggested Topics: `obsidian`, `obsidian-plugin`, `pdf`, `pdfium`,
 `pdf-annotations`, `document-management`, `metadata`, `email-import`,
 `archive-import`.
 
-The current root README already has a useful feature tour. Suggested follow-up:
-add a compact latest-release/installation section linking to 0.1.230 and the
-current docs index; show the metadata/register and EPOST workflows with a few
-synthetic screenshots; document the distinction between the standard register
-and pedagogical native Bases; link clearly to release notes, compatibility and
-known limits. Keep practical local testing separate from confirmation of a
-published Community Plugins installation. Root README and repository settings
-are not changed in this task.
+The nine suggested Topics match implemented PDF reading/annotation, metadata,
+document-register, email and ZIP/source-archive features. They use valid
+lowercase/hyphen topic names and do not imply mobile support.
+
+The available GitHub tools expose no repository-description or Topics update
+operation, and GitHub CLI is not installed in this environment. For a later,
+separately approved settings update, a user with the necessary repository
+rights can open the repository home page, select the **About** panel's gear,
+paste the description above, add the nine Topics and save. That action has
+not been performed.
+
+The README update keeps the existing feature tour and adds a compact
+Desktop/Community introduction with links to installation, the official listing
+and Releases. It retains the backup warning and practical-testing limits.
+No synthetic screenshots or repository-settings changes are included.
 
 ## Documentation scope and historical records
 
@@ -300,7 +371,7 @@ Retained synthetic evidence (all outside any Obsidian Vault):
 - Unmodified-test lifecycle evidence: `C:\Users\leifd\AppData\Local\Temp\pdfium-gate-electron-43.7.5-proof-TWP88N\result.json`.
 - Completed three-case diagnostic evidence: `C:\Users\leifd\AppData\Local\Temp\pdfium-gate-electron-43.7.5-complete-emfnS2\result.json`.
 
-### Commit-readiness decision
+### Commit-readiness decision at the 19 October snapshot
 
 **Not ready for commit as a fully green regression update.** The dependency
 upgrade and full repository check succeed, and the complete diagnostic PDF run
@@ -426,7 +497,7 @@ Retained follow-up evidence:
 - Disk migration workspace:
   `C:\Users\leifd\AppData\Local\Temp\metadata-migration-9d3e46f8-2f11-408e-9153-3ed6dc7c6bf5`.
 
-### Current local decision
+### Local decision at the stabilization snapshot
 
 **Ready for commit after local stabilization.** There is no observed production
 or PDF/link regression in these runs. Scope is Git checkout attributes, the
@@ -446,7 +517,7 @@ is preserved from task start, including the existing package changes.
 All 332 index mode/blob/path entries still equal HEAD. No index restoration
 or staging was used to clear the reported reference-file status.
 
-## Email Import CI modernization and reference status refresh (20 October 2026)
+## Email Import CI modernization and reference status refresh (20 October 2026, local preparation record)
 
 This follow-up starts on `main` at
 `b24b948e30620193b084cc7bc55716ad3eecccdc`, also the local `origin/main`
@@ -561,7 +632,7 @@ checks do not execute GitHub event delivery or artifact services.
 green runtime build for the base commit does not verify the new triggers,
 PR permissions or Linux Email Import run.
 
-### Final scope and next gate
+### Scope and next gate at the local preparation snapshot
 
 After refresh, status was clean before implementation. After implementation,
 only `.github/workflows/email-import-poc.yml` and this report are modified.
